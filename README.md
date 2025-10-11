@@ -234,4 +234,4 @@ Este proyecto está bajo la licencia MIT. Ver `LICENSE` para más detalles.
 
 ---
 
-**¿Necesitas ayuda?** Revisa la documentación de [Next.js](https://nextjs.org/docs) y [Supabase](https://supabase.com/docs).
+**¿Necesitas ayuda?** Revisa la documentación de [Next.js](https://nextjs.org/docs) y [Supabase](https://supabase.com/docs).# Tkicks
