@@ -1,6 +1,5 @@
 "use client";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
 
@@ -11,30 +10,11 @@ const links = [
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
   const isOpen = useUIStore((s) => s.isSidebarOpen);
   const close = useUIStore((s) => s.closeSidebar);
 
   return (
-    <aside className="relative">
-      {/* Desktop */}
-      <div className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-56 shrink-0 border-r border-neutral-800 bg-black p-4 md:block">
-        <nav className="flex flex-col gap-1">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={cn(
-                'rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800',
-                pathname.startsWith(l.href.split('?')[0]) && 'bg-neutral-800 font-medium'
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
+    <>
       {/* Mobile drawer */}
       <div
         className={cn(
@@ -65,7 +45,7 @@ export function Sidebar() {
           className="fixed inset-0 z-40 bg-black/30 md:hidden"
         />
       )}
-    </aside>
+    </>
   );
 }
 
