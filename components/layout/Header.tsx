@@ -51,21 +51,30 @@ export function Header() {
 			<BannerTicker />
 			<div className="grid h-16 grid-cols-3 items-center border-b border-neutral-800 bg-black px-4 md:px-6">
 			<div className="flex items-center gap-2">
+				{/* Botón hamburguesa en móvil */}
+				<button
+					onClick={toggleSidebar}
+					className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-neutral-800 md:hidden"
+					aria-label="Abrir menú"
+				>
+					<Menu className="h-5 w-5" />
+				</button>
+				{/* Enlaces en desktop */}
 				<Link
 					href="/productos?sneakers"
-					className="rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800"
+					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
 				>
 					Sneakers
 				</Link>
 				<Link
 					href="/productos?streetwear"
-					className="rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800"
+					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
 				>
 					Streetwear
 				</Link>
 				<Link
 					href="/encargos"
-					className="rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800"
+					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
 				>
 					Encargos
 				</Link>
