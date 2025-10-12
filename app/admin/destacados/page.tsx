@@ -28,11 +28,11 @@ export default function AdminFeaturedPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Destacados</h1>
-      {message && <p className="text-sm text-white">{message}</p>}
+      {message && <p className="text-sm text-black">{message}</p>}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b text-xs text-neutral-300">
+            <tr className="border-b text-xs text-neutral-700">
               <th className="p-2">Título</th>
               <th className="p-2">Categoría</th>
               <th className="p-2">Sneakers</th>
@@ -42,8 +42,8 @@ export default function AdminFeaturedPage() {
           <tbody>
             {products.map((p) => (
               <tr key={p.id} className="border-b">
-                <td className="p-2 text-white">{p.title}</td>
-                <td className="p-2 text-white">{p.category}</td>
+                <td className="p-2 text-black">{p.title}</td>
+                <td className="p-2 text-black">{p.category}</td>
                 <td className="p-2">
                   <input type="checkbox" checked={p.featured_sneakers} onChange={(e) => toggle(p.id, 'featured_sneakers', e.target.checked)} />
                 </td>
