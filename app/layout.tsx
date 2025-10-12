@@ -24,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className={cn('min-h-screen bg-black text-white antialiased font-bold')}>
         <DolarRateProvider>
           <Header />
+          <Sidebar />
           <main className="p-4 md:p-6 lg:p-8">
             <RouteTransitions>{children}</RouteTransitions>
           </main>
