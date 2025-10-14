@@ -92,8 +92,9 @@ function SaleSection({ products }: { products: Product[] }) {
             <li key={p.id} className="min-w-0 shrink-0 grow-0 basis-1/3 pl-4 sm:basis-1/2 md:basis-1/3">
               <Link href={`/producto/${p.slug}`} className="block rounded-xl border-2 border-red-500 bg-gradient-to-br from-red-950 to-neutral-900 p-4 shadow-xl hover:shadow-2xl hover:scale-105 transition-all relative overflow-hidden group">
                 {/* Badge de SALE */}
-                <div className="absolute top-2 right-2 z-10 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-black uppercase shadow-lg animate-pulse">
-                  🔥 SALE
+                <div className="absolute top-2 right-2 z-10 bg-red-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-black uppercase shadow-lg animate-pulse">
+                  <span className="sm:hidden">🔥</span>
+                  <span className="hidden sm:inline">🔥 SALE</span>
                 </div>
                 
                 <div className="relative aspect-square w-full overflow-hidden rounded-lg ring-2 ring-red-500/50">
@@ -240,8 +241,9 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
             <li key={p.id} className="min-w-0 shrink-0 grow-0 basis-1/3 pl-4 sm:basis-1/2 md:basis-1/3">
               <Link href={`/producto/${p.slug}`} className={`block rounded-xl border-2 ${config.cardBorder} bg-gradient-to-br ${config.cardBg} p-4 shadow-xl hover:shadow-2xl hover:scale-105 transition-all relative overflow-hidden group`}>
                 {/* Badge destacado */}
-                <div className={`absolute top-2 right-2 z-10 ${config.badge} text-white px-3 py-1 rounded-full text-xs font-black uppercase shadow-lg`}>
-                  {config.icon} {config.badgeText}
+                <div className={`absolute top-2 right-2 z-10 ${config.badge} text-white px-2 sm:px-3 py-1 rounded-full text-xs font-black uppercase shadow-lg`}>
+                  <span className="sm:hidden">{config.icon}</span>
+                  <span className="hidden sm:inline">{config.icon} {config.badgeText}</span>
                 </div>
                 
                 <div className={`relative aspect-square w-full overflow-hidden rounded-lg ${config.ring} ring-2`}>
