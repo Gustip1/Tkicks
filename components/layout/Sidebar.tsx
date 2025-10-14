@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 const links = [
   { href: '/productos?sneakers', label: 'Sneakers' },
   { href: '/productos?streetwear', label: 'Streetwear' },
+  { href: '/ofertas', label: '🔥 Ofertas', special: true },
   { href: '/encargos', label: 'Encargos' }
 ];
 
@@ -31,7 +32,10 @@ export function Sidebar() {
               key={l.href}
               href={l.href}
               onClick={close}
-              className={cn('rounded-md px-3 py-2 text-base text-white hover:bg-neutral-800')}
+              className={cn(
+                'rounded-md px-3 py-2 text-base hover:bg-neutral-800',
+                (l as any).special ? 'text-red-500 font-bold' : 'text-white'
+              )}
             >
               {l.label}
             </Link>

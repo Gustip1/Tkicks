@@ -59,25 +59,31 @@ export function Header() {
 				>
 					<Menu className="h-5 w-5" />
 				</button>
-				{/* Enlaces en desktop */}
-				<Link
-					href="/productos?sneakers"
-					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
-				>
-					Sneakers
-				</Link>
-				<Link
-					href="/productos?streetwear"
-					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
-				>
-					Streetwear
-				</Link>
-				<Link
-					href="/encargos"
-					className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
-				>
-					Encargos
-				</Link>
+			{/* Enlaces en desktop */}
+			<Link
+				href="/productos?sneakers"
+				className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
+			>
+				Sneakers
+			</Link>
+			<Link
+				href="/productos?streetwear"
+				className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
+			>
+				Streetwear
+			</Link>
+			<Link
+				href="/ofertas"
+				className="hidden rounded-md px-3 py-2 text-sm font-bold text-red-500 hover:bg-neutral-800 md:inline-block animate-pulse"
+			>
+				🔥 Ofertas
+			</Link>
+			<Link
+				href="/encargos"
+				className="hidden rounded-md px-3 py-2 text-sm text-white hover:bg-neutral-800 md:inline-block"
+			>
+				Encargos
+			</Link>
 			</div>
         <div className="flex items-center justify-center gap-3">
           <Link href="/" className="flex items-center">

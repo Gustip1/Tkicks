@@ -22,6 +22,7 @@ export interface Product {
   images: ProductImage[];
   featured_sneakers: boolean;
   featured_streetwear: boolean;
+  on_sale: boolean;
   active: boolean;
   created_at: string | null;
   updated_at: string | null;

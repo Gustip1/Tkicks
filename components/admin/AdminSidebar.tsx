@@ -8,6 +8,7 @@ import {
   Warehouse, 
   DollarSign, 
   Star, 
+  Flame,
   Upload, 
   Users,
   Settings
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Stock', href: '/admin/stock', icon: Warehouse },
   { name: 'Precios', href: '/admin/precios', icon: DollarSign },
   { name: 'Destacados', href: '/admin/destacados', icon: Star },
+  { name: 'Ofertas', href: '/admin/ofertas', icon: Flame },
   { name: 'Imágenes', href: '/admin/uploads', icon: Upload },
   { name: 'Clientes', href: '/admin/clientes', icon: Users },
   { name: 'Ajustes', href: '/admin/ajustes', icon: Settings },
