@@ -149,5 +149,42 @@ Antes de hacer push a GitHub, asegúrate de:
 
 ---
 
-¡Todo listo! 🎉 La funcionalidad de ofertas está completamente implementada y el servidor está corriendo.
+## 🚀 Deployment
+
+### Git Status
+✅ **Commit realizado**: `f4afa52`
+```
+feat: Agregar sección de Ofertas con diseño llamativo en rojo
+
+- 10 archivos modificados
+- 582 líneas agregadas
+- 23 líneas eliminadas
+```
+
+✅ **Push completado**: Cambios subidos a GitHub exitosamente
+- Repositorio: `Gustip1/Tkicks`
+- Branch: `main`
+
+---
+
+## 🎯 Próximos Pasos
+
+1. **Actualizar Base de Datos en Supabase (IMPORTANTE)**
+   ```sql
+   ALTER TABLE products ADD COLUMN IF NOT EXISTS on_sale boolean DEFAULT false;
+   ```
+
+2. **Verificar en Producción**
+   - Verificar que la columna `on_sale` exista en Supabase
+   - Probar la funcionalidad de agregar/quitar productos en oferta
+   - Verificar que los carruseles móviles muestren 3 productos
+
+3. **Primeros Pasos**
+   - Ir a `/admin/ofertas`
+   - Marcar algunos productos como ofertas
+   - Verificar que aparezcan en la landing y en `/ofertas`
+
+---
+
+¡Todo listo! 🎉 La funcionalidad de ofertas está completamente implementada, testeada y subida a GitHub.
 
