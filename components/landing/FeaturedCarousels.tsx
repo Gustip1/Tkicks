@@ -108,9 +108,9 @@ function SaleSection({ products }: { products: Product[] }) {
                   )}
                 </div>
                 <div className="mt-3">
-                  <div className="line-clamp-1 text-sm font-bold text-white">{p.title}</div>
+                  <div className="line-clamp-1 text-xs sm:text-sm font-bold text-white">{p.title}</div>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <div className="text-lg font-black text-red-400">USD ${Number(p.price).toFixed(2)}</div>
+                    <div className="text-sm sm:text-lg font-black text-red-400">USD ${Number(p.price).toFixed(2)}</div>
                   </div>
                   <div className="text-xs text-red-300 font-medium">{formatCurrency(Number(p.price) * dolarOficial)}</div>
                 </div>
@@ -256,9 +256,9 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
                   )}
                 </div>
                 <div className="mt-3">
-                  <div className="line-clamp-1 text-sm font-bold text-white">{p.title}</div>
+                  <div className="line-clamp-1 text-xs sm:text-sm font-bold text-white">{p.title}</div>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <div className={`text-lg font-black ${config.textColor}`}>USD ${Number(p.price).toFixed(2)}</div>
+                    <div className={`text-sm sm:text-lg font-black ${config.textColor}`}>USD ${Number(p.price).toFixed(2)}</div>
                   </div>
                   <div className={`text-xs ${config.accentColor} font-medium`}>{formatCurrency(Number(p.price) * dolarOficial)}</div>
                 </div>
