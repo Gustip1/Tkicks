@@ -10,7 +10,7 @@ export function ProductCard({ product, usdArsRate = 1 }: { product: Product; usd
   const [index, setIndex] = useState(0);
   const images = product.images || [];
   const [hovering, setHovering] = useState(false);
-  const dolarOficial = useDolarRate();
+  const { rate: dolarOficial } = useDolarRate();
   
   useEffect(() => {
     if (!hovering || images.length <= 1) return;
