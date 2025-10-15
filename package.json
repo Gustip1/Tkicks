@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
     "e2e:codegen": "playwright codegen http://localhost:3000",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "verify-security": "tsx scripts/verify-security.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
