@@ -14,13 +14,14 @@ export function BannerTicker() {
         <div className="relative overflow-hidden flex-1 min-w-0" aria-label="Ofertas y mensajes importantes" role="region">
           <div className="animate-marquee whitespace-nowrap py-2 will-change-transform">
             {[...items, ...items].map((item, idx) => (
-              <span key={idx} className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-bold">
+              <span key={idx} className="mx-4 md:mx-6 inline-block text-[11px] md:text-sm font-bold">
                 {item}
               </span>
             ))}
           </div>
         </div>
-        <div className="shrink-0 border-l border-white/20 pl-2 md:pl-4 ml-2 md:ml-4">
+        {/* Widget del dólar - OCULTO en móvil, VISIBLE en desktop */}
+        <div className="hidden md:flex shrink-0 border-l border-white/20 pl-4 ml-4">
           <DolarWidget />
         </div>
       </div>
