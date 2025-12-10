@@ -2,9 +2,17 @@
 import Link from 'next/link';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, Flame, Package, ShoppingBag, FileText } from 'lucide-react';
+import { X, ChevronRight, Flame, Package, ShoppingBag, FileText, type LucideIcon } from 'lucide-react';
 
-const links = [
+type LinkItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon | string;
+  desc: string;
+  special?: boolean;
+};
+
+const links: LinkItem[] = [
   { href: '/productos?sneakers', label: 'Sneakers', icon: '👟', desc: 'Calzado premium' },
   { href: '/productos?streetwear', label: 'Streetwear', icon: '👕', desc: 'Ropa urbana' },
   { href: '/ofertas', label: 'Ofertas', icon: Flame, special: true, desc: 'Precios especiales' },
