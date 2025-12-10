@@ -1,5 +1,4 @@
 "use client";
-import { cn } from '@/lib/utils';
 import { DolarWidget } from '@/components/DolarWidget';
 
 export function BannerTicker() {

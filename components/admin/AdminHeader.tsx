@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Settings, User, LogOut, Search, Plus } from 'lucide-react';
+import { Bell, Settings, LogOut, Search, Plus } from 'lucide-react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useState } from 'react';
 

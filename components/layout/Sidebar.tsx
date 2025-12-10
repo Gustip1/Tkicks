@@ -2,21 +2,13 @@
 import Link from 'next/link';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, Flame, Package, ShoppingBag, FileText, type LucideIcon } from 'lucide-react';
+import { X, ChevronRight } from 'lucide-react';
 
-type LinkItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon | string;
-  desc: string;
-  special?: boolean;
-};
-
-const links: LinkItem[] = [
+const links = [
   { href: '/productos?sneakers', label: 'Sneakers', icon: '👟', desc: 'Calzado premium' },
   { href: '/productos?streetwear', label: 'Streetwear', icon: '👕', desc: 'Ropa urbana' },
-  { href: '/ofertas', label: 'Ofertas', icon: Flame, special: true, desc: 'Precios especiales' },
-  { href: '/encargos', label: 'Encargos', icon: Package, desc: 'Pedidos especiales' }
+  { href: '/ofertas', label: 'Ofertas', icon: '🔥', special: true, desc: 'Precios especiales' },
+  { href: '/encargos', label: 'Encargos', icon: '📦', desc: 'Pedidos especiales' }
 ];
 
 export function Sidebar() {
@@ -69,8 +61,6 @@ export function Sidebar() {
           </p>
           <div className="space-y-1">
             {links.map((l) => {
-              const Icon = typeof l.icon === 'string' ? null : l.icon;
-              
               return (
                 <Link
                   key={l.href}
@@ -84,10 +74,10 @@ export function Sidebar() {
                   )}
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center text-lg",
+                    "w-10 h-10 rounded-xl flex items-center justify-center text-2xl",
                     l.special ? "bg-white/20" : "bg-zinc-800"
                   )}>
-                    {Icon ? <Icon className="w-5 h-5" /> : l.icon}
+                    {l.icon}
                   </div>
                   <div className="flex-1">
                     <p className={cn("font-black uppercase tracking-tight", l.special ? "text-white" : "text-white")}>

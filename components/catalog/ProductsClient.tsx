@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
 import { ProductCard } from './ProductCard';
-import { Filter, X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
+import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function useDebouncedValue<T>(value: T, delayMs: number) {

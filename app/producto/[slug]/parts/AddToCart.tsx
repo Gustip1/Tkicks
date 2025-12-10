@@ -4,7 +4,6 @@ import { Product, ProductVariant } from '@/types/db';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
-import { ChevronDown } from 'lucide-react';
 
 export function AddToCart({ product, variants }: { product: Product; variants: ProductVariant[] }) {
   const [size, setSize] = useState<string>('');

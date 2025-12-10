@@ -7,7 +7,6 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
 import { useCartStore } from '@/store/cart';
 import { BannerTicker } from './BannerTicker';
-import { cn } from '@/lib/utils';
 
 export function Header() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);

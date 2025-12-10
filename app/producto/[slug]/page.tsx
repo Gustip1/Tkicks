@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { Shield, Truck, RefreshCw, Star } from 'lucide-react';
+import { Shield, Truck, Star } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string }>();
