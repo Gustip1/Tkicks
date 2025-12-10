@@ -4,8 +4,7 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '100mb'
-    },
-    optimizeCss: true,
+    }
   },
   images: {
     remotePatterns: [
