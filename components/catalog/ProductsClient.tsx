@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
 import { ProductCard } from './ProductCard';
+import { Filter, X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
   const [debounced, setDebounced] = useState(value);
@@ -13,6 +15,25 @@ function useDebouncedValue<T>(value: T, delayMs: number) {
   }, [value, delayMs]);
   return debounced;
 }
+
+const categoryConfig = {
+  sneakers: {
+    title: 'SNEAKERS',
+    gradient: 'from-blue-600 via-purple-600 to-pink-600',
+    accent: 'bg-blue-500',
+    pattern: 'sneakers',
+    emoji: '👟',
+    filterColor: 'blue'
+  },
+  streetwear: {
+    title: 'STREETWEAR',
+    gradient: 'from-orange-500 via-red-500 to-pink-600',
+    accent: 'bg-purple-500',
+    pattern: 'streetwear',
+    emoji: '🔥',
+    filterColor: 'purple'
+  }
+};
 
 export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneakers' | 'streetwear', usdArsRate?: number }) {
   const supabase = useRef(createBrowserClient());
@@ -24,19 +45,23 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
   const [hasMore, setHasMore] = useState(false);
   const [availableSizes, setAvailableSizes] = useState<{ size: string; count: number }[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [gridSize, setGridSize] = useState<'normal' | 'large'>('normal');
 
   const pageSize = dq ? 24 : 60;
 
   const title = useMemo(
-    () => (category ? (category === 'sneakers' ? 'Sneakers' : 'Streetwear') : 'Productos'),
+    () => (category ? categoryConfig[category].title : 'Productos'),
     [category]
   );
+
+  const config = category ? categoryConfig[category] : null;
 
   const load = async (reset = true) => {
     setLoading(true);
     const from = reset ? 0 : (page + 1) * pageSize;
     const to = from + pageSize - 1;
-    // Si hay término de búsqueda, obtener ids de productos que coinciden por talle para incluirlos en el OR
+    
     let variantIdsForQ: string[] = [];
     if (dq) {
       const like = `%${dq}%`;
@@ -52,7 +77,9 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
       .select('*', { count: 'exact' })
       .eq('active', true)
       .order('created_at', { ascending: false });
+    
     if (category) query = query.eq('category', category);
+    
     if (dq) {
       const like = `%${dq}%`;
       const orParts = [`title.ilike.${like}`, `slug.ilike.${like}`];
@@ -61,7 +88,7 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
       }
       query = query.or(orParts.join(','));
     }
-    // Si hay filtros de talles, obtener los product_ids que coinciden
+    
     if (selectedSizes.length > 0) {
       const { data: pidRows } = await supabase.current
         .from('product_variants')
@@ -76,6 +103,7 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
       }
       query = query.in('id', ids);
     }
+    
     query = query.range(from, to);
     const { data, count } = await query;
     const list = (data || []) as unknown as Product[];
@@ -88,15 +116,13 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
 
   const searchParams = useSearchParams();
   const urlQuery = (searchParams.get('q') || '').trim();
+  
   useEffect(() => {
-    // Sincronizar el estado local con ?q= en la URL (también al navegar entre búsquedas)
     setQ(urlQuery);
   }, [urlQuery]);
 
-  // Cargar talles disponibles por categoría para filtros
   useEffect(() => {
     (async () => {
-      // Si hay categoría, limitar; si no, usar global
       let productIds: string[] = [];
       if (category) {
         const { data: prod } = await supabase.current
@@ -107,10 +133,12 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
           .limit(1000);
         productIds = (prod || []).map((p: any) => p.id);
       }
+      
       let variantsQuery = supabase.current
         .from('product_variants')
         .select('size, product_id');
       if (productIds.length > 0) variantsQuery = variantsQuery.in('product_id', productIds);
+      
       const { data: vars } = await variantsQuery;
       const counts = new Map<string, number>();
       (vars || []).forEach((v: any) => {
@@ -118,9 +146,10 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
         if (!key) return;
         counts.set(key, (counts.get(key) || 0) + 1);
       });
+      
       let sizes = Array.from(counts.entries()).map(([size, count]) => ({ size, count }));
+      
       if (category === 'sneakers') {
-        // Mostrar solo talles numéricos y ordenarlos numéricamente
         const numeric = sizes.filter((s) => /^\d+(?:[.,]\d+)?$/.test(String(s.size)));
         sizes = numeric.sort(
           (a, b) =>
@@ -129,7 +158,6 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
         );
         setAvailableSizes(sizes);
       } else if (category === 'streetwear') {
-        // Mostrar solo talles de texto clásicos y ordenarlos XS → XXL
         const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         const textual = sizes
           .map((s) => ({ size: String(s.size).toUpperCase(), count: s.count }))
@@ -139,46 +167,137 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
       } else {
         setAvailableSizes([]);
       }
-      // Reiniciar selección al cambiar de categoría
       setSelectedSizes([]);
     })();
   }, [category]);
 
   useEffect(() => {
-    // Cargar cuando cambian categoría, término de búsqueda o filtros de talles
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, dq, selectedSizes]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-white">{title}</h1>
+    <div className="space-y-6 animate-fadeIn bg-black">
+      {/* Simple category title */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+          {config ? config.title : title}
+        </h1>
+      </div>
 
-      {/* Filtros por talle */}
-      {availableSizes.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {availableSizes.map(({ size, count }) => {
-            const active = selectedSizes.includes(size);
-            return (
-              <button
-                key={size}
-                className={`rounded px-3 py-1 text-xs ${
-                  active ? 'bg-white text-black' : 'bg-neutral-800 text-white hover:bg-neutral-700'
-                }`}
-                onClick={() =>
-                  setSelectedSizes((prev) =>
-                    prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-                  )
-                }
-              >
-                {size} ({count})
-              </button>
-            );
-          })}
+      {/* Filters bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {/* Filter toggle button */}
+          {availableSizes.length > 0 && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                showFilters || selectedSizes.length > 0
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+              )}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtrar
+              {selectedSizes.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
+                  {selectedSizes.length}
+                </span>
+              )}
+            </button>
+          )}
+          
+          {/* Active filters */}
           {selectedSizes.length > 0 && (
             <button
-              className="rounded px-3 py-1 text-xs bg-red-600/20 text-red-300 hover:bg-red-600/30"
               onClick={() => setSelectedSizes([])}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+              Limpiar
+            </button>
+          )}
+        </div>
+        
+        {/* Grid toggle */}
+        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => setGridSize('normal')}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              gridSize === 'normal' ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+            )}
+            aria-label="Grid normal"
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setGridSize('large')}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              gridSize === 'large' ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+            )}
+            aria-label="Grid grande"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Size filters */}
+      {showFilters && availableSizes.length > 0 && (
+        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn">
+          <p className="text-sm font-medium text-gray-700 mb-3">Filtrar por talle</p>
+          <div className="flex flex-wrap gap-2">
+            {availableSizes.map(({ size, count }) => {
+              const active = selectedSizes.includes(size);
+              return (
+                <button
+                  key={size}
+                  className={cn(
+                    "min-w-[3rem] px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    active 
+                      ? "bg-gray-900 text-white shadow-md scale-105" 
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                  )}
+                  onClick={() =>
+                    setSelectedSizes((prev) =>
+                      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                    )
+                  }
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && products.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-gray-500 font-medium">Cargando productos...</p>
+        </div>
+      )}
+      
+      {/* Empty state */}
+      {!loading && products.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <span className="text-4xl">🔍</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No encontramos productos</h3>
+          <p className="text-gray-500 max-w-md">
+            Intenta ajustar los filtros o buscar con otros términos
+          </p>
+          {selectedSizes.length > 0 && (
+            <button
+              onClick={() => setSelectedSizes([])}
+              className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
             >
               Limpiar filtros
             </button>
@@ -186,32 +305,43 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
         </div>
       )}
 
-      {loading && products.length === 0 && (
-        <p className="text-sm text-neutral-400">Cargando…</p>
-      )}
-      {!loading && products.length === 0 && (
-        <p className="text-sm text-neutral-400">Sin resultados.</p>
-      )}
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} usdArsRate={usdArsRate} />
+      {/* Products grid */}
+      <div className={cn(
+        "grid gap-4 md:gap-6",
+        gridSize === 'large' 
+          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
+          : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      )}>
+        {products.map((p, idx) => (
+          <div 
+            key={p.id} 
+            className="animate-fadeIn"
+            style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
+          >
+            <ProductCard product={p} usdArsRate={usdArsRate} size={gridSize} />
+          </div>
         ))}
       </div>
 
+      {/* Load more */}
       {hasMore && (
-        <div className="pt-2">
+        <div className="flex justify-center pt-8">
           <button
-            className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="flex items-center gap-2 rounded-full bg-gray-900 text-white px-8 py-3.5 text-sm font-medium hover:bg-gray-800 transition-all hover:scale-105 shadow-medium disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             disabled={loading}
             onClick={() => load(false)}
           >
-            {loading ? 'Cargando…' : 'Cargar más'}
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Cargando...
+              </>
+            ) : (
+              'Cargar más productos'
+            )}
           </button>
         </div>
       )}
     </div>
   );
 }
-
-

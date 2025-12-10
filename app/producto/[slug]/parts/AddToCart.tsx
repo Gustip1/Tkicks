@@ -41,51 +41,107 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Selector de talla */}
       <div>
-        <label className="block text-sm font-medium">Talle</label>
-        <div className="relative mt-1">
-          <select
-            className="w-full appearance-none rounded border border-neutral-700 bg-neutral-900 px-3 py-2 pr-8 text-sm text-white"
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccionar talle
-            </option>
-            {variants.map((v) => (
-              <option key={v.id} value={v.size} disabled={v.stock <= 0}>
-                {v.size} {v.stock <= 0 ? '(Sin stock)' : `(Stock: ${v.stock})`}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <label className="block text-sm font-black text-white mb-3 uppercase tracking-wider">
+          Selecciona tu talla
+        </label>
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+          {variants.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => setSize(size === v.size ? '' : v.size)}
+              disabled={v.stock <= 0}
+              className={`
+                relative py-3 px-2 rounded-lg border-2 text-sm font-black transition-all
+                ${size === v.size 
+                  ? 'border-white bg-white text-black' 
+                  : v.stock > 0
+                    ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white'
+                    : 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed'
+                }
+              `}
+            >
+              {v.size}
+              {v.stock <= 0 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-full h-0.5 bg-zinc-600 rotate-45" />
+                </div>
+              )}
+            </button>
+          ))}
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Cantidad</label>
-        <input
-          className="mt-1 w-24 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white"
-          type="number"
-          min={1}
-          max={maxQty > 0 ? maxQty : undefined}
-          value={qty}
-          disabled={!size || maxQty <= 0}
-          onChange={(e) => {
-            const next = Number(e.target.value);
-            if (Number.isNaN(next)) return;
-            setQty(Math.max(1, Math.min(next, maxQty || 1)));
-          }}
-        />
-        {size && (
-          <div className="mt-1 text-xs text-neutral-400">
-            {maxQty > 0 ? `Stock disponible: ${maxQty}` : 'Sin stock para este talle'}
-          </div>
+        {size && selectedVariant && (
+          <p className="mt-2 text-xs text-gray-400 font-bold">
+            {maxQty > 0 ? `${maxQty} unidades disponibles` : 'Sin stock'}
+          </p>
         )}
       </div>
-      <Button onClick={handleAdd} disabled={!size || maxQty <= 0 || qty < 1 || qty > maxQty} className="w-full">
-        Agregar al carrito
+
+      {/* Selector de cantidad */}
+      <div>
+        <label className="block text-sm font-black text-white mb-3 uppercase tracking-wider">
+          Cantidad
+        </label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setQty(Math.max(1, qty - 1))}
+            disabled={!size || maxQty <= 0 || qty <= 1}
+            className="w-10 h-10 rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <span className="text-lg">−</span>
+          </button>
+          <input
+            className="w-16 h-10 text-center rounded-lg border-2 border-zinc-700 bg-black text-white text-base font-black focus:outline-none focus:border-white"
+            type="number"
+            min={1}
+            max={maxQty > 0 ? maxQty : undefined}
+            value={qty}
+            disabled={!size || maxQty <= 0}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (Number.isNaN(next)) return;
+              setQty(Math.max(1, Math.min(next, maxQty || 1)));
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setQty(Math.min(maxQty, qty + 1))}
+            disabled={!size || maxQty <= 0 || qty >= maxQty}
+            className="w-10 h-10 rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <span className="text-lg">+</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Botón de agregar al carrito */}
+      <Button 
+        onClick={handleAdd} 
+        disabled={!size || maxQty <= 0 || qty < 1 || qty > maxQty} 
+        className="btn-primary w-full py-4 text-base font-black tracking-wide uppercase shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {!size ? 'Selecciona una talla' : maxQty <= 0 ? 'Sin stock' : 'Agregar al carrito'}
       </Button>
+
+      {/* Información adicional - SIN MENCIONAR CAMBIOS/DEVOLUCIONES */}
+      <div className="pt-4 space-y-2 text-sm text-gray-300 border-t border-zinc-800">
+        <p className="flex items-center gap-2 font-bold">
+          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Envío gratis en compras mayores a $50
+        </p>
+        <p className="flex items-center gap-2 font-bold">
+          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          Producto 100% original garantizado
+        </p>
+      </div>
     </div>
   );
 }

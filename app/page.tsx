@@ -1,39 +1,77 @@
 import { FeaturedCarousels } from '@/components/landing/FeaturedCarousels';
 import { USPCardCarousel } from '@/components/landing/USPCardCarousel';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="space-y-10">
-      <section aria-labelledby="hero-title" className="mt-2">
+    <div className="space-y-12 bg-black min-h-screen">
+      {/* Hero Section - Sin caja, integrado al fondo negro */}
+      <section aria-labelledby="hero-title" className="relative bg-black py-8 md:py-12 lg:py-16">
         <h1 id="hero-title" className="sr-only">
           Sneakers & Streetwear 100% originales
         </h1>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 p-8 md:p-12">
-          <div className="relative z-10 max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-              Bienvenido a Tkicks
-            </h2>
-            <p className="mt-4 text-lg md:text-xl text-neutral-200 font-normal">
-              Tu destino exclusivo para descubrir lo último en <span className="text-white font-semibold">Sneakers</span> y <span className="text-white font-semibold">Streetwear</span>.
-            </p>
-            <p className="mt-3 text-base text-neutral-300">
-              <span className="inline-block bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
-                100% Originales
-              </span>
-              <span className="ml-3 text-neutral-400">•</span>
-              <span className="ml-3 text-yellow-400 font-semibold">Únicos en San Juan</span>
-            </p>
+        
+        {/* Contenido principal */}
+        <div className="relative max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black mb-6">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-sm text-white font-black uppercase tracking-wide">Únicos en San Juan</span>
           </div>
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white/5 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-24 w-24 rounded-full bg-white/5 blur-2xl"></div>
+          
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
+            Bienvenido a{' '}
+            <span className="text-white">
+              Tkicks
+            </span>
+          </h2>
+          
+          <p className="text-lg md:text-xl text-white font-bold mb-8 max-w-2xl">
+            Tu destino exclusivo para descubrir lo último en{' '}
+            <span className="text-white font-black">Sneakers</span> y{' '}
+            <span className="text-white font-black">Streetwear</span>{' '}
+            100% originales.
+          </p>
+          
+          <div className="flex flex-wrap gap-4 mb-12">
+            <Link
+              href="/productos?sneakers"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-black text-sm hover:bg-gray-200 transition-all hover:scale-105 shadow-lg uppercase tracking-tight"
+            >
+              <span className="text-lg">👟</span>
+              Ver Sneakers
+            </Link>
+            <Link
+              href="/productos?streetwear"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-black text-white font-black text-sm hover:bg-zinc-900 transition-all border-2 border-white uppercase tracking-tight"
+            >
+              <span className="text-lg">👕</span>
+              Ver Streetwear
+            </Link>
+          </div>
+
+          {/* Stats - Integradas al fondo */}
+          <div className="flex flex-wrap gap-8 pt-8 border-t border-white/10">
+            <div>
+              <p className="text-3xl md:text-4xl font-black text-white">100%</p>
+              <p className="text-sm text-white font-bold">Original</p>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-black text-white">🇦🇷</p>
+              <p className="text-sm text-white font-bold">Envío nacional</p>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-black text-white">3x</p>
+              <p className="text-sm text-white font-bold">Cuotas sin interés</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <FeaturedCarousels />
+      {/* USP Cards */}
       <USPCardCarousel />
+      
+      {/* Featured Carousels */}
+      <FeaturedCarousels />
     </div>
   );
 }
-
-
-

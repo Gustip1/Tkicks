@@ -1,33 +1,47 @@
 "use client";
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
+import { Shield, Truck, CreditCard } from 'lucide-react';
 
 const items = [
-  { title: 'Envío gratis', desc: 'En compras seleccionadas' },
-  { title: '3 cuotas sin interés', desc: 'Con tarjetas bancarias' },
-  { title: 'Productos 100% originales', desc: 'Garantía de autenticidad' }
+  { 
+    title: 'Envío a todo el país', 
+    desc: 'Llegamos a donde estés',
+    icon: Truck,
+    color: 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+  },
+  { 
+    title: '3 cuotas sin interés', 
+    desc: 'Con tarjetas bancarias',
+    icon: CreditCard,
+    color: 'bg-green-500/20 text-green-400 border-green-500/50'
+  },
+  { 
+    title: '100% Originales', 
+    desc: 'Garantía de autenticidad',
+    icon: Shield,
+    color: 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+  }
 ];
 
 export function USPCardCarousel() {
-  const [ref] = useEmblaCarousel({ loop: true, align: 'start' }, [
-    Autoplay({ delay: 3500, stopOnMouseEnter: true, stopOnInteraction: false })
-  ]);
-
   return (
-    <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
-      <ul className="-ml-4 flex">
-        {items.map((it) => (
-          <li key={it.title} className="min-w-0 shrink-0 grow-0 basis-full pl-4 md:basis-1/3">
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
-              <h3 className="text-base font-semibold text-white">{it.title}</h3>
-              <p className="mt-1 text-sm text-neutral-300">{it.desc}</p>
+    <section className="py-8 bg-black">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div 
+              key={item.title} 
+              className="flex flex-col items-center text-center p-6 bg-black transition-all group"
+            >
+              <div className={`w-14 h-14 rounded-xl ${item.color} border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                <Icon className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-black text-white mb-1 uppercase tracking-tight">{item.title}</h3>
+              <p className="text-xs text-gray-400 font-bold">{item.desc}</p>
             </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
-
-
-
