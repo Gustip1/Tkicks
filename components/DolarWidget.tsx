@@ -7,19 +7,15 @@ export function DolarWidget() {
   if (!rate || rate <= 0) return null;
 
   return (
-    <div className="text-xs text-neutral-400 flex items-center gap-1">
-      <span>Dólar Oficial:</span>
-      <span className={`font-semibold ${isLoading ? 'animate-pulse' : ''}`}>
+    <div className="text-[9px] md:text-xs text-gray-400 flex items-center gap-1 font-bold whitespace-nowrap">
+      <span className="hidden md:inline">Dólar Oficial:</span>
+      <span className="md:hidden">USD:</span>
+      <span className={`font-black text-white ${isLoading ? 'animate-pulse' : ''}`}>
         ${rate.toFixed(2)}
       </span>
       {lastUpdate && !isLoading && (
-        <span className="text-neutral-500 text-[10px]">
+        <span className="text-gray-500 text-[8px] md:text-[10px] hidden lg:inline">
           ({lastUpdate})
-        </span>
-      )}
-      {isLoading && (
-        <span className="text-neutral-500 text-[10px]">
-          (actualizando...)
         </span>
       )}
     </div>
