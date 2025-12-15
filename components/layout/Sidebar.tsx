@@ -1,10 +1,8 @@
 "use client";
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, ShieldCheck } from 'lucide-react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { X, ChevronRight } from 'lucide-react';
 
 const links = [
   { href: '/productos?sneakers', label: 'Sneakers', icon: '👟', desc: 'Calzado premium' },
@@ -16,42 +14,6 @@ const links = [
 export function Sidebar() {
   const isOpen = useUIStore((s) => s.isSidebarOpen);
   const close = useUIStore((s) => s.closeSidebar);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkedAuth, setCheckedAuth] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createBrowserClient();
-
-    (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        if (!cancelled) {
-          setIsAdmin(false);
-          setCheckedAuth(true);
-        }
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!cancelled) {
-        setIsAdmin(profile?.role === 'admin');
-        setCheckedAuth(true);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   return (
     <>
@@ -134,34 +96,6 @@ export function Sidebar() {
             })}
           </div>
         </nav>
-
-        {/* Admin access - only for authenticated admins */}
-        {(isAdmin || !checkedAuth) && (
-          <div className="px-4 mt-6">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 px-2">
-              Panel
-            </p>
-            <Link
-              href="/admin"
-              onClick={close}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black text-white bg-gradient-to-r from-slate-800 to-zinc-900 border border-zinc-800 hover:border-white/40 hover:shadow-lg hover:-translate-y-0.5"
-            >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-zinc-800 text-xl">
-                <ShieldCheck className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-black uppercase tracking-tight">Panel admin</p>
-                <p className="text-xs text-gray-400 font-bold">Gestión interna</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            </Link>
-            {!isAdmin && !checkedAuth && (
-              <p className="text-[11px] text-gray-500 font-bold mt-2 px-1">
-                TODO: ocultar para usuarios sin rol admin cuando haya auth cargada
-              </p>
-            )}
-          </div>
-        )}
         
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-800 bg-zinc-900">
