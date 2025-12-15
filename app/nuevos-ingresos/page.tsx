@@ -13,6 +13,7 @@ export default async function NuevosIngresosPage() {
     .from('products')
     .select('*')
     .eq('active', true)
+    .eq('is_new', true)
     .order('created_at', { ascending: false });
 
   const products = (data ?? []) as Product[];

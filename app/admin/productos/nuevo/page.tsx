@@ -14,6 +14,7 @@ export default function NewProductPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [featuredSneakers, setFeaturedSneakers] = useState(false);
   const [featuredStreetwear, setFeaturedStreetwear] = useState(false);
+  const [isNew, setIsNew] = useState(true);
   const [active, setActive] = useState(true);
   const [variants, setVariants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,18 @@ export default function NewProductPage() {
 
     const { data: product, error: pErr } = await supabase
       .from('products')
-      .insert({ title, slug: finalSlug, category, price, description, images, featured_sneakers: featuredSneakers, featured_streetwear: featuredStreetwear, active })
+      .insert({ 
+        title, 
+        slug: finalSlug, 
+        category, 
+        price, 
+        description, 
+        images, 
+        featured_sneakers: featuredSneakers, 
+        featured_streetwear: featuredStreetwear, 
+        is_new: isNew,
+        active 
+      })
       .select('*')
       .single();
     if (pErr) return setError(pErr.message);
@@ -77,15 +89,40 @@ export default function NewProductPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={featuredSneakers} onChange={(e) => setFeaturedSneakers(e.target.checked)} /> Destacado Sneakers
+              <input
+                type="checkbox"
+                checked={featuredSneakers}
+                onChange={(e) => setFeaturedSneakers(e.target.checked)}
+              />{' '}
+              Destacado Sneakers
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={featuredStreetwear} onChange={(e) => setFeaturedStreetwear(e.target.checked)} /> Destacado Streetwear
+              <input
+                type="checkbox"
+                checked={featuredStreetwear}
+                onChange={(e) => setFeaturedStreetwear(e.target.checked)}
+              />{' '}
+              Destacado Streetwear
             </label>
           </div>
-          <label className="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Activo
-          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={isNew}
+                onChange={(e) => setIsNew(e.target.checked)}
+              />{' '}
+              Nuevos ingresos
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={(e) => setActive(e.target.checked)}
+              />{' '}
+              Activo
+            </label>
+          </div>
         </div>
         <div className="space-y-3">
           <div>

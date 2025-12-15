@@ -23,6 +23,7 @@ export default function EditProductPage() {
   const [featuredSneakers, setFeaturedSneakers] = useState(false);
   const [featuredStreetwear, setFeaturedStreetwear] = useState(false);
   const [onSale, setOnSale] = useState(false);
+  const [isNew, setIsNew] = useState<boolean>(false);
   const [active, setActive] = useState(true);
   const [variants, setVariants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export default function EditProductPage() {
         setFeaturedSneakers(p.featured_sneakers);
         setFeaturedStreetwear(p.featured_streetwear);
         setOnSale(p.on_sale || false);
+        setIsNew(!!p.is_new);
         setActive(p.active);
       }
       setVariants((v || []) as any);
@@ -69,6 +71,7 @@ export default function EditProductPage() {
           featured_sneakers: featuredSneakers, 
           featured_streetwear: featuredStreetwear,
           on_sale: onSale, 
+          is_new: isNew,
           active 
         })
         .eq('id', id);
@@ -328,6 +331,21 @@ export default function EditProductPage() {
               <div>
                 <p className="text-sm font-medium text-gray-900">👕 Destacado Streetwear</p>
                 <p className="text-xs text-gray-500">Aparece en el carousel de streetwear</p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+              <input 
+                type="checkbox" 
+                checked={isNew} 
+                onChange={(e) => setIsNew(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              /> 
+              <div>
+                <p className="text-sm font-medium text-gray-900">🆕 Nuevos ingresos</p>
+                <p className="text-xs text-gray-500">
+                  Controla si aparece o no en la sección de \"Nuevos ingresos\".
+                </p>
               </div>
             </label>
           </div>

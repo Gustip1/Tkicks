@@ -23,6 +23,8 @@ export interface Product {
   featured_sneakers: boolean;
   featured_streetwear: boolean;
   on_sale: boolean;
+  // Flag para controlar manualmente si aparece en \"Nuevos ingresos\"
+  is_new?: boolean | null;
   active: boolean;
   created_at: string | null;
   updated_at: string | null;
