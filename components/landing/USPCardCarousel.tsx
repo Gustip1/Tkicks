@@ -35,21 +35,21 @@ export function USPCardCarousel() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory [-mx-4] px-4 md:mx-0 md:px-0">
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-6">
           {items.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
-                className="flex flex-col items-start md:items-center text-left md:text-center p-4 md:p-6 bg-gradient-to-br from-zinc-950 to-black rounded-xl border border-zinc-800 transition-all group snap-center min-w-[240px]"
+                className="flex flex-col items-center text-center p-3 md:p-6 bg-gradient-to-br from-zinc-950 to-black rounded-xl border border-zinc-800 transition-all group"
               >
-                <div className={`w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl ${item.color} border flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5 md:w-7 md:h-7" />
+                <div className={`w-8 h-8 md:w-14 md:h-14 rounded-lg md:rounded-xl ${item.color} border flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-4 h-4 md:w-7 md:h-7" />
                 </div>
-                <h3 className="text-xs md:text-base font-black text-white mb-1 uppercase tracking-tight leading-tight">
+                <h3 className="text-[10px] md:text-base font-black text-white mb-1 uppercase tracking-tight leading-tight">
                   {item.title}
                 </h3>
-                <p className="text-[11px] md:text-sm text-gray-400 font-bold">
+                <p className="hidden md:block text-[11px] md:text-sm text-gray-400 font-bold">
                   {item.desc}
                 </p>
               </div>

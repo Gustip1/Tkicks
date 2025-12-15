@@ -54,10 +54,10 @@ export function NewArrivals() {
             </div>
           </div>
           <Link
-            href="/productos"
+            href="/nuevos-ingresos"
             className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-black hover:bg-gray-100 transition-colors uppercase tracking-tight"
           >
-            Ver todo
+            Ver todos
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -72,20 +72,24 @@ export function NewArrivals() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+              {products.slice(0, 8).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
 
-        <Link
-          href="/productos"
-          className="sm:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white text-black text-sm font-black uppercase tracking-tight"
-        >
-          Ver catálogo completo
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+            <div className="flex justify-center pt-2">
+              <Link
+                href="/nuevos-ingresos"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-white text-black text-sm font-black hover:bg-gray-100 transition-colors uppercase tracking-tight w-full sm:w-auto"
+              >
+                Ver todos
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
