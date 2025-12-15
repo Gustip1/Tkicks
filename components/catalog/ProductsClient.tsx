@@ -35,7 +35,7 @@ const categoryConfig = {
   }
 };
 
-export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneakers' | 'streetwear', usdArsRate?: number }) {
+export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwear' }) {
   const supabase = useRef(createBrowserClient());
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 350);
@@ -251,7 +251,7 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
         <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn">
           <p className="text-sm font-medium text-gray-700 mb-3">Filtrar por talle</p>
           <div className="flex flex-wrap gap-2">
-            {availableSizes.map(({ size, count }) => {
+            {availableSizes.map(({ size }) => {
               const active = selectedSizes.includes(size);
               return (
                 <button
@@ -318,7 +318,7 @@ export function ProductsClient({ category, usdArsRate = 1 }: { category?: 'sneak
             className="animate-fadeIn"
             style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
           >
-            <ProductCard product={p} usdArsRate={usdArsRate} size={gridSize} />
+            <ProductCard product={p} size={gridSize} />
           </div>
         ))}
       </div>

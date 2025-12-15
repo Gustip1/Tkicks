@@ -344,7 +344,7 @@ export default function EditProductPage() {
               <div>
                 <p className="text-sm font-medium text-gray-900">🆕 Nuevos ingresos</p>
                 <p className="text-xs text-gray-500">
-                  Controla si aparece o no en la sección de \"Nuevos ingresos\".
+                  Controla si aparece o no en la sección de &quot;Nuevos ingresos&quot;.
                 </p>
               </div>
             </label>

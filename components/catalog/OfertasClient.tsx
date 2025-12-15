@@ -4,7 +4,7 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
 import { ProductCard } from './ProductCard';
 
-export function OfertasClient({ usdArsRate = 1 }: { usdArsRate?: number }) {
+export function OfertasClient() {
   const supabase = useRef(createBrowserClient());
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,7 +96,7 @@ export function OfertasClient({ usdArsRate = 1 }: { usdArsRate?: number }) {
                   🔥 OFERTA
                 </div>
                 <div className="ring-2 ring-red-500/50 rounded-lg overflow-hidden">
-                  <ProductCard product={p} usdArsRate={usdArsRate} />
+                  <ProductCard product={p} />
                 </div>
               </div>
             ))}

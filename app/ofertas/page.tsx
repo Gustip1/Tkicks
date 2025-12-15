@@ -1,4 +1,3 @@
-import { createServerSupabase } from '@/lib/supabase/server';
 import { OfertasClient } from '@/components/catalog/OfertasClient';
 
 export const dynamic = 'force-dynamic';
@@ -9,15 +8,6 @@ export const metadata = {
 };
 
 export default async function OfertasPage() {
-  const supabase = createServerSupabase();
-  
-  const { data: rateSetting } = await supabase
-    .from('settings')
-    .select('value')
-    .eq('key', 'usd_ars_rate')
-    .single();
-  const usdArsRate = rateSetting ? Number(rateSetting.value) : 1;
-  
-  return <OfertasClient usdArsRate={usdArsRate} />;
+  return <OfertasClient />;
 }
 
