@@ -35,6 +35,7 @@ create table if not exists public.products (
   featured_sneakers boolean not null default false,
   featured_streetwear boolean not null default false,
   on_sale boolean not null default false,
+  is_new boolean not null default false,
   active boolean not null default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
