@@ -1,4 +1,5 @@
 import { FeaturedCarousels } from '@/components/landing/FeaturedCarousels';
+import { NewArrivals } from '@/components/landing/NewArrivals';
 import { USPCardCarousel } from '@/components/landing/USPCardCarousel';
 import Link from 'next/link';
 
@@ -66,6 +67,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* New Arrivals */}
+      <NewArrivals />
 
       {/* USP Cards */}
       <USPCardCarousel />
