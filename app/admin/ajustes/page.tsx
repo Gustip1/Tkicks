@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 export default function AdminSettingsPage() {
-  const supabase = createBrowserClient();
   const [rate, setRate] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -11,6 +10,7 @@ export default function AdminSettingsPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
+    const supabase = createBrowserClient();
     const fetchRate = async () => {
       setLoading(true);
       const { data } = await supabase
@@ -25,7 +25,7 @@ export default function AdminSettingsPage() {
       setLoading(false);
     };
     void fetchRate();
-  }, [supabase]);
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
     setError(null);
     setSuccess(null);
 
+    const supabase = createBrowserClient();
     const { error: updateError } = await supabase
       .from('settings')
       .update({ value: rate })

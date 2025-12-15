@@ -24,13 +24,13 @@ interface CustomerWithProfile {
 }
 
 export default function AdminCustomersPage() {
-  const supabase = createBrowserClient();
   const [customers, setCustomers] = useState<CustomerWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
+    const supabase = createBrowserClient();
 
     const { data: profiles } = await supabase
       .from('profiles')
@@ -69,11 +69,12 @@ export default function AdminCustomersPage() {
 
     setCustomers(customersWithStats);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    loadCustomers();
-  }, [loadCustomers]);
+    void loadCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredCustomers = customers.filter(customer => {
     if (search) {

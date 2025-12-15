@@ -20,8 +20,14 @@ export async function POST(req: NextRequest) {
   const files = formData.getAll('files');
   if (!files || files.length === 0) return NextResponse.json([], { status: 200 });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRole) {
+    console.error('Missing Supabase configuration');
+    return NextResponse.json({ error: 'Configuración del servidor incompleta' }, { status: 500 });
+  }
+  
   const supabase = createClient(supabaseUrl, serviceRole);
 
   const outputs: { url: string }[] = [];
@@ -47,11 +53,22 @@ export async function POST(req: NextRequest) {
 
     const ext = mime === 'image/webp' ? 'webp' : mime === 'image/png' ? 'png' : 'jpg';
     const path = `product-images/${fileNameBase}.${ext}`;
-    const { error } = await supabase.storage.from('product-images').upload(path, buf, {
-      contentType: mime,
-      upsert: false
-    });
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    
+    // Intentar subir la imagen
+    const { error } = await supabase.storage
+      .from('product-images')
+      .upload(path, buf, {
+        contentType: mime,
+        upsert: false
+      });
+    
+    if (error) {
+      console.error('Upload error:', error);
+      return NextResponse.json({ 
+        error: `Error al subir imagen: ${error.message}. Verifica que el bucket 'product-images' exista y sea público.` 
+      }, { status: 400 });
+    }
+    
     const { data: pub } = supabase.storage.from('product-images').getPublicUrl(path);
     outputs.push({ url: pub.publicUrl });
   }

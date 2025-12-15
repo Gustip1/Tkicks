@@ -5,12 +5,12 @@ import { Product } from '@/types/db';
 import Image from 'next/image';
 
 export default function AdminFeaturedPage() {
-  const supabase = createBrowserClient();
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const supabase = createBrowserClient();
     supabase
       .from('products')
       .select('*')
@@ -20,10 +20,11 @@ export default function AdminFeaturedPage() {
         setProducts((data || []) as any);
         setLoading(false);
       });
-  }, [supabase]);
+  }, []);
 
   const toggle = async (id: string, key: 'featured_sneakers' | 'featured_streetwear', value: boolean) => {
     setMessage(null);
+    const supabase = createBrowserClient();
     const { error } = await supabase
       .from('products')
       .update({ [key]: value })
