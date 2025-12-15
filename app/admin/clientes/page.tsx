@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 interface Profile {
@@ -29,14 +29,9 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setLoading(true);
 
-    // Get all profiles (users)
     const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
@@ -47,7 +42,6 @@ export default function AdminCustomersPage() {
       return;
     }
 
-    // Get order counts and totals for each user
     const customersWithStats = await Promise.all(
       profiles.map(async (profile) => {
         const { data: orders } = await supabase
@@ -62,7 +56,7 @@ export default function AdminCustomersPage() {
         return {
           user: {
             id: profile.id,
-            email: '', // We don't have email in profiles, would need auth.users
+            email: '',
             created_at: profile.created_at,
             last_sign_in_at: null
           },
@@ -75,7 +69,11 @@ export default function AdminCustomersPage() {
 
     setCustomers(customersWithStats);
     setLoading(false);
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
 
   const filteredCustomers = customers.filter(customer => {
     if (search) {

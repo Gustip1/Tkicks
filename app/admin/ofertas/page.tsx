@@ -20,7 +20,7 @@ export default function AdminOfertasPage() {
         setProducts((data || []) as any);
         setLoading(false);
       });
-  }, []);
+  }, [supabase]);
 
   const toggleSale = async (id: string, value: boolean) => {
     setMessage(null);

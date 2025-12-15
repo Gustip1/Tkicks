@@ -12,7 +12,7 @@ interface DollarApiResponse {
   fechaActualizacion: string;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     console.log('[DOLLAR API] Fetching from external API...');
     

@@ -13,11 +13,7 @@ export default function BulkPricingPage() {
   const apply = async () => {
     setMessage(null);
     setConfirming(false);
-    let query = supabase.from('products').update({});
-    if (category) query = query.eq('category', category);
-    const { data: list } = await supabase.from('products').select('id, price').maybeSingle();
-    void list; // preview is simplified for brevity
-    // Perform update
+    // Actualización masiva usando la función SQL bulk_update_prices
     const { error } = await supabase.rpc('bulk_update_prices', {
       p_mode: mode,
       p_value: value,

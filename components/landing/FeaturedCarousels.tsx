@@ -10,7 +10,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
-function ProductSlide({ product, accentColor }: { product: Product; accentColor: string }) {
+function ProductSlide({ product }: { product: Product }) {
   const { rate: dolarOficial } = useDolarRate();
   const [imageLoaded, setImageLoaded] = useState(false);
   
@@ -112,7 +112,7 @@ function SaleSection({ products }: { products: Product[] }) {
         <div className="-ml-4 flex">
           {products.map((p) => (
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[280px] md:basis-[300px] pl-4">
-              <ProductSlide product={p} accentColor="red" />
+              <ProductSlide product={p} />
             </div>
           ))}
         </div>
@@ -205,7 +205,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
         <div className="-ml-4 flex">
           {products.map((p) => (
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[280px] md:basis-[300px] pl-4">
-              <ProductSlide product={p} accentColor={type === 'sneakers' ? 'blue' : 'purple'} />
+              <ProductSlide product={p} />
             </div>
           ))}
         </div>

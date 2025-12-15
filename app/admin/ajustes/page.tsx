@@ -24,8 +24,8 @@ export default function AdminSettingsPage() {
       }
       setLoading(false);
     };
-    fetchRate();
-  }, []);
+    void fetchRate();
+  }, [supabase]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

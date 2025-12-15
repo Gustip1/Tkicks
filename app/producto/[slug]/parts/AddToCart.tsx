@@ -15,10 +15,10 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
   const maxQty = selectedVariant?.stock ?? 0;
 
   useEffect(() => {
-    // Clamp qty when size changes or stock updates
+    // Clamp qty cuando cambia el talle o el stock disponible
     if (qty > maxQty) setQty(maxQty > 0 ? maxQty : 1);
     if (qty < 1) setQty(1);
-  }, [maxQty]);
+  }, [maxQty, qty]);
 
   const handleAdd = () => {
     if (!size) return;

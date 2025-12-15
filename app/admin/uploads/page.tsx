@@ -18,7 +18,7 @@ export default function AdminUploadsPage() {
       .order('title', { ascending: true })
       .limit(200)
       .then(({ data }) => setProducts((data || []) as any));
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const p = products.find((p) => p.id === selected);

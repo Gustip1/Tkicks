@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
 
@@ -43,11 +43,7 @@ export default function AdminOrdersPage() {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     let query = supabase
       .from('orders')
@@ -61,7 +57,11 @@ export default function AdminOrdersPage() {
     const { data } = await query;
     setOrders(data || []);
     setLoading(false);
-  };
+  }, [supabase, filter]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase
@@ -74,20 +74,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const updateTracking = async (orderId: string, carrier: string, trackingNumber: string, trackingUrl: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ 
-        carrier: carrier || null,
-        tracking_number: trackingNumber || null,
-        tracking_url: trackingUrl || null
-      })
-      .eq('id', orderId);
-
-    if (!error) {
-      loadOrders();
-    }
-  };
+  // Nota: el tracking detallado se gestiona en la página de detalle de cada pedido.
 
   const filteredOrders = orders.filter(order => {
     if (search) {

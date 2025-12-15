@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, ProductVariant } from '@/types/db';
 import Image from 'next/image';
@@ -18,11 +18,7 @@ export default function AdminStockPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     const { data: productsData } = await supabase
       .from('products')
@@ -48,7 +44,11 @@ export default function AdminStockPage() {
       setProducts(productsWithVariants as any);
     }
     setLoading(false);
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
 
   const startEdit = (product: ProductWithVariants) => {
     setEditingId(product.id);

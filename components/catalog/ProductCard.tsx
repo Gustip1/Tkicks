@@ -9,11 +9,10 @@ import { Heart, ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
-  usdArsRate?: number;
   size?: 'normal' | 'large';
 }
 
-export function ProductCard({ product, usdArsRate = 1, size = 'normal' }: ProductCardProps) {
+export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [index, setIndex] = useState(0);
   const images = product.images || [];
   const [hovering, setHovering] = useState(false);

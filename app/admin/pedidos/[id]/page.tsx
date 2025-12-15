@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -56,11 +56,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
   const [trackingUrl, setTrackingUrl] = useState('');
   const [validating, setValidating] = useState(false);
 
-  useEffect(() => {
-    loadOrderDetails();
-  }, [params.id]);
-
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = useCallback(async () => {
     setLoading(true);
 
     // Load order
@@ -100,7 +96,11 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
     }
 
     setLoading(false);
-  };
+  }, [params.id, router, supabase]);
+
+  useEffect(() => {
+    void loadOrderDetails();
+  }, [loadOrderDetails]);
 
   const updateStatus = async (status: string) => {
     const { error } = await supabase

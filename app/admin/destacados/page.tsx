@@ -20,7 +20,7 @@ export default function AdminFeaturedPage() {
         setProducts((data || []) as any);
         setLoading(false);
       });
-  }, []);
+  }, [supabase]);
 
   const toggle = async (id: string, key: 'featured_sneakers' | 'featured_streetwear', value: boolean) => {
     setMessage(null);
@@ -88,7 +88,6 @@ export default function AdminFeaturedPage() {
             </thead>
             <tbody>
               {products.map((p) => {
-                const isFeatured = p.featured_sneakers || p.featured_streetwear;
                 const bgColor = p.featured_sneakers && p.featured_streetwear 
                   ? 'bg-gradient-to-r from-blue-50 to-purple-50'
                   : p.featured_sneakers 
