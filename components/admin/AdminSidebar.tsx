@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -12,6 +13,8 @@ import {
   Upload, 
   Users,
   Settings,
+  Menu,
+  X,
   ChevronRight,
   Home
 } from 'lucide-react';
@@ -32,11 +35,57 @@ const navigation = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   return (
     <>
-      {/* Sidebar - completamente oculto en móvil */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200">
+      {/* Mobile menu button - floating */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "md:hidden fixed z-50 p-3 rounded-full shadow-strong transition-all",
+          isOpen 
+            ? "top-4 left-56 bg-red-500 text-white hover:bg-red-600" 
+            : "top-4 left-4 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+        )}
+        aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+      >
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed md:static inset-y-0 left-0 z-40",
+        "w-64 bg-white border-r border-gray-200",
+        "transform transition-transform duration-300 ease-out",
+        "flex flex-col",
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      )}>
         {/* Logo area */}
         <div className="p-4 border-b border-gray-200">
           <Link href="/admin" className="flex items-center gap-3">
