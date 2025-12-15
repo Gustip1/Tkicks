@@ -134,21 +134,41 @@ export function Header() {
           </button>
           
           {isAdmin && (
-            <Link
-              href="/admin"
-              className="hidden sm:flex rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors uppercase tracking-tight"
-            >
-              Admin
-            </Link>
+            <>
+              {/* Admin desktop */}
+              <Link
+                href="/admin"
+                className="hidden sm:flex rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors uppercase tracking-tight"
+              >
+                Admin
+              </Link>
+              {/* Admin mobile */}
+              <Link
+                href="/admin"
+                className="sm:hidden inline-flex rounded-xl px-2.5 py-1.5 text-[11px] font-black text-white border border-zinc-700 hover:bg-zinc-800 transition-colors uppercase tracking-tight"
+              >
+                Admin
+              </Link>
+            </>
           )}
           
           {!isAdmin && !user && (
-            <Link
-              href="/login"
-              className="hidden sm:flex rounded-xl px-3 py-2 text-xs text-gray-300 hover:bg-zinc-800 transition-colors font-bold"
-            >
-              Admin
-            </Link>
+            <>
+              {/* Admin desktop (login) */}
+              <Link
+                href="/login"
+                className="hidden sm:flex rounded-xl px-3 py-2 text-xs text-gray-300 hover:bg-zinc-800 transition-colors font-bold"
+              >
+                Admin
+              </Link>
+              {/* Admin mobile (login) */}
+              <Link
+                href="/login"
+                className="sm:hidden inline-flex rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-gray-300 border border-zinc-800 hover:bg-zinc-800 transition-colors"
+              >
+                Admin
+              </Link>
+            </>
           )}
           
           {/* Cart button */}
