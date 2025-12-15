@@ -17,8 +17,19 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
       const form = new FormData();
       accepted.forEach((f) => form.append('files', f));
       const res = await fetch('/api/upload', { method: 'POST', body: form });
-      const data: { url: string }[] = await res.json();
-      onChange([...(value || []), ...data.map((d) => ({ url: d.url, alt: '' }))]);
+      const payload = await res.json();
+
+      if (!res.ok) {
+        const message = typeof payload?.error === 'string'
+          ? payload.error
+          : 'No se pudieron subir las imágenes. Intenta nuevamente.';
+        console.error('Image upload error:', payload);
+        alert(message);
+        return;
+      }
+
+      const data = Array.isArray(payload) ? payload : [];
+      onChange([...(value || []), ...data.map((d: { url: string }) => ({ url: d.url, alt: '' }))]);
     } finally {
       setLoading(false);
     }

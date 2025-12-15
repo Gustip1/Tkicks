@@ -16,11 +16,13 @@ export function NewArrivals() {
     let active = true;
 
     (async () => {
-      // Usamos created_at para traer los productos más recientes sin configurarlos a mano
+      // Usamos is_new para controlar manualmente qué productos aparecen,
+      // y created_at para ordenarlos por los más recientes primero.
       const { data } = await supabase
         .from('products')
         .select('*')
         .eq('active', true)
+        .eq('is_new', true)
         .order('created_at', { ascending: false })
         .limit(12);
 
