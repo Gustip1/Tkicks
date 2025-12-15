@@ -5,7 +5,8 @@ export function BannerTicker() {
   const items = [
     '✨ 3 cuotas sin interés',
     '✓ Productos 100% originales',
-    '📦 Envíos a todo el país'
+    '📦 Envíos a todo el país',
+    '🚀 Nuevos ingresos cada semana'
   ];
   
   return (
