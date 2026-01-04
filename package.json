@@ -34,14 +34,10 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.5",
     "react-hook-form": "^7.53.0",
-    "sharp": "^0.34.5",
     "tailwind-merge": "^2.5.2",
     "tailwindcss": "^3.4.10",
     "zod": "^3.23.8",
     "zustand": "^4.5.4"
-  },
-  "optionalDependencies": {
-    "@img/sharp-wasm32": "^0.34.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0",
