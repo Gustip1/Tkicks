@@ -1,2 +1,2 @@
-# No incluir sharp en el deployment de Vercel
-node_modules/sharp
+# Archivos a ignorar en Vercel
+# (Sharp WebAssembly se incluirá automáticamente)
