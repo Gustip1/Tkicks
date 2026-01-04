@@ -7,7 +7,9 @@ const nextConfig = {
     }
   },
   images: {
-    unoptimized: true, // Desactivar Image Optimization de Vercel
+    unoptimized: true, // Desactivar completamente Image Optimization de Vercel
+    loader: 'custom', // Usar loader personalizado (directo a Supabase)
+    loaderFile: './lib/image-loader.ts',
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' }

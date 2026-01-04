@@ -1,0 +1,2 @@
+# No incluir sharp en el deployment de Vercel
+node_modules/sharp
