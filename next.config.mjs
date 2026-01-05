@@ -7,6 +7,7 @@ const nextConfig = {
     }
   },
   images: {
+    unoptimized: true, // Deshabilitar optimización - imágenes manejadas por Supabase
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' }
