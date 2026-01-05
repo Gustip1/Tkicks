@@ -1,5 +1,4 @@
 "use client";
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Product } from '@/types/db';
@@ -48,20 +47,15 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}
         
         {images[index]?.url && (
-          <Image
+          <img
             src={images[index].url}
             alt={images[index].alt || product.title}
-            fill
-            sizes={size === 'large' 
-              ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            }
+            loading="lazy"
             className={cn(
-              "object-cover transition-all duration-700",
+              "absolute inset-0 w-full h-full object-cover transition-all duration-700",
               imageLoaded ? "opacity-100" : "opacity-0",
               hovering && "scale-110"
             )}
-            loading="lazy"
             onLoad={() => setImageLoaded(true)}
           />
         )}

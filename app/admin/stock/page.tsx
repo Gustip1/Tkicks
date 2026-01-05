@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, ProductVariant } from '@/types/db';
-import Image from 'next/image';
 
 interface ProductWithVariants extends Product {
   variants?: ProductVariant[];
@@ -184,11 +183,11 @@ export default function AdminStockPage() {
                     <td className="p-4">
                       <div className="relative w-16 h-16 rounded overflow-hidden bg-neutral-100">
                         {product.images?.[0]?.url && (
-                          <Image
+                          <img
                             src={product.images[0].url}
                             alt={product.title}
-                            fill
-                            className="object-cover"
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         )}
                       </div>

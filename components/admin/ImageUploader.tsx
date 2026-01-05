@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Image from 'next/image';
 import { X, Upload, GripVertical, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -150,12 +149,11 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
                 
                 {/* Image */}
                 <div className="aspect-square relative">
-                  <Image
+                  <img
                     src={img.url}
                     alt={img.alt || `Imagen ${idx + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover"
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 </div>
                 

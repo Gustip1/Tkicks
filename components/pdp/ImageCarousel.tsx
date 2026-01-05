@@ -1,5 +1,4 @@
 "use client";
-import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -42,19 +41,15 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
                 <div className="relative aspect-square w-full overflow-hidden">
-                  <Image 
+                  <img 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 
-                    fill 
-                    sizes="(max-width: 768px) 100vw, 50vw" 
+                    loading={idx === 0 ? 'eager' : 'lazy'}
                     className={cn(
-                      "object-cover transition-all duration-500",
+                      "absolute inset-0 w-full h-full object-cover transition-all duration-500",
                       imageLoaded[idx] ? "opacity-100 scale-100" : "opacity-0 scale-105"
                     )}
-                    priority={idx === 0}
-                    loading={idx === 0 ? undefined : 'lazy'}
                     onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}
-                    quality={90}
                   />
                   {!imageLoaded[idx] && (
                     <div className="absolute inset-0 bg-gray-200 animate-pulse" />
@@ -108,13 +103,11 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
               aria-label={`Ver imagen ${idx + 1}`}
               onClick={() => api?.scrollTo(idx)}
             >
-              <Image
+              <img
                 src={img.url}
                 alt={img.alt || `Miniatura ${idx + 1}`}
-                fill
-                sizes="80px"
-                className="object-cover"
                 loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </button>
           ))}

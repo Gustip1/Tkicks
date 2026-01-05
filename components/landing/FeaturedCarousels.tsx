@@ -1,7 +1,6 @@
 "use client";
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -22,13 +21,12 @@ function ProductSlide({ product }: { product: Product }) {
       <div className="relative aspect-square w-full overflow-hidden bg-zinc-950">
         {!imageLoaded && <div className="absolute inset-0 bg-zinc-800 animate-pulse" />}
         {product.images?.[0]?.url && (
-          <Image
+          <img
             src={product.images[0].url}
             alt={product.images[0].alt || product.title}
-            fill
-            sizes="(max-width: 768px) 80vw, 300px"
+            loading="lazy"
             className={cn(
-              "object-cover transition-all duration-500 hover:scale-110",
+              "absolute inset-0 w-full h-full object-cover transition-all duration-500 hover:scale-110",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}

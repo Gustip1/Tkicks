@@ -1,5 +1,4 @@
 "use client";
-import Image from 'next/image';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
@@ -33,11 +32,10 @@ export function CartDrawer() {
             {items.map((it) => (
               <div key={`${it.productId}-${it.size}`} className="flex gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
                 {it.imageUrl && (
-                  <Image
+                  <img
                     src={it.imageUrl}
                     alt={it.title}
-                    width={80}
-                    height={80}
+                    loading="lazy"
                     className="h-20 w-20 rounded-lg object-cover"
                   />
                 )}

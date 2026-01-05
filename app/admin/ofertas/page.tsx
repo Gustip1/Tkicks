@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
-import Image from 'next/image';
 
 export default function AdminOfertasPage() {
   const supabase = createBrowserClient();
@@ -88,11 +87,11 @@ export default function AdminOfertasPage() {
                   <td className="p-4">
                     <div className="relative w-16 h-16 rounded overflow-hidden bg-neutral-100">
                       {p.images?.[0]?.url && (
-                        <Image
+                        <img
                           src={p.images[0].url}
                           alt={p.title}
-                          fill
-                          className="object-cover"
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
                       )}
                     </div>
