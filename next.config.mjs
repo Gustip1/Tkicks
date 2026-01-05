@@ -7,7 +7,6 @@ const nextConfig = {
     }
   },
   images: {
-    unoptimized: true, // Desactivar completamente Image Optimization de Vercel
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' }
@@ -15,9 +14,6 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    formats: [], // Deshabilitar formatos de imagen optimizados
-    deviceSizes: [], // Deshabilitar responsive images
-    imageSizes: [], // Deshabilitar image sizes
   },
   compress: true,
   poweredByHeader: false,
