@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 
-// Cambiar a nodejs runtime para evitar problemas con sharp en edge
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -26,38 +25,56 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Configuración del servidor incompleta' }, { status: 500 });
   }
 
-  // Obtener el token de sesión del usuario
-  const { data: { session } } = await supaSSR.auth.getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'No session' }, { status: 401 });
-  }
+  const outputs: { url: string }[] = [];
 
-  // Llamar a la función de Supabase para comprimir y subir las imágenes
-  const functionUrl = `${supabaseUrl}/functions/v1/compress-image`;
-  
   try {
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: formData,
-    });
+    for (const file of files) {
+      if (!(file instanceof File)) continue;
+      
+      // Validar tipo de archivo
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        console.warn(`Tipo de archivo no válido: ${file.type}`);
+        continue;
+      }
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Supabase function error:', error);
-      return NextResponse.json({ 
-        error: error.error || 'Error al procesar las imágenes en Supabase' 
-      }, { status: response.status });
+      // Generar nombre único
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+      
+      // Convertir a buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Subir directamente a Supabase Storage
+      const { data, error } = await supaSSR.storage
+        .from('product-images')
+        .upload(fileName, buffer, {
+          contentType: file.type,
+          cacheControl: '31536000', // 1 año de cache
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Error uploading to Supabase Storage:', error);
+        continue;
+      }
+
+      // Obtener URL pública
+      const { data: publicUrlData } = supaSSR.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      if (publicUrlData?.publicUrl) {
+        outputs.push({ url: publicUrlData.publicUrl });
+      }
     }
 
-    const outputs = await response.json();
     return NextResponse.json(outputs);
   } catch (error) {
-    console.error('Error calling Supabase function:', error);
+    console.error('Error processing images:', error);
     return NextResponse.json({ 
-      error: 'Error al procesar las imágenes. Intenta nuevamente.' 
+      error: 'Error al subir las imágenes. Intenta nuevamente.' 
     }, { status: 500 });
   }
 }
