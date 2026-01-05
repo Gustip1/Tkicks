@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,11 +20,15 @@ export async function POST(req: NextRequest) {
   if (!files || files.length === 0) return NextResponse.json([], { status: 200 });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
-  if (!supabaseUrl) {
+  if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase configuration');
     return NextResponse.json({ error: 'Configuración del servidor incompleta' }, { status: 500 });
   }
+
+  // Crear cliente con service role para bypass RLS en storage
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
   const outputs: { url: string }[] = [];
 
@@ -46,22 +51,22 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Subir directamente a Supabase Storage
-      const { data, error } = await supaSSR.storage
+      // Subir con service role key (bypass RLS)
+      const { data, error } = await supabaseAdmin.storage
         .from('product-images')
         .upload(fileName, buffer, {
           contentType: file.type,
-          cacheControl: '31536000', // 1 año de cache
+          cacheControl: '31536000',
           upsert: false
         });
 
       if (error) {
-        console.error('Error uploading to Supabase Storage:', error);
+        console.error('Error uploading to Supabase Storage:', error.message);
         continue;
       }
 
       // Obtener URL pública
-      const { data: publicUrlData } = supaSSR.storage
+      const { data: publicUrlData } = supabaseAdmin.storage
         .from('product-images')
         .getPublicUrl(fileName);
 
