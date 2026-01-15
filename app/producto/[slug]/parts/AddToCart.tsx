@@ -61,7 +61,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
                     ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white'
                     : 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed'
                 }
-              `}}
+              `}
             >
               {v.size}
               {v.stock <= 0 && (
