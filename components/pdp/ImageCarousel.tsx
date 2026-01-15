@@ -33,9 +33,9 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
   if (!images || images.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Main image carousel */}
-      <div className="relative group rounded-2xl overflow-hidden bg-gray-50 shadow-lg">
+      <div className="relative group rounded-none md:rounded-2xl overflow-hidden bg-gray-50 shadow-lg">
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (

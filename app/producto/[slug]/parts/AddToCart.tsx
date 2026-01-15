@@ -40,13 +40,13 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 md:space-y-5">
       {/* Selector de talla */}
       <div>
-        <label className="block text-sm font-black text-white mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-white mb-2 md:mb-3 uppercase tracking-wider">
           Selecciona tu talla
         </label>
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-5 gap-1.5 md:gap-2">
           {variants.map((v) => (
             <button
               key={v.id}
@@ -54,14 +54,14 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
               onClick={() => setSize(size === v.size ? '' : v.size)}
               disabled={v.stock <= 0}
               className={`
-                relative py-3 px-2 rounded-lg border-2 text-sm font-black transition-all
+                relative py-2.5 md:py-3 px-1.5 md:px-2 rounded-md md:rounded-lg border-2 text-xs md:text-sm font-black transition-all
                 ${size === v.size 
                   ? 'border-white bg-white text-black' 
                   : v.stock > 0
                     ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white'
                     : 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed'
                 }
-              `}
+              `}}
             >
               {v.size}
               {v.stock <= 0 && (
@@ -81,20 +81,20 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
 
       {/* Selector de cantidad */}
       <div>
-        <label className="block text-sm font-black text-white mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-white mb-2 md:mb-3 uppercase tracking-wider">
           Cantidad
         </label>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <button
             type="button"
             onClick={() => setQty(Math.max(1, qty - 1))}
             disabled={!size || maxQty <= 0 || qty <= 1}
-            className="w-10 h-10 rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-9 h-9 md:w-10 md:h-10 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <span className="text-lg">−</span>
+            <span className="text-base md:text-lg">−</span>
           </button>
           <input
-            className="w-16 h-10 text-center rounded-lg border-2 border-zinc-700 bg-black text-white text-base font-black focus:outline-none focus:border-white"
+            className="w-14 md:w-16 h-9 md:h-10 text-center rounded-md md:rounded-lg border-2 border-zinc-700 bg-black text-white text-sm md:text-base font-black focus:outline-none focus:border-white"
             type="number"
             min={1}
             max={maxQty > 0 ? maxQty : undefined}
@@ -110,9 +110,9 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             type="button"
             onClick={() => setQty(Math.min(maxQty, qty + 1))}
             disabled={!size || maxQty <= 0 || qty >= maxQty}
-            className="w-10 h-10 rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-9 h-9 md:w-10 md:h-10 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <span className="text-lg">+</span>
+            <span className="text-base md:text-lg">+</span>
           </button>
         </div>
       </div>
@@ -121,13 +121,13 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       <Button 
         onClick={handleAdd} 
         disabled={!size || maxQty <= 0 || qty < 1 || qty > maxQty} 
-        className="btn-primary w-full py-4 text-base font-black tracking-wide uppercase shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-primary w-full py-3 md:py-4 text-sm md:text-base font-black tracking-wide uppercase shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {!size ? 'Selecciona una talla' : maxQty <= 0 ? 'Sin stock' : 'Agregar al carrito'}
       </Button>
 
       {/* Información adicional - SIN MENCIONAR CAMBIOS/DEVOLUCIONES */}
-      <div className="pt-4 space-y-2 text-sm text-gray-300 border-t border-zinc-800">
+      <div className="pt-3 md:pt-4 space-y-1.5 md:space-y-2 text-xs md:text-sm text-gray-300 border-t border-zinc-800">
         <p className="flex items-center gap-2 font-bold">
           <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

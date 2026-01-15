@@ -67,21 +67,21 @@ export default function ProductDetailPage() {
   const priceInArs = Number(product.price) * dolarOficial;
 
   return (
-    <div className="max-w-7xl mx-auto animate-fadeIn bg-black min-h-screen">
+    <div className="max-w-7xl mx-auto animate-fadeIn bg-black min-h-screen overflow-x-hidden">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-400 font-bold">
+      <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold">
         <a href="/" className="hover:text-white transition-colors">Inicio</a>
         <span>/</span>
         <a href={`/productos?${product.category}`} className="hover:text-white transition-colors capitalize">
           {product.category}
         </a>
         <span>/</span>
-        <span className="text-white font-black truncate max-w-[200px]">{product.title}</span>
+        <span className="text-white font-black truncate max-w-[120px] md:max-w-[200px]">{product.title}</span>
       </nav>
 
-      <div className="grid gap-8 lg:gap-16 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-8 lg:gap-16 lg:grid-cols-2">
         {/* Image section */}
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="lg:sticky lg:top-8 lg:self-start -mx-4 md:mx-0">
           <ImageCarousel images={product.images || []} />
         </div>
         
@@ -100,7 +100,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
+          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
             {product.title}
           </h1>
           
@@ -115,14 +115,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Price */}
-          <div className="space-y-1 pb-4 border-b border-zinc-800">
-            <div className="flex items-baseline gap-4">
-              <span className="text-3xl md:text-4xl font-black text-white">
+          <div className="space-y-1 pb-3 md:pb-4 border-b border-zinc-800">
+            <div className="flex items-baseline gap-2 md:gap-4">
+              <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
                 ${Number(product.price).toFixed(2)} USD
               </span>
             </div>
-            <p className="text-lg text-gray-300 font-bold">
-              {formatCurrency(priceInArs)} <span className="text-sm">(al tipo de cambio actual)</span>
+            <p className="text-sm md:text-lg text-gray-300 font-bold">
+              {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
           </div>
           
@@ -132,41 +132,41 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Trust badges - SIN CAMBIOS NI DEVOLUCIONES */}
-          <div className="grid grid-cols-2 gap-4 py-6 border-t border-zinc-800">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500/20">
-                <Shield className="w-5 h-5 text-green-400" />
+          <div className="grid grid-cols-2 gap-2 md:gap-4 py-4 md:py-6 border-t border-zinc-800">
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-500/20 shrink-0">
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
               </div>
-              <div>
-                <p className="text-sm font-black text-white">100% Original</p>
-                <p className="text-xs text-gray-400 font-bold">Garantía de autenticidad</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500/20">
-                <Truck className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-white">Envío seguro</p>
-                <p className="text-xs text-gray-400 font-bold">A todo el país</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-black text-white truncate">100% Original</p>
+                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Garantía</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/20">
-                <span className="text-lg">💳</span>
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500/20 shrink-0">
+                <Truck className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
               </div>
-              <div>
-                <p className="text-sm font-black text-white">3 cuotas</p>
-                <p className="text-xs text-gray-400 font-bold">Sin interés</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-black text-white truncate">Envío seguro</p>
+                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Todo el país</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/20">
-                <Star className="w-5 h-5 text-purple-400" />
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-500/20 shrink-0">
+                <span className="text-sm md:text-lg">💳</span>
               </div>
-              <div>
-                <p className="text-sm font-black text-white">Verificado</p>
-                <p className="text-xs text-gray-400 font-bold">Producto auténtico</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-black text-white truncate">3 cuotas</p>
+                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Sin interés</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-500/20 shrink-0">
+                <Star className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-black text-white truncate">Verificado</p>
+                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Auténtico</p>
               </div>
             </div>
           </div>
