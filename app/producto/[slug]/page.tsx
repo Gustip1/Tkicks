@@ -79,22 +79,22 @@ export default function ProductDetailPage() {
         <span className="text-white font-black truncate max-w-[120px] md:max-w-[200px]">{product.title}</span>
       </nav>
 
-      <div className="grid gap-4 md:gap-8 lg:gap-16 lg:grid-cols-2">
+      <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">
         {/* Image section */}
-        <div className="lg:sticky lg:top-8 lg:self-start -mx-4 md:mx-0">
+        <div className="lg:sticky lg:top-8 lg:self-start">
           <ImageCarousel images={product.images || []} />
         </div>
         
         {/* Product info section */}
-        <div className="space-y-6">
+        <div className="space-y-3 md:space-y-6">
           {/* Category badge */}
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-green-500/20 text-green-400 px-3 py-1 text-xs font-black uppercase tracking-wide border border-green-500/50">
+          <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+            <span className="inline-flex items-center rounded-full bg-green-500/20 text-green-400 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-green-500/50">
               {product.category}
             </span>
             {product.on_sale && (
-              <span className="inline-flex items-center rounded-full bg-red-500/20 text-red-400 px-3 py-1 text-xs font-black uppercase tracking-wide border border-red-500/50">
-                🔥 En oferta
+              <span className="inline-flex items-center rounded-full bg-red-500/20 text-red-400 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-500/50">
+                🔥 Oferta
               </span>
             )}
           </div>
@@ -105,13 +105,13 @@ export default function ProductDetailPage() {
           </h1>
           
           {/* Rating placeholder */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <div className="flex items-center gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star key={i} className="w-3 h-3 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
-            <span className="text-sm text-gray-300 font-bold">(Producto verificado)</span>
+            <span className="text-[10px] md:text-sm text-gray-300 font-bold">(Verificado)</span>
           </div>
 
           {/* Price */}
@@ -127,7 +127,7 @@ export default function ProductDetailPage() {
           </div>
           
           {/* Add to cart section */}
-          <div className="py-4">
+          <div className="py-2 md:py-4">
             <AddToCart product={product} variants={variants} />
           </div>
 

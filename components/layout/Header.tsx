@@ -57,7 +57,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-black/98 backdrop-blur-md border-b border-zinc-800 shadow-xl">
       <BannerTicker />
-      <div className="h-16 px-4 md:px-8 flex items-center justify-between gap-4 max-w-[1600px] mx-auto">
+      <div className="h-14 md:h-16 px-2 md:px-8 flex items-center justify-between gap-2 md:gap-4 max-w-[1600px] mx-auto">
         {/* Left - Menu & Nav */}
         <div className="flex items-center gap-1 md:gap-4">
           <button
@@ -100,7 +100,7 @@ export function Header() {
         
         {/* Center - Logo */}
         <Link href="/" className="flex items-center">
-          <img src="/logo.jpg" alt="Tkicks" className="h-10 md:h-12 w-auto" />
+          <img src="/logo.jpg" alt="Tkicks" className="h-8 md:h-12 w-auto" />
         </Link>
         
         {/* Right - Search & Actions */}

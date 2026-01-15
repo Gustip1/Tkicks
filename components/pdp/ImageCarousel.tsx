@@ -33,14 +33,15 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
   if (!images || images.length === 0) return null;
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-2 md:space-y-4">
       {/* Main image carousel */}
-      <div className="relative group rounded-none md:rounded-2xl overflow-hidden bg-gray-50 shadow-lg">
+      <div className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-zinc-900 shadow-lg mx-2 md:mx-0">
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
-                <div className="relative aspect-square w-full overflow-hidden">
+                {/* Aspect ratio más pequeño en móvil (4:3) vs desktop (1:1) */}
+                <div className="relative aspect-[4/3] md:aspect-square w-full overflow-hidden">
                   <img 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 
@@ -65,32 +66,32 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
           <>
             <button
               onClick={scrollPrev}
-              className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/98 shadow-xl border border-gray-200 transition-all hover:scale-110 hover:shadow-2xl active:scale-95 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/95 shadow-lg border border-gray-200 transition-all hover:scale-110 active:scale-95"
               aria-label="Imagen anterior"
             >
-              <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
+              <ChevronLeft className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/98 shadow-xl border border-gray-200 transition-all hover:scale-110 hover:shadow-2xl active:scale-95 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/95 shadow-lg border border-gray-200 transition-all hover:scale-110 active:scale-95"
               aria-label="Siguiente imagen"
             >
-              <ChevronRight className="h-5 w-5 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
+              <ChevronRight className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
             </button>
           </>
         )}
 
         {/* Image counter badge */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-full bg-black/75 text-white text-sm font-medium backdrop-blur-sm">
+          <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 z-10 px-2 py-1 md:px-3 md:py-1.5 rounded-full bg-black/75 text-white text-xs md:text-sm font-medium backdrop-blur-sm">
             {selectedIndex + 1} / {images.length}
           </div>
         )}
       </div>
       
-      {/* Thumbnail navigation */}
+      {/* Thumbnail navigation - oculto en móvil, visible en tablet+ */}
       {images.length > 1 && (
-        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="hidden md:flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide px-2 md:px-0">
           {images.map((img, idx) => (
             <button
               key={idx}
