@@ -40,20 +40,20 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
           <ul className="flex">
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
-                {/* Aspect ratio más pequeño en móvil (4:3) vs desktop (1:1) */}
-                <div className="relative aspect-[4/3] md:aspect-square w-full overflow-hidden">
+                {/* Aspect ratio cuadrado en móvil para mejor visualización del producto */}
+                <div className="relative aspect-square md:aspect-square w-full overflow-hidden">
                   <img 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 
                     loading={idx === 0 ? 'eager' : 'lazy'}
                     className={cn(
-                      "absolute inset-0 w-full h-full object-cover transition-all duration-500",
+                      "absolute inset-0 w-full h-full object-contain transition-all duration-500",
                       imageLoaded[idx] ? "opacity-100 scale-100" : "opacity-0 scale-105"
                     )}
                     onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}
                   />
                   {!imageLoaded[idx] && (
-                    <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                    <div className="absolute inset-0 bg-zinc-900 animate-pulse" />
                   )}
                 </div>
               </li>
