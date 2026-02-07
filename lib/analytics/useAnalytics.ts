@@ -113,7 +113,6 @@ export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const pagesViewedRef = useRef<number>(0);
-  const hasTrackedRef = useRef<boolean>(false);
 
   // Inicializar sesión
   useEffect(() => {
