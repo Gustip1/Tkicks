@@ -16,12 +16,14 @@ import {
   Menu,
   X,
   ChevronRight,
-  Home
+  Home,
+  TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { name: 'Analytics', href: '/admin/analytics', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   { name: 'Pedidos', href: '/admin/pedidos', icon: ShoppingCart, color: 'text-green-600', bg: 'bg-green-50' },
   { name: 'Productos', href: '/admin/productos', icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
   { name: 'Stock', href: '/admin/stock', icon: Warehouse, color: 'text-amber-600', bg: 'bg-amber-50' },

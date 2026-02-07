@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { RouteTransitions } from '@/components/RouteTransitions';
 import { DolarRateProvider } from '@/components/DolarRateProvider';
+import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -58,12 +59,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* End Meta Pixel Code */}
         
         <DolarRateProvider>
-          <Header />
-          <Sidebar />
-          <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-black overflow-x-hidden">
-            <RouteTransitions>{children}</RouteTransitions>
-          </main>
-          <CartDrawer />
+          <AnalyticsProvider>
+            <Header />
+            <Sidebar />
+            <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-black overflow-x-hidden">
+              <RouteTransitions>{children}</RouteTransitions>
+            </main>
+            <CartDrawer />
+          </AnalyticsProvider>
         </DolarRateProvider>
       </body>
     </html>
