@@ -103,8 +103,6 @@ export default function NewProductPage() {
               </select>
             </div>
           )}
-            </div>
-          </div>
           <div>
             <label className="block text-sm font-medium">Descripción</label>
             <textarea className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />
