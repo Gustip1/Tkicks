@@ -37,6 +37,7 @@ create table if not exists public.products (
   on_sale boolean not null default false,
   is_new boolean not null default false,
   active boolean not null default true,
+  subcategory text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

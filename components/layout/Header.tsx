@@ -1,12 +1,13 @@
 "use client";
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, Menu, Search as SearchIcon, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ShoppingCart, Menu, Search as SearchIcon, X, ChevronDown } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
 import { useCartStore } from '@/store/cart';
 import { BannerTicker } from './BannerTicker';
+import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
 
 export function Header() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
@@ -76,13 +77,45 @@ export function Header() {
               <span className="text-base">👟</span>
               Sneakers
             </Link>
-            <Link
-              href="/productos?streetwear"
-              className="rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors flex items-center gap-2 uppercase tracking-tight"
-            >
-              <span className="text-base">👕</span>
-              Streetwear
-            </Link>
+            
+            {/* Streetwear con dropdown */}
+            <div className="relative group">
+              <Link
+                href="/productos?streetwear"
+                className="rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors flex items-center gap-2 uppercase tracking-tight"
+              >
+                <span className="text-base">👕</span>
+                Streetwear
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-colors" />
+              </Link>
+              
+              {/* Dropdown */}
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden">
+                  <div className="p-2 space-y-0.5">
+                    {STREETWEAR_SUBCATEGORIES.map((sub) => (
+                      <Link
+                        key={sub.value}
+                        href={`/productos?streetwear&sub=${sub.value}`}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-gray-300 hover:text-white hover:bg-zinc-800 transition-all"
+                      >
+                        <span className="text-lg">{sub.icon}</span>
+                        <span>{sub.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="border-t border-zinc-700">
+                    <Link
+                      href="/productos?streetwear"
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black text-white hover:bg-zinc-800 transition-all uppercase tracking-tight"
+                    >
+                      Ver todo en Streetwear
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <Link
               href="/ofertas"
               className="rounded-xl px-4 py-2 text-sm font-black text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md flex items-center gap-2 uppercase tracking-tight"

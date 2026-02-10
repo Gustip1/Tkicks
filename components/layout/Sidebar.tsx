@@ -1,19 +1,15 @@
 "use client";
 import Link from 'next/link';
+import { useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight } from 'lucide-react';
-
-const links = [
-  { href: '/productos?sneakers', label: 'Sneakers', icon: '👟', desc: 'Calzado premium' },
-  { href: '/productos?streetwear', label: 'Streetwear', icon: '👕', desc: 'Ropa urbana' },
-  { href: '/ofertas', label: 'Ofertas', icon: '🔥', special: true, desc: 'Precios especiales' },
-  { href: '/encargos', label: 'Encargos', icon: '📦', desc: 'Pedidos especiales' }
-];
+import { X, ChevronRight, ChevronDown } from 'lucide-react';
+import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
 
 export function Sidebar() {
   const isOpen = useUIStore((s) => s.isSidebarOpen);
   const close = useUIStore((s) => s.closeSidebar);
+  const [streetwearOpen, setStreetwearOpen] = useState(false);
 
   return (
     <>
@@ -55,45 +51,107 @@ export function Sidebar() {
         </div>
         
         {/* Navigation */}
-        <nav className="p-4">
+        <nav className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
           <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 px-2">
             Categorías
           </p>
           <div className="space-y-1">
-            {links.map((l) => {
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  onClick={close}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black',
-                    l.special 
-                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02]' 
-                      : 'hover:bg-zinc-800 text-white'
-                  )}
-                >
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center text-2xl",
-                    l.special ? "bg-white/20" : "bg-zinc-800"
-                  )}>
-                    {l.icon}
-                  </div>
-                  <div className="flex-1">
-                    <p className={cn("font-black uppercase tracking-tight", l.special ? "text-white" : "text-white")}>
-                      {l.label}
-                    </p>
-                    <p className={cn("text-xs font-bold", l.special ? "text-white/80" : "text-gray-400")}>
-                      {l.desc}
-                    </p>
-                  </div>
-                  <ChevronRight className={cn(
-                    "w-5 h-5",
-                    l.special ? "text-white/60" : "text-gray-400"
-                  )} />
-                </Link>
-              );
-            })}
+            {/* Sneakers */}
+            <Link
+              href="/productos?sneakers"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-zinc-800 text-white"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-zinc-800">
+                👟
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-white">Sneakers</p>
+                <p className="text-xs font-bold text-gray-400">Calzado premium</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
+
+            {/* Streetwear con subcategorías */}
+            <div>
+              <button
+                onClick={() => setStreetwearOpen(!streetwearOpen)}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-zinc-800 text-white"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-zinc-800">
+                  👕
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-black uppercase tracking-tight text-white">Streetwear</p>
+                  <p className="text-xs font-bold text-gray-400">Ropa urbana</p>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 text-gray-400 transition-transform duration-200",
+                  streetwearOpen && "rotate-180"
+                )} />
+              </button>
+
+              {/* Subcategorías */}
+              <div className={cn(
+                "overflow-hidden transition-all duration-200 ease-out",
+                streetwearOpen ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
+              )}>
+                <div className="ml-6 pl-4 border-l border-zinc-700 space-y-0.5 py-1">
+                  {STREETWEAR_SUBCATEGORIES.map((sub) => (
+                    <Link
+                      key={sub.value}
+                      href={`/productos?streetwear&sub=${sub.value}`}
+                      onClick={close}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-gray-300 hover:text-white hover:bg-zinc-800 transition-all"
+                    >
+                      <span className="text-lg">{sub.icon}</span>
+                      <span>{sub.label}</span>
+                    </Link>
+                  ))}
+                  {/* Ver todo en Streetwear */}
+                  <Link
+                    href="/productos?streetwear"
+                    onClick={close}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-white hover:bg-zinc-800 transition-all mt-1 border-t border-zinc-700/50 pt-2.5"
+                  >
+                    <span className="text-lg">🔥</span>
+                    <span>Ver todo en Streetwear</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Ofertas */}
+            <Link
+              href="/ofertas"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-white/20">
+                🔥
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-white">Ofertas</p>
+                <p className="text-xs font-bold text-white/80">Precios especiales</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/60" />
+            </Link>
+
+            {/* Encargos */}
+            <Link
+              href="/encargos"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-zinc-800 text-white"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-zinc-800">
+                📦
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-white">Encargos</p>
+                <p className="text-xs font-bold text-gray-400">Pedidos especiales</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
           </div>
         </nav>
         

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Product } from '@/types/db';
+import { Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 import { ProductCard } from './ProductCard';
 import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,13 @@ const categoryConfig = {
   }
 };
 
-export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwear' }) {
+const subcategoryLabels: Record<string, string> = {
+  remeras: 'REMERAS',
+  hoodies: 'HOODIES / ABRIGOS',
+  pantalones: 'PANTALONES',
+};
+
+export function ProductsClient({ category, subcategory }: { category?: 'sneakers' | 'streetwear'; subcategory?: StreetWearSubcategory }) {
   const supabase = useRef(createBrowserClient());
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 350);
@@ -51,8 +57,11 @@ export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwe
   const pageSize = dq ? 24 : 60;
 
   const title = useMemo(
-    () => (category ? categoryConfig[category].title : 'Productos'),
-    [category]
+    () => {
+      if (subcategory && subcategoryLabels[subcategory]) return subcategoryLabels[subcategory];
+      return category ? categoryConfig[category].title : 'Productos';
+    },
+    [category, subcategory]
   );
 
   const config = category ? categoryConfig[category] : null;
@@ -79,6 +88,7 @@ export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwe
       .order('created_at', { ascending: false });
     
     if (category) query = query.eq('category', category);
+    if (subcategory) query = query.eq('subcategory', subcategory);
     
     if (dq) {
       const like = `%${dq}%`;
@@ -125,12 +135,13 @@ export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwe
     (async () => {
       let productIds: string[] = [];
       if (category) {
-        const { data: prod } = await supabase.current
+        let prodQuery = supabase.current
           .from('products')
           .select('id')
           .eq('category', category)
-          .eq('active', true)
-          .limit(1000);
+          .eq('active', true);
+        if (subcategory) prodQuery = prodQuery.eq('subcategory', subcategory);
+        const { data: prod } = await prodQuery.limit(1000);
         productIds = (prod || []).map((p: any) => p.id);
       }
       
@@ -169,12 +180,12 @@ export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwe
       }
       setSelectedSizes([]);
     })();
-  }, [category]);
+  }, [category, subcategory]);
 
   useEffect(() => {
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, dq, selectedSizes]);
+  }, [category, subcategory, dq, selectedSizes]);
 
   return (
     <div className="space-y-6 animate-fadeIn bg-black">
@@ -184,6 +195,38 @@ export function ProductsClient({ category }: { category?: 'sneakers' | 'streetwe
           {config ? config.title : title}
         </h1>
       </div>
+
+      {/* Subcategory tabs for streetwear */}
+      {category === 'streetwear' && (
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="/productos?streetwear"
+            className={cn(
+              "px-4 py-2 rounded-xl text-sm font-bold transition-all",
+              !subcategory
+                ? "bg-white text-black"
+                : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
+            )}
+          >
+            Todo
+          </a>
+          {STREETWEAR_SUBCATEGORIES.map((sub) => (
+            <a
+              key={sub.value}
+              href={`/productos?streetwear&sub=${sub.value}`}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5",
+                subcategory === sub.value
+                  ? "bg-white text-black"
+                  : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
+              )}
+            >
+              <span>{sub.icon}</span>
+              {sub.label}
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Filters bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">

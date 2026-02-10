@@ -4,11 +4,13 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { VariantEditor } from '@/components/admin/VariantEditor';
 import { slugify } from '@/lib/utils';
+import { STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 
 export default function NewProductPage() {
   const supabase = createBrowserClient();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'sneakers' | 'streetwear'>('sneakers');
+  const [subcategory, setSubcategory] = useState<StreetWearSubcategory | ''>('');
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState('Todos nuestros productos son 100% originales.');
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -41,6 +43,7 @@ export default function NewProductPage() {
         title, 
         slug: finalSlug, 
         category, 
+        subcategory: category === 'streetwear' && subcategory ? subcategory : null,
         price, 
         description, 
         images, 
@@ -73,7 +76,7 @@ export default function NewProductPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium">Categoría</label>
-              <select className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" value={category} onChange={(e) => setCategory(e.target.value as any)}>
+              <select className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" value={category} onChange={(e) => { setCategory(e.target.value as any); if (e.target.value !== 'streetwear') setSubcategory(''); }}>
                 <option value="sneakers">Sneakers</option>
                 <option value="streetwear">Streetwear</option>
               </select>
@@ -81,6 +84,25 @@ export default function NewProductPage() {
             <div>
               <label className="block text-sm font-medium">Precio (USD)</label>
               <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" type="number" min={0} value={price} onChange={(e) => setPrice(Number(e.target.value))} />
+            </div>
+          </div>
+          {category === 'streetwear' && (
+            <div>
+              <label className="block text-sm font-medium">Subcategoría</label>
+              <select
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                value={subcategory}
+                onChange={(e) => setSubcategory(e.target.value as StreetWearSubcategory | '')}
+              >
+                <option value="">— Sin subcategoría —</option>
+                {STREETWEAR_SUBCATEGORIES.map((sub) => (
+                  <option key={sub.value} value={sub.value}>
+                    {sub.icon} {sub.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
             </div>
           </div>
           <div>

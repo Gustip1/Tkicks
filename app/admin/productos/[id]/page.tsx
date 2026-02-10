@@ -7,6 +7,7 @@ import { VariantEditor } from '@/components/admin/VariantEditor';
 import { Save, Trash2, ArrowLeft, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ export default function EditProductPage() {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState<'sneakers' | 'streetwear'>('sneakers');
+  const [subcategory, setSubcategory] = useState<StreetWearSubcategory | ''>('');
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -38,6 +40,7 @@ export default function EditProductPage() {
         setTitle(p.title);
         setSlug(p.slug);
         setCategory(p.category);
+        setSubcategory(p.subcategory || '');
         setPrice(Number(p.price));
         setDescription(p.description || '');
         setImages((p.images || []) as UploadedImage[]);
@@ -65,6 +68,7 @@ export default function EditProductPage() {
           title, 
           slug, 
           category, 
+          subcategory: category === 'streetwear' && subcategory ? subcategory : null,
           price, 
           description, 
           images, 
@@ -226,7 +230,7 @@ export default function EditProductPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setCategory('sneakers')}
+                  onClick={() => { setCategory('sneakers'); setSubcategory(''); }}
                   className={cn(
                     "flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all",
                     category === 'sneakers' 
@@ -250,6 +254,35 @@ export default function EditProductPage() {
                 </button>
               </div>
             </div>
+
+            {/* Subcategoría (solo para streetwear) */}
+            {category === 'streetwear' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Subcategoría</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {STREETWEAR_SUBCATEGORIES.map((sub) => (
+                    <button
+                      key={sub.value}
+                      type="button"
+                      onClick={() => setSubcategory(subcategory === sub.value ? '' : sub.value)}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                        subcategory === sub.value
+                          ? "border-primary bg-primary-light text-primary"
+                          : "border-gray-200 text-gray-600 hover:border-gray-300"
+                      )}
+                    >
+                      {sub.icon} {sub.label}
+                    </button>
+                  ))}
+                </div>
+                {!subcategory && (
+                  <p className="mt-1.5 text-xs text-amber-600">
+                    Seleccioná una subcategoría para mejor organización
+                  </p>
+                )}
+              </div>
+            )}
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Descripción</label>

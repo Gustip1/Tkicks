@@ -1,10 +1,15 @@
 import { ProductsClient } from '@/components/catalog/ProductsClient';
+import { StreetWearSubcategory } from '@/types/db';
 
 export const dynamic = 'force-dynamic';
 
+const validSubcategories = ['remeras', 'hoodies', 'pantalones'];
+
 export default async function ProductsPage({ searchParams }: { searchParams: { [k: string]: string | string[] | undefined } }) {
   const category = typeof searchParams?.sneakers !== 'undefined' ? 'sneakers' : typeof searchParams?.streetwear !== 'undefined' ? 'streetwear' : undefined;
-  return <ProductsClient category={category as any} />;
+  const subParam = typeof searchParams?.sub === 'string' ? searchParams.sub : undefined;
+  const subcategory = subParam && validSubcategories.includes(subParam) ? (subParam as StreetWearSubcategory) : undefined;
+  return <ProductsClient category={category as any} subcategory={subcategory} />;
 }
 
 

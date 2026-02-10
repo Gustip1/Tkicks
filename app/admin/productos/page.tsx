@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Product } from '@/types/db';
+import { Product, STREETWEAR_SUBCATEGORIES } from '@/types/db';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string>('');
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>('');
   const [onlyActive, setOnlyActive] = useState<boolean>(false);
 
   useEffect(() => {
@@ -24,10 +25,11 @@ export default function AdminProductsPage() {
     return products.filter((p) => {
       if (q && !p.title.toLowerCase().includes(q.toLowerCase())) return false;
       if (category && p.category !== category) return false;
+      if (subcategoryFilter && p.subcategory !== subcategoryFilter) return false;
       if (onlyActive && !p.active) return false;
       return true;
     });
-  }, [products, q, category, onlyActive]);
+  }, [products, q, category, subcategoryFilter, onlyActive]);
 
   return (
     <div className="space-y-4 md:space-y-6 text-black">
@@ -56,13 +58,30 @@ export default function AdminProductsPage() {
           <select 
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" 
             value={category} 
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => { setCategory(e.target.value); if (e.target.value !== 'streetwear') setSubcategoryFilter(''); }}
           >
             <option value="">Todas</option>
             <option value="sneakers">Sneakers</option>
             <option value="streetwear">Streetwear</option>
           </select>
         </div>
+        {category === 'streetwear' && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-xs font-medium text-black mb-1">Subcategoría</label>
+            <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={subcategoryFilter}
+              onChange={(e) => setSubcategoryFilter(e.target.value)}
+            >
+              <option value="">Todas</option>
+              {STREETWEAR_SUBCATEGORIES.map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.icon} {sub.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <label className="inline-flex items-center gap-2 text-sm text-black cursor-pointer px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
           <input 
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4" 
@@ -107,6 +126,11 @@ export default function AdminProductsPage() {
                       }`}>
                         {p.category === 'sneakers' ? 'Sneakers' : 'Streetwear'}
                       </span>
+                      {p.subcategory && (
+                        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 ml-1">
+                          {STREETWEAR_SUBCATEGORIES.find(s => s.value === p.subcategory)?.label || p.subcategory}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       ${Number(p.price).toFixed(2)}
@@ -164,6 +188,11 @@ export default function AdminProductsPage() {
                 }`}>
                   {p.category === 'sneakers' ? 'Sneakers' : 'Streetwear'}
                 </span>
+                {p.subcategory && (
+                  <span className="inline-flex px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">
+                    {STREETWEAR_SUBCATEGORIES.find(s => s.value === p.subcategory)?.label || p.subcategory}
+                  </span>
+                )}
                 <span className={`inline-flex px-2 py-1 rounded-full font-medium ${
                   p.active 
                     ? 'bg-green-100 text-green-800' 
