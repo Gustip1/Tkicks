@@ -128,7 +128,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Category */}
         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">
           {product.category === 'streetwear' && product.subcategory
-            ? `Streetwear · ${product.subcategory === 'remeras' ? 'Remeras' : product.subcategory === 'hoodies' ? 'Hoodies' : product.subcategory === 'pantalones' ? 'Pantalones' : product.subcategory}`
+            ? `Streetwear · ${product.subcategory === 'remeras' ? 'Remeras' : product.subcategory === 'hoodies' ? 'Hoodies' : product.subcategory === 'pantalones' ? 'Pantalones' : product.subcategory === 'accesorios' ? 'Accesorios' : product.subcategory}`
             : product.category}
         </p>
         

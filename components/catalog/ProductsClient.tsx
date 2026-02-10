@@ -39,6 +39,7 @@ const subcategoryLabels: Record<string, string> = {
   remeras: 'REMERAS',
   hoodies: 'HOODIES / ABRIGOS',
   pantalones: 'PANTALONES',
+  accesorios: 'ACCESORIOS',
 };
 
 export function ProductsClient({ category, subcategory }: { category?: 'sneakers' | 'streetwear'; subcategory?: StreetWearSubcategory }) {

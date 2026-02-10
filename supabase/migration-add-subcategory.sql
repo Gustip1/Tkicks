@@ -1,5 +1,5 @@
 -- Migración: agregar subcategoría a productos (streetwear)
--- Subcategorías válidas: 'remeras', 'hoodies', 'pantalones'
+-- Subcategorías válidas: 'remeras', 'hoodies', 'pantalones', 'accesorios'
 
 -- Agregar columna subcategory (nullable, solo aplica a streetwear)
 ALTER TABLE public.products

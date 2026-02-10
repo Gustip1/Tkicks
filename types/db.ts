@@ -1,11 +1,12 @@
 export type ProductCategory = 'sneakers' | 'streetwear';
 
-export type StreetWearSubcategory = 'remeras' | 'hoodies' | 'pantalones';
+export type StreetWearSubcategory = 'remeras' | 'hoodies' | 'pantalones' | 'accesorios';
 
 export const STREETWEAR_SUBCATEGORIES: { value: StreetWearSubcategory; label: string; icon: string }[] = [
   { value: 'remeras', label: 'Remeras', icon: '👕' },
   { value: 'hoodies', label: 'Hoodies / Abrigos', icon: '🧥' },
   { value: 'pantalones', label: 'Pantalones', icon: '👖' },
+  { value: 'accesorios', label: 'Accesorios', icon: '🧢' },
 ];
 
 export interface ProductImage {
