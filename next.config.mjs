@@ -53,7 +53,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://accounts.google.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com https://api.bluelytics.com.ar",
               "frame-src https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",

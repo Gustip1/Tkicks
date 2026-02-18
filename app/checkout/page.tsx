@@ -23,6 +23,14 @@ export default function CheckoutPage() {
   useEffect(() => {
     (async () => {
       if (checkout.orderId) return; // ya creada
+      // Don't create empty orders
+      if (cart.items.length === 0) return;
+      
+      // Rate limit on client: prevent spamming order creation
+      const lastOrderTime = sessionStorage.getItem('tkicks_last_order');
+      if (lastOrderTime && Date.now() - parseInt(lastOrderTime) < 10000) return; // 10s cooldown
+      sessionStorage.setItem('tkicks_last_order', Date.now().toString());
+
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
