@@ -5,8 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Límite de tamaño de archivo: 10MB
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// Sin límite de tamaño - removido a petición del usuario
+// const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export async function POST(req: NextRequest) {
@@ -39,14 +39,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'order_id inválido' }, { status: 400 });
     }
 
-    // Validar tamaño de archivo
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'El archivo es demasiado grande. Máximo 10MB.' },
-        { status: 400 }
-      );
-    }
-
+    // Validación de tamaño removida - sin límite de tamaño de archivo
+    
     // Validar tipo MIME
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(

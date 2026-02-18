@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { publicApiLimiter } from '@/lib/security/rate-limiter';
-import { getClientIp } from '@/lib/security/get-client-ip';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 1800; // 30 minutos
-
-// In-memory cache to reduce external API calls
-let cachedRate: { rate: number; source: string; lastUpdate: string; timestamp: string } | null = null;
-let cacheExpiry = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface DollarApiResponse {
   moneda: string;
@@ -20,18 +13,6 @@ interface DollarApiResponse {
 }
 
 export async function GET(_req: NextRequest) {
-  const clientIp = getClientIp(_req);
-
-  // Rate limiting
-  if (publicApiLimiter.isBlocked(clientIp)) {
-    return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 });
-  }
-
-  // Return cached data if fresh
-  if (cachedRate && Date.now() < cacheExpiry) {
-    return NextResponse.json(cachedRate);
-  }
-
   try {
     console.log('[DOLLAR API] Fetching from external API...');
     
@@ -58,16 +39,12 @@ export async function GET(_req: NextRequest) {
 
     console.log('[DOLLAR API] Success:', data.venta);
     
-    const result = {
+    return NextResponse.json({
       rate: data.venta,
       source: 'dolarapi.com',
       lastUpdate: data.fechaActualizacion,
       timestamp: new Date().toISOString()
-    };
-    cachedRate = result;
-    cacheExpiry = Date.now() + CACHE_TTL;
-    
-    return NextResponse.json(result);
+    });
 
   } catch (error) {
     console.error('[DOLLAR API] Primary source failed:', error);
@@ -94,16 +71,12 @@ export async function GET(_req: NextRequest) {
         if (officialRate && typeof officialRate === 'number') {
           console.log('[DOLLAR API] Backup success:', officialRate);
           
-          const result = {
+          return NextResponse.json({
             rate: officialRate,
             source: 'bluelytics.com.ar',
             lastUpdate: new Date().toISOString(),
             timestamp: new Date().toISOString()
-          };
-          cachedRate = result;
-          cacheExpiry = Date.now() + CACHE_TTL;
-          
-          return NextResponse.json(result);
+          });
         }
       }
       
