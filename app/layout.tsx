@@ -65,6 +65,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-black overflow-x-hidden">
               <RouteTransitions>{children}</RouteTransitions>
             </main>
+            <footer className="w-full py-4 text-center text-sm text-zinc-400">
+              Todas las ventas son <span className="font-semibold text-zinc-300">Final Sale</span>
+            </footer>
             <CartDrawer />
           </AnalyticsProvider>
         </DolarRateProvider>
