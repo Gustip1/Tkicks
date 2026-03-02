@@ -11,7 +11,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'NEXT_PUBLIC_SUPABASE_ANON_KEY es requerida'),
   
   // Supabase (Privadas - Servidor)
-  SUPABASE_SERVICE_ROLE: z.string().min(1, 'SUPABASE_SERVICE_ROLE es requerida (solo servidor)'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY es requerida (solo servidor)'),
   
   // Node Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -27,7 +27,7 @@ function validateEnv() {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       NODE_ENV: process.env.NODE_ENV || 'development',
-      SUPABASE_SERVICE_ROLE: 'client-side-skip-validation', // No se usa en cliente
+      SUPABASE_SERVICE_ROLE_KEY: 'client-side-skip-validation', // No se usa en cliente
     };
     return envSchema.parse(clientEnv);
   }
@@ -36,7 +36,7 @@ function validateEnv() {
   const serverEnv = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE: process.env.SUPABASE_SERVICE_ROLE,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     NODE_ENV: process.env.NODE_ENV || 'development',
   };
 

@@ -85,7 +85,7 @@ console.log('\n🌍 Verificando variables de entorno...');
 const requiredEnvVars = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE'
+  'SUPABASE_SERVICE_ROLE_KEY'
 ];
 
 requiredEnvVars.forEach(envVar => {
