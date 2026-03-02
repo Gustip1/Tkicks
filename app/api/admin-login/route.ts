@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // Intentar login
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

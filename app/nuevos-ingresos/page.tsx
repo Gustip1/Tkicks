@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function NuevosIngresosPage() {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { data } = await supabase
     .from('products')
     .select('*, product_variants(stock)')

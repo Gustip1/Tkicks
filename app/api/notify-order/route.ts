@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const orderId: string | undefined = body?.order_id;
     if (!orderId) return NextResponse.json({ ok: false, error: 'order_id requerido' }, { status: 400 });
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // Obtener orden y asegurar permisos (admin via RLS)
     const { data: order, error } = await supabase

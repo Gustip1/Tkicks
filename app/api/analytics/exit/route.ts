@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'session_id required' }, { status: 400 });
     }
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // Actualizar la última visita de esta sesión
     await supabase

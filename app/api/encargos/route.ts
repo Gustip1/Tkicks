@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const body = await req.json().catch(() => null);
 
   if (!body || !body.message) {
