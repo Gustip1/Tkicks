@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Product, ProductVariant } from '@/types/db';
 
-const CART_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes
+const CART_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface CartItem {
   productId: string;

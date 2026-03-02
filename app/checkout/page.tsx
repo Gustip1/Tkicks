@@ -27,8 +27,9 @@ import {
 type Step = 1 | 2;
 
 const WHATSAPP_NUMBER = '5492644802994';
-const PAYMENT_ALIAS = 'gus.p21';
-const CRYPTO_WALLET = 'TRC20: TXxxx...xxx'; // Replace with real wallet
+const PAYMENT_ALIAS_ARS = 'gusti.naranjax';
+const PAYMENT_ALIAS_USD = 'gusti.dolares';
+const CRYPTO_WALLET = 'Not yet...'; // Replace with real wallet
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -435,13 +436,17 @@ export default function CheckoutPage() {
                     
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias bancario</p>
-                        <p className="text-lg font-black text-white font-mono">{PAYMENT_ALIAS}</p>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias (Pesos ARS)</p>
+                        <p className="text-lg font-black text-white font-mono">{PAYMENT_ALIAS_ARS}</p>
                       </div>
                       <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT TRC20)</p>
-                        <p className="text-xs font-bold text-white font-mono break-all">{CRYPTO_WALLET}</p>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias (Dólares USD)</p>
+                        <p className="text-lg font-black text-white font-mono">{PAYMENT_ALIAS_USD}</p>
                       </div>
+                    </div>
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT TRC20)</p>
+                      <p className="text-xs font-bold text-white font-mono break-all">{CRYPTO_WALLET}</p>
                     </div>
 
                     <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
