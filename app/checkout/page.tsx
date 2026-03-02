@@ -296,7 +296,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-black text-white">Envío a domicilio</p>
-                        <p className="text-xs text-gray-400 font-bold">Coordinaremos el costo</p>
+                        <p className="text-xs text-emerald-400 font-bold">100% Gratis</p>
                       </div>
                       {checkout.fulfillment === 'shipping' && (
                         <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center">
@@ -596,7 +596,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400 font-bold">Envío</span>
                   <span className="text-gray-400 font-bold">
-                    {checkout.fulfillment === 'pickup' ? 'Gratis' : 'A coordinar'}
+Gratis
                   </span>
                 </div>
                 <div className="flex justify-between text-base pt-2 border-t border-zinc-800">
