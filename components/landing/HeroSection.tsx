@@ -56,7 +56,7 @@ export function HeroSection() {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
             <span className="text-xs md:text-sm text-white/90 font-bold uppercase tracking-widest">
-              Drops exclusivos en San Juan
+              Stock Único en San Juan
             </span>
           </div>
 
@@ -68,7 +68,7 @@ export function HeroSection() {
           >
             Tu estilo.
             <br />
-            <span className="hero-text-gradient">Tus kicks.</span>
+            <span className="hero-text-gradient">Solo en Tkicks.</span>
           </h1>
 
           {/* Subtitle */}
