@@ -52,8 +52,8 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Headings with display font */
-h1, h2, .font-display {
+/* Display font — apply explicitly, not to all headings */
+.font-display {
   font-family: var(--font-display);
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -139,3 +139,114 @@ img {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ========== Hero Animations ========== */
+
+/* Animated gradient background */
+.hero-gradient {
+  background: linear-gradient(
+    125deg,
+    #000 0%,
+    #1a0030 25%,
+    #000 50%,
+    #001a33 75%,
+    #000 100%
+  );
+  background-size: 400% 400%;
+  animation: hero-gradient-shift 12s ease-in-out infinite;
+}
+
+@keyframes hero-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  25% { background-position: 100% 0%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 0% 100%; }
+}
+
+/* Noise texture overlay */
+.hero-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px;
+}
+
+/* Hero text gradient */
+.hero-text-gradient {
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: hero-text-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes hero-text-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Product marquee */
+@keyframes marquee-products {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-products {
+  animation: marquee-products 30s linear infinite;
+}
+
+.animate-marquee-products:hover {
+  animation-play-state: paused;
+}
+
+/* Slow pulse for glow orbs */
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.1); }
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+/* Gentle bounce for scroll indicator */
+.animate-bounce-gentle {
+  animation: bounce-gentle 2.5s ease-in-out infinite;
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* Category card tilt on hover */
+.category-card-hover {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+}
+
+.category-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Stagger children entrance */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
