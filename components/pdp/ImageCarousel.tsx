@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductImage } from '@/types/db';
 import { cn } from '@/lib/utils';
@@ -42,12 +43,15 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
                 {/* Aspect ratio cuadrado en móvil para mejor visualización del producto */}
                 <div className="relative aspect-square md:aspect-square w-full overflow-hidden">
-                  <img 
+                  <Image 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 
-                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    quality={85}
+                    priority={idx === 0}
                     className={cn(
-                      "absolute inset-0 w-full h-full object-contain transition-all duration-500",
+                      "object-contain transition-all duration-500",
                       imageLoaded[idx] ? "opacity-100 scale-100" : "opacity-0 scale-105"
                     )}
                     onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}

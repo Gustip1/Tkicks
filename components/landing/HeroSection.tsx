@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState, useRef } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
@@ -146,11 +147,14 @@ export function HeroSection() {
                     href={`/producto/${img.slug}`}
                     className="group relative shrink-0 w-[160px] md:w-[220px] aspect-square rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all hover:scale-[1.03]"
                   >
-                    <img
+                    <Image
                       src={img.url}
                       alt={img.title}
-                      loading={idx < 6 ? 'eager' : 'lazy'}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      fill
+                      sizes="220px"
+                      quality={70}
+                      priority={idx < 4}
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

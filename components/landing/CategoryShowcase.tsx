@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 
@@ -88,10 +89,13 @@ export function CategoryShowcase() {
               {/* Background image */}
               {cat.image && (
                 <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                  <img
+                  <Image
                     src={cat.image}
                     alt=""
-                    className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-700"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 50vw"
+                    quality={60}
+                    className="object-cover scale-110 group-hover:scale-125 transition-transform duration-700"
                   />
                 </div>
               )}

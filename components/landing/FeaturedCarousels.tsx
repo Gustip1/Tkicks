@@ -2,6 +2,7 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
@@ -21,12 +22,14 @@ function ProductSlide({ product }: { product: Product }) {
       <div className="relative aspect-square w-full overflow-hidden bg-zinc-950">
         {!imageLoaded && <div className="absolute inset-0 bg-zinc-800 animate-pulse" />}
         {product.images?.[0]?.url && (
-          <img
+          <Image
             src={product.images[0].url}
             alt={product.images[0].alt || product.title}
-            loading="lazy"
+            fill
+            sizes="300px"
+            quality={75}
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-all duration-500 hover:scale-110",
+              "object-cover transition-all duration-500 hover:scale-110",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}

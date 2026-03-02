@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -53,12 +54,14 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}
         
         {images[index]?.url && (
-          <img
+          <Image
             src={images[index].url}
             alt={images[index].alt || product.title}
-            loading="lazy"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            quality={75}
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+              "object-cover transition-all duration-700",
               imageLoaded ? "opacity-100" : "opacity-0",
               hovering && "scale-110"
             )}
