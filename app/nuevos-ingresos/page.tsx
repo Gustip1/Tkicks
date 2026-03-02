@@ -11,7 +11,7 @@ export default async function NuevosIngresosPage() {
   const supabase = createServerSupabase();
   const { data } = await supabase
     .from('products')
-    .select('*')
+    .select('*, product_variants(stock)')
     .eq('active', true)
     .eq('is_new', true)
     .order('created_at', { ascending: false });

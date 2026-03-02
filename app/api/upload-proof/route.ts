@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Sin límite de tamaño - removido a petición del usuario
-// const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export async function POST(req: NextRequest) {
-  const supaSSR = createServerSupabase();
-  const {
-    data: { user }
-  } = await supaSSR.auth.getUser();
-  
-  if (!user) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
-
   try {
     const form = await req.formData();
     const file = form.get('file');
@@ -38,8 +26,6 @@ export async function POST(req: NextRequest) {
     if (!uuidRegex.test(orderId)) {
       return NextResponse.json({ error: 'order_id inválido' }, { status: 400 });
     }
-
-    // Validación de tamaño removida - sin límite de tamaño de archivo
     
     // Validar tipo MIME
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -49,27 +35,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar que la orden pertenece al usuario
-    const { data: order, error: orderError } = await supaSSR
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceRole = process.env.SUPABASE_SERVICE_ROLE!;
+    const supabase = createClient(url, serviceRole);
+
+    // Verificar que la orden existe
+    const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, user_id')
+      .select('id')
       .eq('id', orderId)
       .single();
 
     if (orderError || !order) {
       return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
-
-    // Solo el propietario de la orden puede subir el comprobante
-    // (o un admin, pero por ahora lo dejamos solo para el propietario)
-    if (order.user_id && order.user_id !== user.id) {
-      console.warn(`[SECURITY] Usuario ${user.id} intentó subir comprobante para orden ${orderId} que no le pertenece`);
-      return NextResponse.json({ error: 'No tienes permiso para modificar esta orden' }, { status: 403 });
-    }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRole = process.env.SUPABASE_SERVICE_ROLE!;
-    const supabase = createClient(url, serviceRole);
 
     const arrayBuf = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuf as ArrayBuffer);
@@ -93,12 +72,10 @@ export async function POST(req: NextRequest) {
 
     const { data: pub } = supabase.storage.from('payment-proofs').getPublicUrl(path);
 
-    const { error: updErr } = await supaSSR
+    const { error: updErr } = await supabase
       .from('orders')
       .update({
         payment_proof_url: pub.publicUrl,
-        payment_method: 'bank_transfer',
-        payment_alias: 'gus.p21',
         payment_status: 'pending'
       })
       .eq('id', orderId);
@@ -108,7 +85,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Error al actualizar la orden' }, { status: 500 });
     }
 
-    console.info(`[INFO] Comprobante de pago subido para orden ${orderId} por usuario ${user.id}`);
+    console.info(`[INFO] Comprobante de pago subido para orden ${orderId}`);
 
     return NextResponse.json({ ok: true, url: pub.publicUrl });
   } catch (error: any) {

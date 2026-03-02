@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!files || files.length === 0) return NextResponse.json([], { status: 200 });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE;
   
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase configuration');

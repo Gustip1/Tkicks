@@ -1,14 +1,48 @@
 "use client";
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { formatCurrency } from '@/lib/utils';
+import { Clock, AlertTriangle } from 'lucide-react';
 
 export function CartDrawer() {
-  const { items, updateQty, removeItem } = useCartStore();
+  const { items, updateQty, removeItem, checkExpiry, getRemainingSeconds, clear } = useCartStore();
   const subtotal = items.reduce((acc, it) => acc + it.price * it.quantity, 0);
   const isOpen = useUIStore((s) => s.isCartOpen);
   const close = useUIStore((s) => s.closeCart);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [expired, setExpired] = useState(false);
+
+  // Timer tick every second
+  useEffect(() => {
+    if (!isOpen) return;
+    const tick = () => {
+      if (checkExpiry()) {
+        setExpired(true);
+        setRemainingSeconds(0);
+        return;
+      }
+      setRemainingSeconds(getRemainingSeconds());
+      setExpired(false);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [isOpen, items.length, checkExpiry, getRemainingSeconds]);
+
+  // Clear expired state when new items are added
+  useEffect(() => {
+    if (items.length > 0) setExpired(false);
+  }, [items.length]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const isLowTime = remainingSeconds !== null && remainingSeconds <= 30;
 
   return (
     <>
@@ -23,12 +57,36 @@ export function CartDrawer() {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-neutral-800 p-4">
             <h2 className="text-lg font-black text-white uppercase tracking-tight">Carrito</h2>
-            <button onClick={close} className="rounded-xl px-3 py-1.5 text-sm text-white hover:bg-neutral-800 font-black border border-zinc-700 hover:border-white transition-all">
-              Cerrar
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Timer display */}
+              {items.length > 0 && remainingSeconds !== null && (
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black ${
+                  isLowTime
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
+                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                }`}>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{formatTime(remainingSeconds)}</span>
+                </div>
+              )}
+              <button onClick={close} className="rounded-xl px-3 py-1.5 text-sm text-white hover:bg-neutral-800 font-black border border-zinc-700 hover:border-white transition-all">
+                Cerrar
+              </button>
+            </div>
           </div>
+
+          {/* Expired warning */}
+          {expired && items.length === 0 && (
+            <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl bg-red-500/15 border border-red-500/30 px-4 py-3">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <p className="text-xs text-red-300 font-bold">
+                Tu carrito expiró. Los artículos fueron devueltos al stock. Volvé a agregarlos si los querés.
+              </p>
+            </div>
+          )}
+
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {items.length === 0 && <p className="text-sm text-neutral-400 font-bold">Tu carrito está vacío.</p>}
+            {items.length === 0 && !expired && <p className="text-sm text-neutral-400 font-bold">Tu carrito está vacío.</p>}
             {items.map((it) => (
               <div key={`${it.productId}-${it.size}`} className="flex gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
                 {it.imageUrl && (
@@ -73,21 +131,22 @@ export function CartDrawer() {
               <span className="font-black text-white uppercase tracking-wide">Subtotal</span>
               <span className="font-black text-white">{formatCurrency(subtotal)}</span>
             </div>
-            <p className="mt-1 text-xs text-neutral-400 font-bold">
-              Coordinaremos pago y envío por WhatsApp.
-            </p>
-            <a
-              href={`https://api.whatsapp.com/send?phone=5492644802994&text=${encodeURIComponent(
-                `¡Hola! Quisiera comprar los siguientes productos de tu página web:\n\n${items
-                  .map((it) => `• ${it.title} - Talle: ${it.size} - Cantidad: ${it.quantity} - ${formatCurrency(it.price * it.quantity)}`)
-                  .join('\n')}\n\nSubtotal: ${formatCurrency(subtotal)}\n\nQuedo a la espera para coordinar el pago y el envío. ¡Gracias!`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-black text-white hover:bg-green-700 uppercase tracking-tight shadow-lg"
+            {items.length > 0 && remainingSeconds !== null && (
+              <p className="mt-1 text-xs text-amber-400/80 font-bold">
+                ⏱ Tenés {formatTime(remainingSeconds)} para completar tu compra
+              </p>
+            )}
+            <Link
+              href="/checkout"
+              onClick={close}
+              className={`mt-3 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-black uppercase tracking-tight shadow-lg transition-colors ${
+                items.length === 0
+                  ? 'bg-zinc-800 text-zinc-500 pointer-events-none'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
             >
-              Coordinar por WhatsApp
-            </a>
+              Ir al Checkout
+            </Link>
           </div>
         </div>
       </div>

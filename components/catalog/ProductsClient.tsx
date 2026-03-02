@@ -84,7 +84,7 @@ export function ProductsClient({ category, subcategory }: { category?: 'sneakers
 
     let query = supabase.current
       .from('products')
-      .select('*', { count: 'exact' })
+      .select('*, product_variants(stock)', { count: 'exact' })
       .eq('active', true)
       .order('created_at', { ascending: false });
     

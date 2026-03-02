@@ -17,7 +17,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [hovering, setHovering] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const { rate: dolarOficial } = useDolarRate();
-  
+  // Compute total stock from joined variants
+  const totalStock = useMemo(() => {
+    if (!product.product_variants || product.product_variants.length === 0) return null; // unknown
+    return product.product_variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
+  }, [product.product_variants]);
+
+  const isSoldOut = totalStock !== null && totalStock <= 0;  
   useEffect(() => {
     if (!hovering || images.length <= 1) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % images.length), 800);
@@ -62,14 +68,21 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {product.on_sale && (
+          {isSoldOut && (
+            <span className="px-2.5 py-1 rounded-full bg-black/80 text-white text-xs font-black shadow-md border border-zinc-600 backdrop-blur-sm uppercase tracking-wide">
+              Sin Stock
+            </span>
+          )}
+          {product.on_sale && !isSoldOut && (
             <span className="px-2.5 py-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-md">
               🔥 SALE
             </span>
           )}
-          <span className="px-2.5 py-1 rounded-full bg-primary text-white text-xs font-semibold shadow-md">
-            Original
-          </span>
+          {!isSoldOut && (
+            <span className="px-2.5 py-1 rounded-full bg-primary text-white text-xs font-semibold shadow-md">
+              Original
+            </span>
+          )}
         </div>
         
         {/* Quick actions */}
@@ -92,20 +105,34 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Add to cart button */}
         <div className={cn(
           "absolute bottom-0 left-0 right-0 p-3 transition-all duration-300",
-          hovering ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          hovering && !isSoldOut ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}>
           <button 
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg"
+            className={cn(
+              "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-lg",
+              isSoldOut
+                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                : "bg-gray-900 text-white hover:bg-gray-800"
+            )}
+            disabled={isSoldOut}
             onClick={(e) => {
               e.preventDefault();
-              // Navigate to product page
-              window.location.href = `/producto/${product.slug}`;
+              if (!isSoldOut) window.location.href = `/producto/${product.slug}`;
             }}
           >
             <ShoppingBag className="w-4 h-4" />
-            Ver producto
+            {isSoldOut ? 'Sin stock' : 'Ver producto'}
           </button>
         </div>
+        
+        {/* Sold out overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+            <span className="bg-black/80 text-white text-sm font-black px-4 py-2 rounded-lg border border-zinc-600 uppercase tracking-wider backdrop-blur-sm">
+              Sold Out
+            </span>
+          </div>
+        )}
         
         {/* Image indicators */}
         {images.length > 1 && (

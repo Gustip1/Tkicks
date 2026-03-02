@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Product, ProductVariant } from '@/types/db';
 
+const CART_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes
+
 export interface CartItem {
   productId: string;
   slug: string;
@@ -15,12 +17,18 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isOpen: boolean;
+  /** Timestamp (ms) when cart will expire. null = no timer running */
+  expiresAt: number | null;
   addItem: (item: Omit<CartItem, 'quantity'>, qty?: number) => void;
   removeItem: (productId: string, size: string) => void;
   updateQty: (productId: string, size: string, qty: number) => void;
   clear: () => void;
   open: () => void;
   close: () => void;
+  /** Check if timer expired and clear items if so. Returns true if expired. */
+  checkExpiry: () => boolean;
+  /** Get remaining seconds, or null if no timer */
+  getRemainingSeconds: () => number | null;
 }
 
 export const useCartStore = create<CartState>()(
@@ -28,6 +36,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      expiresAt: null,
       addItem: (item, qty = 1) =>
         set((state) => {
           const idx = state.items.findIndex(
@@ -39,12 +48,17 @@ export const useCartStore = create<CartState>()(
           } else {
             items.push({ ...item, quantity: qty });
           }
-          return { items };
+          // Start or reset the 2-minute timer whenever an item is added
+          return { items, expiresAt: Date.now() + CART_EXPIRY_MS };
         }),
       removeItem: (productId, size) =>
-        set((state) => ({
-          items: state.items.filter((it) => !(it.productId === productId && it.size === size))
-        })),
+        set((state) => {
+          const newItems = state.items.filter((it) => !(it.productId === productId && it.size === size));
+          return {
+            items: newItems,
+            expiresAt: newItems.length > 0 ? state.expiresAt : null,
+          };
+        }),
       updateQty: (productId, size, qty) =>
         set((state) => ({
           items: state.items.map((it) =>
@@ -53,9 +67,24 @@ export const useCartStore = create<CartState>()(
               : it
           )
         })),
-      clear: () => set({ items: [] }),
+      clear: () => set({ items: [], expiresAt: null }),
       open: () => set({ isOpen: true }),
-      close: () => set({ isOpen: false })
+      close: () => set({ isOpen: false }),
+      checkExpiry: () => {
+        const { expiresAt, items } = get();
+        if (!expiresAt || items.length === 0) return false;
+        if (Date.now() >= expiresAt) {
+          set({ items: [], expiresAt: null });
+          return true;
+        }
+        return false;
+      },
+      getRemainingSeconds: () => {
+        const { expiresAt, items } = get();
+        if (!expiresAt || items.length === 0) return null;
+        const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+        return remaining;
+      },
     }),
     {
       name: 'cart-store',
