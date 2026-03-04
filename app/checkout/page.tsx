@@ -67,6 +67,11 @@ export default function CheckoutPage() {
     () => cart.items.reduce((acc, it) => acc + it.price * it.quantity, 0),
     [cart.items]
   );
+  // 10% surcharge for credit card payments
+  const isCardPayment = checkout.paymentMethod === 'installments_3';
+  const surchargeRate = 0.10;
+  const totalUSD = isCardPayment ? subtotalUSD * (1 + surchargeRate) : subtotalUSD;
+  const totalARS = totalUSD * dolarOficial;
   const subtotalARS = subtotalUSD * dolarOficial;
 
   // ─── Step 1 Validation ───
@@ -404,8 +409,8 @@ export default function CheckoutPage() {
                       selected={checkout.paymentMethod === 'installments_3'}
                       onClick={() => checkout.setPaymentMethod('installments_3')}
                       icon={<CreditCard className="w-5 h-5" />}
-                      title="3 Cuotas sin interés"
-                      description="Coordinamos por WhatsApp con link de pago"
+                      title="3 Cuotas sin interés (Tarjeta)"
+                      description="10% de recargo sobre el precio base · Link de pago por WhatsApp"
                     />
                   </div>
                 </div>
@@ -510,21 +515,55 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="text-sm font-black text-white">3 Cuotas sin interés</p>
-                        <p className="text-xs text-gray-400 font-bold">Te enviaremos un link de pago por WhatsApp</p>
+                        <p className="text-xs text-gray-400 font-bold">Se aplica un 10% de recargo sobre el precio base</p>
                       </div>
                     </div>
+
+                    {/* Surcharge breakdown */}
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400 font-bold">Subtotal (precio base)</span>
+                        <span className="text-white font-bold">${subtotalUSD.toFixed(2)} USD</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400 font-bold">Recargo tarjeta (10%)</span>
+                        <span className="text-amber-400 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-zinc-700">
+                        <span className="text-white font-black">Total con tarjeta</span>
+                        <div className="text-right">
+                          <p className="text-white font-black">${totalUSD.toFixed(2)} USD</p>
+                          <p className="text-xs text-gray-400 font-bold">{formatCurrency(totalARS)}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-purple-400 font-black">3 cuotas de</span>
+                        <span className="text-purple-400 font-black">{formatCurrency(totalARS / 3)}</span>
+                      </div>
+                    </div>
+
                     <a
                       href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(
-                        `¡Hola! Quiero pagar en 3 cuotas sin interés.\n\nProductos:\n${cart.items
-                          .map((it) => `• ${it.title} (${it.size}) x${it.quantity} - $${it.price.toFixed(2)} USD`)
-                          .join('\n')}\n\nTotal: $${subtotalUSD.toFixed(2)} USD\n\nEmail: ${checkout.contact.email}\nNombre: ${checkout.contact.firstName} ${checkout.contact.lastName}`
+                        `¡Hola! Quiero pagar en *3 cuotas sin interés* con tarjeta de crédito.\n\n` +
+                        `📦 *Productos:*\n${cart.items
+                          .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
+                          .join('\n')}\n\n` +
+                        `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
+                        `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n` +
+                        `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
+                        `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
+                        `👤 *Datos:*\n` +
+                        `Nombre: ${checkout.contact.firstName} ${checkout.contact.lastName}\n` +
+                        `Email: ${checkout.contact.email}\n` +
+                        `${checkout.contact.phone ? `Teléfono: ${checkout.contact.phone}\n` : ''}` +
+                        `${checkout.fulfillment === 'shipping' ? `Envío a: ${checkout.address.street}, CP ${checkout.address.postalCode}` : 'Retiro en Showroom'}`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-green-600 text-white font-black text-sm uppercase tracking-tight hover:bg-green-700 transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Solicitar link de pago por WhatsApp
+                      Link de pago · WhatsApp
                     </a>
                   </div>
                 )}
@@ -593,6 +632,12 @@ export default function CheckoutPage() {
                   <span className="text-gray-400 font-bold">Subtotal</span>
                   <span className="text-white font-black">${subtotalUSD.toFixed(2)} USD</span>
                 </div>
+                {isCardPayment && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-400 font-bold">Recargo tarjeta (10%)</span>
+                    <span className="text-amber-400 font-black">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400 font-bold">Envío</span>
                   <span className="text-gray-400 font-bold">
@@ -602,10 +647,16 @@ Gratis
                 <div className="flex justify-between text-base pt-2 border-t border-zinc-800">
                   <span className="text-white font-black uppercase">Total</span>
                   <div className="text-right">
-                    <p className="text-white font-black">${subtotalUSD.toFixed(2)} USD</p>
-                    <p className="text-xs text-gray-400 font-bold">{formatCurrency(subtotalARS)}</p>
+                    <p className="text-white font-black">${totalUSD.toFixed(2)} USD</p>
+                    <p className="text-xs text-gray-400 font-bold">{formatCurrency(totalARS)}</p>
                   </div>
                 </div>
+                {isCardPayment && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-purple-400 font-black">3 cuotas de</span>
+                    <span className="text-purple-400 font-black">{formatCurrency(totalARS / 3)}</span>
+                  </div>
+                )}
               </div>
             </div>
 

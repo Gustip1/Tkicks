@@ -115,7 +115,8 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Price */}
-          <div className="space-y-1 pb-3 md:pb-4 border-b border-zinc-800">
+          <div className="space-y-2 pb-3 md:pb-4 border-b border-zinc-800">
+            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio Base · Transferencia / Efectivo</p>
             <div className="flex items-baseline gap-2 md:gap-4">
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
                 ${Number(product.price).toFixed(2)} USD
@@ -124,6 +125,21 @@ export default function ProductDetailPage() {
             <p className="text-sm md:text-lg text-gray-300 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
+            {/* Precio Tarjeta — 3 cuotas sin interés con 10% recargo */}
+            {(() => {
+              const cardPriceArs = Number(product.price) * 1.10 * dolarOficial;
+              const installment = cardPriceArs / 3;
+              return (
+                <div className="mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                  <p className="text-sm md:text-base text-purple-300 font-black">
+                    💳 3 cuotas sin interés de {formatCurrency(installment)}
+                  </p>
+                  <p className="text-xs text-gray-400 font-bold">
+                    Total tarjeta: {formatCurrency(cardPriceArs)} (10% recargo incluido)
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           
           {/* Add to cart section */}

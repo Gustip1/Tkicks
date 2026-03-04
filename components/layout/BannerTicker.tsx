@@ -3,7 +3,7 @@ import { DolarWidget } from '@/components/DolarWidget';
 
 export function BannerTicker() {
   const items = [
-    '✨ 3 cuotas sin interés',
+    '💳 Hasta 3 Cuotas sin interés con tarjeta de crédito (Aplica 10% de recargo sobre el precio base)',
     '✓ Productos 100% originales',
     '📦 Envíos a todo el país',
     '🚀 Nuevos ingresos cada semana'

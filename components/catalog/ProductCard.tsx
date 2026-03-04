@@ -171,7 +171,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         </h3>
         
         {/* Price */}
-        <div className="space-y-0.5">
+        <div className="space-y-1">
+          {/* Precio Base (Transferencia/Efectivo) */}
           <p className={cn(
             "font-black text-white",
             size === 'large' ? "text-xl" : "text-lg"
@@ -181,6 +182,24 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           <p className="text-sm text-gray-400 font-semibold">
             {formatCurrency(priceInArs)}
           </p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Transferencia / Efectivo</p>
+
+          {/* Precio Tarjeta (10% recargo) — 3 cuotas */}
+          {!isSoldOut && (() => {
+            const cardPrice = Number(product.price) * 1.10;
+            const cardPriceArs = cardPrice * dolarOficial;
+            const installment = cardPriceArs / 3;
+            return (
+              <div className="pt-1 border-t border-zinc-800 mt-1">
+                <p className="text-xs text-purple-400 font-bold">
+                  💳 3 cuotas de {formatCurrency(installment)}
+                </p>
+                <p className="text-[10px] text-gray-500 font-semibold">
+                  Total tarjeta: {formatCurrency(cardPriceArs)}
+                </p>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </Link>
