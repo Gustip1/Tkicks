@@ -65,11 +65,15 @@ export default function AdminStockPage() {
 
   const saveChanges = async (productId: string) => {
     setMessage(null);
+
+    // Calcular stock total para decidir si el producto queda activo
+    const totalStock = editVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+    const shouldBeActive = totalStock > 0;
     
-    // Actualizar precio
+    // Actualizar precio y estado activo según stock
     const { error: priceError } = await supabase
       .from('products')
-      .update({ price: parseFloat(editPrice) })
+      .update({ price: parseFloat(editPrice), active: shouldBeActive })
       .eq('id', productId);
 
     if (priceError) {
@@ -94,7 +98,9 @@ export default function AdminStockPage() {
       return;
     }
 
-    setMessage('✓ Cambios guardados correctamente');
+    setMessage(totalStock === 0
+      ? '✓ Guardado — producto marcado como inactivo (stock 0)'
+      : '✓ Cambios guardados correctamente');
     await loadProducts();
     setEditingId(null);
   };

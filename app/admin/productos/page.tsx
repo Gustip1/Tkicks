@@ -9,7 +9,8 @@ export default function AdminProductsPage() {
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string>('');
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('');
-  const [onlyActive, setOnlyActive] = useState<boolean>(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -26,10 +27,40 @@ export default function AdminProductsPage() {
       if (q && !p.title.toLowerCase().includes(q.toLowerCase())) return false;
       if (category && p.category !== category) return false;
       if (subcategoryFilter && p.subcategory !== subcategoryFilter) return false;
-      if (onlyActive && !p.active) return false;
+      if (activeFilter === 'active' && !p.active) return false;
+      if (activeFilter === 'inactive' && p.active) return false;
       return true;
     });
-  }, [products, q, category, subcategoryFilter, onlyActive]);
+  }, [products, q, category, subcategoryFilter, activeFilter]);
+
+  const inactiveCount = useMemo(() => products.filter(p => !p.active).length, [products]);
+
+  const deleteInactiveProducts = async () => {
+    const inactiveProducts = products.filter(p => !p.active);
+    if (inactiveProducts.length === 0) return;
+    if (!confirm(`¿Estás seguro de eliminar ${inactiveProducts.length} producto(s) inactivo(s)? Esta acción no se puede deshacer.`)) return;
+    setDeleting(true);
+    const supabase = createBrowserClient();
+    const ids = inactiveProducts.map(p => p.id);
+    const { error } = await supabase.from('products').delete().in('id', ids);
+    if (error) {
+      alert(`Error al eliminar: ${error.message}`);
+    } else {
+      setProducts(prev => prev.filter(p => p.active));
+    }
+    setDeleting(false);
+  };
+
+  const deleteSingleProduct = async (id: string, title: string) => {
+    if (!confirm(`¿Eliminar "${title}"? Esta acción no se puede deshacer.`)) return;
+    const supabase = createBrowserClient();
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) {
+      alert(`Error al eliminar: ${error.message}`);
+    } else {
+      setProducts(prev => prev.filter(p => p.id !== id));
+    }
+  };
 
   return (
     <div className="space-y-4 md:space-y-6 text-black">
@@ -82,16 +113,34 @@ export default function AdminProductsPage() {
             </select>
           </div>
         )}
-        <label className="inline-flex items-center gap-2 text-sm text-black cursor-pointer px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-          <input 
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4" 
-            type="checkbox" 
-            checked={onlyActive} 
-            onChange={(e) => setOnlyActive(e.target.checked)} 
-          /> 
-          <span className="font-medium">Solo activos</span>
-        </label>
+        <div className="flex-1 min-w-[150px]">
+          <label className="block text-xs font-medium text-black mb-1">Estado</label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={activeFilter}
+            onChange={(e) => setActiveFilter(e.target.value as 'all' | 'active' | 'inactive')}
+          >
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos ({inactiveCount})</option>
+          </select>
+        </div>
       </div>
+
+      {activeFilter === 'inactive' && inactiveCount > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">
+            Hay <span className="font-bold">{inactiveCount}</span> producto(s) inactivo(s) (sin stock).
+          </p>
+          <button
+            onClick={deleteInactiveProducts}
+            disabled={deleting}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {deleting ? 'Eliminando...' : `🗑️ Eliminar todos los inactivos`}
+          </button>
+        </div>
+      )}
 
       {/* Vista de tabla para desktop */}
       <div className="hidden md:block bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
@@ -148,12 +197,22 @@ export default function AdminProductsPage() {
                       {p.featured_sneakers || p.featured_streetwear ? '⭐ Sí' : '—'}
                     </td>
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                      <Link 
-                        href={`/admin/productos/${p.id}`} 
-                        className="text-blue-600 hover:text-blue-900 font-medium"
-                      >
-                        Editar →
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link 
+                          href={`/admin/productos/${p.id}`} 
+                          className="text-blue-600 hover:text-blue-900 font-medium"
+                        >
+                          Editar →
+                        </Link>
+                        {!p.active && (
+                          <button
+                            onClick={() => deleteSingleProduct(p.id, p.title)}
+                            className="text-red-600 hover:text-red-800 font-medium"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -178,7 +237,17 @@ export default function AdminProductsPage() {
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="font-medium text-gray-900 text-sm flex-1 line-clamp-2">{p.title}</h3>
-                <span className="text-blue-600 font-medium text-sm whitespace-nowrap">Editar →</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600 font-medium text-sm whitespace-nowrap">Editar →</span>
+                  {!p.active && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); deleteSingleProduct(p.id, p.title); }}
+                      className="text-red-600 font-medium text-sm whitespace-nowrap"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className={`inline-flex px-2 py-1 rounded-full font-medium ${
