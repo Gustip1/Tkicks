@@ -153,7 +153,9 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
   };
 
   const deleteOrder = async () => {
-    if (!confirm('¿Seguro que querés eliminar esta orden? Esta acción no se puede deshacer.')) return;
+    if (!confirm('¿Seguro que querés eliminar esta orden? Los productos volverán al stock.')) return;
+    // Restore stock for all items in this order
+    await supabase.rpc('restore_order_stock', { p_order_id: params.id });
     await supabase.from('order_items').delete().eq('order_id', params.id);
     await supabase.from('shipping_addresses').delete().eq('order_id', params.id);
     const { error } = await supabase.from('orders').delete().eq('id', params.id);
