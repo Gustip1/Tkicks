@@ -107,6 +107,17 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const deleteOrder = async (orderId: string) => {
+    if (!confirm('¿Seguro que querés eliminar esta orden? Esta acción no se puede deshacer.')) return;
+    // Delete related records first, then the order
+    await supabase.from('order_items').delete().eq('order_id', orderId);
+    await supabase.from('shipping_addresses').delete().eq('order_id', orderId);
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (!error) {
+      loadOrders();
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     if (search) {
       const searchLower = search.toLowerCase();
@@ -305,6 +316,15 @@ export default function AdminOrdersPage() {
                               📦 Entregado
                             </button>
                           )}
+                          {order.status === 'cancelled' && (
+                            <button
+                              onClick={() => deleteOrder(order.id)}
+                              className="text-red-500 hover:text-red-700 text-xs font-semibold"
+                              title="Eliminar orden"
+                            >
+                              🗑 Eliminar
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -391,6 +411,16 @@ export default function AdminOrdersPage() {
                         className="text-xs text-blue-600 font-semibold underline"
                       >
                         📄 Ver comprobante de pago
+                      </button>
+                    </div>
+                  )}
+                  {order.status === 'cancelled' && (
+                    <div className="px-4 pb-3">
+                      <button
+                        onClick={() => deleteOrder(order.id)}
+                        className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        🗑 Eliminar orden
                       </button>
                     </div>
                   )}

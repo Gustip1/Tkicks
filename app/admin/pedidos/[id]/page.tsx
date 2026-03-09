@@ -152,6 +152,16 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
     }
   };
 
+  const deleteOrder = async () => {
+    if (!confirm('¿Seguro que querés eliminar esta orden? Esta acción no se puede deshacer.')) return;
+    await supabase.from('order_items').delete().eq('order_id', params.id);
+    await supabase.from('shipping_addresses').delete().eq('order_id', params.id);
+    const { error } = await supabase.from('orders').delete().eq('id', params.id);
+    if (!error) {
+      router.push('/admin/pedidos');
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -219,6 +229,14 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
               className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors border border-red-200"
             >
               Cancelar orden
+            </button>
+          )}
+          {order.status === 'cancelled' && (
+            <button
+              onClick={deleteOrder}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+            >
+              🗑 Eliminar orden
             </button>
           )}
         </div>

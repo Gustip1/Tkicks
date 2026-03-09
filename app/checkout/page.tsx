@@ -29,7 +29,7 @@ type Step = 1 | 2;
 const WHATSAPP_NUMBER = '5492644802994';
 const PAYMENT_ALIAS_ARS = 'gusti.naranjax';
 const PAYMENT_ALIAS_USD = 'gusti.dolares';
-const CRYPTO_WALLET = 'Not yet...'; // Replace with real wallet
+const CRYPTO_WALLET = '0x9f5e152b579263fbb2b88f976fa4bb4bbac21e20';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -450,7 +450,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
-                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT TRC20)</p>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT ERC20 - Red Ethereum)</p>
                       <p className="text-xs font-bold text-white font-mono break-all">{CRYPTO_WALLET}</p>
                     </div>
 
