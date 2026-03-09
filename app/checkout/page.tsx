@@ -88,10 +88,11 @@ export default function CheckoutPage() {
       if (!checkout.address.postalCode.trim()) e.postalCode = 'Código postal requerido';
       if (!checkout.address.street.trim()) e.street = 'Dirección requerida';
     } else {
-      // Pickup: minimal info
+      // Pickup: name, email, phone
       if (!checkout.contact.firstName.trim()) e.firstName = 'Nombre requerido';
       if (!checkout.contact.email.trim()) e.email = 'Email requerido';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkout.contact.email)) e.email = 'Email inválido';
+      if (!checkout.contact.phone.trim()) e.phone = 'Teléfono requerido';
     }
 
     setErrors(e);
@@ -199,20 +200,14 @@ export default function CheckoutPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-400 mt-0.5">✓</span>
-                Podés seguir tu pedido en <span className="text-white font-black">/track</span>
+                Te contactaremos por WhatsApp o email con novedades
               </li>
             </ul>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={() => router.push('/track')}
-              className="flex-1 py-3 rounded-xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-colors"
-            >
-              Seguir mi pedido
-            </button>
-            <button
               onClick={() => router.push('/productos')}
-              className="flex-1 py-3 rounded-xl bg-zinc-800 text-white font-black text-sm uppercase tracking-tight hover:bg-zinc-700 transition-colors border border-zinc-700"
+              className="flex-1 py-3 rounded-xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-colors"
             >
               Seguir comprando
             </button>
@@ -327,10 +322,10 @@ export default function CheckoutPage() {
                       required={checkout.fulfillment === 'shipping'} />
                     <InputField label="Email *" type="email" value={checkout.contact.email} error={errors.email}
                       onChange={(v) => checkout.updateContact({ email: v })} />
+                    <InputField label="Teléfono *" type="tel" value={checkout.contact.phone} error={errors.phone}
+                      onChange={(v) => checkout.updateContact({ phone: v })} />
                     {checkout.fulfillment === 'shipping' && (
                       <>
-                        <InputField label="Teléfono *" type="tel" value={checkout.contact.phone} error={errors.phone}
-                          onChange={(v) => checkout.updateContact({ phone: v })} />
                         <InputField label="Documento (DNI/CUIT) *" value={checkout.contact.document} error={errors.document}
                           onChange={(v) => checkout.updateContact({ document: v })} />
                         <InputField label="Código Postal *" value={checkout.address.postalCode} error={errors.postalCode}

@@ -444,11 +444,11 @@ export default function AdminOrdersPage() {
                 ✕
               </button>
             </div>
-            <div className="p-4">
+            <div className="p-4 flex justify-center">
               <img
                 src={proofModal}
                 alt="Comprobante de pago"
-                className="w-full rounded-lg border border-gray-200"
+                className="max-w-[280px] max-h-[400px] object-contain rounded-lg border border-gray-200"
               />
             </div>
             <div className="p-4 pt-0 flex gap-2">
