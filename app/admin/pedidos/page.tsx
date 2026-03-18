@@ -109,15 +109,15 @@ export default function AdminOrdersPage() {
 
   const deleteOrder = async (orderId: string) => {
     if (!confirm('¿Seguro que querés eliminar esta orden? Los productos volverán al stock.')) return;
-    // Restore stock for all items in this order
-    await supabase.rpc('restore_order_stock', { p_order_id: orderId });
-    // Delete related records first, then the order
-    await supabase.from('order_items').delete().eq('order_id', orderId);
-    await supabase.from('shipping_addresses').delete().eq('order_id', orderId);
-    const { error } = await supabase.from('orders').delete().eq('id', orderId);
-    if (!error) {
+    const res = await fetch(`/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
       loadOrders();
+      return;
     }
+    const data = await res.json().catch(() => ({}));
+    alert(data.error || 'No se pudo eliminar la orden');
   };
 
   const filteredOrders = orders.filter(order => {

@@ -128,6 +128,12 @@ export function Header() {
             >
               Encargos
             </Link>
+            <Link
+              href="/nosotros"
+              className="rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors uppercase tracking-tight"
+            >
+              Nosotros
+            </Link>
           </nav>
         </div>
         
