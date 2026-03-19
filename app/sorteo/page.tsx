@@ -327,7 +327,7 @@ export default function SorteoPage() {
                 </p>
               )}
               <p className="text-sm font-bold leading-relaxed text-zinc-300 italic">
-                "{investigationText}"
+                &ldquo;{investigationText}&rdquo;
               </p>
               {lastFoundPos !== null && (
                 <p className="mt-2 text-xs font-black text-red-400">
