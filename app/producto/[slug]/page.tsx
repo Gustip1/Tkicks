@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { GiveawayInlinePriceClue, getProductClueForSlug, FoundClue } from '@/components/giveaway/GiveawayClue';
+import { GiveawayInlinePriceClue, getProductClueForSlug } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star } from 'lucide-react';
 
 export default function ProductDetailPage() {
@@ -16,7 +16,6 @@ export default function ProductDetailPage() {
   const { rate: dolarOficial } = useDolarRate();
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [foundProductClues, setFoundProductClues] = useState<FoundClue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,23 +46,6 @@ export default function ProductDetailPage() {
     loadProduct();
   }, [params.slug, supabase]);
 
-  useEffect(() => {
-    if (!product) return;
-    try {
-      const raw = localStorage.getItem('tkicks_giveaway_found_paths');
-      const parsed = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(parsed)) {
-        setFoundProductClues([]);
-        return;
-      }
-      const found = (parsed as FoundClue[])
-        .filter((item) => item?.id?.startsWith('producto:'))
-        .sort((a, b) => (a.foundAt < b.foundAt ? 1 : -1));
-      setFoundProductClues(found);
-    } catch {
-      setFoundProductClues([]);
-    }
-  }, [product]);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh] bg-black">
@@ -153,21 +135,6 @@ export default function ProductDetailPage() {
             <p className="text-sm md:text-lg text-gray-300 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
-            <div className="mt-2 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-wider">Pistas encontradas (en productos)</p>
-              {foundProductClues.length === 0 ? (
-                <p className="text-xs text-gray-400 font-bold mt-1">Todavía no encontraste pistas en productos.</p>
-              ) : (
-                <ul className="mt-1 space-y-1">
-                  {foundProductClues.slice(0, 5).map((clue) => (
-                    <li key={clue.id} className="text-xs text-gray-300 font-bold flex items-center justify-between gap-2">
-                      <span className="truncate">{clue.label}</span>
-                      <span className="text-red-400 font-black">{clue.digit}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
             {/* Precio Tarjeta — 3 cuotas sin interés con 10% recargo */}
             {(() => {
               const cardPriceArs = Number(product.price) * 1.10 * dolarOficial;
