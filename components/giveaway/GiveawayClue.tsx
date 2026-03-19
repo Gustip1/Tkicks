@@ -1,20 +1,15 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
-const CLUE_MAP: Record<string, string> = {
-  '/': '2',
-  '/productos': '6',
-  '/ofertas': '0',
-  '/encargos': '7',
-  '/nosotros': '0',
-  '/nuevos-ingresos': '5',
-};
+const TOTAL_CLUES = 6;
 
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
 
 export type FoundClue = {
-  path: string;
+  id: string;
+  label: string;
+  path?: string;
   digit: string;
   foundAt: string;
 };
@@ -28,16 +23,17 @@ function normalizeClues(raw: string | null): FoundClue[] {
     // Backward compatibility: older format was string[] paths
     if (parsed.every((item) => typeof item === 'string')) {
       return (parsed as string[])
-        .filter((path) => Boolean(CLUE_MAP[path]))
         .map((path) => ({
+          id: path,
+          label: path,
           path,
-          digit: CLUE_MAP[path],
+          digit: '?',
           foundAt: new Date().toISOString(),
         }));
     }
 
     return (parsed as FoundClue[]).filter(
-      (item) => Boolean(item?.path) && Boolean(item?.digit)
+      (item) => Boolean(item?.id) && Boolean(item?.digit)
     );
   } catch {
     return [];
@@ -47,6 +43,7 @@ function normalizeClues(raw: string | null): FoundClue[] {
 export function GiveawayClue() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
+  const [foundCount, setFoundCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -61,6 +58,16 @@ export function GiveawayClue() {
           try {
             localStorage.removeItem(STORAGE_KEY);
           } catch {}
+          if (mounted) setFoundCount(0);
+          return;
+        }
+
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          const found = normalizeClues(raw);
+          if (mounted) setFoundCount(found.length);
+        } catch {
+          if (mounted) setFoundCount(0);
         }
       } catch {
         if (mounted) setActive(false);
@@ -76,37 +83,74 @@ export function GiveawayClue() {
   }, []);
 
   const isAdmin = pathname.startsWith('/admin');
-  const digit = useMemo(() => CLUE_MAP[pathname], [pathname]);
-  const isReal = Boolean(CLUE_MAP[pathname]);
+  if (!active || isAdmin) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 rounded-xl border border-zinc-700 bg-black/90 px-3 py-2 shadow-lg backdrop-blur-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400">Pistas encontradas</p>
+      <p className="text-sm font-black text-white">{foundCount}/{TOTAL_CLUES}</p>
+      <p className="text-[10px] font-bold text-zinc-400">Detalle completo en /sorteo</p>
+    </div>
+  );
+}
+
+type InlinePriceClueProps = {
+  clueId: string;
+  label: string;
+  digit: string;
+};
+
+export function GiveawayInlinePriceClue({ clueId, label, digit }: InlinePriceClueProps) {
+  const pathname = usePathname();
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
-    if (!active || !isReal || isAdmin || !digit) return;
+    let mounted = true;
+    const fetchState = async () => {
+      try {
+        const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
+        const data = await res.json();
+        const isActive = Boolean(data?.active);
+        if (!mounted) return;
+        setActive(isActive);
+        if (!isActive) {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch {}
+        }
+      } catch {
+        if (mounted) setActive(false);
+      }
+    };
+
+    void fetchState();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!active || pathname.startsWith('/admin')) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const found = normalizeClues(raw);
-      const map = new Map(found.map((clue) => [clue.path, clue]));
-      map.set(pathname, {
+      const map = new Map(found.map((clue) => [clue.id, clue]));
+      map.set(clueId, {
+        id: clueId,
+        label,
         path: pathname,
         digit,
         foundAt: new Date().toISOString(),
       });
-      const next = Array.from(map.values());
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(map.values())));
     } catch {}
-  }, [active, isReal, isAdmin, pathname, digit]);
+  }, [active, clueId, label, digit, pathname]);
 
-  if (!active || isAdmin || !isReal || !digit) return null;
+  if (!active || pathname.startsWith('/admin')) return null;
 
   return (
-    <div className="mt-4 flex justify-end">
-      <div
-        className="rounded-lg border border-red-500/60 bg-black/85 px-2 py-1 shadow-lg rotate-[-3deg] transition hover:rotate-0"
-      >
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Pista</p>
-        <p className="text-lg font-black leading-none text-red-500">
-          {digit}
-        </p>
-      </div>
-    </div>
+    <span className="inline-flex items-center rounded-md border border-red-500/60 bg-black/70 px-2 py-0.5 text-xs font-black text-red-500">
+      PISTA {digit}
+    </span>
   );
 }

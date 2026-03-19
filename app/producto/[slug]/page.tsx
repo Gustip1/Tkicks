@@ -7,7 +7,15 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star } from 'lucide-react';
+
+const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'];
+
+function clueDigitFromSlug(slug: string) {
+  const hash = slug.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return CLUE_SEQUENCE[hash % CLUE_SEQUENCE.length];
+}
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -121,6 +129,11 @@ export default function ProductDetailPage() {
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
                 ${Number(product.price).toFixed(2)} USD
               </span>
+              <GiveawayInlinePriceClue
+                clueId={`producto:${product.slug}`}
+                label={`Producto: ${product.title}`}
+                digit={clueDigitFromSlug(product.slug)}
+              />
             </div>
             <p className="text-sm md:text-lg text-gray-300 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>

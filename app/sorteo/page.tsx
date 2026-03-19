@@ -2,7 +2,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
 type FoundClue = {
-  path: string;
+  id: string;
+  label: string;
+  path?: string;
   digit: string;
   foundAt: string;
 };
@@ -32,12 +34,14 @@ function normalizeClues(raw: string | null): FoundClue[] {
     if (!Array.isArray(parsed)) return [];
     if (parsed.every((item) => typeof item === 'string')) {
       return (parsed as string[]).map((path) => ({
+        id: path,
+        label: PATH_LABELS[path] || path,
         path,
         digit: CLUE_DIGITS_BY_PATH[path] || '?',
         foundAt: new Date().toISOString(),
       }));
     }
-    return (parsed as FoundClue[]).filter((item) => Boolean(item?.path));
+    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id));
   } catch {
     return [];
   }
@@ -69,7 +73,7 @@ export default function SorteoPage() {
 
   const totalClues = 6;
   const selectedClue = useMemo(
-    () => foundClues.find((item) => item.path === selectedCluePath) || null,
+    () => foundClues.find((item) => item.id === selectedCluePath) || null,
     [foundClues, selectedCluePath]
   );
 
@@ -107,7 +111,7 @@ export default function SorteoPage() {
       const found = normalizeClues(raw);
       setFoundCount(found.length);
       setFoundClues(found);
-      if (found.length > 0) setSelectedCluePath(found[0].path);
+      if (found.length > 0) setSelectedCluePath(found[0].id);
     } catch {
       setFoundCount(0);
       setFoundClues([]);
@@ -216,16 +220,16 @@ export default function SorteoPage() {
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {foundClues.map((clue) => (
                   <button
-                    key={clue.path}
+                    key={clue.id}
                     type="button"
-                    onClick={() => setSelectedCluePath(clue.path)}
+                    onClick={() => setSelectedCluePath(clue.id)}
                     className={`rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-wider transition ${
-                      selectedCluePath === clue.path
+                      selectedCluePath === clue.id
                         ? 'border-red-500 bg-red-500/10 text-red-400'
                         : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
                     }`}
                   >
-                    {(PATH_LABELS[clue.path] || clue.path) + ' · ' + (clue.digit || '?')}
+                    {(clue.label || PATH_LABELS[clue.path || ''] || clue.id) + ' · ' + (clue.digit || '?')}
                   </button>
                 ))}
               </div>
@@ -233,7 +237,7 @@ export default function SorteoPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Detalle</p>
                 <p className="text-xs font-bold text-zinc-300">
                   {selectedCluePath && selectedClue
-                    ? `En ${PATH_LABELS[selectedCluePath] || selectedCluePath} encontraste el número ${selectedClue.digit || '?'} el ${formatFoundMoment(selectedClue.foundAt)}.`
+                    ? `Encontraste la pista ${selectedClue.digit || '?'} en ${selectedClue.label || PATH_LABELS[selectedClue.path || ''] || selectedClue.id} el ${formatFoundMoment(selectedClue.foundAt)}.`
                     : 'Seleccioná una pista para ver el número.'}
                 </p>
               </div>
