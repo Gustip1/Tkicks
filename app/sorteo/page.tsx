@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type FoundClue = {
   path: string;
@@ -13,7 +13,16 @@ const PATH_LABELS: Record<string, string> = {
   '/ofertas': 'Ofertas',
   '/encargos': 'Encargos',
   '/nosotros': 'Nosotros',
-  '/sorteo': 'Sorteo',
+  '/nuevos-ingresos': 'Nuevos ingresos',
+};
+
+const CLUE_DIGITS_BY_PATH: Record<string, string> = {
+  '/': '2',
+  '/productos': '6',
+  '/ofertas': '0',
+  '/encargos': '7',
+  '/nosotros': '0',
+  '/nuevos-ingresos': '5',
 };
 
 function normalizeClues(raw: string | null): FoundClue[] {
@@ -24,7 +33,7 @@ function normalizeClues(raw: string | null): FoundClue[] {
     if (parsed.every((item) => typeof item === 'string')) {
       return (parsed as string[]).map((path) => ({
         path,
-        digit: '?',
+        digit: CLUE_DIGITS_BY_PATH[path] || '?',
         foundAt: new Date().toISOString(),
       }));
     }
@@ -32,6 +41,17 @@ function normalizeClues(raw: string | null): FoundClue[] {
   } catch {
     return [];
   }
+}
+
+function formatFoundMoment(iso?: string) {
+  if (!iso) return 'Momento no disponible';
+  return new Date(iso).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export default function SorteoPage() {
@@ -48,6 +68,10 @@ export default function SorteoPage() {
   const [selectedCluePath, setSelectedCluePath] = useState<string | null>(null);
 
   const totalClues = 6;
+  const selectedClue = useMemo(
+    () => foundClues.find((item) => item.path === selectedCluePath) || null,
+    [foundClues, selectedCluePath]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -170,12 +194,12 @@ export default function SorteoPage() {
         </p>
         <h1 className="mt-4 text-3xl font-black uppercase tracking-tight text-white">Coming Soon</h1>
         <p className="mt-2 text-sm font-bold text-zinc-400">
-          Buscá las pistas rojas en toda la web, armá el código y ganate la remera.
+          Buscá las pistas visuales en páginas clave de la web, armá el código y ganate la remera.
         </p>
         <div className="mt-4 grid gap-2 rounded-xl border border-zinc-800 bg-black p-3 text-left sm:grid-cols-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Pista general</p>
-            <p className="text-xs font-bold text-zinc-300">Las pistas están distribuidas por toda la web.</p>
+            <p className="text-xs font-bold text-zinc-300">Explorá Inicio, Productos, Ofertas, Encargos, Nosotros y Nuevos ingresos.</p>
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Tu progreso</p>
@@ -201,17 +225,15 @@ export default function SorteoPage() {
                         : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
                     }`}
                   >
-                    {PATH_LABELS[clue.path] || clue.path}
+                    {(PATH_LABELS[clue.path] || clue.path) + ' · ' + (clue.digit || '?')}
                   </button>
                 ))}
               </div>
               <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-2">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Detalle</p>
                 <p className="text-xs font-bold text-zinc-300">
-                  {selectedCluePath
-                    ? `En ${PATH_LABELS[selectedCluePath] || selectedCluePath} encontraste el número ${
-                        foundClues.find((item) => item.path === selectedCluePath)?.digit || '?'
-                      }`
+                  {selectedCluePath && selectedClue
+                    ? `En ${PATH_LABELS[selectedCluePath] || selectedCluePath} encontraste el número ${selectedClue.digit || '?'} el ${formatFoundMoment(selectedClue.foundAt)}.`
                     : 'Seleccioná una pista para ver el número.'}
                 </p>
               </div>
