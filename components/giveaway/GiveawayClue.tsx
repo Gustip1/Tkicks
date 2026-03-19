@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const TOTAL_CLUES = 6;
+const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'];
 
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
 
@@ -13,6 +14,14 @@ export type FoundClue = {
   digit: string;
   foundAt: string;
 };
+
+export function getProductClueForSlug(slug: string): string | null {
+  const hash = slug.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  // Deterministic pseudo-random selection: only some products have clues
+  const selected = hash % 3 === 0;
+  if (!selected) return null;
+  return CLUE_SEQUENCE[hash % CLUE_SEQUENCE.length];
+}
 
 function normalizeClues(raw: string | null): FoundClue[] {
   if (!raw) return [];

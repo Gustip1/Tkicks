@@ -5,15 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import { Heart, ShoppingBag } from 'lucide-react';
-
-const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'];
-
-function clueDigitFromSlug(slug: string) {
-  const hash = slug.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return CLUE_SEQUENCE[hash % CLUE_SEQUENCE.length];
-}
 
 interface ProductCardProps {
   product: Product;
@@ -181,19 +173,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Price */}
         <div className="space-y-1">
           {/* Precio Base (Transferencia/Efectivo) */}
-          <div className="flex items-center justify-between gap-2">
-            <p className={cn(
-              "font-black text-white",
-              size === 'large' ? "text-xl" : "text-lg"
-            )}>
-              ${Number(product.price).toFixed(2)} USD
-            </p>
-            <GiveawayInlinePriceClue
-              clueId={`card:${product.slug}`}
-              label={`Card: ${product.title}`}
-              digit={clueDigitFromSlug(product.slug)}
-            />
-          </div>
+          <p className={cn(
+            "font-black text-white",
+            size === 'large' ? "text-xl" : "text-lg"
+          )}>
+            ${Number(product.price).toFixed(2)} USD
+          </p>
           <p className="text-sm text-gray-400 font-semibold">
             {formatCurrency(priceInArs)}
           </p>
