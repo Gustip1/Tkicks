@@ -2,6 +2,7 @@ import { createServerSupabase } from '@/lib/supabase/server';
 import { Product } from '@/types/db';
 import { ProductCard } from '@/components/catalog/ProductCard';
 import Link from 'next/link';
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export const metadata = {
   title: 'Nuevos ingresos | Tkicks',
@@ -22,9 +23,12 @@ export default async function NuevosIngresosPage() {
     <div className="min-h-screen bg-black">
       <main className="max-w-[1600px] mx-auto px-4 py-8 space-y-8">
         <header className="space-y-3">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
-            Catálogo exclusivo
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+              Catálogo exclusivo
+            </p>
+            <GiveawayInlinePriceClue clueId="/nuevos-ingresos" label="Nuevos ingresos" position={5} digit="5" />
+          </div>
           <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
             Nuevos ingresos
           </h1>

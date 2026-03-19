@@ -17,13 +17,30 @@ export type FoundClue = {
   foundAt: string;
 };
 
-// Cada producto con hash%3===0 tiene una posición determinada en el código.
-// La posición = hash % 6, el dígito = CLUE_SEQUENCE[hash % 6].
-// Si esa posición ya fue encontrada (por página u otro producto), no muestra el badge.
-export function getProductClueInfo(slug: string): { digit: string; position: number } | null {
-  const hash = slug.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  if (hash % 3 !== 0) return null;
-  const position = hash % 6;
+// Posiciones asignadas por categoría para garantizar que todos los dígitos aparezcan:
+//   sneakers   → posiciones {0, 2, 5} = dígitos {2, 0, 5}
+//   streetwear → posiciones {1, 3, 4} = dígitos {6, 7, 0}
+// El dígito '0' aparece dos veces (pos 2 y 4) porque el código es 260705.
+const SNEAKERS_POS  = [0, 2, 5] as const; // 2, 0, 5
+const STREETWEAR_POS = [1, 3, 4] as const; // 6, 7, 0
+
+export function getProductClueInfo(slug: string, category?: string): { digit: string; position: number } | null {
+  // DJB2 hash — distribución mucho mejor que simple suma de char codes
+  let h = 5381;
+  for (const c of slug) h = ((h << 5) + h + c.charCodeAt(0)) & 0x7fffffff;
+
+  // ~50 % de los productos muestran pista (bit 0 del hash)
+  if ((h & 1) !== 0) return null;
+
+  // Asignación por categoría: usa bits altos para no correlacionar con selección
+  const positions = category === 'sneakers' ? SNEAKERS_POS
+                  : category === 'streetwear' ? STREETWEAR_POS
+                  : null;
+
+  const position = positions
+    ? positions[(h >> 4) % positions.length]
+    : (h >> 4) % 6; // fallback: cualquier posición
+
   return { position, digit: CLUE_SEQUENCE[position] };
 }
 

@@ -3,6 +3,7 @@ import { NewArrivals } from '@/components/landing/NewArrivals';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase } from '@/components/landing/CategoryShowcase';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export default function HomePage() {
   return (
@@ -15,6 +16,11 @@ export default function HomePage() {
 
       {/* Social proof strip — trust signals */}
       <SocialProofStrip />
+
+      {/* Sorteo clue — posición 0 */}
+      <div className="flex justify-center py-1">
+        <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
+      </div>
 
       {/* Category showcase — Sneakers / Streetwear cards */}
       <CategoryShowcase />

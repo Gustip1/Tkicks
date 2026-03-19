@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export const metadata: Metadata = {
   title: 'Nosotros | Tkicks',
@@ -62,9 +63,12 @@ export default async function NosotrosPage() {
 
         <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
           <div className="space-y-4">
-            <p className="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-300">
-              Quiénes somos
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-300">
+                Quiénes somos
+              </p>
+              <GiveawayInlinePriceClue clueId="/nosotros" label="Nosotros" position={4} digit="0" />
+            </div>
             <h1 className="text-2xl font-black leading-tight md:text-4xl">
               Somos Tkicks: cultura urbana, autenticidad y comunidad.
             </h1>

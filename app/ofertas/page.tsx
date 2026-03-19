@@ -1,4 +1,5 @@
 import { OfertasClient } from '@/components/catalog/OfertasClient';
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,13 @@ export const metadata = {
 };
 
 export default async function OfertasPage() {
-  return <OfertasClient />;
+  return (
+    <>
+      <div className="flex justify-center py-2">
+        <GiveawayInlinePriceClue clueId="/ofertas" label="Ofertas" position={2} digit="0" />
+      </div>
+      <OfertasClient />
+    </>
+  );
 }
 

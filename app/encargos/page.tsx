@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 /* ─── tipos ─── */
 interface Producto {
@@ -174,7 +175,10 @@ export default function EncargosPage() {
     <div className="mx-auto max-w-2xl space-y-6 pb-32">
       {/* header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Encargos Personalizados</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white">Encargos Personalizados</h1>
+          <GiveawayInlinePriceClue clueId="/encargos" label="Encargos" position={3} digit="7" />
+        </div>
         <p className="mt-1 text-sm text-neutral-400">
           Completá los datos de tu pedido y te contactaremos por WhatsApp.
         </p>

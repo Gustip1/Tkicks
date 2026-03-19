@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
   );
 
   const priceInArs = Number(product.price) * dolarOficial;
-  const productClueInfo = getProductClueInfo(product.slug);
+  const productClueInfo = getProductClueInfo(product.slug, product.category);
 
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-black min-h-screen overflow-x-hidden">
