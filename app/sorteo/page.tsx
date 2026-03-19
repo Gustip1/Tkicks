@@ -1,6 +1,39 @@
 "use client";
 import { useEffect, useState } from 'react';
 
+type FoundClue = {
+  path: string;
+  digit: string;
+  foundAt: string;
+};
+
+const PATH_LABELS: Record<string, string> = {
+  '/': 'Inicio',
+  '/productos': 'Productos',
+  '/ofertas': 'Ofertas',
+  '/encargos': 'Encargos',
+  '/nosotros': 'Nosotros',
+  '/sorteo': 'Sorteo',
+};
+
+function normalizeClues(raw: string | null): FoundClue[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    if (parsed.every((item) => typeof item === 'string')) {
+      return (parsed as string[]).map((path) => ({
+        path,
+        digit: '?',
+        foundAt: new Date().toISOString(),
+      }));
+    }
+    return (parsed as FoundClue[]).filter((item) => Boolean(item?.path));
+  } catch {
+    return [];
+  }
+}
+
 export default function SorteoPage() {
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -11,6 +44,8 @@ export default function SorteoPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [foundCount, setFoundCount] = useState(0);
+  const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
+  const [selectedCluePath, setSelectedCluePath] = useState<string | null>(null);
 
   const totalClues = 6;
 
@@ -21,7 +56,16 @@ export default function SorteoPage() {
         const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
         const data = await res.json();
         if (!mounted) return;
-        setActive(Boolean(data?.active));
+        const isActive = Boolean(data?.active);
+        setActive(isActive);
+        if (!isActive) {
+          try {
+            localStorage.removeItem('tkicks_giveaway_found_paths');
+          } catch {}
+          setFoundCount(0);
+          setFoundClues([]);
+          setSelectedCluePath(null);
+        }
       } catch {
         if (mounted) setActive(false);
       } finally {
@@ -36,11 +80,13 @@ export default function SorteoPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem('tkicks_giveaway_found_paths');
-      const parsed = raw ? JSON.parse(raw) : [];
-      const found = Array.isArray(parsed) ? parsed : [];
+      const found = normalizeClues(raw);
       setFoundCount(found.length);
+      setFoundClues(found);
+      if (found.length > 0) setSelectedCluePath(found[0].path);
     } catch {
       setFoundCount(0);
+      setFoundClues([]);
     }
   }, [active]);
 
@@ -135,6 +181,42 @@ export default function SorteoPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Tu progreso</p>
             <p className="text-sm font-black text-red-500">{foundCount}/{totalClues} pistas encontradas</p>
           </div>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-zinc-800 bg-black p-3 text-left">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Números encontrados</p>
+          {foundClues.length === 0 ? (
+            <p className="mt-1 text-xs font-bold text-zinc-400">Todavía no encontraste pistas.</p>
+          ) : (
+            <>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {foundClues.map((clue) => (
+                  <button
+                    key={clue.path}
+                    type="button"
+                    onClick={() => setSelectedCluePath(clue.path)}
+                    className={`rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-wider transition ${
+                      selectedCluePath === clue.path
+                        ? 'border-red-500 bg-red-500/10 text-red-400'
+                        : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
+                    }`}
+                  >
+                    {PATH_LABELS[clue.path] || clue.path}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Detalle</p>
+                <p className="text-xs font-bold text-zinc-300">
+                  {selectedCluePath
+                    ? `En ${PATH_LABELS[selectedCluePath] || selectedCluePath} encontraste el número ${
+                        foundClues.find((item) => item.path === selectedCluePath)?.digit || '?'
+                      }`
+                    : 'Seleccioná una pista para ver el número.'}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <form onSubmit={handleCheckCode} className="mt-6 space-y-3 text-left">
