@@ -167,6 +167,21 @@ export function Sidebar() {
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </Link>
+
+            <Link
+              href="/sorteo"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-zinc-800 text-white"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-zinc-800">
+                🎯
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-red-400">Sorteo</p>
+                <p className="text-xs font-bold text-gray-400">Encontrá el código oculto</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
           </div>
         </nav>
         

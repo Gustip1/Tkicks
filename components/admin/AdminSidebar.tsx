@@ -17,7 +17,8 @@ import {
   X,
   ChevronRight,
   Home,
-  TrendingUp
+  TrendingUp,
+  Gift
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Precios', href: '/admin/precios', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { name: 'Destacados', href: '/admin/destacados', icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   { name: 'Ofertas', href: '/admin/ofertas', icon: Flame, color: 'text-red-600', bg: 'bg-red-50' },
+  { name: 'Sorteo', href: '/admin/sorteo', icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   { name: 'Imágenes', href: '/admin/uploads', icon: Upload, color: 'text-cyan-600', bg: 'bg-cyan-50' },
   { name: 'Clientes', href: '/admin/clientes', icon: Users, color: 'text-pink-600', bg: 'bg-pink-50' },
   { name: 'Ajustes', href: '/admin/ajustes', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100' },
