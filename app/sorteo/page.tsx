@@ -10,6 +10,9 @@ export default function SorteoPage() {
   const [ok, setOk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [foundCount, setFoundCount] = useState(0);
+
+  const totalClues = 6;
 
   useEffect(() => {
     let mounted = true;
@@ -29,6 +32,17 @@ export default function SorteoPage() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tkicks_giveaway_found_paths');
+      const parsed = raw ? JSON.parse(raw) : [];
+      const found = Array.isArray(parsed) ? parsed : [];
+      setFoundCount(found.length);
+    } catch {
+      setFoundCount(0);
+    }
+  }, [active]);
 
   const handleCheckCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +126,16 @@ export default function SorteoPage() {
         <p className="mt-2 text-sm font-bold text-zinc-400">
           Buscá las pistas rojas en toda la web, armá el código y ganate la remera.
         </p>
+        <div className="mt-4 grid gap-2 rounded-xl border border-zinc-800 bg-black p-3 text-left sm:grid-cols-2">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Pista general</p>
+            <p className="text-xs font-bold text-zinc-300">Las pistas están distribuidas por toda la web.</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Tu progreso</p>
+            <p className="text-sm font-black text-red-500">{foundCount}/{totalClues} pistas encontradas</p>
+          </div>
+        </div>
 
         <form onSubmit={handleCheckCode} className="mt-6 space-y-3 text-left">
           <div>
