@@ -91,7 +91,7 @@ export default async function NosotrosPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2.5 rounded-2xl border border-zinc-800 bg-black/30 p-2 sm:gap-3">
             <div className="rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
               <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Foco</p>
               <p className="mt-2 text-sm font-bold text-white">Streetwear y sneakers originales, sin vueltas</p>
@@ -100,7 +100,7 @@ export default async function NosotrosPage() {
               <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Estilo</p>
               <p className="mt-2 text-sm font-bold text-white">Hype real y lanzamientos clave</p>
             </div>
-            <div className="rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4 sm:col-span-2">
+            <div className="col-span-2 rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
               <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Comunidad</p>
               <p className="mt-2 text-sm font-bold text-white">
                 En @tkicks.sj compartimos producto real, outfits, videos y novedades para que estés siempre al día.
@@ -133,7 +133,7 @@ export default async function NosotrosPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 xl:grid-cols-4">
             {feed.map((item) => {
               const preview = item.media_type === 'VIDEO' ? item.thumbnail_url || item.media_url : item.media_url;
               return (
