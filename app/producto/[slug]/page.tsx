@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { GiveawayInlinePriceClue, getProductClueForSlug } from '@/components/giveaway/GiveawayClue';
+import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star } from 'lucide-react';
 
 export default function ProductDetailPage() {
@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
   );
 
   const priceInArs = Number(product.price) * dolarOficial;
-  const productClueDigit = getProductClueForSlug(product.slug);
+  const productClueInfo = getProductClueInfo(product.slug);
 
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-black min-h-screen overflow-x-hidden">
@@ -124,11 +124,12 @@ export default function ProductDetailPage() {
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
                 ${Number(product.price).toFixed(2)} USD
               </span>
-              {productClueDigit && (
+              {productClueInfo && (
                 <GiveawayInlinePriceClue
                   clueId={`producto:${product.slug}`}
                   label={`Producto: ${product.title}`}
-                  digit={productClueDigit}
+                  position={productClueInfo.position}
+                  digit={productClueInfo.digit}
                 />
               )}
             </div>

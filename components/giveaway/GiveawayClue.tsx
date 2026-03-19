@@ -3,23 +3,33 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
-const TOTAL_CLUES = 6;
-const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'];
+export const TOTAL_CLUES = 6;
+export const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'] as const;
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
+const CLUE_EVENT = 'tkicks-clue-found';
 
 export type FoundClue = {
   id: string;
   label: string;
   path?: string;
+  position: number; // 0-5, posición exacta en el código
   digit: string;
   foundAt: string;
 };
 
-export function getProductClueForSlug(slug: string): string | null {
+// Cada producto con hash%3===0 tiene una posición determinada en el código.
+// La posición = hash % 6, el dígito = CLUE_SEQUENCE[hash % 6].
+// Si esa posición ya fue encontrada (por página u otro producto), no muestra el badge.
+export function getProductClueInfo(slug: string): { digit: string; position: number } | null {
   const hash = slug.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const selected = hash % 3 === 0;
-  if (!selected) return null;
-  return CLUE_SEQUENCE[hash % CLUE_SEQUENCE.length];
+  if (hash % 3 !== 0) return null;
+  const position = hash % 6;
+  return { position, digit: CLUE_SEQUENCE[position] };
+}
+
+// Compatibilidad con llamadas antiguas
+export function getProductClueForSlug(slug: string): string | null {
+  return getProductClueInfo(slug)?.digit ?? null;
 }
 
 function normalizeClues(raw: string | null): FoundClue[] {
@@ -27,43 +37,53 @@ function normalizeClues(raw: string | null): FoundClue[] {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    if (parsed.every((item) => typeof item === 'string')) {
-      return (parsed as string[]).map((path) => ({
-        id: path,
-        label: path,
-        path,
-        digit: '?',
-        foundAt: new Date().toISOString(),
-      }));
-    }
-    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id) && Boolean(item?.digit));
+    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id) && item?.position !== undefined);
   } catch {
     return [];
   }
 }
 
-function saveClue(clueId: string, label: string, digit: string, path: string) {
+function readClues(): FoundClue[] {
+  try { return normalizeClues(localStorage.getItem(STORAGE_KEY)); } catch { return []; }
+}
+
+function saveClue(clue: Omit<FoundClue, 'foundAt'>) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const found = normalizeClues(raw);
-    const map = new Map(found.map((c) => [c.id, c]));
-    if (!map.has(clueId)) {
-      map.set(clueId, { id: clueId, label, path, digit, foundAt: new Date().toISOString() });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(map.values())));
-    }
+    const found = readClues();
+    // No duplicar posición
+    if (found.some((c) => c.position === clue.position)) return;
+    const next: FoundClue = { ...clue, foundAt: new Date().toISOString() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...found, next]));
+    window.dispatchEvent(new CustomEvent(CLUE_EVENT));
   } catch {}
 }
 
-// ─── Widget flotante bottom-right ───────────────────────────────────────────
+// ─── Widget flotante bottom-right ────────────────────────────────────────────
 
 export function GiveawayClue() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
   const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
+  const [newPos, setNewPos] = useState<number | null>(null);
+
+  const refresh = () => {
+    try {
+      const clues = readClues();
+      setFoundClues((prev) => {
+        // Detectar posición nueva para animación
+        const prevPositions = new Set(prev.map((c) => c.position));
+        const added = clues.find((c) => !prevPositions.has(c.position));
+        if (added) {
+          setNewPos(added.position);
+          setTimeout(() => setNewPos(null), 900);
+        }
+        return clues;
+      });
+    } catch {}
+  };
 
   useEffect(() => {
     let mounted = true;
-
     const fetchState = async () => {
       try {
         const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
@@ -71,75 +91,83 @@ export function GiveawayClue() {
         const isActive = Boolean(data?.active);
         if (!mounted) return;
         setActive(isActive);
-
         if (!isActive) {
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
           setFoundClues([]);
           return;
         }
-
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (mounted) setFoundClues(normalizeClues(raw));
-        } catch {
-          if (mounted) setFoundClues([]);
-        }
+        refresh();
       } catch {
         if (mounted) setActive(false);
       }
     };
 
     void fetchState();
-    const timer = setInterval(fetchState, 5000);
-    return () => { mounted = false; clearInterval(timer); };
+    const timer = setInterval(fetchState, 8000);
+
+    // Actualización inmediata al encontrar pista
+    const handler = () => refresh();
+    window.addEventListener(CLUE_EVENT, handler);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+      window.removeEventListener(CLUE_EVENT, handler);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!active || pathname.startsWith('/admin')) return null;
 
-  const foundCount = foundClues.length;
+  const byPos = new Map(foundClues.map((c) => [c.position, c]));
+  const foundCount = byPos.size;
 
   return (
     <Link href="/sorteo" aria-label="Ver progreso del sorteo">
-      <div className="fixed bottom-4 right-4 z-50 cursor-pointer rounded-2xl border border-zinc-800 bg-black/95 px-3.5 py-3 shadow-2xl shadow-black/50 backdrop-blur-md transition-all duration-200 hover:border-red-500/40 hover:shadow-red-950/30">
-        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">Sorteo · Pistas</p>
-        <div className="mt-2 flex items-center gap-1">
+      <div className="fixed bottom-4 right-4 z-50 cursor-pointer select-none rounded-2xl border border-zinc-800 bg-black/95 p-3 shadow-2xl shadow-black/60 backdrop-blur-md transition-all duration-200 hover:border-zinc-700">
+        <p className="mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">
+          Pistas · <span className={foundCount > 0 ? 'text-red-500' : 'text-zinc-600'}>{foundCount}</span>/{TOTAL_CLUES}
+        </p>
+        <div className="flex gap-1.5">
           {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-            const clue = foundClues[i];
+            const clue = byPos.get(i);
+            const isNew = newPos === i;
             return (
               <div
                 key={i}
-                title={clue ? `Pista ${i + 1}: ${clue.digit}` : `Pista ${i + 1}: no encontrada`}
-                className={`flex h-7 w-7 items-center justify-center rounded-lg text-[12px] font-black transition-all duration-300 ${
+                className={`relative flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black transition-all duration-300 ${
                   clue
-                    ? 'bg-red-500 text-white shadow-md shadow-red-900/50'
+                    ? isNew
+                      ? 'scale-110 bg-red-400 text-white shadow-lg shadow-red-800/60'
+                      : 'bg-red-500 text-white shadow-md shadow-red-900/40'
                     : 'border border-zinc-800 bg-zinc-950 text-zinc-700'
                 }`}
               >
-                {clue ? clue.digit : '·'}
+                {clue ? clue.digit : <span className="text-[10px]">?</span>}
               </div>
             );
           })}
         </div>
-        <p className="mt-1.5 text-[9px] font-bold text-zinc-600">
-          <span className={foundCount > 0 ? 'text-red-500' : ''}>{foundCount}</span>/{TOTAL_CLUES} encontradas
-        </p>
+        <p className="mt-1.5 text-center text-[9px] font-bold text-zinc-700">ver en /sorteo →</p>
       </div>
     </Link>
   );
 }
 
-// ─── Badge inline junto al precio ───────────────────────────────────────────
+// ─── Badge inline junto al precio (puzzle) ───────────────────────────────────
 
 type InlinePriceClueProps = {
   clueId: string;
   label: string;
+  position: number;
   digit: string;
 };
 
-export function GiveawayInlinePriceClue({ clueId, label, digit }: InlinePriceClueProps) {
+export function GiveawayInlinePriceClue({ clueId, label, position, digit }: InlinePriceClueProps) {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -153,18 +181,18 @@ export function GiveawayInlinePriceClue({ clueId, label, digit }: InlinePriceClu
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
           return;
         }
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (normalizeClues(raw).some((c) => c.id === clueId)) setSaved(true);
-        } catch {}
+        // ¿ya fue encontrada esta posición?
+        const already = readClues().some((c) => c.position === position);
+        if (already) setSaved(true);
       })
       .catch(() => { if (mounted) setActive(false); });
     return () => { mounted = false; };
-  }, [clueId]);
+  }, [position]);
 
   const handleHover = () => {
-    if (!active || saved || pathname.startsWith('/admin')) return;
-    saveClue(clueId, label, digit, pathname);
+    setHovered(true);
+    if (saved || !active || pathname.startsWith('/admin')) return;
+    saveClue({ id: clueId, label, path: pathname, position, digit });
     setSaved(true);
   };
 
@@ -173,13 +201,27 @@ export function GiveawayInlinePriceClue({ clueId, label, digit }: InlinePriceClu
   return (
     <span
       onMouseEnter={handleHover}
-      className={`inline-flex cursor-default select-none items-center rounded-md border px-2 py-0.5 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+      onMouseLeave={() => setHovered(false)}
+      title={saved ? `Pista ${position + 1} encontrada · ${digit}` : 'Pasá el mouse para revelar la pista'}
+      className={`inline-flex cursor-default select-none items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
         saved
-          ? 'border-red-500/70 bg-red-500/10 text-red-400'
-          : 'border-red-500/30 bg-black/40 text-red-500/60 hover:border-red-500/70 hover:bg-red-500/10 hover:text-red-400'
+          ? 'border-red-500/60 bg-red-500/10 text-red-400'
+          : hovered
+          ? 'border-red-500/50 bg-red-500/10 text-red-400 scale-105'
+          : 'border-zinc-700/60 bg-zinc-900/60 text-zinc-500 hover:border-zinc-600'
       }`}
     >
-      {saved ? `✓ ${digit}` : 'fecha'}
+      {saved ? (
+        <>
+          <span className="text-red-500">✦</span>
+          <span>{digit}</span>
+        </>
+      ) : (
+        <>
+          <span className="text-zinc-600">◈</span>
+          <span>fecha</span>
+        </>
+      )}
     </span>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type FoundClue = {
   id: string;
   label: string;
   path?: string;
+  position: number;
   digit: string;
   foundAt: string;
 };
@@ -12,55 +13,43 @@ type FoundClue = {
 const TOTAL_CLUES = 6;
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
 
-function normalizeClues(raw: string | null): FoundClue[] {
-  if (!raw) return [];
+function readClues(): FoundClue[] {
   try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    if (parsed.every((item) => typeof item === 'string')) {
-      return (parsed as string[]).map((path) => ({
-        id: path,
-        label: path,
-        path,
-        digit: '?',
-        foundAt: new Date().toISOString(),
-      }));
-    }
-    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id));
+    return (parsed as FoundClue[]).filter(
+      (item) => Boolean(item?.id) && item?.position !== undefined
+    );
   } catch {
     return [];
   }
 }
 
-function formatFoundMoment(iso?: string) {
+function formatDate(iso?: string) {
   if (!iso) return '';
   return new Date(iso).toLocaleString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
 export default function SorteoPage() {
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
   const [code, setCode] = useState('');
   const [phone, setPhone] = useState('');
   const [codeValidated, setCodeValidated] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [ok, setOk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const foundCount = foundClues.length;
-
-  const selectedClue = useMemo(
-    () => (selectedIndex !== null ? foundClues[selectedIndex] ?? null : null),
-    [foundClues, selectedIndex]
-  );
+  // Mapa posición → clue encontrada
+  const byPos = new Map(foundClues.map((c) => [c.position, c]));
+  const foundCount = byPos.size;
 
   useEffect(() => {
     let mounted = true;
@@ -74,7 +63,8 @@ export default function SorteoPage() {
         if (!isActive) {
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
           setFoundClues([]);
-          setSelectedIndex(null);
+        } else {
+          setFoundClues(readClues());
         }
       } catch {
         if (mounted) setActive(false);
@@ -85,19 +75,16 @@ export default function SorteoPage() {
     return () => { mounted = false; };
   }, []);
 
+  // Sincronizar código input con pistas encontradas cuando cambian
   useEffect(() => {
-    if (!active) return;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const found = normalizeClues(raw).sort(
-        (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
-      );
-      setFoundClues(found);
-      if (found.length > 0) setSelectedIndex(0);
-    } catch {
-      setFoundClues([]);
+    const fullCode = Array.from({ length: TOTAL_CLUES }, (_, i) =>
+      byPos.get(i)?.digit ?? ''
+    ).join('');
+    if (fullCode.length === TOTAL_CLUES && !fullCode.includes('')) {
+      setCode(fullCode);
     }
-  }, [active]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foundClues]);
 
   const handleCheckCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,21 +98,18 @@ export default function SorteoPage() {
         body: JSON.stringify({ code }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setMessage(data?.error || 'No se pudo validar el código');
-        return;
-      }
+      if (!res.ok) { setMessage(data?.error || 'Código incorrecto'); return; }
       setCodeValidated(true);
       setOk(true);
-      setMessage('Código correcto. Ahora dejá tu teléfono para participar.');
+      setMessage('Código correcto. Dejá tu teléfono para participar.');
     } catch {
-      setMessage('Error de conexión, intentá nuevamente.');
+      setMessage('Error de conexión.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleRegisterWinner = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
     setSubmitting(true);
@@ -136,155 +120,158 @@ export default function SorteoPage() {
         body: JSON.stringify({ code, phone, sourcePath: window.location.pathname }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setMessage(data?.error || 'No se pudo registrar tu participación');
-        return;
-      }
+      if (!res.ok) { setMessage(data?.error || 'No se pudo registrar'); return; }
       setOk(true);
       setMessage(
         data?.alreadyRegistered
-          ? 'Ya estabas registrado en el sorteo con ese teléfono.'
-          : '¡Listo! Quedaste registrado como participante ganador.'
+          ? 'Ya estabas registrado con ese teléfono.'
+          : '¡Listo! Quedaste registrado como participante.'
       );
-      setCode('');
-      setPhone('');
-      setCodeValidated(false);
+      setCode(''); setPhone(''); setCodeValidated(false);
     } catch {
-      setMessage('Error de conexión, intentá nuevamente.');
+      setMessage('Error de conexión.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ─── Loading ─────────────────────────────────────────────────────────────
+  // ─── Loading ──────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-700 border-t-red-500" />
-          <p className="text-xs font-bold tracking-widest text-zinc-600 uppercase">Cargando</p>
-        </div>
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-red-500" />
       </div>
     );
   }
 
-  // ─── Inactivo ────────────────────────────────────────────────────────────
+  // ─── Inactivo ─────────────────────────────────────────────────────────────
 
   if (!active) {
     return (
-      <div className="mx-auto max-w-md py-20 text-center">
-        <img src="/logo.jpg" alt="Tkicks" className="mx-auto h-20 w-auto rounded-2xl opacity-60" />
+      <div className="mx-auto max-w-md py-24 text-center">
+        <img src="/logo.jpg" alt="Tkicks" className="mx-auto h-16 w-auto rounded-2xl opacity-50" />
         <h1 className="mt-8 text-3xl font-black uppercase tracking-tight text-white">Coming Soon</h1>
-        <p className="mt-3 text-sm font-bold text-zinc-500">El sorteo no está activo por el momento.</p>
+        <p className="mt-3 text-sm font-bold text-zinc-600">El sorteo no está activo por el momento.</p>
       </div>
     );
   }
 
-  // ─── Activo ──────────────────────────────────────────────────────────────
+  // ─── Activo ───────────────────────────────────────────────────────────────
+
+  const selectedClue = selected !== null ? byPos.get(selected) ?? null : null;
 
   return (
-    <div className="mx-auto max-w-xl py-10 px-4">
+    <div className="mx-auto max-w-xl px-4 py-10">
       <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
 
         {/* Header */}
         <div className="text-center">
-          <img src="/logo.jpg" alt="Tkicks" className="mx-auto h-16 w-auto rounded-xl" />
-          <span className="mt-4 inline-flex rounded-full border border-red-600/50 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
+          <img src="/logo.jpg" alt="Tkicks" className="mx-auto h-14 w-auto rounded-xl" />
+          <span className="mt-3 inline-flex rounded-full border border-red-600/40 bg-red-500/10 px-3 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
             Sorteo Activo
           </span>
-          <h1 className="mt-3 text-2xl font-black uppercase tracking-tight text-white">
-            Encontrá las pistas
-          </h1>
-          <p className="mt-2 text-sm font-bold text-zinc-500">
-            Buscá la pista <span className="text-red-500 font-black">fecha</span> escondida en productos y secciones. Pasá el mouse para revelarla.
+          <h1 className="mt-2 text-xl font-black uppercase tracking-tight text-white">Encontrá las pistas</h1>
+          <p className="mt-1 text-xs font-bold text-zinc-600">
+            Buscá la pista <span className="text-red-500">◈ fecha</span> en la web y pasá el mouse para revelarla.
           </p>
         </div>
 
-        {/* Slots de pistas */}
+        {/* ── Puzzle slots ───────────────────────────────────────────────── */}
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Pistas encontradas</p>
-            <p className="text-[10px] font-black text-zinc-500">
-              <span className={foundCount > 0 ? 'text-red-500' : 'text-zinc-400'}>{foundCount}</span>
-              <span className="text-zinc-600">/{TOTAL_CLUES}</span>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">Piezas del código</p>
+            <p className="text-[9px] font-bold text-zinc-600">
+              <span className={foundCount > 0 ? 'text-red-500 font-black' : ''}>{foundCount}</span>/{TOTAL_CLUES} encontradas
             </p>
           </div>
 
           <div className="grid grid-cols-6 gap-2">
             {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-              const clue = foundClues[i];
-              const isSelected = selectedIndex === i;
+              const clue = byPos.get(i);
+              const isSelected = selected === i;
               return (
                 <button
                   key={i}
                   type="button"
+                  onClick={() => clue && setSelected(isSelected ? null : i)}
                   disabled={!clue}
-                  onClick={() => clue && setSelectedIndex(i)}
-                  className={`relative flex flex-col items-center justify-center rounded-xl border py-3 transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center rounded-xl border py-3.5 transition-all duration-200 ${
                     clue
                       ? isSelected
-                        ? 'border-red-500 bg-red-500/15 shadow-sm shadow-red-900/30'
-                        : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800'
-                      : 'border-zinc-800 bg-zinc-950 opacity-50'
+                        ? 'border-red-500 bg-red-500/15 shadow-lg shadow-red-900/20'
+                        : 'border-zinc-700 bg-zinc-900 hover:border-red-500/50 hover:bg-zinc-800'
+                      : 'border-zinc-800/50 bg-zinc-950/50 opacity-40 cursor-default'
                   }`}
                 >
-                  <span
-                    className={`text-xl font-black leading-none ${
-                      clue
-                        ? isSelected
-                          ? 'text-red-400'
-                          : 'text-white'
-                        : 'text-zinc-700'
-                    }`}
-                  >
-                    {clue ? clue.digit : '?'}
-                  </span>
-                  <span className="mt-1 text-[8px] font-bold uppercase tracking-wider text-zinc-600">
-                    {clue ? `#${i + 1}` : `···`}
-                  </span>
+                  {clue ? (
+                    <>
+                      <span className={`text-xl font-black leading-none ${isSelected ? 'text-red-400' : 'text-white'}`}>
+                        {clue.digit}
+                      </span>
+                      <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-red-500/60">✦</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-lg font-black leading-none text-zinc-700">?</span>
+                      <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-zinc-800">◈</span>
+                    </>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Detalle de pista seleccionada */}
-          {selectedClue && (
-            <div className="mt-3 rounded-xl border border-zinc-800 bg-black/60 px-3.5 py-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Detalle</p>
-              <p className="mt-1 text-xs font-bold text-zinc-300">
-                <span className="text-red-400">Pista #{(selectedIndex ?? 0) + 1}</span>
-                {selectedClue.label ? ` · ${selectedClue.label}` : ''}
-              </p>
-              <p className="mt-0.5 text-[10px] font-bold text-zinc-600">
-                Encontrada el {formatFoundMoment(selectedClue.foundAt)}
+          {/* Detalle de pieza seleccionada */}
+          {selectedClue ? (
+            <div className="mt-2.5 rounded-xl border border-red-500/20 bg-red-500/5 px-3.5 py-2.5">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Pieza #{(selected ?? 0) + 1}</p>
+              <p className="mt-0.5 text-xs font-bold text-zinc-300">{selectedClue.label}</p>
+              <p className="text-[10px] font-bold text-zinc-600">Encontrada: {formatDate(selectedClue.foundAt)}</p>
+            </div>
+          ) : foundCount === 0 ? (
+            <div className="mt-2.5 rounded-xl border border-zinc-800/50 bg-black/30 px-3.5 py-2.5 text-center">
+              <p className="text-[11px] font-bold text-zinc-600">
+                Recorrés la web, encontrás <span className="text-red-500">◈ fecha</span> y pasás el mouse. Así de simple.
               </p>
             </div>
-          )}
-
-          {foundCount === 0 && (
-            <div className="mt-3 rounded-xl border border-zinc-800 bg-black/40 px-3.5 py-3 text-center">
-              <p className="text-xs font-bold text-zinc-600">
-                Buscá la pista <span className="text-red-500">fecha</span> en la web y pasá el mouse para guardarla.
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
 
-        {/* Formulario */}
-        <div className="mt-6 border-t border-zinc-800 pt-6">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
-            Ingresá el código
+        {/* ── Ensamblador del código ─────────────────────────────────────── */}
+        <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/50 p-4">
+          <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">
+            Armá el código
           </p>
-          <form onSubmit={handleCheckCode} className="space-y-3">
+
+          {/* Vista del código parcial / completo */}
+          <div className="mb-4 flex justify-center gap-1.5">
+            {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
+              const clue = byPos.get(i);
+              return (
+                <div
+                  key={i}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition-all duration-200 ${
+                    clue
+                      ? 'border-red-500/60 bg-red-500/10 text-red-400'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-700'
+                  }`}
+                >
+                  {clue ? clue.digit : '·'}
+                </div>
+              );
+            })}
+          </div>
+
+          <form onSubmit={handleCheckCode} className="space-y-2">
             <input
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => setCode(e.target.value.slice(0, 6))}
               maxLength={6}
-              placeholder="_ _ _ _ _ _"
-              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-center text-lg font-black tracking-[0.4em] text-red-500 placeholder:tracking-[0.3em] placeholder:text-zinc-700 focus:border-red-500 focus:outline-none disabled:opacity-50"
-              required
+              placeholder="Ingresá el código"
               disabled={codeValidated}
+              required
+              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-center text-lg font-black tracking-[0.4em] text-red-500 placeholder:tracking-normal placeholder:text-zinc-700 focus:border-red-500 focus:outline-none disabled:opacity-50"
             />
             <button
               type="submit"
@@ -296,13 +283,13 @@ export default function SorteoPage() {
           </form>
 
           {codeValidated && (
-            <form onSubmit={handleRegisterWinner} className="mt-3 space-y-3">
+            <form onSubmit={handleRegister} className="mt-3 space-y-2">
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Tu teléfono para contactarte"
-                className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-600 focus:border-white focus:outline-none"
+                placeholder="Tu teléfono"
                 required
+                className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-600 focus:border-white focus:outline-none"
               />
               <button
                 type="submit"
@@ -315,9 +302,9 @@ export default function SorteoPage() {
           )}
 
           {(ok || message) && (
-            <div className={`mt-4 rounded-xl border px-4 py-3 ${ok ? 'border-green-800/50 bg-green-950/30' : 'border-zinc-800 bg-black'}`}>
-              {ok && <p className="text-lg font-black text-green-500">✓</p>}
-              {message && <p className="text-sm font-bold text-zinc-300">{message}</p>}
+            <div className={`mt-3 rounded-xl border px-4 py-3 ${ok ? 'border-green-800/40 bg-green-950/20' : 'border-zinc-800 bg-black'}`}>
+              {ok && <span className="mr-2 text-green-500">✓</span>}
+              <span className="text-sm font-bold text-zinc-300">{message}</span>
             </div>
           )}
         </div>
