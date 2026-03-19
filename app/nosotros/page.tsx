@@ -100,7 +100,7 @@ export default async function NosotrosPage() {
             </div>
             <div className="rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
               <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Estilo</p>
-              <p className="mt-2 text-sm font-bold text-white">Hype real, curaduría y lanzamientos clave</p>
+              <p className="mt-2 text-sm font-bold text-white">Hype real y lanzamientos clave</p>
             </div>
             <div className="rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4 sm:col-span-2">
               <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Comunidad</p>
