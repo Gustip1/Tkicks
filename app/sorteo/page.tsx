@@ -47,8 +47,10 @@ export default function SorteoPage() {
   const [ok, setOk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Mapa posición → clue encontrada
-  const byPos = new Map(foundClues.map((c) => [c.position, c]));
+  // byPos: primera pista encontrada por posición (un producto y una página
+  // pueden tener la misma posición para confundir — aquí se toma la primera)
+  const byPos = new Map<number, FoundClue>();
+  foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
   const foundCount = byPos.size;
 
   useEffect(() => {

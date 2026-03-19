@@ -50,8 +50,9 @@ function readClues(): FoundClue[] {
 function saveClue(clue: Omit<FoundClue, 'foundAt'>) {
   try {
     const found = readClues();
-    // No duplicar posición
-    if (found.some((c) => c.position === clue.position)) return;
+    // Deduplicar por clueId (no por posición — un producto y una página
+    // pueden tener la misma posición/dígito para confundir al jugador)
+    if (found.some((c) => c.id === clue.id)) return;
     const next: FoundClue = { ...clue, foundAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...found, next]));
     window.dispatchEvent(new CustomEvent(CLUE_EVENT));
@@ -70,9 +71,13 @@ export function GiveawayClue() {
     try {
       const clues = readClues();
       setFoundClues((prev) => {
-        // Detectar posición nueva para animación
-        const prevPositions = new Set(prev.map((c) => c.position));
-        const added = clues.find((c) => !prevPositions.has(c.position));
+        // Animar la posición nueva (primer badge encontrado para esa posición)
+        const prevPositions = new Set(
+          [...new Map(prev.map((c) => [c.position, c])).values()].map((c) => c.position)
+        );
+        const byPosCurrent = new Map<number, FoundClue>();
+        clues.forEach((c) => { if (!byPosCurrent.has(c.position)) byPosCurrent.set(c.position, c); });
+        const added = [...byPosCurrent.values()].find((c) => !prevPositions.has(c.position));
         if (added) {
           setNewPos(added.position);
           setTimeout(() => setNewPos(null), 900);
@@ -119,7 +124,9 @@ export function GiveawayClue() {
 
   if (!active || pathname.startsWith('/admin')) return null;
 
-  const byPos = new Map(foundClues.map((c) => [c.position, c]));
+  // byPos: primera pista encontrada por posición (para los 6 slots del widget)
+  const byPos = new Map<number, FoundClue>();
+  foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
   const foundCount = byPos.size;
 
   return (
@@ -181,13 +188,13 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
           return;
         }
-        // ¿ya fue encontrada esta posición?
-        const already = readClues().some((c) => c.position === position);
+        // ¿ya fue descubierto este badge específico (por su id único)?
+        const already = readClues().some((c) => c.id === clueId);
         if (already) setSaved(true);
       })
       .catch(() => { if (mounted) setActive(false); });
     return () => { mounted = false; };
-  }, [position]);
+  }, [clueId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleHover = () => {
     setHovered(true);
