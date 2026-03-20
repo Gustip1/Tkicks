@@ -44,15 +44,10 @@ export default function SorteoPage() {
   const [ok, setOk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // byPos: primera pista encontrada por posición
-  const byPos = new Map<number, FoundClue>();
-  foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
-
-  // Orden de descubrimiento (no orden del código)
-  const discoveryOrder = [...byPos.values()].sort(
-    (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
-  );
-  const foundCount = discoveryOrder.length;
+  // foundClues ordenado por foundAt — cada entrada es única por clueId.
+  // El dígito '0' puede aparecer hasta 2 veces (como en el código 260705).
+  const discoveryOrder = foundClues;
+  const foundCount = foundClues.length;
 
   const refreshClues = () => {
     const clues = readClues().sort(

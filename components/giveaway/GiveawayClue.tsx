@@ -8,43 +8,46 @@ export const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'] as const;
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
 const CLUE_EVENT = 'tkicks-clue-found';
 
+// Cuántas veces aparece cada dígito en el código 260705
+// 2→1, 6→1, 0→2, 7→1, 5→1
+const DIGIT_MAX: Record<string, number> = {};
+CLUE_SEQUENCE.forEach((d) => { DIGIT_MAX[d] = (DIGIT_MAX[d] ?? 0) + 1; });
+
 export type FoundClue = {
   id: string;
   label: string;
   path?: string;
-  position: number; // 0-5, posición exacta en el código
+  position: number;
   digit: string;
   foundAt: string;
 };
 
-// Posiciones asignadas por categoría para garantizar que todos los dígitos aparezcan:
-//   sneakers   → posiciones {0, 2, 5} = dígitos {2, 0, 5}
-//   streetwear → posiciones {1, 3, 4} = dígitos {6, 7, 0}
-// El dígito '0' aparece dos veces (pos 2 y 4) porque el código es 260705.
-const SNEAKERS_POS  = [0, 2, 5] as const; // 2, 0, 5
-const STREETWEAR_POS = [1, 3, 4] as const; // 6, 7, 0
+// Productos por categoría:
+//   sneakers   → posiciones {0, 5} = dígitos {2, 5}  ← sin 0 para no saturar
+//   streetwear → posiciones {1, 3} = dígitos {6, 7}  ← sin 0 para no saturar
+// El 0 solo aparece en páginas (/ofertas y /nosotros), garantizando sus 2 instancias.
+const SNEAKERS_POS   = [0, 5] as const; // 2, 5
+const STREETWEAR_POS = [1, 3] as const; // 6, 7
 
 export function getProductClueInfo(slug: string, category?: string): { digit: string; position: number } | null {
-  // DJB2 hash — distribución mucho mejor que simple suma de char codes
+  // DJB2 hash
   let h = 5381;
   for (const c of slug) h = ((h << 5) + h + c.charCodeAt(0)) & 0x7fffffff;
 
-  // ~50 % de los productos muestran pista (bit 0 del hash)
-  if ((h & 1) !== 0) return null;
+  // ~33 % de los productos muestran pista
+  if (h % 3 !== 0) return null;
 
-  // Asignación por categoría: usa bits altos para no correlacionar con selección
-  const positions = category === 'sneakers' ? SNEAKERS_POS
-                  : category === 'streetwear' ? STREETWEAR_POS
+  const positions = category === 'sneakers'    ? SNEAKERS_POS
+                  : category === 'streetwear'  ? STREETWEAR_POS
                   : null;
 
   const position = positions
     ? positions[(h >> 4) % positions.length]
-    : (h >> 4) % 6; // fallback: cualquier posición
+    : (h >> 4) % 6;
 
   return { position, digit: CLUE_SEQUENCE[position] };
 }
 
-// Compatibilidad con llamadas antiguas
 export function getProductClueForSlug(slug: string): string | null {
   return getProductClueInfo(slug)?.digit ?? null;
 }
@@ -54,10 +57,8 @@ function normalizeClues(raw: string | null): FoundClue[] {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id) && item?.position !== undefined);
-  } catch {
-    return [];
-  }
+    return (parsed as FoundClue[]).filter((item) => Boolean(item?.id) && Boolean(item?.digit));
+  } catch { return []; }
 }
 
 function readClues(): FoundClue[] {
@@ -67,9 +68,16 @@ function readClues(): FoundClue[] {
 function saveClue(clue: Omit<FoundClue, 'foundAt'>) {
   try {
     const found = readClues();
-    // Deduplicar por clueId (no por posición — un producto y una página
-    // pueden tener la misma posición/dígito para confundir al jugador)
+
+    // No guardar el mismo badge dos veces
     if (found.some((c) => c.id === clue.id)) return;
+
+    // Respetar cuántas veces puede aparecer este dígito en el código
+    // El 0 puede aparecer 2 veces, los demás solo 1 vez
+    const max = DIGIT_MAX[clue.digit] ?? 1;
+    const current = found.filter((c) => c.digit === clue.digit).length;
+    if (current >= max) return;
+
     const next: FoundClue = { ...clue, foundAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...found, next]));
     window.dispatchEvent(new CustomEvent(CLUE_EVENT));
@@ -82,22 +90,18 @@ export function GiveawayClue() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
   const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
-  const [newPos, setNewPos] = useState<number | null>(null);
+  const [newIdx, setNewIdx] = useState<number | null>(null);
 
   const refresh = () => {
     try {
-      const clues = readClues();
+      const clues = readClues().sort(
+        (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
+      );
       setFoundClues((prev) => {
-        // Animar la posición nueva (primer badge encontrado para esa posición)
-        const prevPositions = new Set(
-          [...new Map(prev.map((c) => [c.position, c])).values()].map((c) => c.position)
-        );
-        const byPosCurrent = new Map<number, FoundClue>();
-        clues.forEach((c) => { if (!byPosCurrent.has(c.position)) byPosCurrent.set(c.position, c); });
-        const added = [...byPosCurrent.values()].find((c) => !prevPositions.has(c.position));
-        if (added) {
-          setNewPos(added.position);
-          setTimeout(() => setNewPos(null), 900);
+        // Animar el slot nuevo
+        if (clues.length > prev.length) {
+          setNewIdx(clues.length - 1);
+          setTimeout(() => setNewIdx(null), 900);
         }
         return clues;
       });
@@ -126,28 +130,15 @@ export function GiveawayClue() {
 
     void fetchState();
     const timer = setInterval(fetchState, 8000);
-
-    // Actualización inmediata al encontrar pista
     const handler = () => refresh();
     window.addEventListener(CLUE_EVENT, handler);
-
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-      window.removeEventListener(CLUE_EVENT, handler);
-    };
+    return () => { mounted = false; clearInterval(timer); window.removeEventListener(CLUE_EVENT, handler); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!active || pathname.startsWith('/admin')) return null;
 
-  // Posiciones únicas ordenadas por momento de descubrimiento (no por orden del código)
-  const byPos = new Map<number, FoundClue>();
-  foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
-  const discoveryOrder = [...byPos.values()].sort(
-    (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
-  );
-  const foundCount = discoveryOrder.length;
+  const foundCount = foundClues.length;
 
   return (
     <Link href="/sorteo" aria-label="Ver progreso del sorteo">
@@ -155,15 +146,15 @@ export function GiveawayClue() {
         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">
           Pistas · <span className={foundCount > 0 ? 'text-red-500' : 'text-zinc-600'}>{foundCount}</span>/{TOTAL_CLUES}
         </p>
-        {/* Slots en orden de descubrimiento — el usuario debe reordenarlos para armar el código */}
+        {/* Slots en orden de descubrimiento */}
         <div className="flex gap-1.5">
           {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-            const clue = discoveryOrder[i];
-            const isNew = clue && newPos === clue.position;
+            const clue = foundClues[i];
+            const isNew = newIdx === i;
             return (
               <div
                 key={i}
-                className={`relative flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black transition-all duration-300 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black transition-all duration-300 ${
                   clue
                     ? isNew
                       ? 'scale-110 bg-red-400 text-white shadow-lg shadow-red-800/60'
@@ -182,7 +173,7 @@ export function GiveawayClue() {
   );
 }
 
-// ─── Badge inline junto al precio (puzzle) ───────────────────────────────────
+// ─── Badge inline junto al precio ────────────────────────────────────────────
 
 type InlinePriceClueProps = {
   clueId: string;
@@ -205,13 +196,8 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
         if (!mounted) return;
         const isActive = Boolean(data?.active);
         setActive(isActive);
-        if (!isActive) {
-          try { localStorage.removeItem(STORAGE_KEY); } catch {}
-          return;
-        }
-        // ¿ya fue descubierto este badge específico (por su id único)?
-        const already = readClues().some((c) => c.id === clueId);
-        if (already) setSaved(true);
+        if (!isActive) { try { localStorage.removeItem(STORAGE_KEY); } catch {} return; }
+        if (readClues().some((c) => c.id === clueId)) setSaved(true);
       })
       .catch(() => { if (mounted) setActive(false); });
     return () => { mounted = false; };
@@ -230,7 +216,7 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
     <span
       onMouseEnter={handleHover}
       onMouseLeave={() => setHovered(false)}
-      title={saved ? `Pista ${position + 1} encontrada · ${digit}` : 'Pasá el mouse para revelar la pista'}
+      title={saved ? `Pista encontrada · ${digit}` : 'Pasá el mouse para revelar la pista'}
       className={`inline-flex cursor-default select-none items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
         saved
           ? 'border-red-500/60 bg-red-500/10 text-red-400'
@@ -240,15 +226,9 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
       }`}
     >
       {saved ? (
-        <>
-          <span className="text-red-500">✦</span>
-          <span>{digit}</span>
-        </>
+        <><span className="text-red-500">✦</span><span>{digit}</span></>
       ) : (
-        <>
-          <span className="text-zinc-600">◈</span>
-          <span>pista</span>
-        </>
+        <><span className="text-zinc-600">◈</span><span>pista</span></>
       )}
     </span>
   );
