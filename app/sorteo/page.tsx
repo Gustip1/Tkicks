@@ -39,6 +39,8 @@ export default function SorteoPage() {
   const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
   const [code, setCode] = useState('');
   const [phone, setPhone] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [codeValidated, setCodeValidated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [ok, setOk] = useState(false);
@@ -112,7 +114,7 @@ export default function SorteoPage() {
       const res = await fetch('/api/sorteo/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, phone, sourcePath: window.location.pathname }),
+        body: JSON.stringify({ code, phone, firstName, lastName, sourcePath: window.location.pathname }),
       });
       const data = await res.json();
       if (!res.ok) { setMessage(data?.error || 'No se pudo registrar.'); return; }
@@ -122,7 +124,7 @@ export default function SorteoPage() {
           ? 'Ya estabas registrado con ese teléfono.'
           : 'Participación registrada. Serás contactado si resultás ganador.'
       );
-      setCode(''); setPhone(''); setCodeValidated(false);
+      setCode(''); setPhone(''); setFirstName(''); setLastName(''); setCodeValidated(false);
     } catch {
       setMessage('Error de conexión.');
     } finally { setSubmitting(false); }
@@ -293,6 +295,22 @@ export default function SorteoPage() {
 
           {codeValidated && (
             <form onSubmit={handleRegister} className="mt-3 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Nombre"
+                  required
+                  className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-white focus:outline-none"
+                />
+                <input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Apellido"
+                  required
+                  className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-white focus:outline-none"
+                />
+              </div>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}

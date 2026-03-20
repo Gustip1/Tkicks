@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
 const GIVEAWAY_CODE = '260705';
 
 type Winner = {
+  first_name: string;
+  last_name: string;
   phone: string;
   created_at: string;
   source_path?: string;
@@ -17,6 +19,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const code = String(body?.code || '').trim();
     const phone = String(body?.phone || '').trim();
+    const firstName = String(body?.firstName || '').trim();
+    const lastName = String(body?.lastName || '').trim();
     const sourcePath = String(body?.sourcePath || '').trim();
 
     if (!code) {
@@ -25,7 +29,9 @@ export async function POST(req: NextRequest) {
     if (code !== GIVEAWAY_CODE) {
       return NextResponse.json({ error: 'Código incorrecto' }, { status: 400 });
     }
-
+    if (!firstName || !lastName) {
+      return NextResponse.json({ error: 'Nombre y apellido requeridos' }, { status: 400 });
+    }
     if (!phone || phone.length < 8) {
       return NextResponse.json({ error: 'Número de teléfono inválido' }, { status: 400 });
     }
@@ -65,6 +71,8 @@ export async function POST(req: NextRequest) {
     }
 
     winners.unshift({
+      first_name: firstName,
+      last_name: lastName,
       phone,
       created_at: new Date().toISOString(),
       source_path: sourcePath || '/',
