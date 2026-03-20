@@ -11,30 +11,7 @@ type FoundClue = {
 };
 
 const TOTAL_CLUES = 6;
-const CLUE_SEQUENCE = ['2', '6', '0', '7', '0', '5'];
 const STORAGE_KEY = 'tkicks_giveaway_found_paths';
-
-// ─── Textos de investigación ──────────────────────────────────────────────────
-
-const FAIL_TEXTS = [
-  "El catálogo se extiende ante vos como un laberinto. Hay algo oculto, pero todavía no lograste verlo. Seguís.",
-  "Una vibración en el aire. Como si alguien hubiera estado aquí hace poco. Nada concreto por ahora.",
-  "Demasiado ruido. Demasiados productos, demasiadas pistas falsas. El código se esconde bien.",
-  "La tienda tiene sus secretos. Hoy no te quiso revelar ninguno. Intentá de nuevo.",
-  "Algo no encaja, pero todavía no podés identificarlo. La respuesta está más cerca de lo que creés.",
-  "Las sombras del catálogo se mueven. Nada te llama la atención esta vez. Seguís buscando.",
-  "El pasillo digital está silencioso. Quizás debas mirar en otro sector.",
-];
-
-// Textos de éxito por posición (no revelan el dígito, solo la narrativa)
-const SUCCESS_TEXTS: Record<number, string> = {
-  0: "En la entrada del sitio, casi invisible entre el ruido visual, una marca que nadie nota a simple vista. La primera cifra del código es tuya.",
-  1: "El catálogo completo esconde más de lo que muestra. En la sección principal, entre cientos de productos, algo estaba esperando que lo encontraras.",
-  2: "Las ofertas ocultan más de lo que venden. Una pista discreta, mezclada entre descuentos y etiquetas rojas. Ahora es tuya.",
-  3: "El formulario de encargos. Una pieza de información que casi nadie lee con atención. Vos sí. La cifra te pertenece.",
-  4: "Quiénes somos... La sección de identidad guarda una cifra que lo define todo. La encontraste donde menos se esperaba.",
-  5: "Las zapatillas más nuevas del catálogo. El par que llegó último tenía la respuesta escondida en su ficha. Ahora completás el mapa.",
-};
 
 function readClues(): FoundClue[] {
   try {
@@ -48,16 +25,6 @@ function readClues(): FoundClue[] {
   } catch { return []; }
 }
 
-function saveClue(clue: Omit<FoundClue, 'foundAt'>) {
-  try {
-    const found = readClues();
-    if (found.some((c) => c.id === clue.id)) return;
-    const next: FoundClue = { ...clue, foundAt: new Date().toISOString() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...found, next]));
-    window.dispatchEvent(new CustomEvent('tkicks-clue-found'));
-  } catch {}
-}
-
 function formatDate(iso?: string) {
   if (!iso) return '';
   return new Date(iso).toLocaleString('es-AR', {
@@ -66,22 +33,10 @@ function formatDate(iso?: string) {
   });
 }
 
-// ─── Componente ───────────────────────────────────────────────────────────────
-
 export default function SorteoPage() {
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Clues — ordenadas por foundAt (orden de descubrimiento)
   const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
-
-  // Investigación
-  const [investigating, setInvestigating] = useState(false);
-  const [investigationText, setInvestigationText] = useState<string | null>(null);
-  const [consecutiveFails, setConsecutiveFails] = useState(0);
-  const [lastFoundPos, setLastFoundPos] = useState<number | null>(null);
-
-  // Código y participación
   const [code, setCode] = useState('');
   const [phone, setPhone] = useState('');
   const [codeValidated, setCodeValidated] = useState(false);
@@ -93,7 +48,7 @@ export default function SorteoPage() {
   const byPos = new Map<number, FoundClue>();
   foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
 
-  // discoveryOrder: posiciones únicas en orden de descubrimiento (no orden del código)
+  // Orden de descubrimiento (no orden del código)
   const discoveryOrder = [...byPos.values()].sort(
     (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
   );
@@ -130,7 +85,6 @@ export default function SorteoPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Escuchar evento de badge hover (actualizar clues en tiempo real)
   useEffect(() => {
     const handler = () => refreshClues();
     window.addEventListener('tkicks-clue-found', handler);
@@ -138,62 +92,9 @@ export default function SorteoPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sin auto-fill: el usuario debe armar el código desde las pistas encontradas
-
-  // ─── Mecánica de investigación ──────────────────────────────────────────────
-
-  const handleInvestigate = () => {
-    if (investigating) return;
-    setInvestigating(true);
-    setInvestigationText(null);
-    setLastFoundPos(null);
-
-    setTimeout(() => {
-      const unfoundPositions = Array.from({ length: TOTAL_CLUES }, (_, i) => i)
-        .filter((i) => !byPos.has(i));
-
-      if (unfoundPositions.length === 0) {
-        setInvestigationText("Ya descubriste todas las pistas. El código está completo. Es momento de actuar.");
-        setInvestigating(false);
-        return;
-      }
-
-      // Éxito garantizado a partir del 3er fallo consecutivo
-      const successRate = consecutiveFails >= 2 ? 1 : 0.5;
-      const success = Math.random() < successRate;
-
-      if (success) {
-        // Seleccionar una posición no encontrada al azar
-        const pos = unfoundPositions[Math.floor(Math.random() * unfoundPositions.length)];
-        const digit = CLUE_SEQUENCE[pos];
-        saveClue({
-          id: `sorteo:pos${pos}`,
-          label: `Investigación · pista ${pos + 1}`,
-          path: '/sorteo',
-          position: pos,
-          digit,
-        });
-        refreshClues();
-        setLastFoundPos(pos);
-        setConsecutiveFails(0);
-        setInvestigationText(SUCCESS_TEXTS[pos]);
-      } else {
-        setConsecutiveFails((n) => n + 1);
-        const txt = FAIL_TEXTS[Math.floor(Math.random() * FAIL_TEXTS.length)];
-        setInvestigationText(txt);
-      }
-
-      setInvestigating(false);
-    }, 1400); // Pausa dramática
-  };
-
-  // ─── Validación de código ───────────────────────────────────────────────────
-
   const handleCheckCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(null);
-    setOk(false);
-    setSubmitting(true);
+    setMessage(null); setOk(false); setSubmitting(true);
     try {
       const res = await fetch('/api/sorteo/check', {
         method: 'POST',
@@ -202,20 +103,16 @@ export default function SorteoPage() {
       });
       const data = await res.json();
       if (!res.ok) { setMessage(data?.error || 'El código no es correcto.'); return; }
-      setCodeValidated(true);
-      setOk(true);
+      setCodeValidated(true); setOk(true);
       setMessage('Código correcto. Dejá tu teléfono para participar.');
     } catch {
-      setMessage('Error de conexión. Intentá nuevamente.');
-    } finally {
-      setSubmitting(false);
-    }
+      setMessage('Error de conexión.');
+    } finally { setSubmitting(false); }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(null);
-    setSubmitting(true);
+    setMessage(null); setSubmitting(true);
     try {
       const res = await fetch('/api/sorteo/submit', {
         method: 'POST',
@@ -233,9 +130,7 @@ export default function SorteoPage() {
       setCode(''); setPhone(''); setCodeValidated(false);
     } catch {
       setMessage('Error de conexión.');
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
   // ─── Loading ──────────────────────────────────────────────────────────────
@@ -252,115 +147,112 @@ export default function SorteoPage() {
 
   if (!active) {
     return (
-      <div className="mx-auto max-w-md py-24 text-center">
-        <img src="/logo.jpg" alt="Tkicks" className="mx-auto h-16 w-auto rounded-2xl opacity-40" />
-        <h1 className="mt-8 text-2xl font-black uppercase tracking-[0.15em] text-white">
-          Nada que ver aquí.
+      <div className="relative mx-auto max-w-lg overflow-hidden px-4 py-20 text-center">
+        {/* Glow de fondo */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500/10 blur-3xl" />
+
+        <img src="/logo.jpg" alt="Tkicks" className="relative mx-auto h-16 w-auto rounded-2xl opacity-60" />
+
+        <p className="relative mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-red-500/70">
+          Tkicks · Sorteo
+        </p>
+        <h1 className="relative mt-3 text-5xl font-black uppercase leading-none tracking-tight text-white">
+          Muy<br />pronto.
         </h1>
-        <p className="mt-3 text-sm font-bold text-zinc-600">Por ahora.</p>
+        <p className="relative mt-5 text-sm font-bold leading-relaxed text-zinc-500">
+          Algo se está cocinando. Explorá el sitio,<br />
+          buscá las pistas <span className="text-red-500/70">◈ fecha</span> y preparate.
+        </p>
+
+        <div className="relative mt-8 flex justify-center gap-3">
+          <span className="inline-block h-1 w-8 rounded-full bg-zinc-800" />
+          <span className="inline-block h-1 w-4 rounded-full bg-red-500/40" />
+          <span className="inline-block h-1 w-8 rounded-full bg-zinc-800" />
+        </div>
       </div>
     );
   }
 
-  // ─── Activo ───────────────────────────────────────────────────────────────
+  // ─── Activo (día del sorteo) ──────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <div className="space-y-4">
+    <div className="mx-auto max-w-xl px-4 py-8">
+      <div className="space-y-3">
 
-        {/* ── Escenario ────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-red-500">Sorteo activo</p>
-          </div>
-          <h1 className="text-lg font-black uppercase tracking-tight text-white">
-            El código está ahí afuera.
+        {/* ── Hero del día ─────────────────────────────────────────────────── */}
+        <div className="relative overflow-hidden rounded-3xl border border-red-500/20 bg-zinc-950 p-6 text-center">
+          {/* Glow */}
+          <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500/15 blur-3xl" />
+
+          <p className="relative text-[9px] font-black uppercase tracking-[0.3em] text-red-500">
+            ◈ · Sorteo Tkicks · ◈
+          </p>
+          <h1 className="relative mt-2 text-6xl font-black uppercase leading-none tracking-tighter text-white">
+            Hoy.
           </h1>
-          <p className="mt-2 text-sm font-bold leading-relaxed text-zinc-500">
-            Seis cifras, dispersas por el sitio. Algunas en productos, otras donde menos las esperás.
-            Pasá el mouse sobre la pista <span className="text-red-500/80">◈ fecha</span> cuando la encuentres,
-            o investigá directamente desde acá. El orden en que las descubrís no es el orden del código.
-          </p>
-        </div>
-
-        {/* ── Investigar ───────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600">
-            Investigar
+          <p className="relative mt-3 text-sm font-bold leading-relaxed text-zinc-400">
+            El día llegó. Si encontraste las seis pistas, armá el código<br className="hidden sm:block" />
+            y confirmá tu participación antes de que cierre.
           </p>
 
-          <button
-            onClick={handleInvestigate}
-            disabled={investigating || foundCount === TOTAL_CLUES}
-            className={`w-full rounded-xl border py-3.5 text-sm font-black uppercase tracking-wider transition-all duration-200 ${
-              investigating
-                ? 'border-zinc-700 bg-zinc-900 text-zinc-600 cursor-wait'
-                : foundCount === TOTAL_CLUES
-                ? 'border-zinc-800 bg-zinc-950 text-zinc-700 cursor-default'
-                : 'border-red-500/30 bg-red-500/5 text-red-500 hover:border-red-500/60 hover:bg-red-500/10'
-            }`}
-          >
-            {investigating ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border border-zinc-600 border-t-red-500" />
-                Buscando...
+          {/* Barra de progreso */}
+          <div className="relative mt-5">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Tu progreso</span>
+              <span className="text-[9px] font-black text-zinc-500">
+                <span className={foundCount > 0 ? 'text-red-400' : ''}>{foundCount}</span>/{TOTAL_CLUES} pistas
               </span>
-            ) : foundCount === TOTAL_CLUES ? (
-              'Búsqueda completa'
-            ) : (
-              '◈ Investigar'
-            )}
-          </button>
-
-          {investigationText && (
-            <div className={`mt-3 rounded-xl border p-4 transition-all duration-300 ${
-              lastFoundPos !== null
-                ? 'border-red-500/30 bg-red-500/5'
-                : 'border-zinc-800 bg-black/40'
-            }`}>
-              {lastFoundPos !== null && (
-                <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-red-500">
-                  — Pista encontrada —
-                </p>
-              )}
-              <p className="text-sm font-bold leading-relaxed text-zinc-300 italic">
-                &ldquo;{investigationText}&rdquo;
-              </p>
-              {lastFoundPos !== null && (
-                <p className="mt-2 text-xs font-black text-red-400">
-                  Cifra {lastFoundPos + 1} del código · {CLUE_SEQUENCE[lastFoundPos]}
-                </p>
-              )}
             </div>
-          )}
+            <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-red-500 transition-all duration-700"
+                style={{ width: `${(foundCount / TOTAL_CLUES) * 100}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* ── Pistas descubiertas ──────────────────────────────────────────── */}
+        {/* ── Pistas descubiertas (orden de descubrimiento) ────────────────── */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600">
               Pistas descubiertas
             </p>
-            <p className="text-[9px] font-bold text-zinc-600">
-              <span className={foundCount > 0 ? 'text-red-500 font-black' : ''}>{foundCount}</span>/{TOTAL_CLUES}
-            </p>
+            <p className="text-[9px] italic text-zinc-700">en orden de hallazgo</p>
           </div>
 
-          {/* Lista en ORDEN DE DESCUBRIMIENTO (no orden del código) */}
+          {/* Slots visuales — orden de descubrimiento */}
+          <div className="mb-3 flex justify-center gap-1.5">
+            {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
+              const clue = discoveryOrder[i];
+              return (
+                <div
+                  key={i}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition-all duration-300 ${
+                    clue
+                      ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-800'
+                  }`}
+                >
+                  {clue ? clue.digit : '·'}
+                </div>
+              );
+            })}
+          </div>
+
           {foundClues.length === 0 ? (
-            <p className="text-xs font-bold italic text-zinc-700">
-              Ninguna todavía. La búsqueda acaba de comenzar.
+            <p className="text-center text-xs font-bold italic text-zinc-700">
+              Ninguna todavía. Explorá el sitio y buscá ◈ fecha.
             </p>
           ) : (
-            <div className="space-y-2">
-              {foundClues.map((clue, idx) => (
+            <div className="space-y-1.5">
+              {discoveryOrder.map((clue, idx) => (
                 <div
                   key={clue.id}
-                  className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-black/40 px-3 py-2"
+                  className="flex items-center gap-3 rounded-lg border border-zinc-800/60 bg-black/30 px-3 py-2"
                 >
-                  <span className="text-[9px] font-black text-zinc-700">#{idx + 1}</span>
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-red-500 text-sm font-black text-white shadow shadow-red-900/50">
+                  <span className="w-4 text-[9px] font-black text-zinc-700">#{idx + 1}</span>
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-red-500 text-sm font-black text-white">
                     {clue.digit}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -372,40 +264,17 @@ export default function SorteoPage() {
             </div>
           )}
 
-          {/* Recordatorio: las pistas no están en orden del código */}
-          {foundClues.length > 0 && foundClues.length < TOTAL_CLUES && (
-            <p className="mt-3 text-[10px] font-bold italic text-zinc-700">
-              Las pistas no aparecen en el orden del código. Tendrás que reordenarlas.
+          {foundCount > 0 && foundCount < TOTAL_CLUES && (
+            <p className="mt-3 text-center text-[9px] italic text-zinc-700">
+              Este no es el orden del código — tenés que reordenarlo.
             </p>
           )}
         </div>
 
-        {/* ── Ensamblador del código ────────────────────────────────────────── */}
+        {/* ── Ingresar la clave ─────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
           <p className="mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600">
-            Clave final
-          </p>
-
-          {/* Slots en orden de descubrimiento — el usuario reordena mentalmente para armar el código */}
-          <div className="mb-1 flex justify-center gap-1.5">
-            {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-              const clue = discoveryOrder[i];
-              return (
-                <div
-                  key={i}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition-all duration-300 ${
-                    clue
-                      ? 'border-red-500/50 bg-red-500/10 text-red-400 shadow shadow-red-900/20'
-                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-800'
-                  }`}
-                >
-                  {clue ? clue.digit : '·'}
-                </div>
-              );
-            })}
-          </div>
-          <p className="mb-3 text-center text-[9px] font-bold italic text-zinc-700">
-            Orden de descubrimiento — no es el orden del código
+            Ingresar clave
           </p>
 
           <form onSubmit={handleCheckCode} className="space-y-2">
@@ -413,15 +282,15 @@ export default function SorteoPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.slice(0, 6))}
               maxLength={6}
-              placeholder="Ingresá la clave"
+              placeholder="······"
               disabled={codeValidated}
               required
-              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-center text-lg font-black tracking-[0.4em] text-red-500 placeholder:tracking-normal placeholder:text-zinc-800 focus:border-red-500 focus:outline-none disabled:opacity-50"
+              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3.5 text-center text-2xl font-black tracking-[0.5em] text-red-500 placeholder:tracking-[0.3em] placeholder:text-zinc-800 focus:border-red-500 focus:outline-none disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={submitting || codeValidated}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:border-white hover:bg-zinc-800 disabled:opacity-40"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-40"
             >
               {submitting ? 'Verificando...' : codeValidated ? '✓ Clave verificada' : 'Verificar clave'}
             </button>
@@ -447,9 +316,7 @@ export default function SorteoPage() {
           )}
 
           {(ok || message) && (
-            <div className={`mt-3 rounded-xl border px-4 py-3 ${
-              ok ? 'border-green-900/50 bg-green-950/20' : 'border-zinc-800 bg-black'
-            }`}>
+            <div className={`mt-3 rounded-xl border px-4 py-3 ${ok ? 'border-green-900/50 bg-green-950/20' : 'border-zinc-800 bg-black'}`}>
               {ok && <span className="mr-2 text-green-500">✓</span>}
               <span className="text-sm font-bold italic text-zinc-300">{message}</span>
             </div>
