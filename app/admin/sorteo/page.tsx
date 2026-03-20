@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 
 type Winner = {
+  first_name?: string;
+  last_name?: string;
   phone: string;
   created_at: string;
   source_path?: string;
@@ -95,6 +97,9 @@ export default function AdminSorteoPage() {
           <div className="space-y-2">
             {winners.map((w, idx) => (
               <div key={`${w.phone}-${idx}`} className="rounded-lg border border-gray-200 p-3">
+                {(w.first_name || w.last_name) && (
+                  <p className="text-sm font-bold text-gray-900">{[w.first_name, w.last_name].filter(Boolean).join(' ')}</p>
+                )}
                 <p className="text-sm font-bold text-gray-900">{w.phone}</p>
                 <p className="text-xs text-gray-500">{new Date(w.created_at).toLocaleString('es-AR')}</p>
                 <p className="text-xs text-gray-500">Origen: {w.source_path || '/'}</p>
