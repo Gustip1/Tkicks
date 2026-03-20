@@ -34,8 +34,8 @@ export function getProductClueInfo(slug: string, category?: string): { digit: st
   let h = 5381;
   for (const c of slug) h = ((h << 5) + h + c.charCodeAt(0)) & 0x7fffffff;
 
-  // ~33 % de los productos muestran pista
-  if (h % 3 !== 0) return null;
+  // ~50 % de los productos muestran pista (la mitad son reales, el resto despistan)
+  if ((h & 1) !== 0) return null;
 
   const positions = category === 'sneakers'    ? SNEAKERS_POS
                   : category === 'streetwear'  ? STREETWEAR_POS
@@ -65,23 +65,24 @@ function readClues(): FoundClue[] {
   try { return normalizeClues(localStorage.getItem(STORAGE_KEY)); } catch { return []; }
 }
 
-function saveClue(clue: Omit<FoundClue, 'foundAt'>) {
+function saveClue(clue: Omit<FoundClue, 'foundAt'>): boolean {
   try {
     const found = readClues();
 
     // No guardar el mismo badge dos veces
-    if (found.some((c) => c.id === clue.id)) return;
+    if (found.some((c) => c.id === clue.id)) return true; // ya guardado = real
 
     // Respetar cuántas veces puede aparecer este dígito en el código
     // El 0 puede aparecer 2 veces, los demás solo 1 vez
     const max = DIGIT_MAX[clue.digit] ?? 1;
     const current = found.filter((c) => c.digit === clue.digit).length;
-    if (current >= max) return;
+    if (current >= max) return false; // cupo lleno = pista de despiste
 
     const next: FoundClue = { ...clue, foundAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...found, next]));
     window.dispatchEvent(new CustomEvent(CLUE_EVENT));
-  } catch {}
+    return true;
+  } catch { return false; }
 }
 
 // ─── Widget flotante bottom-right ────────────────────────────────────────────
@@ -206,8 +207,8 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
   const handleHover = () => {
     setHovered(true);
     if (saved || !active || pathname.startsWith('/admin')) return;
-    saveClue({ id: clueId, label, path: pathname, position, digit });
-    setSaved(true);
+    const wasSaved = saveClue({ id: clueId, label, path: pathname, position, digit });
+    if (wasSaved) setSaved(true);
   };
 
   if (!active || pathname.startsWith('/admin')) return null;
