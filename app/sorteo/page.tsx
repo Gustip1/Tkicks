@@ -92,7 +92,12 @@ export default function SorteoPage() {
   // byPos: primera pista encontrada por posición
   const byPos = new Map<number, FoundClue>();
   foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
-  const foundCount = byPos.size;
+
+  // discoveryOrder: posiciones únicas en orden de descubrimiento (no orden del código)
+  const discoveryOrder = [...byPos.values()].sort(
+    (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
+  );
+  const foundCount = discoveryOrder.length;
 
   const refreshClues = () => {
     const clues = readClues().sort(
@@ -133,14 +138,7 @@ export default function SorteoPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Autocompletar código cuando se tienen todas las pistas
-  useEffect(() => {
-    if (byPos.size === TOTAL_CLUES) {
-      const full = Array.from({ length: TOTAL_CLUES }, (_, i) => byPos.get(i)?.digit ?? '').join('');
-      if (!full.includes('')) setCode(full);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [foundClues]);
+  // Sin auto-fill: el usuario debe armar el código desde las pistas encontradas
 
   // ─── Mecánica de investigación ──────────────────────────────────────────────
 
@@ -388,10 +386,10 @@ export default function SorteoPage() {
             Clave final
           </p>
 
-          {/* Slots en orden correcto (posición 0→5) para que el usuario arme el código */}
-          <div className="mb-4 flex justify-center gap-1.5">
+          {/* Slots en orden de descubrimiento — el usuario reordena mentalmente para armar el código */}
+          <div className="mb-1 flex justify-center gap-1.5">
             {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-              const clue = byPos.get(i);
+              const clue = discoveryOrder[i];
               return (
                 <div
                   key={i}
@@ -406,6 +404,9 @@ export default function SorteoPage() {
               );
             })}
           </div>
+          <p className="mb-3 text-center text-[9px] font-bold italic text-zinc-700">
+            Orden de descubrimiento — no es el orden del código
+          </p>
 
           <form onSubmit={handleCheckCode} className="space-y-2">
             <input

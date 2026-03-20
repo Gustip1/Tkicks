@@ -141,10 +141,13 @@ export function GiveawayClue() {
 
   if (!active || pathname.startsWith('/admin')) return null;
 
-  // byPos: primera pista encontrada por posición (para los 6 slots del widget)
+  // Posiciones únicas ordenadas por momento de descubrimiento (no por orden del código)
   const byPos = new Map<number, FoundClue>();
   foundClues.forEach((c) => { if (!byPos.has(c.position)) byPos.set(c.position, c); });
-  const foundCount = byPos.size;
+  const discoveryOrder = [...byPos.values()].sort(
+    (a, b) => new Date(a.foundAt).getTime() - new Date(b.foundAt).getTime()
+  );
+  const foundCount = discoveryOrder.length;
 
   return (
     <Link href="/sorteo" aria-label="Ver progreso del sorteo">
@@ -152,10 +155,11 @@ export function GiveawayClue() {
         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-zinc-600">
           Pistas · <span className={foundCount > 0 ? 'text-red-500' : 'text-zinc-600'}>{foundCount}</span>/{TOTAL_CLUES}
         </p>
+        {/* Slots en orden de descubrimiento — el usuario debe reordenarlos para armar el código */}
         <div className="flex gap-1.5">
           {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
-            const clue = byPos.get(i);
-            const isNew = newPos === i;
+            const clue = discoveryOrder[i];
+            const isNew = clue && newPos === clue.position;
             return (
               <div
                 key={i}
