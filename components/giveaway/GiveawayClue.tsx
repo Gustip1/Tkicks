@@ -42,8 +42,8 @@ export function getProductClueInfo(slug: string, category?: string): { digit: st
                   : null;
 
   const position = positions
-    ? positions[(h >> 4) % positions.length]
-    : (h >> 4) % 6;
+    ? positions[(h >> 1) % positions.length]
+    : (h >> 1) % 6;
 
   return { position, digit: CLUE_SEQUENCE[position] };
 }
