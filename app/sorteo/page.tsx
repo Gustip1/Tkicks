@@ -161,7 +161,7 @@ export default function SorteoPage() {
         </h1>
         <p className="relative mt-5 text-sm font-bold leading-relaxed text-zinc-500">
           Algo se está cocinando. Explorá el sitio,<br />
-          buscá las pistas <span className="text-red-500/70">◈ fecha</span> y preparate.
+          buscá las pistas <span className="text-red-500/70">◈ pista</span> y preparate.
         </p>
 
         <div className="relative mt-8 flex justify-center gap-3">
@@ -242,7 +242,7 @@ export default function SorteoPage() {
 
           {foundClues.length === 0 ? (
             <p className="text-center text-xs font-bold italic text-zinc-700">
-              Ninguna todavía. Explorá el sitio y buscá ◈ fecha.
+              Ninguna todavía. Explorá el sitio y buscá ◈ pista.
             </p>
           ) : (
             <div className="space-y-1.5">

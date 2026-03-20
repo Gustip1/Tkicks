@@ -247,7 +247,7 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
       ) : (
         <>
           <span className="text-zinc-600">◈</span>
-          <span>fecha</span>
+          <span>pista</span>
         </>
       )}
     </span>
