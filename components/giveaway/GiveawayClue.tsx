@@ -115,10 +115,11 @@ export function GiveawayClue() {
       try {
         const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
         const data = await res.json();
+        const isVisible = data?.visible === undefined ? true : Boolean(data.visible);
         const isActive = Boolean(data?.active);
         if (!mounted) return;
-        setActive(isActive);
-        if (!isActive) {
+        setActive(isActive && isVisible);
+        if (!isActive || !isVisible) {
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
           setFoundClues([]);
           return;
@@ -195,7 +196,8 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
-        const isActive = Boolean(data?.active);
+        const isVisible = data?.visible === undefined ? true : Boolean(data.visible);
+        const isActive = Boolean(data?.active) && isVisible;
         setActive(isActive);
         if (!isActive) { try { localStorage.removeItem(STORAGE_KEY); } catch {} return; }
         if (readClues().some((c) => c.id === clueId)) setSaved(true);
