@@ -35,6 +35,7 @@ function formatDate(iso?: string) {
 
 export default function SorteoPage() {
   const [active, setActive] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [foundClues, setFoundClues] = useState<FoundClue[]>([]);
   const [code, setCode] = useState('');
@@ -65,6 +66,8 @@ export default function SorteoPage() {
         const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
         const data = await res.json();
         if (!mounted) return;
+        const isVisible = data?.visible === undefined ? true : Boolean(data.visible);
+        setVisible(isVisible);
         const isActive = Boolean(data?.active);
         setActive(isActive);
         if (!isActive) {
@@ -138,6 +141,11 @@ export default function SorteoPage() {
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-red-500" />
       </div>
     );
+  }
+
+  if (!visible) {
+    if (typeof window !== 'undefined') window.location.replace('/');
+    return null;
   }
 
   // ─── Inactivo ─────────────────────────────────────────────────────────────

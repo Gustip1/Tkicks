@@ -6,6 +6,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type Winner = {
+  first_name?: string;
+  last_name?: string;
   phone: string;
   created_at: string;
   source_path?: string;
@@ -42,8 +44,9 @@ export async function GET() {
 
     const service = getService();
 
-    const [{ data: activeRow }, { data: winnersRow }] = await Promise.all([
+    const [{ data: activeRow }, { data: visibleRow }, { data: winnersRow }] = await Promise.all([
       service.from('settings').select('value').eq('key', 'giveaway_active').maybeSingle(),
+      service.from('settings').select('value').eq('key', 'giveaway_visible').maybeSingle(),
       service.from('settings').select('value').eq('key', 'giveaway_winners').maybeSingle(),
     ]);
 
@@ -53,6 +56,7 @@ export async function GET() {
 
     return NextResponse.json({
       active: Boolean(activeRow?.value),
+      visible: visibleRow === null ? true : Boolean(visibleRow?.value),
       winners,
       code: '260705',
     });
@@ -69,15 +73,25 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const active = Boolean(body?.active);
-
     const service = getService();
 
+    // Puede venir { active: bool } o { visible: bool } por separado
+    if ('visible' in body) {
+      const visible = Boolean(body.visible);
+      const { error } = await service.from('settings').upsert(
+        { key: 'giveaway_visible', value: visible },
+        { onConflict: 'key' }
+      );
+      if (error) {
+        console.error('[ERROR] upsert giveaway_visible:', error);
+        return NextResponse.json({ error: 'No se pudo actualizar la visibilidad' }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true, visible });
+    }
+
+    const active = Boolean(body?.active);
     const { error } = await service.from('settings').upsert(
-      {
-        key: 'giveaway_active',
-        value: active,
-      },
+      { key: 'giveaway_active', value: active },
       { onConflict: 'key' }
     );
 

@@ -11,6 +11,7 @@ type Winner = {
 
 export default function AdminSorteoPage() {
   const [active, setActive] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [winners, setWinners] = useState<Winner[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -22,6 +23,7 @@ export default function AdminSorteoPage() {
       const data = await res.json();
       if (!res.ok) return;
       setActive(Boolean(data?.active));
+      setVisible(data?.visible === undefined ? true : Boolean(data.visible));
       setWinners(Array.isArray(data?.winners) ? data.winners : []);
     } finally {
       setLoading(false);
@@ -40,9 +42,22 @@ export default function AdminSorteoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: value }),
       });
-      if (!res.ok) {
-        alert('No se pudo actualizar el sorteo');
-      }
+      if (!res.ok) alert('No se pudo actualizar el sorteo');
+      await loadData();
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const setVisibility = async (value: boolean) => {
+    setUpdating(true);
+    try {
+      const res = await fetch('/api/admin/sorteo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visible: value }),
+      });
+      if (!res.ok) alert('No se pudo actualizar la visibilidad');
       await loadData();
     } finally {
       setUpdating(false);
@@ -84,6 +99,36 @@ export default function AdminSorteoPage() {
 
         <p className="text-xs text-gray-500">
           Cuando está activo, se muestran pistas numéricas en la web y la página /sorteo permite validar el código.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-gray-800">Visibilidad de /sorteo</p>
+            <p className={`text-xs font-bold ${visible ? 'text-green-600' : 'text-red-500'}`}>
+              {visible ? 'VISIBLE' : 'OCULTA — redirige al inicio'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setVisibility(true)}
+              disabled={updating || visible}
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              Mostrar página
+            </button>
+            <button
+              onClick={() => setVisibility(false)}
+              disabled={updating || !visible}
+              className="rounded-lg bg-zinc-700 px-4 py-2 text-sm font-bold text-white hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Ocultar página
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500">
+          Ocultar la página redirige a cualquier visitante de /sorteo al inicio, sin mostrar ningún contenido.
         </p>
       </div>
 
