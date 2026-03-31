@@ -1,28 +1,10 @@
 "use client";
 import { useEffect, useState, useMemo } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { 
-  Users, 
-  Clock, 
-  TrendingUp, 
-  Globe, 
-  Monitor,
-  Smartphone,
-  Tablet,
-  ArrowUpRight,
-  ArrowDownRight,
-  Eye,
-  MousePointer,
-  Calendar,
-  BarChart3,
-  RefreshCw,
-  ShoppingCart,
-  CreditCard,
-  Package,
-  UserPlus,
-  UserCheck,
-  Activity,
-  Zap
+import {
+  Users, Clock, TrendingUp, Globe, Monitor, Smartphone, Tablet,
+  ArrowUpRight, ArrowDownRight, Eye, RefreshCw, ShoppingCart,
+  UserPlus, UserCheck, Zap, ChevronRight
 } from 'lucide-react';
 
 interface AnalyticsData {
@@ -64,18 +46,18 @@ const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep'
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<'1d' | '7d' | '30d' | '90d'>('1d');
+  const [dateRange, setDateRange] = useState<'1d' | '7d' | '30d' | '90d'>('7d');
   const supabase = createBrowserClient();
 
   const loadAnalytics = async () => {
     setLoading(true);
-    
+
     const daysAgo = dateRange === '1d' ? 1 : dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
     startDate.setHours(0, 0, 0, 0);
     const startDateStr = startDate.toISOString();
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString();
@@ -130,7 +112,7 @@ export default function AnalyticsPage() {
       const avgDuration = visitsList.length > 0
         ? visitsList.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / visitsList.length
         : 0;
-      
+
       const bounces = visitsList.filter(v => v.is_bounce).length;
       const bounceRate = visitsList.length > 0 ? (bounces / visitsList.length) * 100 : 0;
 
@@ -192,9 +174,9 @@ export default function AnalyticsPage() {
         if (v.is_bounce) pageCounts[page].bounces += 1;
       });
       const visitsByPage = Object.entries(pageCounts)
-        .map(([page_path, d]) => ({ 
-          page_path, 
-          count: d.count, 
+        .map(([page_path, d]) => ({
+          page_path,
+          count: d.count,
           avg_duration: d.count > 0 ? d.totalDuration / d.count : 0,
           bounce_rate: d.count > 0 ? (d.bounces / d.count) * 100 : 0
         }))
@@ -327,8 +309,7 @@ export default function AnalyticsPage() {
     const secs = Math.round(seconds % 60);
     if (mins < 60) return `${mins}m ${secs}s`;
     const hours = Math.floor(mins / 60);
-    const remainMins = mins % 60;
-    return `${hours}h ${remainMins}m`;
+    return `${hours}h ${mins % 60}m`;
   };
 
   const formatDate = (dateStr: string): string => {
@@ -351,280 +332,269 @@ export default function AnalyticsPage() {
     return data.todayByHour.reduce((max, h) => h.count > max.count ? h : max, data.todayByHour[0]);
   }, [data?.todayByHour]);
 
-  const maxHourCount = Math.max(...(data?.visitsByHour.map(h => h.count) || [1]));
-  const maxDayCount = Math.max(...(data?.visitsByDay.map(d => d.count) || [1]));
-  const maxTodayHourCount = Math.max(...(data?.todayByHour.map(h => h.count) || [1]));
-  const maxTrendCount = Math.max(...(data?.visitsTrend.map(t => t.count) || [1]));
-
-  const getDeviceIcon = (device: string) => {
-    switch (device) {
-      case 'mobile': return <Smartphone className="w-4 h-4" />;
-      case 'tablet': return <Tablet className="w-4 h-4" />;
-      default: return <Monitor className="w-4 h-4" />;
-    }
-  };
-
   const todayChangePercent = useMemo(() => {
     if (!data || data.yesterdayVisits === 0) return null;
     return ((data.todayVisits - data.yesterdayVisits) / data.yesterdayVisits * 100);
   }, [data]);
 
+  const maxHourCount = Math.max(...(data?.visitsByHour.map(h => h.count) || [1]), 1);
+  const maxTodayHourCount = Math.max(...(data?.todayByHour.map(h => h.count) || [1]), 1);
+  const maxTrendCount = Math.max(...(data?.visitsTrend.map(t => t.count) || [1]), 1);
+  const maxDayCount = Math.max(...(data?.visitsByDay.map(d => d.count) || [1]), 1);
+
+  const getDeviceIcon = (device: string) => {
+    if (device === 'mobile') return <Smartphone className="w-4 h-4" />;
+    if (device === 'tablet') return <Tablet className="w-4 h-4" />;
+    return <Monitor className="w-4 h-4" />;
+  };
+
+  const getDeviceLabel = (device: string) => {
+    if (device === 'mobile') return 'Celular';
+    if (device === 'tablet') return 'Tablet';
+    if (device === 'desktop') return 'Computadora';
+    return device;
+  };
+
+  const getPageLabel = (path: string) => {
+    const map: Record<string, string> = {
+      '/': 'Inicio',
+      '/productos': 'Productos',
+      '/ofertas': 'Ofertas',
+      '/encargos': 'Encargos',
+      '/nosotros': 'Nosotros',
+      '/checkout': 'Checkout',
+      '/sorteo': 'Sorteo',
+    };
+    if (map[path]) return map[path];
+    if (path.startsWith('/producto/')) return `Producto: ${path.replace('/producto/', '')}`;
+    return path;
+  };
+
+  const getReferrerIcon = (ref: string) => {
+    if (ref === 'Directo') return '🔗';
+    if (ref.includes('instagram')) return '📸';
+    if (ref.includes('google')) return '🔍';
+    if (ref.includes('facebook')) return '👥';
+    if (ref.includes('whatsapp')) return '💬';
+    if (ref.includes('tiktok')) return '🎵';
+    return '🌐';
+  };
+
+  const getEventLabel = (name: string) => {
+    const map: Record<string, string> = {
+      add_to_cart: '🛒 Carrito',
+      checkout_started: '💳 Checkout',
+      checkout: '💳 Checkout',
+      order_paid: '✅ Pagado',
+      purchase: '✅ Pagado',
+      page_view: '👁 Vista',
+    };
+    return map[name] || name.replace(/_/g, ' ');
+  };
+
   if (loading && !data) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <RefreshCw className="w-8 h-8 animate-spin text-gray-300" />
+        <p className="text-sm text-gray-400">Cargando estadísticas...</p>
       </div>
     );
   }
 
+  const activeHours = dateRange === '1d' ? data?.todayByHour : data?.visitsByHour;
+  const activePeakHour = dateRange === '1d' ? todayPeakHour : peakHour;
+  const maxActiveHour = dateRange === '1d' ? maxTodayHourCount : maxHourCount;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 pb-8">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500 text-sm">Estadísticas de visitas y comportamiento</p>
+          <h1 className="text-2xl font-bold text-gray-900">Analíticas</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          {data && data.liveVisitors > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-xs font-medium text-green-700">
-                {data.liveVisitors} en línea
-              </span>
+        <div className="flex items-center gap-2">
+          {(data?.liveVisitors ?? 0) > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs font-semibold text-emerald-700">{data!.liveVisitors} en línea ahora</span>
             </div>
           )}
-
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-          >
-            <option value="1d">Hoy</option>
-            <option value="7d">Últimos 7 días</option>
-            <option value="30d">Últimos 30 días</option>
-            <option value="90d">Últimos 90 días</option>
-          </select>
-          
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            {(['1d', '7d', '30d', '90d'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setDateRange(r)}
+                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${dateRange === r ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                {r === '1d' ? 'Hoy' : r === '7d' ? '7 días' : r === '30d' ? '30 días' : '90 días'}
+              </button>
+            ))}
+          </div>
           <button
             onClick={loadAnalytics}
             disabled={loading}
+            title="Actualizar"
             className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* Today Summary Banner */}
-      {dateRange === '1d' && data && (
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-3">
-            <Activity className="w-5 h-5 text-green-400" />
-            <span className="font-semibold text-lg">Resumen de Hoy</span>
-            <span className="text-xs text-gray-400 ml-auto">
-              {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-gray-400 text-xs">Visitas</p>
-              <p className="text-2xl font-bold">{data.todayVisits}</p>
-              {todayChangePercent !== null && (
-                <div className={`flex items-center gap-1 text-xs ${todayChangePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {todayChangePercent >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {Math.abs(todayChangePercent).toFixed(1)}% vs ayer
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs">Visitantes Únicos</p>
-              <p className="text-2xl font-bold">{data.todayUniqueVisitors}</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs">Duración Prom.</p>
-              <p className="text-2xl font-bold">{formatDuration(data.todayAvgDuration)}</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs">Tasa Rebote</p>
-              <p className="text-2xl font-bold">{data.todayBounceRate.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-        <StatCard title="Total Visitas" value={data?.totalVisits || 0} icon={<Eye className="w-5 h-5" />} color="blue" />
-        <StatCard title="Hoy" value={data?.todayVisits || 0} subtitle={data?.yesterdayVisits ? `Ayer: ${data.yesterdayVisits}` : undefined} icon={<Calendar className="w-5 h-5" />} color="green" trend={todayChangePercent} />
-        <StatCard title="Únicos" value={data?.uniqueVisitors || 0} icon={<Users className="w-5 h-5" />} color="purple" />
-        <StatCard title="Nuevos" value={data?.newVisitors || 0} icon={<UserPlus className="w-5 h-5" />} color="cyan" />
-        <StatCard title="Recurrentes" value={data?.returningVisitors || 0} icon={<UserCheck className="w-5 h-5" />} color="indigo" />
-        <StatCard title="Duración Prom." value={formatDuration(data?.avgDuration || 0)} icon={<Clock className="w-5 h-5" />} color="amber" isText />
-        <StatCard title="Tasa Rebote" value={`${(data?.bounceRate || 0).toFixed(1)}%`} subtitle={`${(data?.pagesPerVisit || 0).toFixed(1)} págs/visita`} icon={<MousePointer className="w-5 h-5" />} color="red" isText />
+      {/* ── KPIs principales ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard
+          label="Visitas totales"
+          value={(dateRange === '1d' ? data?.todayVisits : data?.totalVisits) ?? 0}
+          sub={dateRange === '1d' && todayChangePercent !== null
+            ? { pct: todayChangePercent, text: 'vs ayer' }
+            : dateRange !== '1d' ? { text: `Hoy: ${data?.todayVisits ?? 0}` } : undefined}
+          icon={<Eye className="w-5 h-5" />}
+          accent="blue"
+        />
+        <KpiCard
+          label="Personas únicas"
+          value={(dateRange === '1d' ? data?.todayUniqueVisitors : data?.uniqueVisitors) ?? 0}
+          sub={{ text: `${data?.newVisitors ?? 0} nuevas · ${data?.returningVisitors ?? 0} repiten` }}
+          icon={<Users className="w-5 h-5" />}
+          accent="violet"
+        />
+        <KpiCard
+          label="Tiempo promedio"
+          value={formatDuration(dateRange === '1d' ? (data?.todayAvgDuration ?? 0) : (data?.avgDuration ?? 0))}
+          sub={{ text: `${(data?.pagesPerVisit ?? 0).toFixed(1)} páginas por visita` }}
+          icon={<Clock className="w-5 h-5" />}
+          accent="amber"
+          isText
+        />
+        <KpiCard
+          label="Visitas rápidas"
+          value={`${(dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)).toFixed(0)}%`}
+          sub={{ text: 'entraron y salieron rápido' }}
+          icon={<Zap className="w-5 h-5" />}
+          accent="rose"
+          isText
+        />
       </div>
 
-      {/* Peak Times */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-5 h-5 opacity-80" />
-            <span className="font-medium opacity-90">Hora Pico {dateRange === '1d' ? '(Hoy)' : `(${dateRange})`}</span>
+      {/* ── Gráfico de actividad ── */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="font-semibold text-gray-900">
+              {dateRange === '1d' ? 'Actividad de hoy por hora' : 'Visitas por día'}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {dateRange === '1d'
+                ? `Hora pico: ${activePeakHour ? `${activePeakHour.hour.toString().padStart(2, '0')}:00 (${activePeakHour.count} visitas)` : 'sin datos'}`
+                : `Día más activo: ${peakDay?.day_name ?? 'sin datos'}`
+              }
+            </p>
           </div>
-          <div className="text-3xl font-bold">
-            {dateRange === '1d' 
-              ? (todayPeakHour ? `${todayPeakHour.hour.toString().padStart(2, '0')}:00` : '--:--')
-              : (peakHour ? `${peakHour.hour.toString().padStart(2, '0')}:00` : '--:--')
-            }
-          </div>
-          <div className="text-sm opacity-80 mt-1">
-            {dateRange === '1d'
-              ? (todayPeakHour ? `${todayPeakHour.count} visitas` : 'Sin datos')
-              : (peakHour ? `${peakHour.count} visitas` : 'Sin datos')
-            }
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="w-5 h-5 opacity-80" />
-            <span className="font-medium opacity-90">Día Pico</span>
-          </div>
-          <div className="text-3xl font-bold">{peakDay?.day_name || 'Sin datos'}</div>
-          <div className="text-sm opacity-80 mt-1">{peakDay ? `${peakDay.count} visitas` : 'Sin datos'}</div>
-        </div>
-      </div>
-
-      {/* Today Hourly Chart */}
-      {dateRange === '1d' && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-500" />
-            Actividad por Hora — Hoy
-            <span className="ml-auto text-xs text-gray-400 font-normal">
-              Hora actual: {new Date().getHours().toString().padStart(2, '0')}:{new Date().getMinutes().toString().padStart(2, '0')}
+          {dateRange === '1d' && (
+            <span className="text-xs text-gray-400">
+              Ahora: {new Date().getHours().toString().padStart(2, '0')}:{new Date().getMinutes().toString().padStart(2, '0')}
             </span>
-          </h3>
-          <div className="flex items-end gap-[3px] h-40">
-            {data?.todayByHour.map((h) => {
+          )}
+        </div>
+
+        {dateRange === '1d' ? (
+          /* Hourly bars */
+          <div className="flex items-end gap-[3px] h-36">
+            {activeHours?.map((h) => {
               const currentHour = new Date().getHours();
-              const isCurrentHour = h.hour === currentHour;
-              const isFuture = h.hour > currentHour;
+              const isCurrent = (h as {hour:number}).hour === currentHour;
+              const isFuture = (h as {hour:number}).hour > currentHour;
+              const pct = maxActiveHour > 0 ? ((h as {count:number}).count / maxActiveHour) * 100 : 0;
               return (
-                <div key={h.hour} className="flex-1 flex flex-col items-center group relative">
-                  <div className="hidden group-hover:block absolute -top-8 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                    {h.hour.toString().padStart(2, '0')}:00 — {h.count} visitas
+                <div key={(h as {hour:number}).hour} className="flex-1 flex flex-col items-center group relative">
+                  <div className="hidden group-hover:flex absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center">
+                    {(h as {hour:number}).hour.toString().padStart(2, '0')}:00
+                    <span className="font-bold">{(h as {count:number}).count} visitas</span>
                   </div>
-                  <div 
-                    className={`w-full rounded-t transition-all ${isCurrentHour ? 'bg-green-500 hover:bg-green-600' : isFuture ? 'bg-gray-200' : 'bg-blue-500 hover:bg-blue-600'}`}
-                    style={{ height: maxTodayHourCount > 0 ? `${(h.count / maxTodayHourCount) * 100}%` : '0%', minHeight: h.count > 0 ? '4px' : isFuture ? '2px' : '0' }}
+                  <div
+                    className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : isFuture ? 'bg-gray-100' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    style={{ height: `${Math.max(pct, isFuture ? 0 : (h as {count:number}).count > 0 ? 3 : 0)}%`, minHeight: (h as {count:number}).count > 0 ? '4px' : undefined }}
                   />
-                  {h.hour % 3 === 0 && (
-                    <span className={`text-[10px] mt-1 ${isCurrentHour ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
-                      {h.hour.toString().padStart(2, '0')}
+                  {(h as {hour:number}).hour % 4 === 0 && (
+                    <span className={`text-[10px] mt-1 ${isCurrent ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>
+                      {(h as {hour:number}).hour.toString().padStart(2, '0')}
                     </span>
                   )}
                 </div>
               );
             })}
           </div>
+        ) : (
+          /* Daily trend bars */
+          <div className="flex items-end gap-[3px] h-36">
+            {data?.visitsTrend.map((t, i) => {
+              const pct = maxTrendCount > 0 ? (t.count / maxTrendCount) * 100 : 0;
+              const show = data.visitsTrend.length <= 14 || i % Math.ceil(data.visitsTrend.length / 10) === 0;
+              return (
+                <div key={t.date} className="flex-1 flex flex-col items-center group relative">
+                  <div className="hidden group-hover:flex absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center">
+                    {formatDate(t.date)}
+                    <span className="font-bold">{t.count} visitas</span>
+                  </div>
+                  <div
+                    className="w-full bg-blue-500 hover:bg-blue-600 rounded-t-md transition-all"
+                    style={{ height: `${Math.max(pct, t.count > 0 ? 3 : 0)}%` }}
+                  />
+                  {show && <span className="text-[9px] text-gray-400 mt-1">{formatDate(t.date)}</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {dateRange === '1d' && (
           <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
-            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-500 rounded" /> Completadas</div>
-            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" /> Hora actual</div>
-            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-200 rounded" /> Pendientes</div>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-blue-500 inline-block" />Pasadas</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" />Hora actual</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-100 inline-block" />Por venir</span>
           </div>
-        </div>
-      )}
-
-      {/* Visits Trend (multi-day) */}
-      {dateRange !== '1d' && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-gray-400" />
-            Tendencia de Visitas
-          </h3>
-          <div className="flex items-end gap-[2px] h-40">
-            {data?.visitsTrend.map((t, i) => (
-              <div key={t.date} className="flex-1 flex flex-col items-center group relative">
-                <div className="hidden group-hover:block absolute -top-10 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                  {formatDate(t.date)}: {t.count} visitas, {t.unique} únicos
-                </div>
-                <div className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600" style={{ height: `${(t.count / maxTrendCount) * 100}%`, minHeight: t.count > 0 ? '4px' : '0' }} />
-                {(data?.visitsTrend.length || 0) <= 14 && (
-                  <span className="text-[9px] text-gray-400 mt-1 truncate max-w-full">{formatDate(t.date)}</span>
-                )}
-                {(data?.visitsTrend.length || 0) > 14 && i % 7 === 0 && (
-                  <span className="text-[9px] text-gray-400 mt-1">{formatDate(t.date)}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400" />
-            Visitas por Hora {dateRange !== '1d' && `(${dateRange})`}
-          </h3>
-          <div className="flex items-end gap-1 h-32">
-            {data?.visitsByHour.map((h) => (
-              <div key={h.hour} className="flex-1 flex flex-col items-center group relative">
-                <div className="hidden group-hover:block absolute -top-8 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                  {h.hour.toString().padStart(2, '0')}:00 — {h.count}
-                </div>
-                <div className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600" style={{ height: `${(h.count / maxHourCount) * 100}%`, minHeight: h.count > 0 ? '4px' : '0' }} />
-                {h.hour % 6 === 0 && <span className="text-[10px] text-gray-400 mt-1">{h.hour}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            Visitas por Día de Semana
-          </h3>
-          <div className="flex items-end gap-2 h-32">
-            {data?.visitsByDay.map((d) => (
-              <div key={d.day} className="flex-1 flex flex-col items-center group relative">
-                <div className="hidden group-hover:block absolute -top-8 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                  {d.day_name}: {d.count}
-                </div>
-                <div className="w-full bg-purple-500 rounded-t transition-all hover:bg-purple-600" style={{ height: `${(d.count / maxDayCount) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }} />
-                <span className="text-[10px] text-gray-400 mt-1">{d.day_name.slice(0, 3)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Conversion Funnel */}
-      {(data?.conversionFunnel.addToCart || 0) > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 text-gray-400" />
-            Embudo de Conversión
-          </h3>
-          <div className="grid grid-cols-4 gap-3">
+      {/* ── Embudo de conversión ── */}
+      {(data?.conversionFunnel.addToCart ?? 0) > 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">¿Cuántos llegan a comprar?</h2>
+          <p className="text-xs text-gray-400 mb-5">De cada 100 visitantes, así avanza el proceso</p>
+          <div className="flex items-end gap-3">
             {[
-              { label: 'Visitas', value: data?.conversionFunnel.pageViews || 0, color: 'bg-blue-500' },
-              { label: 'Agregar al Carrito', value: data?.conversionFunnel.addToCart || 0, color: 'bg-amber-500' },
-              { label: 'Checkout', value: data?.conversionFunnel.checkoutStarted || 0, color: 'bg-purple-500' },
-              { label: 'Pagado', value: data?.conversionFunnel.ordersPaid || 0, color: 'bg-green-500' },
-            ].map((step, i) => {
-              const prevValue = i === 0 ? step.value : [data?.conversionFunnel.pageViews, data?.conversionFunnel.addToCart, data?.conversionFunnel.checkoutStarted, data?.conversionFunnel.ordersPaid][i - 1] || 0;
-              const rate = prevValue > 0 ? ((step.value / prevValue) * 100).toFixed(1) : '0';
-              const maxVal = data?.conversionFunnel.pageViews || 1;
+              { label: 'Visitaron la web', value: data?.conversionFunnel.pageViews ?? 0, color: 'bg-blue-500', emoji: '👁' },
+              { label: 'Agregaron al carrito', value: data?.conversionFunnel.addToCart ?? 0, color: 'bg-amber-500', emoji: '🛒' },
+              { label: 'Fueron al checkout', value: data?.conversionFunnel.checkoutStarted ?? 0, color: 'bg-purple-500', emoji: '💳' },
+              { label: 'Completaron la compra', value: data?.conversionFunnel.ordersPaid ?? 0, color: 'bg-emerald-500', emoji: '✅' },
+            ].map((step, i, arr) => {
+              const base = arr[0].value || 1;
+              const pct = ((step.value / base) * 100).toFixed(1);
+              const dropPct = i > 0 ? ((step.value / (arr[i-1].value || 1)) * 100).toFixed(0) : null;
               return (
-                <div key={step.label} className="text-center">
-                  <div className={`w-full ${step.color} rounded-t mx-auto transition-all`} style={{ height: `${Math.max((step.value / maxVal) * 80, 8)}px` }} />
-                  <div className="mt-2 text-lg font-bold text-gray-900">{step.value.toLocaleString()}</div>
-                  <div className="text-xs text-gray-500">{step.label}</div>
-                  {i > 0 && <div className="text-xs text-gray-400 mt-1">{rate}%</div>}
+                <div key={step.label} className="flex-1 flex flex-col items-center gap-2">
+                  {i > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
+                      <ChevronRight className="w-3 h-3" />
+                      <span>{dropPct}% continúa</span>
+                    </div>
+                  )}
+                  <div className="w-full flex flex-col items-center">
+                    <div
+                      className={`w-full ${step.color} rounded-xl transition-all`}
+                      style={{ height: `${Math.max((step.value / base) * 120, step.value > 0 ? 8 : 0)}px` }}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-gray-900">{step.value.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500 mt-0.5 leading-tight">{step.emoji} {step.label}</div>
+                    {i > 0 && <div className="text-xs text-gray-400 mt-0.5">{pct}% del total</div>}
+                  </div>
                 </div>
               );
             })}
@@ -632,72 +602,60 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Events */}
-      {((dateRange === '1d' ? data?.todayEvents : data?.events) || []).length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-gray-400" />
-            Eventos {dateRange === '1d' ? 'de Hoy' : `(${dateRange})`}
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {(dateRange === '1d' ? data?.todayEvents : data?.events)?.map((ev) => (
-              <div key={ev.event_name} className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-gray-900">{ev.count}</div>
-                <div className="text-xs text-gray-500 truncate" title={ev.event_name}>{ev.event_name.replace(/_/g, ' ')}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sources and Pages */}
+      {/* ── Fila media: Páginas + Fuentes ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-gray-400" />
-            Origen de Visitas
-          </h3>
-          <div className="space-y-3">
-            {data?.visitsByReferrer.length === 0 && <p className="text-gray-500 text-sm">Sin datos disponibles</p>}
-            {data?.visitsByReferrer.map((ref, i) => (
-              <div key={ref.referrer_domain} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">{i + 1}</div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{ref.referrer_domain}</span>
-                    <span className="text-sm text-gray-500">{ref.count}</span>
-                  </div>
-                  <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${(ref.count / (data?.visitsByReferrer[0]?.count || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-gray-400" />
-            Páginas más Visitadas
-          </h3>
+        {/* Páginas más vistas */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Páginas más visitadas</h2>
+          <p className="text-xs text-gray-400 mb-4">Las secciones que más atraen</p>
           <div className="space-y-3">
-            {data?.visitsByPage.length === 0 && <p className="text-gray-500 text-sm">Sin datos disponibles</p>}
+            {(data?.visitsByPage.length ?? 0) === 0 && (
+              <p className="text-sm text-gray-400">Sin datos todavía</p>
+            )}
             {data?.visitsByPage.map((page, i) => (
-              <div key={page.page_path} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">{i + 1}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-gray-900 truncate">{page.page_path}</span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400" title="Duración promedio">{formatDuration(page.avg_duration)}</span>
-                      <span className="text-xs text-red-400" title="Tasa de rebote">{page.bounce_rate.toFixed(0)}%</span>
-                      <span className="text-sm text-gray-500 font-medium">{page.count}</span>
-                    </div>
+              <div key={page.page_path}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
+                    <span className="text-sm font-medium text-gray-800 truncate">{getPageLabel(page.page_path)}</span>
+                    <span className="text-[10px] text-gray-400 shrink-0">{formatDuration(page.avg_duration)}</span>
                   </div>
-                  <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(page.count / (data?.visitsByPage[0]?.count || 1)) * 100}%` }} />
+                  <span className="text-sm font-bold text-gray-900 shrink-0 ml-2">{page.count}</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{ width: `${(page.count / (data.visitsByPage[0]?.count || 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Origen de visitas */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">¿De dónde vienen?</h2>
+          <p className="text-xs text-gray-400 mb-4">Fuentes que traen tráfico a la tienda</p>
+          <div className="space-y-3">
+            {(data?.visitsByReferrer.length ?? 0) === 0 && (
+              <p className="text-sm text-gray-400">Sin datos todavía</p>
+            )}
+            {data?.visitsByReferrer.map((ref, i) => (
+              <div key={ref.referrer_domain}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-base shrink-0">{getReferrerIcon(ref.referrer_domain)}</span>
+                    <span className="text-sm font-medium text-gray-800 truncate">{ref.referrer_domain}</span>
                   </div>
+                  <span className="text-sm font-bold text-gray-900 shrink-0 ml-2">{ref.count}</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${(ref.count / (data.visitsByReferrer[0]?.count || 1)) * 100}%` }}
+                  />
                 </div>
               </div>
             ))}
@@ -705,147 +663,167 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Devices, Browsers, OS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Monitor className="w-4 h-4 text-gray-400" />
-            Dispositivos
-          </h3>
-          <div className="space-y-3">
-            {data?.visitsByDevice.map((device) => (
-              <div key={device.device_type} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">{getDeviceIcon(device.device_type)}</div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900 capitalize">{device.device_type}</span>
+      {/* ── Dispositivos + Días de la semana ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Dispositivos */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">¿Con qué dispositivo entran?</h2>
+          <p className="text-xs text-gray-400 mb-5">Importante para saber si el diseño mobile es clave</p>
+          <div className="space-y-4">
+            {data?.visitsByDevice.map((d) => {
+              const pct = ((d.count / (data.totalVisits || 1)) * 100);
+              return (
+                <div key={d.device_type}>
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{device.count}</span>
-                      <span className="text-sm text-gray-500 font-medium">{((device.count / (data?.totalVisits || 1)) * 100).toFixed(1)}%</span>
+                      <span className="text-gray-500">{getDeviceIcon(d.device_type)}</span>
+                      <span className="text-sm font-medium text-gray-800">{getDeviceLabel(d.device_type)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{d.count} visitas</span>
+                      <span className="text-sm font-bold text-gray-900">{pct.toFixed(0)}%</span>
                     </div>
                   </div>
-                  <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(device.count / (data?.totalVisits || 1)) * 100}%` }} />
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-gray-400" />
-            Navegadores
-          </h3>
-          <div className="space-y-3">
-            {data?.visitsByBrowser.map((browser) => (
-              <div key={browser.browser} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{browser.browser}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{browser.count}</span>
-                      <span className="text-sm text-gray-500 font-medium">{((browser.count / (data?.totalVisits || 1)) * 100).toFixed(1)}%</span>
-                    </div>
+        {/* Días de la semana */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">¿Qué día vienen más?</h2>
+          <p className="text-xs text-gray-400 mb-5">
+            {peakDay ? `El día más activo es el ${peakDay.day_name}` : 'Acumulado del período seleccionado'}
+          </p>
+          <div className="flex items-end gap-2 h-28">
+            {data?.visitsByDay.map((d) => {
+              const pct = maxDayCount > 0 ? (d.count / maxDayCount) * 100 : 0;
+              const isPeak = d.count === maxDayCount && d.count > 0;
+              return (
+                <div key={d.day} className="flex-1 flex flex-col items-center group relative">
+                  <div className="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                    {d.count} visitas
                   </div>
-                  <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${(browser.count / (data?.totalVisits || 1)) * 100}%` }} />
-                  </div>
+                  <div
+                    className={`w-full rounded-t-md transition-all ${isPeak ? 'bg-violet-500' : 'bg-violet-200 hover:bg-violet-400'}`}
+                    style={{ height: `${Math.max(pct, d.count > 0 ? 5 : 0)}%` }}
+                  />
+                  <span className={`text-[10px] mt-1.5 font-medium ${isPeak ? 'text-violet-600' : 'text-gray-400'}`}>
+                    {d.day_name.slice(0, 3)}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Monitor className="w-4 h-4 text-gray-400" />
-            Sistema Operativo
-          </h3>
-          <div className="space-y-3">
-            {data?.visitsByOS.map((osItem) => (
-              <div key={osItem.os} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{osItem.os}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{osItem.count}</span>
-                      <span className="text-sm text-gray-500 font-medium">{((osItem.count / (data?.totalVisits || 1)) * 100).toFixed(1)}%</span>
-                    </div>
-                  </div>
-                  <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(osItem.count / (data?.totalVisits || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* New vs Returning */}
-      {data && (data.newVisitors > 0 || data.returningVisitors > 0) && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="w-4 h-4 text-gray-400" />
-            Visitantes Nuevos vs Recurrentes
-          </h3>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                  <span className="text-sm text-gray-700">Nuevos</span>
+      {/* ── Nuevos vs recurrentes + Eventos ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Nuevos vs recurrentes */}
+        {data && (data.newVisitors > 0 || data.returningVisitors > 0) && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <h2 className="font-semibold text-gray-900 mb-1">¿Son clientes nuevos o fieles?</h2>
+            <p className="text-xs text-gray-400 mb-5">Visitantes únicos del período</p>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm font-medium text-gray-700">Primera vez</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">
+                    {data.newVisitors} · {data.uniqueVisitors > 0 ? ((data.newVisitors / data.uniqueVisitors) * 100).toFixed(0) : 0}%
+                  </span>
                 </div>
-                <span className="text-sm font-medium">{data.newVisitors} ({data.uniqueVisitors > 0 ? ((data.newVisitors / data.uniqueVisitors) * 100).toFixed(1) : 0}%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span className="text-sm text-gray-700">Recurrentes</span>
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${data.uniqueVisitors > 0 ? (data.newVisitors / data.uniqueVisitors) * 100 : 0}%` }} />
                 </div>
-                <span className="text-sm font-medium">{data.returningVisitors} ({data.uniqueVisitors > 0 ? ((data.returningVisitors / data.uniqueVisitors) * 100).toFixed(1) : 0}%)</span>
               </div>
-              <div className="mt-3 h-3 bg-gray-100 rounded-full overflow-hidden flex">
-                <div className="h-full bg-blue-500 transition-all" style={{ width: `${data.uniqueVisitors > 0 ? (data.newVisitors / data.uniqueVisitors) * 100 : 50}%` }} />
-                <div className="h-full bg-green-500 transition-all" style={{ width: `${data.uniqueVisitors > 0 ? (data.returningVisitors / data.uniqueVisitors) * 100 : 50}%` }} />
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-medium text-gray-700">Volvieron a visitar</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">
+                    {data.returningVisitors} · {data.uniqueVisitors > 0 ? ((data.returningVisitors / data.uniqueVisitors) * 100).toFixed(0) : 0}%
+                  </span>
+                </div>
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${data.uniqueVisitors > 0 ? (data.returningVisitors / data.uniqueVisitors) * 100 : 0}%` }} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Eventos */}
+        {((dateRange === '1d' ? data?.todayEvents : data?.events) || []).length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <h2 className="font-semibold text-gray-900 mb-1">Acciones realizadas</h2>
+            <p className="text-xs text-gray-400 mb-5">Qué hicieron los visitantes</p>
+            <div className="grid grid-cols-2 gap-3">
+              {(dateRange === '1d' ? data?.todayEvents : data?.events)?.map((ev) => (
+                <div key={ev.event_name} className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
+                  <div className="text-xl leading-none">{getEventLabel(ev.event_name).split(' ')[0]}</div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">{ev.count}</div>
+                    <div className="text-xs text-gray-500 leading-tight">{getEventLabel(ev.event_name).split(' ').slice(1).join(' ') || ev.event_name.replace(/_/g, ' ')}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
 
-function StatCard({ title, value, subtitle, icon, color, isText = false, trend }: { 
-  title: string; value: number | string; subtitle?: string; icon: React.ReactNode; 
-  color: 'blue' | 'green' | 'purple' | 'amber' | 'red' | 'cyan' | 'indigo';
-  isText?: boolean; trend?: number | null;
+/* ── KPI Card ── */
+function KpiCard({
+  label, value, sub, icon, accent, isText = false,
+}: {
+  label: string;
+  value: number | string;
+  sub?: { pct?: number; text?: string };
+  icon: React.ReactNode;
+  accent: 'blue' | 'violet' | 'amber' | 'rose';
+  isText?: boolean;
 }) {
-  const colorClasses: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600', green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600', amber: 'bg-amber-50 text-amber-600',
-    red: 'bg-red-50 text-red-600', cyan: 'bg-cyan-50 text-cyan-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
+  const bg: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-600',
+    violet: 'bg-violet-50 text-violet-600',
+    amber: 'bg-amber-50 text-amber-600',
+    rose: 'bg-rose-50 text-rose-600',
   };
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>{icon}</div>
-        <div className="min-w-0">
-          <p className="text-xs text-gray-500 truncate">{title}</p>
-          <p className="text-xl font-bold text-gray-900">{isText ? value : typeof value === 'number' ? value.toLocaleString() : value}</p>
-          {trend !== undefined && trend !== null && (
-            <div className={`flex items-center gap-0.5 text-[10px] ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {trend >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {Math.abs(trend).toFixed(1)}%
-            </div>
-          )}
-          {subtitle && <p className="text-[10px] text-gray-400 truncate">{subtitle}</p>}
-        </div>
+    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${bg[accent]}`}>{icon}</div>
+      <div>
+        <p className="text-xs text-gray-500 font-medium">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 mt-0.5">
+          {isText ? value : typeof value === 'number' ? value.toLocaleString() : value}
+        </p>
+        {sub && (
+          <div className="flex items-center gap-1 mt-1">
+            {sub.pct !== undefined && (
+              <span className={`flex items-center gap-0.5 text-xs font-semibold ${sub.pct >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {sub.pct >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                {Math.abs(sub.pct).toFixed(1)}%
+              </span>
+            )}
+            {sub.text && <span className="text-xs text-gray-400">{sub.text}</span>}
+          </div>
+        )}
       </div>
     </div>
   );
