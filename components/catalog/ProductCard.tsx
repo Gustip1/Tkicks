@@ -46,7 +46,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       {/* Image container */}
       <div className={cn(
         "relative w-full overflow-hidden bg-surface",
-        size === 'large' ? "aspect-[4/5]" : "aspect-square"
+        "aspect-[4/5]"
       )}>
         {/* Skeleton loader */}
         {!imageLoaded && (

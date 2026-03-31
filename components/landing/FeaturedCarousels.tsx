@@ -19,7 +19,7 @@ function ProductSlide({ product }: { product: Product }) {
       href={`/producto/${product.slug}`} 
       className="block rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-2xl hover:shadow-white/5 transition-all"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-zinc-950">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-950">
         {!imageLoaded && <div className="absolute inset-0 bg-zinc-800 animate-pulse" />}
         {product.images?.[0]?.url && (
           <Image

@@ -42,7 +42,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
                 {/* Aspect ratio cuadrado en móvil para mejor visualización del producto */}
-                <div className="relative aspect-square md:aspect-square w-full overflow-hidden">
+                <div className="relative aspect-[4/5] w-full overflow-hidden">
                   <Image 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 

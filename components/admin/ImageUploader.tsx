@@ -148,7 +148,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
                 </button>
                 
                 {/* Image */}
-                <div className="aspect-square relative">
+                <div className="aspect-[4/5] relative">
                   <img
                     src={img.url}
                     alt={img.alt || `Imagen ${idx + 1}`}
