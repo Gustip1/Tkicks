@@ -21,12 +21,14 @@ export function CategoryShowcase() {
           .select('id, images', { count: 'exact' })
           .eq('active', true)
           .eq('category', 'sneakers')
+          .order('created_at', { ascending: false })
           .limit(1),
         supabase
           .from('products')
           .select('id, images', { count: 'exact' })
           .eq('active', true)
           .eq('category', 'streetwear')
+          .order('created_at', { ascending: false })
           .limit(1),
       ]);
 
@@ -88,7 +90,7 @@ export function CategoryShowcase() {
 
               {/* Background image */}
               {cat.image && (
-                <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-55 transition-opacity duration-500">
                   <Image
                     src={cat.image}
                     alt=""
