@@ -14,8 +14,8 @@ const proofs = [
   },
   {
     icon: Repeat,
-    value: 'Cada semana',
-    label: 'Nuevos drops',
+    value: 'Únicos',
+    label: 'y exclusivos',
   },
   {
     icon: Heart,

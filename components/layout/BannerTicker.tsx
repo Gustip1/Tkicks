@@ -6,7 +6,7 @@ export function BannerTicker() {
     '💳 3 cuotas sin interés (10% de recargo)',
     '✓ Productos 100% originales',
     '📦 Envíos a todo el país',
-    '🚀 Nuevos ingresos cada semana'
+    '✨ Productos únicos y exclusivos'
   ];
   
   return (
