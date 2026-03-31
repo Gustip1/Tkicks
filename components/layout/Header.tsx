@@ -134,12 +134,6 @@ export function Header() {
             >
               Nosotros
             </Link>
-            <Link
-              href="/sorteo"
-              className="rounded-xl px-4 py-2 text-sm font-black text-red-400 hover:bg-zinc-800 transition-colors uppercase tracking-tight"
-            >
-              Sorteo
-            </Link>
           </nav>
         </div>
         
