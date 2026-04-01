@@ -4,7 +4,7 @@ import { createServerSupabase } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { session_id, duration_seconds, pages_viewed } = body;
+    const { session_id, duration_seconds, pages_viewed, scroll_depth } = body;
 
     if (!session_id) {
       return NextResponse.json({ error: 'session_id required' }, { status: 400 });
@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
       .update({
         duration_seconds: duration_seconds || 0,
         pages_viewed: pages_viewed || 1,
-        is_bounce: (pages_viewed || 1) <= 1,
+        is_bounce: (pages_viewed || 1) <= 1 && (duration_seconds || 0) < 5,
+        scroll_depth: scroll_depth ?? 0,
         exited_at: new Date().toISOString(),
       })
       .eq('session_id', session_id)

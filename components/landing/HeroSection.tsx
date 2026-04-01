@@ -8,7 +8,6 @@ import { ArrowRight, Truck, Shield, CreditCard, ChevronDown } from 'lucide-react
 
 export function HeroSection() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,8 +20,6 @@ export function HeroSection() {
         .order('created_at', { ascending: false })
         .limit(12);
       if (data) setProducts(data as unknown as Product[]);
-      // Trigger entrance animations after a short delay
-      setTimeout(() => setLoaded(true), 100);
     })();
   }, []);
 
@@ -30,7 +27,6 @@ export function HeroSection() {
     .filter((p) => p.images?.[0]?.url)
     .map((p) => ({ url: p.images![0].url, title: p.title, slug: p.slug }));
 
-  // Duplicate for seamless loop
   const marqueeItems = [...productImages, ...productImages];
 
   return (
@@ -44,14 +40,10 @@ export function HeroSection() {
       <div className="absolute bottom-10 -right-32 w-96 h-96 rounded-full bg-blue-600/20 blur-[128px] animate-pulse-slow animation-delay-2000" />
 
       <div className="relative max-w-[1600px] mx-auto px-4">
-        {/* Main hero content */}
+        {/* Main hero content — NO espera a la DB, aparece de inmediato */}
         <div className="pt-8 md:pt-16 lg:pt-20 pb-6 md:pb-10">
-          {/* Badge */}
-          <div
-            className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 md:mb-8 transition-all duration-700 ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`}
-          >
+          {/* Badge — instant */}
+          <div className="animate-hero-enter inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 md:mb-8">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
@@ -61,34 +53,22 @@ export function HeroSection() {
             </span>
           </div>
 
-          {/* Headline */}
-          <h1
-            className={`text-[2.75rem] md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tighter mb-5 md:mb-6 transition-all duration-700 delay-150 ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-            }`}
-          >
+          {/* Headline — 50ms */}
+          <h1 className="animate-hero-enter hero-delay-1 text-[2.75rem] md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tighter mb-5 md:mb-6">
             Tu estilo.
             <br />
             <span className="hero-text-gradient">Solo en Tkicks.</span>
           </h1>
 
-          {/* Subtitle */}
-          <p
-            className={`text-base md:text-xl text-white/60 font-medium max-w-lg mb-8 md:mb-10 leading-relaxed transition-all duration-700 delay-300 ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-            }`}
-          >
+          {/* Subtitle — 100ms */}
+          <p className="animate-hero-enter hero-delay-2 text-base md:text-xl text-white/60 font-medium max-w-lg mb-8 md:mb-10 leading-relaxed">
             Sneakers & Streetwear{' '}
             <span className="text-white font-bold">100% originales</span>.
             Envíos a todo el país. Hasta 3 cuotas sin interés.
           </p>
 
-          {/* CTAs */}
-          <div
-            className={`flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 md:mb-14 transition-all duration-700 delay-[450ms] ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-            }`}
-          >
+          {/* CTAs — 150ms */}
+          <div className="animate-hero-enter hero-delay-3 flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 md:mb-14">
             <Link
               href="/productos"
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.15)]"
@@ -105,12 +85,8 @@ export function HeroSection() {
             </Link>
           </div>
 
-          {/* Trust bar */}
-          <div
-            className={`flex flex-wrap gap-6 md:gap-10 transition-all duration-700 delay-[600ms] ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-            }`}
-          >
+          {/* Trust bar — 200ms */}
+          <div className="animate-hero-enter hero-delay-4 flex flex-wrap gap-6 md:gap-10">
             {[
               { icon: Shield, text: '100% Original' },
               { icon: Truck, text: 'Envío nacional' },
@@ -128,14 +104,9 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Product image marquee */}
+        {/* Product image marquee — aparece apenas carga la data */}
         {productImages.length > 0 && (
-          <div
-            className={`relative pb-6 md:pb-10 transition-all duration-1000 delay-700 ${
-              loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-            }`}
-          >
-            {/* Fade edges */}
+          <div className="animate-hero-enter hero-delay-5 relative pb-6 md:pb-10">
             <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
 

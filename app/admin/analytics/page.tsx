@@ -38,6 +38,12 @@ interface AnalyticsData {
   };
   todayEvents: { event_name: string; count: number }[];
   liveVisitors: number;
+  // Retention metrics
+  scrollDepthAvg: number;
+  scrollDepthBuckets: { label: string; count: number }[];
+  durationBuckets: { label: string; count: number; pct: number }[];
+  engagementRate: number; // % who stayed > 5s
+  retentionSteps: { label: string; count: number; pct: number }[];
 }
 
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -259,6 +265,60 @@ export default function AnalyticsPage() {
         ordersPaid: eventCounts['order_paid'] || eventCounts['purchase'] || 0,
       };
 
+      // ── Retention & Engagement metrics ──
+      const exitedVisits = visitsList.filter(v => v.exited_at);
+
+      // Scroll depth
+      const scrollValues = exitedVisits.map(v => v.scroll_depth ?? 0);
+      const scrollDepthAvg = scrollValues.length > 0
+        ? scrollValues.reduce((s, v) => s + v, 0) / scrollValues.length
+        : 0;
+
+      const scrollBucketDefs = [
+        { label: '0%', min: 0, max: 0 },
+        { label: '1–25%', min: 1, max: 25 },
+        { label: '26–50%', min: 26, max: 50 },
+        { label: '51–75%', min: 51, max: 75 },
+        { label: '76–100%', min: 76, max: 100 },
+      ];
+      const scrollDepthBuckets = scrollBucketDefs.map(b => ({
+        label: b.label,
+        count: scrollValues.filter(v => v >= b.min && v <= b.max).length,
+      }));
+
+      // Duration buckets
+      const durations = exitedVisits.map(v => v.duration_seconds ?? 0);
+      const total = durations.length || 1;
+      const durBucketDefs = [
+        { label: '< 5s', min: 0, max: 4 },
+        { label: '5–15s', min: 5, max: 15 },
+        { label: '15–30s', min: 16, max: 30 },
+        { label: '30s–1m', min: 31, max: 60 },
+        { label: '1–3m', min: 61, max: 180 },
+        { label: '> 3m', min: 181, max: Infinity },
+      ];
+      const durationBuckets = durBucketDefs.map(b => {
+        const count = durations.filter(d => d >= b.min && d <= b.max).length;
+        return { label: b.label, count, pct: (count / total) * 100 };
+      });
+
+      // Engagement rate = % who stayed > 5s
+      const engaged = durations.filter(d => d >= 5).length;
+      const engagementRate = total > 0 ? (engaged / total) * 100 : 0;
+
+      // Retention funnel
+      const retentionThresholds = [
+        { label: 'Entraron', sec: 0 },
+        { label: '> 5 seg', sec: 5 },
+        { label: '> 15 seg', sec: 15 },
+        { label: '> 30 seg', sec: 30 },
+        { label: '> 1 min', sec: 60 },
+      ];
+      const retentionSteps = retentionThresholds.map(t => {
+        const count = durations.filter(d => d >= t.sec).length;
+        return { label: t.label, count, pct: (count / total) * 100 };
+      });
+
       setData({
         totalVisits: totalVisits || 0,
         todayVisits,
@@ -285,6 +345,11 @@ export default function AnalyticsPage() {
         conversionFunnel,
         todayEvents,
         liveVisitors: liveVisitors || 0,
+        scrollDepthAvg,
+        scrollDepthBuckets,
+        durationBuckets,
+        engagementRate,
+        retentionSteps,
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -783,6 +848,111 @@ export default function AnalyticsPage() {
           </div>
         )}
       </div>
+
+      {/* ── RETENCIÓN — La sección más importante ── */}
+      {data && (data.retentionSteps[0]?.count ?? 0) > 0 && (
+        <>
+          <div className="pt-2">
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="text-lg font-bold text-gray-900">Retención</h2>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                data.engagementRate >= 50 ? 'bg-emerald-50 text-emerald-700' :
+                data.engagementRate >= 25 ? 'bg-amber-50 text-amber-700' :
+                'bg-rose-50 text-rose-700'
+              }`}>
+                {data.engagementRate.toFixed(0)}% se quedan más de 5s
+              </span>
+            </div>
+            <p className="text-sm text-gray-500">¿La gente se queda o se va enseguida? Estas métricas te ayudan a entenderlo.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Embudo de retención */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h2 className="font-semibold text-gray-900 mb-1">¿Cuántos se quedan?</h2>
+              <p className="text-xs text-gray-400 mb-5">De todas las visitas, cuántas superan cada umbral de tiempo</p>
+              <div className="space-y-3">
+                {data.retentionSteps.map((step, i) => {
+                  const colors = ['bg-blue-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500', 'bg-violet-500'];
+                  return (
+                    <div key={step.label}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-gray-700">{step.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">{step.count} personas</span>
+                          <span className="text-sm font-bold text-gray-900">{step.pct.toFixed(0)}%</span>
+                        </div>
+                      </div>
+                      <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${step.pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Distribución de tiempo */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h2 className="font-semibold text-gray-900 mb-1">¿Cuánto tiempo se quedan?</h2>
+              <p className="text-xs text-gray-400 mb-5">Distribución de duración de las visitas</p>
+              <div className="space-y-3">
+                {data.durationBuckets.map((b) => {
+                  const maxPct = Math.max(...data.durationBuckets.map(x => x.pct), 1);
+                  const isTop = b.pct === maxPct;
+                  return (
+                    <div key={b.label}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-sm font-medium ${isTop ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>{b.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">{b.count}</span>
+                          <span className="text-sm font-bold text-gray-900">{b.pct.toFixed(0)}%</span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${isTop ? 'bg-rose-500' : 'bg-blue-400'}`} style={{ width: `${(b.pct / maxPct) * 100}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Scroll depth */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="font-semibold text-gray-900">¿Hasta dónde bajan en la página?</h2>
+              <span className="text-sm font-bold text-gray-600">Promedio: {data.scrollDepthAvg.toFixed(0)}%</span>
+            </div>
+            <p className="text-xs text-gray-400 mb-5">
+              {data.scrollDepthAvg < 25
+                ? 'La mayoría no baja de la primera pantalla — el contenido de arriba debe retener mejor'
+                : data.scrollDepthAvg < 50
+                ? 'Llegan hasta la mitad — algo bueno hay, pero se pierden a la mitad'
+                : 'Buen scroll — la gente explora bastante tu sitio'}
+            </p>
+            <div className="flex items-end gap-3 h-28">
+              {data.scrollDepthBuckets.map((b) => {
+                const maxBucket = Math.max(...data.scrollDepthBuckets.map(x => x.count), 1);
+                const pct = (b.count / maxBucket) * 100;
+                const colors = ['bg-rose-400', 'bg-amber-400', 'bg-yellow-400', 'bg-cyan-400', 'bg-emerald-500'];
+                const idx = data.scrollDepthBuckets.indexOf(b);
+                return (
+                  <div key={b.label} className="flex-1 flex flex-col items-center group relative">
+                    <div className="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                      {b.count} visitas
+                    </div>
+                    <div className={`w-full ${colors[idx]} rounded-t-lg transition-all`} style={{ height: `${Math.max(pct, b.count > 0 ? 5 : 0)}%` }} />
+                    <span className="text-[10px] text-gray-500 font-medium mt-1.5">{b.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
