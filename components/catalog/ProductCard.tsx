@@ -178,7 +178,18 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}>
           {product.title}
         </h3>
-        
+
+        {/* Talles disponibles */}
+        {availableSizes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {availableSizes.map((s) => (
+              <span key={s} className="px-2 py-0.5 rounded-md bg-zinc-800 text-[10px] font-bold text-gray-300 uppercase">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Price */}
         <div className="space-y-1">
           {/* Precio Base (Transferencia/Efectivo) */}
@@ -210,16 +221,6 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             );
           })()}
 
-          {/* Talles disponibles */}
-          {availableSizes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-2 mt-2 border-t border-zinc-800">
-              {availableSizes.map((s) => (
-                <span key={s} className="px-2 py-0.5 rounded-md bg-zinc-800 text-[10px] font-bold text-gray-300 uppercase">
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </Link>
