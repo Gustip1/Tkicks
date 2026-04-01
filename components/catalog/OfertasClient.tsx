@@ -14,7 +14,7 @@ export function OfertasClient() {
       setLoading(true);
       const { data } = await supabase.current
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock,size)')
         .eq('on_sale', true)
         .eq('active', true)
         .order('created_at', { ascending: false });

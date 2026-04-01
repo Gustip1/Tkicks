@@ -38,8 +38,8 @@ export interface Product {
   active: boolean;
   created_at: string | null;
   updated_at: string | null;
-  /** Joined from product_variants when using select('*, product_variants(stock)') */
-  product_variants?: { stock: number }[];
+  /** Joined from product_variants when using select('*, product_variants(stock,size)') */
+  product_variants?: { stock: number; size?: string }[];
 }
 
 /* ────────────── Orders ────────────── */

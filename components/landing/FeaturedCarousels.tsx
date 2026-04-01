@@ -235,21 +235,21 @@ export function FeaturedCarousels() {
     Promise.all([
       supabase
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock,size)')
         .eq('on_sale', true)
         .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(12),
       supabase
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock,size)')
         .eq('featured_sneakers', true)
         .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(12),
       supabase
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock,size)')
         .eq('featured_streetwear', true)
         .eq('active', true)
         .order('created_at', { ascending: false })

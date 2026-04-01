@@ -12,7 +12,7 @@ export default async function NuevosIngresosPage() {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from('products')
-    .select('*, product_variants(stock)')
+    .select('*, product_variants(stock,size)')
     .eq('active', true)
     .eq('is_new', true)
     .order('created_at', { ascending: false });

@@ -24,7 +24,16 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
     return product.product_variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
   }, [product.product_variants]);
 
-  const isSoldOut = totalStock !== null && totalStock <= 0;  
+  const isSoldOut = totalStock !== null && totalStock <= 0;
+
+  const availableSizes = useMemo(() => {
+    if (!product.product_variants) return [];
+    return product.product_variants
+      .filter(v => (v.stock ?? 0) > 0)
+      .map(v => v.size)
+      .filter(Boolean) as string[];
+  }, [product.product_variants]);
+
   useEffect(() => {
     if (!hovering || images.length <= 1) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % images.length), 800);
@@ -200,6 +209,17 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
               </div>
             );
           })()}
+
+          {/* Talles disponibles */}
+          {availableSizes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-2 mt-2 border-t border-zinc-800">
+              {availableSizes.map((s) => (
+                <span key={s} className="px-2 py-0.5 rounded-md bg-zinc-800 text-[10px] font-bold text-gray-300 uppercase">
+                  {s}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Link>

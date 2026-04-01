@@ -20,7 +20,7 @@ export function NewArrivals() {
       // y created_at para ordenarlos por los más recientes primero.
       const { data } = await supabase
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock,size)')
         .eq('active', true)
         .eq('is_new', true)
         .order('created_at', { ascending: false })
