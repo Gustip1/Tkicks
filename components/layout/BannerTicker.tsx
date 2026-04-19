@@ -3,11 +3,10 @@ import { DolarWidget } from '@/components/DolarWidget';
 
 export function BannerTicker() {
   const items = [
-    '💳 Pagá en hasta 3 cuotas sin interés',
-    '🔒 Solo producto 100% original y verificado',
-    '📦 Envíos rápidos a todo el país',
-    '🏷️ Nuevos drops todas las semanas',
-    '⚡ Stock limitado — cuando se va, no vuelve',
+    '💳 3 cuotas sin interés (10% de recargo)',
+    '✓ Productos 100% originales',
+    '📦 Envíos a todo el país',
+    '✨ Productos únicos y exclusivos',
   ];
   
   return (

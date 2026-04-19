@@ -4,23 +4,23 @@ import { Star, MapPin, Repeat, Heart } from 'lucide-react';
 const proofs = [
   {
     icon: MapPin,
-    value: 'Showroom',
-    label: 'Probátelos en San Juan',
+    value: 'San Juan',
+    label: 'Showroom físico',
   },
   {
     icon: Star,
-    value: 'Curados',
-    label: 'Selección exclusiva',
+    value: '100%',
+    label: 'Originales',
   },
   {
     icon: Repeat,
-    value: 'Stock limitado',
-    label: 'No se repite',
+    value: 'Únicos',
+    label: 'y exclusivos',
   },
   {
     icon: Heart,
-    value: '+500 clientes',
-    label: 'Nos eligen',
+    value: 'Comunidad',
+    label: 'Tkicks fam',
   },
 ];
 

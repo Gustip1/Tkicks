@@ -49,7 +49,7 @@ export function HeroSection() {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
             <span className="text-xs md:text-sm text-white/90 font-bold uppercase tracking-widest">
-              Showroom en San Juan &middot; Envíos a todo el país
+              Stock Único en San Juan
             </span>
           </div>
 
