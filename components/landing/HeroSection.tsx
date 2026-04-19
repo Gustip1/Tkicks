@@ -49,22 +49,22 @@ export function HeroSection() {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
             <span className="text-xs md:text-sm text-white/90 font-bold uppercase tracking-widest">
-              Stock Único en San Juan
+              Showroom en San Juan &middot; Envíos a todo el país
             </span>
           </div>
 
           {/* Headline — 50ms */}
           <h1 className="animate-hero-enter hero-delay-1 text-[2.75rem] md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tighter mb-5 md:mb-6">
-            Tu estilo.
+            Sneakers & Streetwear
             <br />
-            <span className="hero-text-gradient">Solo en Tkicks.</span>
+            <span className="hero-text-gradient">que no encontrás en otro lado.</span>
           </h1>
 
           {/* Subtitle — 100ms */}
           <p className="animate-hero-enter hero-delay-2 text-base md:text-xl text-white/60 font-medium max-w-lg mb-8 md:mb-10 leading-relaxed">
-            Sneakers & Streetwear{' '}
-            <span className="text-white font-bold">100% originales</span>.
-            Envíos a todo el país. Hasta 3 cuotas sin interés.
+            Producto <span className="text-white font-bold">100% original</span>,
+            selección curada y los drops que marcan tendencia.
+            San Juan tiene su propia cultura urbana.
           </p>
 
           {/* CTAs — 150ms */}
@@ -73,7 +73,7 @@ export function HeroSection() {
               href="/productos"
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.15)]"
             >
-              Explorar catálogo
+              Ver lo nuevo
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
@@ -81,16 +81,16 @@ export function HeroSection() {
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white/5 text-white font-black text-sm uppercase tracking-tight border border-white/15 hover:bg-white/10 hover:border-white/30 transition-all backdrop-blur-sm"
             >
               <span className="text-lg">🔥</span>
-              Ver ofertas
+              Ofertas activas
             </Link>
           </div>
 
           {/* Trust bar — 200ms */}
           <div className="animate-hero-enter hero-delay-4 flex flex-wrap gap-6 md:gap-10">
             {[
-              { icon: Shield, text: '100% Original' },
-              { icon: Truck, text: 'Envío nacional' },
-              { icon: CreditCard, text: '3 cuotas sin interés' },
+              { icon: Shield, text: 'Autenticidad garantizada' },
+              { icon: Truck, text: 'Envíos a todo el país' },
+              { icon: CreditCard, text: 'Hasta 3 cuotas' },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">

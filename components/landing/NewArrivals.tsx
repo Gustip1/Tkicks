@@ -50,9 +50,9 @@ export function NewArrivals() {
             </div>
             <div>
               <h2 id="new-arrivals-title" className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-                Nuevos ingresos
+                Recién llegados
               </h2>
-              <p className="text-sm text-gray-400 font-bold">Lo último que llegó a Tkicks</p>
+              <p className="text-sm text-gray-400 font-bold">Los últimos drops que entraron a la tienda</p>
             </div>
           </div>
           <Link

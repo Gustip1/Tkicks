@@ -510,6 +510,54 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* ── Resumen inteligente ── */}
+      {data && (
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 border border-blue-100 rounded-2xl p-5 space-y-2">
+          <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-blue-500" /> Resumen rápido
+          </h2>
+          <ul className="space-y-1.5 text-sm text-gray-600">
+            {(() => {
+              const insights: string[] = [];
+              const br = dateRange === '1d' ? (data.todayBounceRate ?? 0) : (data.bounceRate ?? 0);
+              const dur = dateRange === '1d' ? (data.todayAvgDuration ?? 0) : (data.avgDuration ?? 0);
+              const visits = dateRange === '1d' ? data.todayVisits : data.totalVisits;
+              const topDevice = data.visitsByDevice[0];
+              const topRef = data.visitsByReferrer[0];
+
+              if (visits === 0) {
+                insights.push('Todavía no hay visitas en este período.');
+              } else {
+                if (br >= 70) insights.push(`El ${br.toFixed(0)}% de la gente se va sin explorar. Esto indica que el primer impacto no está enganchando lo suficiente.`);
+                else if (br >= 50) insights.push(`El ${br.toFixed(0)}% se va rápido. Hay que mejorar lo primero que ven al entrar.`);
+                else insights.push(`Solo el ${br.toFixed(0)}% se va sin explorar. La mayoría se queda y navega.`);
+
+                if (dur < 5) insights.push(`La gente se queda en promedio ${Math.round(dur)} segundos. Es muy poco: no llegan a ver los productos.`);
+                else if (dur < 30) insights.push(`Promedio de ${Math.round(dur)} segundos por visita. Hay interés pero se pierde rápido.`);
+                else insights.push(`Promedio de ${formatDuration(dur)} por visita. Buen nivel de exploración.`);
+
+                if (topDevice) {
+                  const pct = ((topDevice.count / (data.totalVisits || 1)) * 100).toFixed(0);
+                  const label = topDevice.device_type === 'mobile' ? 'celular' : topDevice.device_type === 'desktop' ? 'computadora' : 'tablet';
+                  insights.push(`El ${pct}% entra desde ${label}. ${topDevice.device_type === 'mobile' ? 'La experiencia mobile es clave.' : ''}`);
+                }
+
+                if (topRef) {
+                  insights.push(`La principal fuente de tráfico es ${topRef.referrer_domain === 'Directo' ? 'tráfico directo (ponen la URL o te tienen guardado)' : topRef.referrer_domain}.`);
+                }
+
+                if (todayChangePercent !== null && dateRange === '1d') {
+                  if (todayChangePercent > 20) insights.push(`Hoy está ${todayChangePercent.toFixed(0)}% por encima de ayer. Buen día.`);
+                  else if (todayChangePercent < -20) insights.push(`Hoy hay ${Math.abs(todayChangePercent).toFixed(0)}% menos visitas que ayer.`);
+                }
+              }
+
+              return insights.map((ins, i) => <li key={i} className="flex items-start gap-2"><span className="text-blue-400 mt-0.5 shrink-0">&#8226;</span>{ins}</li>);
+            })()}
+          </ul>
+        </div>
+      )}
+
       {/* ── KPIs principales ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard
@@ -537,9 +585,9 @@ export default function AnalyticsPage() {
           isText
         />
         <KpiCard
-          label="Visitas rápidas"
+          label="Se van rápido"
           value={`${(dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)).toFixed(0)}%`}
-          sub={{ text: 'entraron y salieron rápido' }}
+          sub={{ text: dateRange === '1d' ? (data?.todayBounceRate ?? 0) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' : (data?.bounceRate ?? 0) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' }}
           icon={<Zap className="w-5 h-5" />}
           accent="rose"
           isText
@@ -849,21 +897,27 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      {/* ── RETENCIÓN — La sección más importante ── */}
+      {/* ── RETENCIÓN ── */}
       {data && (data.retentionSteps[0]?.count ?? 0) > 0 && (
         <>
           <div className="pt-2">
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-lg font-bold text-gray-900">Retención</h2>
+              <h2 className="text-lg font-bold text-gray-900">Retención: ¿la gente se queda?</h2>
               <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                 data.engagementRate >= 50 ? 'bg-emerald-50 text-emerald-700' :
                 data.engagementRate >= 25 ? 'bg-amber-50 text-amber-700' :
                 'bg-rose-50 text-rose-700'
               }`}>
-                {data.engagementRate.toFixed(0)}% se quedan más de 5s
+                {data.engagementRate >= 50 ? 'Bien' : data.engagementRate >= 25 ? 'Regular' : 'Bajo'} — {data.engagementRate.toFixed(0)}% se quedan +5s
               </span>
             </div>
-            <p className="text-sm text-gray-500">¿La gente se queda o se va enseguida? Estas métricas te ayudan a entenderlo.</p>
+            <p className="text-sm text-gray-500">
+              {data.engagementRate < 25
+                ? 'La mayoría se va antes de los 5 segundos. El hero y el primer scroll tienen que atrapar al instante.'
+                : data.engagementRate < 50
+                ? 'Casi la mitad se va rápido. Mejorar lo primero que ven puede subir estas cifras.'
+                : 'La mayoría explora la web. El contenido está funcionando.'}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

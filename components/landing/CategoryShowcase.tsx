@@ -71,10 +71,10 @@ export function CategoryShowcase() {
       <div className="max-w-[1600px] mx-auto px-4">
         <div className="text-center mb-8 md:mb-10">
           <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight mb-2">
-            Elegí tu categoría
+            Elegí tu estilo
           </h2>
           <p className="text-sm md:text-base text-white/40 font-medium">
-            {counts.sneakers + counts.streetwear} productos disponibles
+            {counts.sneakers + counts.streetwear} productos listos para vos
           </p>
         </div>
 
