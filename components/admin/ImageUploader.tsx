@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { X, Upload, GripVertical, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trimWhiteBorders } from '@/lib/image-trim';
 
 export interface UploadedImage { url: string; alt: string }
 
@@ -13,8 +14,17 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
   const onDrop = useCallback(async (accepted: File[]) => {
     setLoading(true);
     try {
+      const prepared = await Promise.all(
+        accepted.map(async (f) => {
+          try {
+            return await trimWhiteBorders(f);
+          } catch {
+            return f;
+          }
+        })
+      );
       const form = new FormData();
-      accepted.forEach((f) => form.append('files', f));
+      prepared.forEach((f) => form.append('files', f));
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const payload = await res.json();
 
@@ -94,7 +104,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
                 <p className="text-sm font-medium text-gray-700">
                   {isDragActive ? "Soltá las imágenes aquí" : "Arrastrá imágenes o hacé click"}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">JPEG, PNG o WEBP (máx. 10MB)</p>
+                <p className="text-xs text-gray-500 mt-1">JPEG, PNG o WEBP · cualquier resolución · bordes blancos se recortan solos</p>
               </div>
             </>
           )}
