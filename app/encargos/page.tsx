@@ -157,7 +157,7 @@ export default function EncargosPage() {
 
     msg += "\n━━━ Pago ━━━\n";
     msg += `• Método: ${metodoLabel[metodoPago] || metodoPago}\n`;
-    msg += `• Pago: 60% del total como seña para confirmar el pedido\n`;
+    msg += `• Pago: 75% del total como seña para confirmar el pedido\n`;
 
     const url = `https://api.whatsapp.com/send?phone=5492644802994&text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
@@ -191,7 +191,7 @@ export default function EncargosPage() {
           <p className="text-sm font-semibold text-amber-300">Importante: Pago del encargo</p>
           <p className="text-sm text-amber-200/80">
             Para realizar tu encargo, se debe abonar el{" "}
-            <span className="font-bold text-amber-200">60% del precio del producto</span> como seña antes de
+            <span className="font-bold text-amber-200">75% del precio del producto</span> como seña antes de
             realizar el pedido.
           </p>
         </div>
@@ -431,7 +431,7 @@ export default function EncargosPage() {
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 space-y-5">
           <h3 className="text-sm font-bold text-white">Método de pago</h3>
           <p className="text-xs text-neutral-400">
-            Seleccioná cómo preferís abonar el 60% del encargo (seña).
+            Seleccioná cómo preferís abonar el 75% del encargo (seña).
           </p>
 
           <div className="grid grid-cols-2 gap-3">
