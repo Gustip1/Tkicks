@@ -8,7 +8,7 @@ export function DolarWidget() {
 
   return (
     <div className="text-[9px] md:text-xs text-gray-400 flex items-center gap-1 font-bold whitespace-nowrap">
-      <span className="hidden md:inline">Dólar Blue:</span>
+      <span className="hidden md:inline">Dólar:</span>
       <span className="md:hidden">USD:</span>
       <span className={`font-black text-white ${isLoading ? 'animate-pulse' : ''}`}>
         ${rate.toFixed(2)}
