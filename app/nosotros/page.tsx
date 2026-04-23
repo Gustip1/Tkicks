@@ -133,7 +133,7 @@ export default async function NosotrosPage() {
       <section className="relative border-y border-white/5 bg-gradient-to-b from-black via-zinc-950/60 to-black">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-8 md:py-12 grid grid-cols-2 md:grid-cols-4 gap-y-6 md:gap-6">
           {[
-            { k: '2020', v: 'Desde', sub: 'Trayectoria & hype' },
+            { k: '2025', v: 'Desde', sub: 'Trayectoria & hype' },
             { k: '100%', v: 'Originales', sub: 'Sin excepciones' },
             { k: '1', v: 'Showroom', sub: 'Físico en San Juan' },
             { k: '24/7', v: 'Online', sub: 'Siempre con stock' },
