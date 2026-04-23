@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, ChevronDown } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Instagram } from 'lucide-react';
 import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
 
 export function Sidebar() {
@@ -171,13 +171,48 @@ export function Sidebar() {
           </div>
         </nav>
         
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-800 bg-zinc-900">
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-black border border-green-500/50">
-              ✓ 100% Original
+        {/* Footer: Social connect */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-zinc-800 bg-gradient-to-b from-zinc-900 to-black space-y-2.5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Seguinos</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href="https://www.instagram.com/tkicks.sj"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 rounded-xl p-2.5 bg-gradient-to-br from-[#833ab4]/40 via-[#fd1d1d]/30 to-[#fcb045]/30 border border-white/10 hover:border-white/25 active:scale-[0.98] transition-all"
+              aria-label="Instagram @tkicks.sj"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                <Instagram className="w-4 h-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/70 leading-none">IG</p>
+                <p className="text-xs font-black text-white truncate leading-tight mt-0.5">@tkicks.sj</p>
+              </div>
+            </a>
+            <a
+              href="https://www.tiktok.com/@tkicks.sj"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 rounded-xl p-2.5 bg-gradient-to-br from-black via-zinc-900 to-black border border-white/10 hover:border-white/25 active:scale-[0.98] transition-all"
+              aria-label="TikTok @tkicks.sj"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-white" aria-hidden="true">
+                  <path d="M19.321 6.5a6.67 6.67 0 0 1-3.892-1.246A6.67 6.67 0 0 1 13.07 1.5h-3.24v13.09a3.15 3.15 0 1 1-2.26-3.02V8.32a6.38 6.38 0 1 0 5.5 6.32V8.83a9.8 9.8 0 0 0 6.25 2.12V7.72a6.5 6.5 0 0 1-.001-.004z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/70 leading-none">TikTok</p>
+                <p className="text-xs font-black text-white truncate leading-tight mt-0.5">@tkicks.sj</p>
+              </div>
+            </a>
+          </div>
+          <div className="flex items-center justify-center gap-1.5">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-black border border-emerald-500/30">
+              ✓ Originales
             </span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black border border-blue-500/50">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[10px] font-black border border-blue-500/30">
               📦 Envío nacional
             </span>
           </div>

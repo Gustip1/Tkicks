@@ -5,6 +5,7 @@ import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { RouteTransitions } from '@/components/RouteTransitions';
 import { DolarRateProvider } from '@/components/DolarRateProvider';
@@ -67,9 +68,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <RouteTransitions>{children}</RouteTransitions>
               <GiveawayClue />
             </main>
-            <footer className="w-full py-4 text-center text-sm text-zinc-400">
-              Todas las ventas son <span className="font-semibold text-zinc-300">Final Sale</span>
-            </footer>
+            <Footer />
             <CartDrawer />
           </AnalyticsProvider>
         </DolarRateProvider>
