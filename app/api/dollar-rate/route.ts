@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest) {
     console.log('[DOLLAR API] Fetching from external API...');
     
     // Intentar con dolarapi.com primero
-    const response = await fetch('https://dolarapi.com/v1/dolares/blue', {
+    const response = await fetch('https://dolarapi.com/v1/dolares/oficial', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -65,14 +65,14 @@ export async function GET(_req: NextRequest) {
       if (backupResponse.ok) {
         const backupData = await backupResponse.json();
         
-        // Bluelytics devuelve un formato diferente
-        const blueRate = backupData?.blue?.value_avg || backupData?.blue?.value_sell;
+        // Bluelytics devuelve un formato diferente — usamos el precio de venta del oficial
+        const officialRate = backupData?.oficial?.value_sell || backupData?.oficial?.value_avg;
 
-        if (blueRate && typeof blueRate === 'number') {
-          console.log('[DOLLAR API] Backup success:', blueRate);
+        if (officialRate && typeof officialRate === 'number') {
+          console.log('[DOLLAR API] Backup success:', officialRate);
 
           return NextResponse.json({
-            rate: blueRate,
+            rate: officialRate,
             source: 'bluelytics.com.ar',
             lastUpdate: new Date().toISOString(),
             timestamp: new Date().toISOString()
