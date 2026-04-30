@@ -45,23 +45,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    if (order.status !== 'cancelled') {
+    if (order.status !== 'cancelled' && order.status !== 'fulfilled') {
       return NextResponse.json(
-        { error: 'Solo se pueden eliminar órdenes canceladas' },
+        { error: 'Solo se pueden eliminar órdenes canceladas o entregadas' },
         { status: 400 }
       );
     }
 
-    const { error: restoreError } = await service.rpc('restore_order_stock', {
-      p_order_id: orderId,
-    });
+    // Sólo cancelled devuelve stock — los fulfilled ya salieron del local
+    if (order.status === 'cancelled') {
+      const { error: restoreError } = await service.rpc('restore_order_stock', {
+        p_order_id: orderId,
+      });
 
-    if (restoreError) {
-      console.error('[ERROR] restore_order_stock:', restoreError);
-      return NextResponse.json(
-        { error: 'No se pudo restaurar stock antes de eliminar la orden' },
-        { status: 500 }
-      );
+      if (restoreError) {
+        console.error('[ERROR] restore_order_stock:', restoreError);
+        return NextResponse.json(
+          { error: 'No se pudo restaurar stock antes de eliminar la orden' },
+          { status: 500 }
+        );
+      }
     }
 
     // order_items y shipping_addresses se eliminan por ON DELETE CASCADE

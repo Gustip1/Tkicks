@@ -107,8 +107,12 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const deleteOrder = async (orderId: string) => {
-    if (!confirm('¿Seguro que querés eliminar esta orden? Los productos volverán al stock.')) return;
+  const deleteOrder = async (orderId: string, status: Order['status']) => {
+    const message =
+      status === 'cancelled'
+        ? '¿Seguro que querés eliminar esta orden? Los productos volverán al stock.'
+        : '¿Seguro que querés eliminar esta orden entregada? Esta acción no se puede deshacer.';
+    if (!confirm(message)) return;
     const res = await fetch(`/api/admin/orders/${orderId}`, {
       method: 'DELETE',
     });
@@ -318,9 +322,9 @@ export default function AdminOrdersPage() {
                               📦 Entregado
                             </button>
                           )}
-                          {order.status === 'cancelled' && (
+                          {(order.status === 'cancelled' || order.status === 'fulfilled') && (
                             <button
-                              onClick={() => deleteOrder(order.id)}
+                              onClick={() => deleteOrder(order.id, order.status)}
                               className="text-red-500 hover:text-red-700 text-xs font-semibold"
                               title="Eliminar orden"
                             >
@@ -416,10 +420,10 @@ export default function AdminOrdersPage() {
                       </button>
                     </div>
                   )}
-                  {order.status === 'cancelled' && (
+                  {(order.status === 'cancelled' || order.status === 'fulfilled') && (
                     <div className="px-4 pb-3">
                       <button
-                        onClick={() => deleteOrder(order.id)}
+                        onClick={() => deleteOrder(order.id, order.status)}
                         className="text-xs text-red-500 hover:text-red-700 font-semibold"
                       >
                         🗑 Eliminar orden
