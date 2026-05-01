@@ -63,7 +63,7 @@ export function Header() {
         <div className="flex items-center gap-1 md:gap-4">
           <button
             onClick={toggleSidebar}
-            className="inline-flex items-center justify-center rounded-xl p-2.5 text-white hover:bg-zinc-800 md:hidden transition-colors"
+            className="inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-white hover:bg-zinc-800 active:bg-zinc-700 md:hidden transition-colors"
             aria-label="Abrir menú"
           >
             <Menu className="h-5 w-5" />
@@ -166,7 +166,7 @@ export function Header() {
           {/* Search toggle - Mobile */}
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="lg:hidden inline-flex items-center justify-center rounded-xl p-2.5 text-white hover:bg-zinc-800 transition-colors"
+            className="lg:hidden inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-white hover:bg-zinc-800 active:bg-zinc-700 transition-colors"
             aria-label="Buscar"
           >
             {showSearch ? <X className="h-5 w-5" /> : <SearchIcon className="h-5 w-5" />}
@@ -212,7 +212,7 @@ export function Header() {
           
           {/* Cart button */}
           <button
-            className="relative inline-flex items-center justify-center rounded-xl p-2.5 text-white hover:bg-zinc-800 transition-colors"
+            className="relative inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-white hover:bg-zinc-800 active:bg-zinc-700 transition-colors"
             aria-label="Abrir carrito"
             onClick={openCart}
           >

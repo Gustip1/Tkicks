@@ -46,7 +46,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         <label className="block text-xs md:text-sm font-black text-white mb-2 md:mb-3 uppercase tracking-wider">
           Selecciona tu talla
         </label>
-        <div className="grid grid-cols-5 sm:grid-cols-5 gap-1.5 md:gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 md:gap-3">
           {variants.map((v) => (
             <button
               key={v.id}
@@ -54,11 +54,11 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
               onClick={() => setSize(size === v.size ? '' : v.size)}
               disabled={v.stock <= 0}
               className={`
-                relative py-2.5 md:py-3 px-1.5 md:px-2 rounded-md md:rounded-lg border-2 text-xs md:text-sm font-black transition-all
-                ${size === v.size 
-                  ? 'border-white bg-white text-black' 
+                relative min-h-[44px] py-3 md:py-3 px-2 md:px-3 rounded-md md:rounded-lg border-2 text-sm md:text-sm font-black transition-all
+                ${size === v.size
+                  ? 'border-white bg-white text-black'
                   : v.stock > 0
-                    ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white'
+                    ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white active:border-white active:bg-zinc-800'
                     : 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed'
                 }
               `}
@@ -89,13 +89,16 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             type="button"
             onClick={() => setQty(Math.max(1, qty - 1))}
             disabled={!size || maxQty <= 0 || qty <= 1}
-            className="w-9 h-9 md:w-10 md:h-10 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="Disminuir cantidad"
+            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white active:border-white active:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">−</span>
           </button>
           <input
-            className="w-14 md:w-16 h-9 md:h-10 text-center rounded-md md:rounded-lg border-2 border-zinc-700 bg-black text-white text-sm md:text-base font-black focus:outline-none focus:border-white"
+            className="w-16 h-11 text-center rounded-md md:rounded-lg border-2 border-zinc-700 bg-black text-white text-base font-black focus:outline-none focus:border-white"
             type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             min={1}
             max={maxQty > 0 ? maxQty : undefined}
             value={qty}
@@ -110,7 +113,8 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             type="button"
             onClick={() => setQty(Math.min(maxQty, qty + 1))}
             disabled={!size || maxQty <= 0 || qty >= maxQty}
-            className="w-9 h-9 md:w-10 md:h-10 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="Aumentar cantidad"
+            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white active:border-white active:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">+</span>
           </button>

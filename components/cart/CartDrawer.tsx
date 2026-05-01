@@ -69,7 +69,7 @@ export function CartDrawer() {
                   <span>{formatTime(remainingSeconds)}</span>
                 </div>
               )}
-              <button onClick={close} className="rounded-xl px-3 py-1.5 text-sm text-white hover:bg-neutral-800 font-black border border-zinc-700 hover:border-white transition-all">
+              <button onClick={close} className="rounded-xl px-4 min-h-[44px] text-sm text-white hover:bg-neutral-800 active:bg-neutral-700 font-black border border-zinc-700 hover:border-white transition-all">
                 Cerrar
               </button>
             </div>
@@ -109,13 +109,15 @@ export function CartDrawer() {
                     <input
                       id={`qty-${it.productId}-${it.size}`}
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min={1}
-                      className="h-8 w-16 rounded-lg border border-neutral-600 bg-neutral-800 px-2 text-sm text-white font-black text-center focus:border-white focus:outline-none"
+                      className="h-11 w-16 rounded-lg border border-neutral-600 bg-neutral-800 px-2 text-base text-white font-black text-center focus:border-white focus:outline-none"
                       value={it.quantity}
                       onChange={(e) => updateQty(it.productId, it.size, Number(e.target.value))}
                     />
                     <button
-                      className="ml-auto rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/20 font-black uppercase"
+                      className="ml-auto rounded-lg px-3 min-h-[44px] text-xs text-red-400 hover:bg-red-500/20 active:bg-red-500/30 font-black uppercase transition-colors"
                       onClick={() => removeItem(it.productId, it.size)}
                     >
                       Eliminar
