@@ -34,10 +34,10 @@ export function Footer() {
               <img src="/logo.jpg" alt="Tkicks" className="h-10 w-auto rounded-md" />
               <div>
                 <p className="font-black text-white text-lg uppercase tracking-tight leading-none">Tkicks</p>
-                <p className="text-[11px] md:text-xs text-white/50 font-bold mt-1">Sneakers & Streetwear · San Juan</p>
+                <p className="text-[11px] md:text-xs text-white/65 font-bold mt-1">Sneakers & Streetwear · San Juan</p>
               </div>
             </div>
-            <p className="mt-5 max-w-md text-sm md:text-[15px] text-white/55 font-medium leading-relaxed">
+            <p className="mt-5 max-w-md text-sm md:text-[15px] text-white/70 font-medium leading-relaxed">
               El único reseller de San Juan enfocado 100% en producto original. Curamos cada drop para que tengas sólo
               lo que vale la pena.
             </p>
@@ -97,7 +97,7 @@ export function Footer() {
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] md:text-sm font-black text-white leading-tight truncate">{title}</p>
-                <p className="hidden md:block text-[11px] text-white/45 font-bold mt-0.5 truncate">{sub}</p>
+                <p className="hidden md:block text-[11px] text-white/65 font-bold mt-0.5 truncate">{sub}</p>
               </div>
             </div>
           ))}
@@ -106,7 +106,7 @@ export function Footer() {
         {/* Links grid */}
         <div className="mt-10 md:mt-14 grid gap-8 grid-cols-2 md:grid-cols-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mb-4">Tienda</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-4">Tienda</p>
             <ul className="space-y-2.5 text-sm font-bold text-white/75">
               <li><Link href="/productos?sneakers" className="hover:text-white transition-colors">Sneakers</Link></li>
               <li><Link href="/productos?streetwear" className="hover:text-white transition-colors">Streetwear</Link></li>
@@ -115,7 +115,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mb-4">Servicios</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-4">Servicios</p>
             <ul className="space-y-2.5 text-sm font-bold text-white/75">
               <li><Link href="/encargos" className="hover:text-white transition-colors">Encargos</Link></li>
               <li><Link href="/nosotros" className="hover:text-white transition-colors">Nosotros</Link></li>
@@ -127,7 +127,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mb-4">Seguinos</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-4">Seguinos</p>
             <ul className="space-y-2.5 text-sm font-bold text-white/75">
               <li>
                 <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 hover:text-white transition-colors">
@@ -142,16 +142,16 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mb-4">Ubicación</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-4">Ubicación</p>
             <div className="flex items-start gap-2 text-sm font-bold text-white/75">
               <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>San Juan · Argentina<br /><span className="text-white/45 font-medium text-xs">Showroom con cita previa</span></span>
+              <span>San Juan · Argentina<br /><span className="text-white/65 font-medium text-xs">Showroom con cita previa</span></span>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 md:mt-14 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] md:text-xs font-bold text-white/40">
+        <div className="mt-10 md:mt-14 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] md:text-xs font-bold text-white/60">
           <p>© {year} Tkicks · Todos los derechos reservados.</p>
           <p>
             Todas las ventas son <span className="text-white/70 font-black">Final Sale</span>.

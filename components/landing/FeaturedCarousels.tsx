@@ -112,7 +112,7 @@ function SaleSection({ products }: { products: Product[] }) {
       <div className="overflow-hidden -mx-4 px-4" ref={ref}>
         <div className="-ml-4 flex">
           {products.map((p) => (
-            <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[280px] md:basis-[300px] pl-4">
+            <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[75%] sm:basis-[280px] md:basis-[300px] pl-4">
               <ProductSlide product={p} />
             </div>
           ))}
@@ -205,7 +205,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
       <div className="overflow-hidden -mx-4 px-4 bg-black" ref={ref}>
         <div className="-ml-4 flex">
           {products.map((p) => (
-            <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[280px] md:basis-[300px] pl-4">
+            <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[75%] sm:basis-[280px] md:basis-[300px] pl-4">
               <ProductSlide product={p} />
             </div>
           ))}

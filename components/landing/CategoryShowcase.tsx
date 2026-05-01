@@ -10,6 +10,7 @@ export function CategoryShowcase() {
     sneaker: null,
     streetwear: null,
   });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -40,6 +41,7 @@ export function CategoryShowcase() {
       const sImg = (sneakersRes.data?.[0] as any)?.images?.[0]?.url || null;
       const stImg = (streetwearRes.data?.[0] as any)?.images?.[0]?.url || null;
       setImages({ sneaker: sImg, streetwear: stImg });
+      setLoaded(true);
     })();
   }, []);
 
@@ -79,7 +81,15 @@ export function CategoryShowcase() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:gap-6">
-          {categories.map((cat) => (
+          {!loaded && [0, 1].map((i) => (
+            <div
+              key={`skeleton-${i}`}
+              className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-zinc-800 bg-zinc-900 aspect-[4/3] md:aspect-[16/9] animate-pulse"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
+            </div>
+          ))}
+          {loaded && categories.map((cat) => (
             <Link
               key={cat.title}
               href={cat.href}
