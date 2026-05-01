@@ -56,7 +56,7 @@ export function Header() {
   if (isInAdmin) return null;
 
   return (
-    <header className="sticky top-0 z-40 bg-black/98 backdrop-blur-md border-b border-zinc-800 shadow-xl">
+    <header className="sticky top-0 z-40 bg-black/98 backdrop-blur-md border-b border-zinc-800 shadow-xl pt-[env(safe-area-inset-top)]">
       <BannerTicker />
       <div className="h-14 md:h-16 px-2 md:px-8 flex items-center justify-between gap-2 md:gap-4 max-w-[1600px] mx-auto">
         {/* Left - Menu & Nav */}
@@ -228,7 +228,7 @@ export function Header() {
       
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="lg:hidden px-4 pb-3 animate-fadeIn bg-black">
+        <div className="lg:hidden px-4 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fadeIn bg-black">
           <form
             onSubmit={(e) => {
               e.preventDefault();

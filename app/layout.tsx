@@ -15,6 +15,7 @@ import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
   themeColor: '#008060'
 };
 

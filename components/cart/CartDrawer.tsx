@@ -47,7 +47,7 @@ export function CartDrawer() {
   return (
     <>
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md translate-x-full border-l border-neutral-800 bg-black shadow-xl transition-transform md:w-[420px] ${
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md translate-x-full border-l border-neutral-800 bg-black shadow-xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)] ${
           isOpen ? '!translate-x-0' : ''
         }`}
         role="dialog"

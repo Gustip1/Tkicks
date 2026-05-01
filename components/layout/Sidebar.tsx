@@ -25,7 +25,7 @@ export function Sidebar() {
       {/* Drawer */}
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-black border-r border-zinc-800 shadow-2xl transition-transform duration-300 ease-out md:hidden',
+          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-black border-r border-zinc-800 shadow-2xl transition-transform duration-300 ease-out md:hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)]',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         role="dialog"
@@ -51,7 +51,10 @@ export function Sidebar() {
         </div>
         
         {/* Navigation */}
-        <nav className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+        <nav
+          className="p-4 overflow-y-auto"
+          style={{ maxHeight: 'calc(100svh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}
+        >
           <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 px-2">
             Categorías
           </p>
@@ -172,7 +175,7 @@ export function Sidebar() {
         </nav>
         
         {/* Footer: Social connect */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-zinc-800 bg-gradient-to-b from-zinc-900 to-black space-y-2.5">
+        <div className="absolute bottom-0 left-0 right-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-zinc-800 bg-gradient-to-b from-zinc-900 to-black space-y-2.5">
           <p className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Seguinos</p>
           <div className="grid grid-cols-2 gap-2">
             <a

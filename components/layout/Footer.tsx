@@ -26,7 +26,7 @@ export function Footer() {
     <footer className="relative mt-10 md:mt-16 border-t border-white/5 bg-gradient-to-b from-black via-zinc-950 to-black">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
 
-      <div className="max-w-[1600px] mx-auto px-5 md:px-10 pt-10 md:pt-16 pb-6 md:pb-10">
+      <div className="max-w-[1600px] mx-auto px-5 md:px-10 pt-10 md:pt-16 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-10">
         {/* Top: CTA row */}
         <div className="grid gap-6 md:gap-8 md:grid-cols-[1.1fr_1fr] items-start">
           <div>
