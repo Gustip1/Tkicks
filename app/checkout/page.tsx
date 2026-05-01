@@ -316,34 +316,46 @@ export default function CheckoutPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <InputField label="Nombre *" value={checkout.contact.firstName} error={errors.firstName}
+                      autoComplete="given-name" inputMode="text"
                       onChange={(v) => checkout.updateContact({ firstName: v })} />
                     <InputField label="Apellido" value={checkout.contact.lastName} error={errors.lastName}
+                      autoComplete="family-name" inputMode="text"
                       onChange={(v) => checkout.updateContact({ lastName: v })}
                       required={checkout.fulfillment === 'shipping'} />
                     <InputField label="Email *" type="email" value={checkout.contact.email} error={errors.email}
+                      autoComplete="email" inputMode="email"
                       onChange={(v) => checkout.updateContact({ email: v })} />
                     <InputField label="Teléfono *" type="tel" value={checkout.contact.phone} error={errors.phone}
+                      autoComplete="tel" inputMode="tel"
                       onChange={(v) => checkout.updateContact({ phone: v })} />
                     {checkout.fulfillment === 'shipping' && (
                       <>
                         <InputField label="Documento (DNI/CUIT) *" value={checkout.contact.document} error={errors.document}
+                          autoComplete="off" inputMode="numeric"
                           onChange={(v) => checkout.updateContact({ document: v })} />
                         <InputField label="Código Postal *" value={checkout.address.postalCode} error={errors.postalCode}
+                          autoComplete="postal-code" inputMode="numeric"
                           onChange={(v) => checkout.updateAddress({ postalCode: v })} />
                         <div className="sm:col-span-2">
                           <InputField label="Dirección de entrega *" value={checkout.address.street} error={errors.street}
+                            autoComplete="street-address" inputMode="text"
                             onChange={(v) => checkout.updateAddress({ street: v })} placeholder="Ej: Av. Libertador 1234" />
                         </div>
                         <InputField label="Número" value={checkout.address.number}
+                          autoComplete="off" inputMode="numeric"
                           onChange={(v) => checkout.updateAddress({ number: v })} />
                         <InputField label="Piso/Depto" value={checkout.address.unit}
+                          autoComplete="off" inputMode="text"
                           onChange={(v) => checkout.updateAddress({ unit: v })} />
                         <InputField label="Ciudad" value={checkout.address.city}
+                          autoComplete="address-level2" inputMode="text"
                           onChange={(v) => checkout.updateAddress({ city: v })} />
                         <InputField label="Provincia" value={checkout.address.province}
+                          autoComplete="address-level1" inputMode="text"
                           onChange={(v) => checkout.updateAddress({ province: v })} />
                         <div className="sm:col-span-2">
                           <InputField label="Observaciones (opcional)" value={checkout.address.notes}
+                            autoComplete="off" inputMode="text"
                             onChange={(v) => checkout.updateAddress({ notes: v })} />
                         </div>
                       </>
@@ -693,6 +705,8 @@ function InputField({
   type = 'text',
   placeholder,
   required = true,
+  autoComplete,
+  inputMode,
 }: {
   label: string;
   value: string;
@@ -701,6 +715,8 @@ function InputField({
   type?: string;
   placeholder?: string;
   required?: boolean;
+  autoComplete?: string;
+  inputMode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search' | 'url' | 'none';
 }) {
   return (
     <div>
@@ -710,13 +726,15 @@ function InputField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-xl border bg-zinc-900 px-4 py-3 text-sm text-white font-bold placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors ${
+        autoComplete={autoComplete}
+        inputMode={inputMode}
+        className={`w-full rounded-xl border bg-zinc-900 px-4 py-3 text-base text-white font-bold placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors ${
           error
             ? 'border-red-500/50 focus:ring-red-500/30'
             : 'border-zinc-800 focus:border-white focus:ring-white/10'
         }`}
       />
-      {error && <p className="mt-1 text-xs text-red-400 font-bold">{error}</p>}
+      <p className={`mt-1 text-xs text-red-400 font-bold min-h-[1rem] ${error ? '' : 'invisible'}`}>{error || ' '}</p>
     </div>
   );
 }
