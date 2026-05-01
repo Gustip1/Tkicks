@@ -116,7 +116,7 @@ export function HeroSection() {
                   <Link
                     key={idx}
                     href={`/producto/${img.slug}`}
-                    className="group relative shrink-0 w-[160px] md:w-[220px] aspect-square rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all hover:scale-[1.03]"
+                    className="group relative shrink-0 w-[140px] sm:w-[170px] md:w-[220px] aspect-square rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 active:border-white/30 transition-all hover:scale-[1.03] active:scale-[0.98]"
                   >
                     <Image
                       src={img.url}

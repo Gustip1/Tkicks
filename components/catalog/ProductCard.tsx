@@ -97,12 +97,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           )}
         </div>
         
-        {/* Quick actions */}
+        {/* Quick actions - desktop only (hover-only) */}
         <div className={cn(
-          "absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300",
+          "hidden md:flex absolute top-3 right-3 flex-col gap-2 transition-all duration-300",
           hovering ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
         )}>
-          <button 
+          <button
             className="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all"
             aria-label="Agregar a favoritos"
             onClick={(e) => {
@@ -113,13 +113,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             <Heart className="w-4 h-4 text-gray-600" />
           </button>
         </div>
-        
-        {/* Add to cart button */}
+
+        {/* Add to cart button - desktop only (hover-only) */}
         <div className={cn(
-          "absolute bottom-0 left-0 right-0 p-3 transition-all duration-300",
+          "hidden md:block absolute bottom-0 left-0 right-0 p-3 transition-all duration-300",
           hovering && !isSoldOut ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}>
-          <button 
+          <button
             className={cn(
               "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-lg",
               isSoldOut

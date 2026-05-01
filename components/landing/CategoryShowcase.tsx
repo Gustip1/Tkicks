@@ -96,18 +96,18 @@ export function CategoryShowcase() {
               className={`group relative overflow-hidden rounded-2xl md:rounded-3xl border ${cat.border} category-card-hover bg-zinc-950 ${cat.glow}`}
             >
               {/* Background gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-50 group-hover:opacity-80 transition-opacity duration-500`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-50 group-hover:opacity-80 group-active:opacity-80 transition-opacity duration-500`} />
 
               {/* Background image */}
               {cat.image && (
-                <div className="absolute inset-0 opacity-40 group-hover:opacity-55 transition-opacity duration-500">
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-55 group-active:opacity-55 transition-opacity duration-500">
                   <Image
                     src={cat.image}
                     alt=""
                     fill
                     sizes="(max-width: 768px) 50vw, 50vw"
                     quality={60}
-                    className="object-cover scale-110 group-hover:scale-125 transition-transform duration-700"
+                    className="object-cover scale-110 group-hover:scale-125 group-active:scale-110 transition-transform duration-700"
                   />
                 </div>
               )}
