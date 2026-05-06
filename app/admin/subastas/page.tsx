@@ -53,12 +53,25 @@ function formatRemaining(endAt: string): string {
   return `${m}m`;
 }
 
+interface AdminBidRow {
+  id: string;
+  user_id: string;
+  amount: number;
+  created_at: string;
+  contact: ContactInfo | null;
+}
+
 export default function AdminSubastasPage() {
   const [rows, setRows] = useState<AdminAuctionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [bidsModal, setBidsModal] = useState<AdminAuctionRow | null>(null);
+  const [bidsList, setBidsList] = useState<AdminBidRow[]>([]);
+  const [bidsLoading, setBidsLoading] = useState(false);
+  const [bidBusy, setBidBusy] = useState<string | null>(null);
+  const [bidsErr, setBidsErr] = useState<string | null>(null);
 
   useEffect(() => {
     const i = setInterval(() => setTick((x) => x + 1), 30_000);
@@ -146,6 +159,54 @@ export default function AdminSubastasPage() {
     }
   };
 
+  const openBidsModal = async (a: AdminAuctionRow) => {
+    setBidsModal(a);
+    setBidsList([]);
+    setBidsErr(null);
+    setBidsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/auctions/${a.id}/bids`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      setBidsList(data.bids || []);
+    } catch (e: any) {
+      setBidsErr(e.message);
+    } finally {
+      setBidsLoading(false);
+    }
+  };
+
+  const closeBidsModal = () => {
+    setBidsModal(null);
+    setBidsList([]);
+    setBidsErr(null);
+  };
+
+  const deleteBid = async (bid: AdminBidRow) => {
+    if (!bidsModal) return;
+    const name = formatContact(bid.contact).name;
+    if (
+      !confirm(
+        `¿Eliminar la puja de ${name} por ${formatARS(bid.amount)}?\n\nEl precio actual va a volver a la siguiente puja más alta (o al precio de salida si no quedan pujas).`
+      )
+    )
+      return;
+    setBidBusy(bid.id);
+    try {
+      const res = await fetch(`/api/admin/auctions/${bidsModal.id}/bids/${bid.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      // recargar listado de pujas y la lista principal de subastas
+      await Promise.all([openBidsModal(bidsModal), load()]);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBidBusy(null);
+    }
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 text-black">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -219,8 +280,17 @@ export default function AdminSubastasPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {(a.status === 'active' || a.status === 'ended') && (
-                      <div className="flex items-center justify-end gap-3">
+                    <div className="flex items-center justify-end gap-3 flex-wrap">
+                      {a.bid_count > 0 && (
+                        <button
+                          onClick={() => openBidsModal(a)}
+                          className="text-gray-700 hover:text-black font-medium text-sm"
+                          title="Ver y editar pujas"
+                        >
+                          Ver pujas ({a.bid_count})
+                        </button>
+                      )}
+                      {(a.status === 'active' || a.status === 'ended') && (
                         <button
                           onClick={() => resetPrice(a)}
                           disabled={busy === a.id}
@@ -229,17 +299,17 @@ export default function AdminSubastasPage() {
                         >
                           {busy === a.id ? '…' : 'Reiniciar precio'}
                         </button>
-                        {a.status === 'active' && (
-                          <button
-                            onClick={() => cancel(a.id)}
-                            disabled={busy === a.id}
-                            className="text-red-600 hover:text-red-800 font-medium text-sm disabled:opacity-50"
-                          >
-                            {busy === a.id ? '…' : 'Cancelar'}
-                          </button>
-                        )}
-                      </div>
-                    )}
+                      )}
+                      {a.status === 'active' && (
+                        <button
+                          onClick={() => cancel(a.id)}
+                          disabled={busy === a.id}
+                          className="text-red-600 hover:text-red-800 font-medium text-sm disabled:opacity-50"
+                        >
+                          {busy === a.id ? '…' : 'Cancelar'}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
                 );
@@ -250,6 +320,97 @@ export default function AdminSubastasPage() {
       </div>
 
       <div className="text-xs text-gray-500">Auto-refresh cada 30s · Tick: {tick}</div>
+
+      {/* Modal de pujas */}
+      {bidsModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+          onClick={closeBidsModal}
+        >
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-gray-200">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+                  Pujas
+                </p>
+                <h3 className="font-bold text-gray-900 truncate">
+                  {bidsModal.product?.title || 'Subasta'} · Talle {bidsModal.variant?.size || '—'}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Precio actual: <span className="font-semibold text-gray-800">{formatARS(Number(bidsModal.current_price))}</span>
+                  {' · '}
+                  Salida: {formatARS(Number(bidsModal.starting_price))}
+                </p>
+              </div>
+              <button
+                onClick={closeBidsModal}
+                className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold transition-colors shrink-0"
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {bidsLoading ? (
+                <div className="p-8 text-center text-sm text-gray-500">Cargando pujas…</div>
+              ) : bidsErr ? (
+                <div className="p-4 text-sm text-red-700 bg-red-50 border-b border-red-200">{bidsErr}</div>
+              ) : bidsList.length === 0 ? (
+                <div className="p-8 text-center text-sm text-gray-500">
+                  No hay pujas para esta subasta.
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {bidsList.map((b, i) => {
+                    const c = formatContact(b.contact);
+                    const isTop = i === 0;
+                    return (
+                      <li key={b.id} className="p-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900">{c.name}</p>
+                            {isTop && (
+                              <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                                Top bidder
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-0.5">{c.phone}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(b.created_at).toLocaleString('es-AR')}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-lg font-bold text-gray-900 leading-none">
+                            {formatARS(Number(b.amount))}
+                          </p>
+                          <button
+                            onClick={() => deleteBid(b)}
+                            disabled={bidBusy === b.id}
+                            className="mt-2 text-xs text-red-600 hover:text-red-800 font-semibold disabled:opacity-50"
+                          >
+                            {bidBusy === b.id ? 'Eliminando…' : 'Eliminar'}
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 p-3 bg-gray-50">
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                Al eliminar una puja, el precio actual vuelve a la siguiente más alta. Si no quedan pujas, se restaura al precio de salida.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
