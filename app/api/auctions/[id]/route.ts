@@ -24,8 +24,12 @@ export async function GET(
 
   const sb = service();
 
-  // cierre lazy
-  await sb.rpc('finalize_expired_auctions');
+  // cierre lazy — best effort
+  try {
+    await sb.rpc('finalize_expired_auctions');
+  } catch (e) {
+    console.warn('[AUCTION DETAIL] finalize_expired_auctions warn:', e);
+  }
 
   const { data: auction, error } = await sb
     .from('auctions')
