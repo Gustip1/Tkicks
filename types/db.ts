@@ -96,5 +96,52 @@ export interface ShippingAddress {
   notes: string | null;
 }
 
+/* ────────────── Auctions ────────────── */
+
+export type AuctionStatus = 'active' | 'ended' | 'cancelled' | 'paid';
+
+export interface Auction {
+  id: string;
+  product_id: string;
+  variant_id: string;
+  starting_price: number;
+  current_price: number;
+  min_increment: number;
+  status: AuctionStatus;
+  start_at: string;
+  end_at: string;
+  anti_snipe_window_seconds: number;
+  anti_snipe_extend_seconds: number;
+  winner_user_id: string | null;
+  winner_order_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Bid {
+  id: string;
+  auction_id: string;
+  user_id: string;
+  amount: number;
+  created_at: string;
+}
+
+/** Resultado del RPC list_active_auctions */
+export interface ActiveAuctionRow {
+  id: string;
+  product_id: string;
+  variant_id: string;
+  product_title: string;
+  product_slug: string;
+  product_image: string;
+  size: string;
+  starting_price: number;
+  current_price: number;
+  min_increment: number;
+  start_at: string;
+  end_at: string;
+  bid_count: number;
+}
+
 
 

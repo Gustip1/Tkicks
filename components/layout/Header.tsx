@@ -123,6 +123,12 @@ export function Header() {
               🔥 Ofertas
             </Link>
             <Link
+              href="/subastas"
+              className="rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors uppercase tracking-tight"
+            >
+              Subastas
+            </Link>
+            <Link
               href="/encargos"
               className="rounded-xl px-4 py-2 text-sm font-black text-white hover:bg-zinc-800 transition-colors uppercase tracking-tight"
             >

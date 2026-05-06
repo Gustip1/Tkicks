@@ -11,6 +11,15 @@ export function formatCurrency(value: number): string {
   );
 }
 
+/** Formato ARS sin centavos. Usado en la sección de subastas (regla estricta: sólo pesos). */
+export function formatARS(value: number): string {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()
