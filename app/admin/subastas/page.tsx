@@ -82,6 +82,55 @@ export default function AdminSubastasPage() {
     }
   };
 
+  const resetPrice = async (a: AdminAuctionRow) => {
+    const newPriceRaw = prompt(
+      `Nuevo precio de salida para "${a.product?.title || 'la subasta'}" (en ARS).\nEsto BORRA todas las pujas existentes (${a.bid_count}) y reinicia la subasta desde 0.`,
+      String(Number(a.starting_price) || 0)
+    );
+    if (newPriceRaw === null) return;
+    const newPrice = Number(newPriceRaw);
+    if (!Number.isFinite(newPrice) || newPrice < 0) {
+      alert('Precio inválido');
+      return;
+    }
+    const newIncRaw = prompt(
+      `Incremento mínimo (dejá vacío para mantener ${formatARS(Number(a.min_increment))}).`,
+      ''
+    );
+    if (newIncRaw === null) return;
+    const newInc = newIncRaw.trim() === '' ? null : Number(newIncRaw);
+    if (newInc !== null && (!Number.isFinite(newInc) || newInc <= 0)) {
+      alert('Incremento inválido');
+      return;
+    }
+    if (
+      !confirm(
+        `¿Confirmás reiniciar la subasta?\n\nPrecio: ${formatARS(newPrice)}\n${
+          newInc !== null ? `Incremento: ${formatARS(newInc)}` : 'Incremento: sin cambios'
+        }\n\nSe van a borrar las ${a.bid_count} pujas actuales.`
+      )
+    )
+      return;
+    setBusy(a.id);
+    try {
+      const res = await fetch(`/api/admin/auctions/${a.id}/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newStartingPrice: newPrice,
+          newMinIncrement: newInc,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      await load();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 text-black">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -137,14 +186,26 @@ export default function AdminSubastasPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {a.status === 'active' && (
-                      <button
-                        onClick={() => cancel(a.id)}
-                        disabled={busy === a.id}
-                        className="text-red-600 hover:text-red-800 font-medium text-sm disabled:opacity-50"
-                      >
-                        {busy === a.id ? 'Cancelando…' : 'Cancelar'}
-                      </button>
+                    {(a.status === 'active' || a.status === 'ended') && (
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => resetPrice(a)}
+                          disabled={busy === a.id}
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm disabled:opacity-50"
+                          title="Reiniciar precio y borrar pujas"
+                        >
+                          {busy === a.id ? '…' : 'Reiniciar precio'}
+                        </button>
+                        {a.status === 'active' && (
+                          <button
+                            onClick={() => cancel(a.id)}
+                            disabled={busy === a.id}
+                            className="text-red-600 hover:text-red-800 font-medium text-sm disabled:opacity-50"
+                          >
+                            {busy === a.id ? '…' : 'Cancelar'}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>

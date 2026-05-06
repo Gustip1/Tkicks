@@ -75,10 +75,10 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => { load(); }, [load]);
 
-  // refresh cada 10s mientras está activa
+  // refresh cada 5s mientras está activa para reflejar pujas en vivo
   useEffect(() => {
     if (!auction || auction.status !== 'active') return;
-    const i = setInterval(load, 10_000);
+    const i = setInterval(load, 5_000);
     return () => clearInterval(i);
   }, [auction, load]);
 
@@ -93,12 +93,40 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
+  // Mínimo redondeado al múltiplo de min_increment más cercano hacia arriba.
+  // Esto evita que aparezcan números "feos" como 81.001 cuando alguien puja
+  // un peso por encima del mínimo: el siguiente requerido siempre termina en
+  // un valor "limpio" (múltiplo del incremento, normalmente 1.000).
   const minRequired = useMemo(() => {
     if (!auction) return 0;
-    return bids.length === 0
-      ? Number(auction.starting_price)
-      : Number(auction.current_price) + Number(auction.min_increment);
+    const inc = Math.max(1, Number(auction.min_increment) || 1);
+    const raw =
+      bids.length === 0
+        ? Number(auction.starting_price)
+        : Number(auction.current_price) + inc;
+    return Math.ceil(raw / inc) * inc;
   }, [auction, bids]);
+
+  const quickIncrements = useMemo(() => {
+    if (!auction) return [] as number[];
+    const inc = Math.max(1, Number(auction.min_increment) || 1);
+    // Tres atajos: el incremento mínimo, 5x el incremento, 10x el incremento.
+    // Para incrementos típicos de 1.000 esto da +3.000 / +5.000 / +10.000.
+    const base = inc <= 1000 ? [3000, 5000, 10000] : [inc * 3, inc * 5, inc * 10];
+    return base;
+  }, [auction]);
+
+  const applyQuickBid = (delta: number) => {
+    setBidErr(null);
+    setBidOk(null);
+    const inc = Math.max(1, Number(auction?.min_increment) || 1);
+    const current = Number(auction?.current_price || 0);
+    // "Sumar X al precio actual" pero nunca por debajo del mínimo, y
+    // redondeado al múltiplo de inc más cercano hacia arriba.
+    const candidate = Math.max(minRequired, current + delta);
+    const rounded = Math.ceil(candidate / inc) * inc;
+    setBidAmount(String(rounded));
+  };
 
   const submitBid = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,13 +250,30 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                         type="number"
                         inputMode="numeric"
                         min={minRequired}
-                        step="1000"
+                        step={Math.max(1, Number(auction.min_increment) || 1000)}
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
                         placeholder={String(minRequired)}
                         className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-3 text-lg font-bold text-white"
                       />
                     </label>
+
+                    {/* Atajos de puja rápida */}
+                    {quickIncrements.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {quickIncrements.map((delta) => (
+                          <button
+                            key={delta}
+                            type="button"
+                            onClick={() => applyQuickBid(delta)}
+                            className="rounded-lg border border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 active:scale-[0.98] text-orange-300 font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
+                          >
+                            +{formatARS(delta)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {bidErr && <p className="text-red-400 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {bidErr}</p>}
                     {bidOk && <p className="text-green-400 text-sm">{bidOk}</p>}
                     <button
