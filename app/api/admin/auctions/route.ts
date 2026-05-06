@@ -48,8 +48,8 @@ export async function GET() {
   }
 
   const ids = (auctions || []).map((a) => a.id);
-  let countsByAuction: Record<string, number> = {};
-  let topBidderByAuction: Record<string, string> = {};
+  const countsByAuction: Record<string, number> = {};
+  const topBidderByAuction: Record<string, string> = {};
   if (ids.length) {
     const { data: bids } = await sb
       .from('bids')
