@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, ChevronDown, Instagram } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Instagram, Gavel } from 'lucide-react';
 import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
 
 export function Sidebar() {
@@ -138,6 +138,22 @@ export function Sidebar() {
                 <p className="text-xs font-bold text-white/80">Precios especiales</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60" />
+            </Link>
+
+            {/* Subastas */}
+            <Link
+              href="/subastas"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-md hover:shadow-lg hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-black/15">
+                <Gavel className="w-5 h-5 text-black" />
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-black">Subastas</p>
+                <p className="text-xs font-bold text-black/70">Pujá en pesos</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-black/60" />
             </Link>
 
             {/* Encargos */}
