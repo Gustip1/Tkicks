@@ -3,6 +3,12 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatARS } from '@/lib/utils';
 
+interface ContactInfo {
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+}
+
 interface AdminAuctionRow {
   id: string;
   status: 'active' | 'ended' | 'cancelled' | 'paid';
@@ -17,6 +23,15 @@ interface AdminAuctionRow {
   bid_count: number;
   product: { id: string; title: string; slug: string; images: any } | null;
   variant: { id: string; size: string } | null;
+  top_bidder_user_id?: string | null;
+  winner_contact?: ContactInfo | null;
+  top_bidder_contact?: ContactInfo | null;
+}
+
+function formatContact(c?: ContactInfo | null): { name: string; phone: string } {
+  if (!c) return { name: '—', phone: '—' };
+  const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim() || '—';
+  return { name, phone: c.phone || '—' };
 }
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -160,6 +175,7 @@ export default function AdminSubastasPage() {
                 <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Salida</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Actual</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Pujas</th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Contacto</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Termina</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
                 <th className="px-4 py-3"></th>
@@ -167,16 +183,33 @@ export default function AdminSubastasPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
-                <tr><td colSpan={8} className="px-6 py-8 text-center text-sm text-gray-500">Cargando…</td></tr>
+                <tr><td colSpan={9} className="px-6 py-8 text-center text-sm text-gray-500">Cargando…</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={8} className="px-6 py-8 text-center text-sm text-gray-500">No hay subastas todavía.</td></tr>
-              ) : rows.map((a) => (
+                <tr><td colSpan={9} className="px-6 py-8 text-center text-sm text-gray-500">No hay subastas todavía.</td></tr>
+              ) : rows.map((a) => {
+                const contactSource =
+                  a.status === 'ended' || a.status === 'paid' ? a.winner_contact : a.top_bidder_contact;
+                const contact = formatContact(contactSource || null);
+                const contactLabel =
+                  a.status === 'ended' || a.status === 'paid' ? 'Ganador' : 'Top bidder';
+                return (
                 <tr key={a.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">{a.product?.title || '—'}</td>
                   <td className="px-4 py-3">{a.variant?.size || '—'}</td>
                   <td className="px-4 py-3">{formatARS(Number(a.starting_price))}</td>
                   <td className="px-4 py-3 font-semibold">{formatARS(Number(a.current_price))}</td>
                   <td className="px-4 py-3">{a.bid_count}</td>
+                  <td className="px-4 py-3 text-xs">
+                    {contactSource ? (
+                      <div>
+                        <p className="font-semibold text-gray-800">{contact.name}</p>
+                        <p className="text-gray-500">{contact.phone}</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-0.5">{contactLabel}</p>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-xs">
                     {a.status === 'active' ? formatRemaining(a.end_at) : new Date(a.end_at).toLocaleString('es-AR')}
                   </td>
@@ -209,7 +242,8 @@ export default function AdminSubastasPage() {
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

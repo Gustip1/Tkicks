@@ -49,21 +49,55 @@ export async function GET() {
 
   const ids = (auctions || []).map((a) => a.id);
   let countsByAuction: Record<string, number> = {};
+  let topBidderByAuction: Record<string, string> = {};
   if (ids.length) {
     const { data: bids } = await sb
       .from('bids')
-      .select('auction_id')
-      .in('auction_id', ids);
-    countsByAuction = (bids || []).reduce<Record<string, number>>((acc, b) => {
-      acc[b.auction_id] = (acc[b.auction_id] || 0) + 1;
-      return acc;
-    }, {});
+      .select('auction_id, user_id, amount, created_at')
+      .in('auction_id', ids)
+      .order('amount', { ascending: false })
+      .order('created_at', { ascending: false });
+    (bids || []).forEach((b) => {
+      countsByAuction[b.auction_id] = (countsByAuction[b.auction_id] || 0) + 1;
+      if (!topBidderByAuction[b.auction_id]) topBidderByAuction[b.auction_id] = b.user_id;
+    });
   }
 
-  const enriched = (auctions || []).map((a) => ({
-    ...a,
-    bid_count: countsByAuction[a.id] || 0,
-  }));
+  // Recolectar perfiles de ganadores y top bidders activos
+  const userIds = new Set<string>();
+  (auctions || []).forEach((a) => {
+    if (a.winner_user_id) userIds.add(a.winner_user_id);
+  });
+  Object.values(topBidderByAuction).forEach((uid) => userIds.add(uid));
+
+  const profileMap: Record<string, { first_name: string | null; last_name: string | null; phone: string | null }> = {};
+  if (userIds.size) {
+    const { data: profiles } = await sb
+      .from('profiles')
+      .select('id, first_name, last_name, phone')
+      .in('id', Array.from(userIds));
+    (profiles || []).forEach((p) => {
+      profileMap[p.id] = {
+        first_name: p.first_name,
+        last_name: p.last_name,
+        phone: p.phone,
+      };
+    });
+  }
+
+  const enriched = (auctions || []).map((a) => {
+    const winnerId = a.winner_user_id;
+    const topBidderId = topBidderByAuction[a.id] || null;
+    const winnerContact = winnerId ? profileMap[winnerId] || null : null;
+    const topBidderContact = topBidderId ? profileMap[topBidderId] || null : null;
+    return {
+      ...a,
+      bid_count: countsByAuction[a.id] || 0,
+      top_bidder_user_id: topBidderId,
+      winner_contact: winnerContact,
+      top_bidder_contact: topBidderContact,
+    };
+  });
 
   return NextResponse.json({ auctions: enriched });
 }

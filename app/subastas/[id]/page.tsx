@@ -82,14 +82,78 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     return () => clearInterval(i);
   }, [auction, load]);
 
-  // auth
+  // auth + perfil
+  const [profile, setProfile] = useState<{ first_name: string | null; last_name: string | null; phone: string | null } | null>(null);
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [contactFirst, setContactFirst] = useState('');
+  const [contactLast, setContactLast] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileErr, setProfileErr] = useState<string | null>(null);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const res = await fetch('/api/profile', { cache: 'no-store' });
+      const data = await res.json();
+      if (res.ok) setProfile(data.profile);
+    } catch {
+      /* noop */
+    } finally {
+      setProfileChecked(true);
+    }
+  }, []);
+
   useEffect(() => {
     const sb = createBrowserClient();
     sb.auth.getUser().then(({ data }) => {
       setUser(data.user);
       setAuthChecked(true);
+      if (data.user) refreshProfile();
+      else setProfileChecked(true);
     });
-  }, []);
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    if (profile) {
+      setContactFirst(profile.first_name || '');
+      setContactLast(profile.last_name || '');
+      setContactPhone(profile.phone || '');
+    }
+  }, [profile]);
+
+  const hasContactInfo = !!(
+    profile?.first_name?.trim() &&
+    profile?.last_name?.trim() &&
+    profile?.phone?.trim()
+  );
+
+  const saveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileErr(null);
+    if (!contactFirst.trim() || !contactLast.trim() || !contactPhone.trim()) {
+      setProfileErr('Completá nombre, apellido y teléfono.');
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: contactFirst.trim(),
+          lastName: contactLast.trim(),
+          phone: contactPhone.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      await refreshProfile();
+    } catch (err: any) {
+      setProfileErr(err.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
@@ -230,7 +294,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             {/* Formulario de puja */}
             {auction.status === 'active' && !cd.ended && (
               <form onSubmit={submitBid} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
-                {!authChecked ? (
+                {!authChecked || (user && !profileChecked) ? (
                   <p className="text-zinc-400 text-sm">Verificando sesión…</p>
                 ) : !user ? (
                   <div className="text-sm text-zinc-300">
@@ -241,6 +305,66 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     >
                       Iniciar sesión
                     </Link>
+                  </div>
+                ) : !hasContactInfo ? (
+                  <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                    <div>
+                      <p className="text-orange-400 font-black uppercase text-xs tracking-wider">
+                        Antes de pujar
+                      </p>
+                      <p className="text-sm text-zinc-300 mt-1">
+                        Necesitamos tu nombre, apellido y teléfono para contactarte si ganás la subasta.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="block">
+                        <span className="text-[10px] uppercase text-zinc-400 font-bold">Nombre *</span>
+                        <input
+                          type="text"
+                          value={contactFirst}
+                          onChange={(e) => setContactFirst(e.target.value)}
+                          placeholder="Juan"
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-[10px] uppercase text-zinc-400 font-bold">Apellido *</span>
+                        <input
+                          type="text"
+                          value={contactLast}
+                          onChange={(e) => setContactLast(e.target.value)}
+                          placeholder="Pérez"
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                        />
+                      </label>
+                    </div>
+                    <label className="block">
+                      <span className="text-[10px] uppercase text-zinc-400 font-bold">Teléfono *</span>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="+54 9 264..."
+                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                      />
+                    </label>
+                    {profileErr && (
+                      <p className="text-red-400 text-sm flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" /> {profileErr}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={saveContact}
+                      disabled={savingProfile}
+                      className="w-full bg-orange-500 text-black font-black uppercase py-3 rounded-lg hover:bg-orange-400 disabled:opacity-50"
+                    >
+                      {savingProfile ? 'Guardando…' : 'Guardar y habilitar puja'}
+                    </button>
+                    <p className="text-[11px] text-zinc-500">
+                      Estos datos se guardan una sola vez. Sólo el admin de Tkicks va a verlos.
+                    </p>
                   </div>
                 ) : (
                   <>

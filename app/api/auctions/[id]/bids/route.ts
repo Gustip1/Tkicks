@@ -44,6 +44,7 @@ export async function POST(
     else if (msg.includes('bid below minimum')) userMsg = msg.replace('bid below minimum:', 'Mínimo requerido:');
     else if (msg.includes('already top bidder')) userMsg = 'Ya sos el mejor postor';
     else if (msg.includes('login required')) userMsg = 'Tenés que iniciar sesión';
+    else if (msg.includes('contact info required')) userMsg = 'Completá tu nombre, apellido y teléfono antes de pujar';
     return NextResponse.json({ error: userMsg }, { status: 400 });
   }
 
