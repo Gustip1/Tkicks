@@ -32,6 +32,11 @@ export async function GET() {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const sb = service();
+  // Limpieza preventiva: cualquier subasta marcada como 'cancelled' que
+  // hubiera quedado de versiones anteriores se elimina (con sus bids
+  // por cascade). Solo queremos active/ended/paid en el panel.
+  await sb.from('auctions').delete().eq('status', 'cancelled');
+
   const { data: auctions, error } = await sb
     .from('auctions')
     .select(`
@@ -40,6 +45,7 @@ export async function GET() {
       product:products (id, title, slug, images),
       variant:product_variants (id, size)
     `)
+    .neq('status', 'cancelled')
     .order('created_at', { ascending: false });
 
   if (error) {

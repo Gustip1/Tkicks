@@ -142,12 +142,79 @@ export default function AdminSubastasPage() {
   useEffect(() => { load(); }, []);
 
   const cancel = async (id: string) => {
-    if (!confirm('¿Cancelar la subasta? El stock vuelve al producto.')) return;
+    if (!confirm('¿Eliminar la subasta? Esto BORRA la subasta y todas sus pujas. El stock vuelve al producto.')) return;
     setBusy(id);
     try {
       const res = await fetch(`/api/admin/auctions/${id}/cancel`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Error');
+      await load();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const extendTime = async (a: AdminAuctionRow) => {
+    const choice = prompt(
+      `Extender/modificar el tiempo de "${a.product?.title || 'la subasta'}".\n\n` +
+        `Termina actualmente: ${new Date(a.end_at).toLocaleString('es-AR')}\n\n` +
+        `Opción 1: escribí horas a sumar (ej: 24, -6 para restar)\n` +
+        `Opción 2: escribí una fecha ISO completa (ej: 2026-05-15T20:00:00)`,
+      '24'
+    );
+    if (choice === null) return;
+    const trimmed = choice.trim();
+    if (!trimmed) return;
+
+    const body: { addHours?: number; newEndAt?: string } = {};
+    const asNumber = Number(trimmed);
+    if (Number.isFinite(asNumber) && !trimmed.includes('-') && !trimmed.includes(':') && !trimmed.includes('T')) {
+      body.addHours = asNumber;
+    } else if (Number.isFinite(asNumber) && trimmed.match(/^-?\d+(\.\d+)?$/)) {
+      body.addHours = asNumber;
+    } else {
+      body.newEndAt = trimmed;
+    }
+
+    setBusy(a.id);
+    try {
+      const res = await fetch(`/api/admin/auctions/${a.id}/extend`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      await load();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const finalizeNow = async (a: AdminAuctionRow) => {
+    if (a.bid_count === 0) {
+      alert('No hay pujas. Usá "Eliminar" en lugar de finalizar.');
+      return;
+    }
+    if (
+      !confirm(
+        `¿Finalizar la subasta "${a.product?.title || ''}" AHORA?\n\n` +
+          `Se va a marcar como Finalizada con la puja más alta (${formatARS(Number(a.current_price))}) como ganadora.`
+      )
+    )
+      return;
+    setBusy(a.id);
+    try {
+      const res = await fetch(`/api/admin/auctions/${a.id}/finalize`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Error');
+      const w = data.winner;
+      const winnerName = [w?.first_name, w?.last_name].filter(Boolean).join(' ') || '—';
+      alert(`✓ Subasta finalizada.\nGanador: ${winnerName}\nTel: ${w?.phone || '—'}\nMonto: ${formatARS(Number(w?.amount || 0))}`);
       await load();
     } catch (e: any) {
       alert(e.message);
@@ -410,11 +477,31 @@ export default function AdminSubastasPage() {
                       )}
                       {a.status === 'active' && (
                         <button
+                          onClick={() => extendTime(a)}
+                          disabled={busy === a.id}
+                          className="text-purple-600 hover:text-purple-800 font-medium text-sm disabled:opacity-50"
+                          title="Extender o modificar el end_at"
+                        >
+                          {busy === a.id ? '…' : 'Modificar tiempo'}
+                        </button>
+                      )}
+                      {a.status === 'active' && a.bid_count > 0 && (
+                        <button
+                          onClick={() => finalizeNow(a)}
+                          disabled={busy === a.id}
+                          className="text-green-600 hover:text-green-800 font-medium text-sm disabled:opacity-50"
+                          title="Cerrar la subasta ahora con el top bidder como ganador"
+                        >
+                          {busy === a.id ? '…' : 'Finalizar ahora'}
+                        </button>
+                      )}
+                      {(a.status === 'active' || a.status === 'ended') && (
+                        <button
                           onClick={() => cancel(a.id)}
                           disabled={busy === a.id}
                           className="text-red-600 hover:text-red-800 font-medium text-sm disabled:opacity-50"
                         >
-                          {busy === a.id ? '…' : 'Cancelar'}
+                          {busy === a.id ? '…' : 'Eliminar'}
                         </button>
                       )}
                     </div>
