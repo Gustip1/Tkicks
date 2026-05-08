@@ -19,16 +19,19 @@ function firstImage(images: unknown): string {
   return typeof first?.url === 'string' ? first.url : '';
 }
 
+function buildAlias(first: string | null, last: string | null, phone: string | null): string {
+  const f = (first || '').trim();
+  const l = (last || '').trim();
+  if (f) return l ? `${f} ${l[0].toUpperCase()}.` : f;
+  if (phone) return `Pujador ${phone.slice(-4)}`;
+  return 'Anónimo';
+}
+
 export async function GET() {
   const sb = service();
 
-  // Cierre lazy de subastas vencidas — best-effort, no falla la respuesta
-  try {
-    await sb.rpc('finalize_expired_auctions');
-  } catch (e) {
-    console.warn('[AUCTIONS] finalize_expired_auctions warn:', e);
-  }
-
+  // Mismo approach que /api/admin/auctions: sin llamar a finalize_expired_auctions
+  // (que muta estado y no corresponde en un GET). Filtramos por activas y no vencidas.
   const nowIso = new Date().toISOString();
   const { data: auctions, error } = await sb
     .from('auctions')
@@ -51,16 +54,28 @@ export async function GET() {
   const rows = auctions || [];
   const ids = rows.map((a) => a.id);
 
-  // Una sola query trae count + max amount por auction
+  // Misma query exacta que el admin para las pujas — devuelve todas las pujas
+  // de las subastas activas con datos de contacto.
+  type BidRow = {
+    auction_id: string;
+    amount: number;
+    created_at: string;
+    bidder_first_name: string | null;
+    bidder_last_name: string | null;
+    bidder_phone: string | null;
+  };
   const countsByAuction: Record<string, number> = {};
   const maxByAuction: Record<string, number> = {};
+  const topBidByAuction: Record<string, BidRow> = {};
   if (ids.length) {
     const { data: bids, error: bidsError } = await sb
       .from('bids')
-      .select('auction_id, amount')
-      .in('auction_id', ids);
+      .select('auction_id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
+      .in('auction_id', ids)
+      .order('amount', { ascending: false })
+      .order('created_at', { ascending: false });
     if (bidsError) {
-      console.warn('[AUCTIONS] bid count warn:', bidsError);
+      console.warn('[AUCTIONS] bids query warn:', bidsError);
     }
     (bids || []).forEach((b: any) => {
       countsByAuction[b.auction_id] = (countsByAuction[b.auction_id] || 0) + 1;
@@ -68,7 +83,12 @@ export async function GET() {
       if (!maxByAuction[b.auction_id] || amount > maxByAuction[b.auction_id]) {
         maxByAuction[b.auction_id] = amount;
       }
+      // Como ya viene ordenado por amount desc, la primera por auction_id es la top.
+      if (!topBidByAuction[b.auction_id]) {
+        topBidByAuction[b.auction_id] = b as BidRow;
+      }
     });
+    console.log('[AUCTIONS] active:', ids.length, 'bids fetched:', (bids || []).length);
   }
 
   const mapped = rows.map((a: any) => {
@@ -77,8 +97,8 @@ export async function GET() {
     const tableCurrent = Number(a.current_price) || 0;
     const starting = Number(a.starting_price) || 0;
     const topBid = maxByAuction[a.id] || 0;
-    // Reconciliación: el precio mostrado es el max real
     const reconciledCurrent = Math.max(topBid, starting, tableCurrent);
+    const top = topBidByAuction[a.id];
     return {
       id: a.id,
       product_id: a.product_id,
@@ -93,6 +113,9 @@ export async function GET() {
       start_at: a.start_at,
       end_at: a.end_at,
       bid_count: countsByAuction[a.id] || 0,
+      top_bidder_alias: top
+        ? buildAlias(top.bidder_first_name, top.bidder_last_name, top.bidder_phone)
+        : null,
     };
   });
 

@@ -63,6 +63,11 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
         <p className="text-xs text-zinc-500 pt-1 border-t border-zinc-800 mt-2">
           {a.bid_count} {a.bid_count === 1 ? 'puja' : 'pujas'} · Mínimo +{formatARS(Number(a.min_increment))}
         </p>
+        {a.top_bidder_alias && (
+          <p className="text-[11px] text-orange-400 font-bold truncate">
+            ★ Va ganando {a.top_bidder_alias}
+          </p>
+        )}
       </div>
     </Link>
   );
@@ -88,7 +93,7 @@ export default function SubastasPage() {
       }
     };
     load();
-    const i = setInterval(load, 30_000);
+    const i = setInterval(load, 5_000);
     return () => { cancelled = true; clearInterval(i); };
   }, []);
 

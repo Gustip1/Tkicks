@@ -13,6 +13,14 @@ function service() {
   );
 }
 
+function buildAlias(first: string | null, last: string | null, phone: string | null): string {
+  const f = (first || '').trim();
+  const l = (last || '').trim();
+  if (f) return l ? `${f} ${l[0].toUpperCase()}.` : f;
+  if (phone) return `Pujador ${phone.slice(-4)}`;
+  return 'Anónimo';
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -24,13 +32,9 @@ export async function GET(
 
   const sb = service();
 
-  // cierre lazy — best effort
-  try {
-    await sb.rpc('finalize_expired_auctions');
-  } catch (e) {
-    console.warn('[AUCTION DETAIL] finalize_expired_auctions warn:', e);
-  }
-
+  // Misma query que el admin (que SÍ funciona): traemos la subasta directo
+  // sin filtrar por status, sin llamar a finalize_expired_auctions (eso muta
+  // estado y no debería correr en un GET — lo manejamos via cron/admin).
   const { data: auction, error } = await sb
     .from('auctions')
     .select(`
@@ -44,45 +48,35 @@ export async function GET(
     .single();
 
   if (error || !auction) {
+    console.error('[AUCTION DETAIL] auction not found:', id, error);
     return NextResponse.json({ error: 'Subasta no encontrada' }, { status: 404 });
   }
 
-  const { data: bids, error: bidsError } = await sb
+  // Misma query que el admin para las pujas — sin .limit() para evitar
+  // cualquier comportamiento raro y para garantizar que devuelve TODO.
+  const { data: rawBids, error: bidsError } = await sb
     .from('bids')
     .select('id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
     .eq('auction_id', id)
     .order('amount', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(50);
+    .order('created_at', { ascending: false });
 
   if (bidsError) {
     console.error('[AUCTION DETAIL] bids error:', bidsError);
   }
 
-  console.log('[AUCTION DETAIL] auction', id, 'bids:', (bids || []).length);
+  const bids = rawBids || [];
+  console.log('[AUCTION DETAIL]', id, 'status:', (auction as any).status, 'bids:', bids.length);
 
-  // Anonimización para la vista pública: nombre + inicial del apellido.
-  const safeBids = (bids || []).map((b) => {
-    const first = (b.bidder_first_name || '').trim();
-    const last = (b.bidder_last_name || '').trim();
-    let alias = 'Anónimo';
-    if (first) {
-      alias = last ? `${first} ${last[0].toUpperCase()}.` : first;
-    } else if (b.bidder_phone) {
-      alias = `Pujador ${(b.bidder_phone as string).slice(-4)}`;
-    }
-    return {
-      id: b.id,
-      alias,
-      amount: Number(b.amount),
-      created_at: b.created_at,
-    };
-  });
+  // Anonimización para vista pública
+  const safeBids = bids.map((b: any) => ({
+    id: b.id,
+    alias: buildAlias(b.bidder_first_name, b.bidder_last_name, b.bidder_phone),
+    amount: Number(b.amount),
+    created_at: b.created_at,
+  }));
 
-  // FUENTE ÚNICA DE VERDAD: el current_price mostrado se calcula a partir de
-  // la puja más alta. Si la tabla auctions tiene un valor desincronizado
-  // (porque se hizo un insert manual o una versión vieja de place_bid no la
-  // actualizó), igual mostramos lo que realmente vale: max(top bid, salida).
+  // Reconciliación de precio: max entre auctions.current_price, top bid, y starting
   const topBidAmount = safeBids[0]?.amount || 0;
   const startingPrice = Number((auction as any).starting_price) || 0;
   const tableCurrent = Number((auction as any).current_price) || 0;
@@ -91,12 +85,17 @@ export async function GET(
   const reconciledAuction = { ...(auction as any), current_price: reconciledCurrent };
 
   return NextResponse.json(
-    { auction: reconciledAuction, bids: safeBids, bidCount: safeBids.length },
+    {
+      auction: reconciledAuction,
+      bids: safeBids,
+      bidCount: safeBids.length,
+      topBidder: safeBids[0]
+        ? { alias: safeBids[0].alias, amount: safeBids[0].amount }
+        : null,
+    },
     {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        // Estos headers evitan que iOS Safari restaure la página desde
-        // back-forward cache con datos viejos.
         Pragma: 'no-cache',
         Expires: '0',
       },

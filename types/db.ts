@@ -141,6 +141,7 @@ export interface ActiveAuctionRow {
   start_at: string;
   end_at: string;
   bid_count: number;
+  top_bidder_alias?: string | null;
 }
 
 
