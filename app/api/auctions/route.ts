@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 function service() {
   return createClient(
@@ -94,10 +96,11 @@ export async function GET() {
   const mapped = rows.map((a: any) => {
     const product = Array.isArray(a.product) ? a.product[0] : a.product;
     const variant = Array.isArray(a.variant) ? a.variant[0] : a.variant;
-    const tableCurrent = Number(a.current_price) || 0;
     const starting = Number(a.starting_price) || 0;
     const topBid = maxByAuction[a.id] || 0;
-    const reconciledCurrent = Math.max(topBid, starting, tableCurrent);
+    // ÚNICA FUENTE DE VERDAD: derivamos de bids. Si no hay pujas → starting.
+    // NO usamos auctions.current_price para evitar desync.
+    const reconciledCurrent = topBid > 0 ? topBid : starting;
     const top = topBidByAuction[a.id];
     return {
       id: a.id,
@@ -120,10 +123,14 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    { auctions: mapped },
+    { auctions: mapped, _serverTime: new Date().toISOString() },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate',
+        'CDN-Cache-Control': 'no-store',
+        'Vercel-CDN-Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     }
   );

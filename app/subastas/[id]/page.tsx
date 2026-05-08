@@ -104,12 +104,13 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     load();
   }, [load]);
 
-  // Refresh cada 2s mientras está activa
+  // Refresh cada 2s SIEMPRE mientras la página está montada — desacoplado
+  // del status para evitar que el polling se detenga si finalize cambia el
+  // status entre dos requests y deja la pantalla congelada.
   useEffect(() => {
-    if (!auction || auction.status !== 'active') return;
     const i = setInterval(load, 2_000);
     return () => clearInterval(i);
-  }, [auction, load]);
+  }, [load]);
 
   // Refresh cuando el usuario vuelve a la pestaña / al foco / al volver con
   // back-forward cache (iOS Safari es agresivo con esto). Si vuelve desde
