@@ -74,5 +74,12 @@ export async function GET(
     };
   });
 
-  return NextResponse.json({ auction, bids: safeBids, bidCount: safeBids.length });
+  return NextResponse.json(
+    { auction, bids: safeBids, bidCount: safeBids.length },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    }
+  );
 }

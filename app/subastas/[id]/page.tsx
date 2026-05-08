@@ -59,6 +59,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
   const [submitting, setSubmitting] = useState(false);
   const [bidErr, setBidErr] = useState<string | null>(null);
   const [bidOk, setBidOk] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   // Pre-cargar contacto desde el último uso (no es obligatorio, sólo cómodo)
   useEffect(() => {
@@ -77,11 +78,15 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/auctions/${params.id}`, { cache: 'no-store' });
+      // bust de cache vía querystring para evitar cualquier cache intermedio
+      const res = await fetch(`/api/auctions/${params.id}?_=${Date.now()}`, {
+        cache: 'no-store',
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Error');
       setAuction(data.auction);
       setBids(data.bids || []);
+      setLastUpdate(new Date());
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -102,15 +107,20 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
-  // Mínimo crudo: si no hay pujas, el de salida; si ya hubo, current + incremento.
-  // Sin redondeos extra — usamos exactamente lo que el backend va a exigir.
+  // Mínimo crudo: si no hay pujas, el de salida; si ya hubo, top + incremento.
+  // Usamos el máximo entre auction.current_price y bids[0].amount para que
+  // un eventual desync no nos deje calculando el mínimo mal.
+  const effectiveCurrent = Math.max(
+    Number(auction?.current_price || 0),
+    bids[0]?.amount ? Number(bids[0].amount) : 0
+  );
   const minRequired = useMemo(() => {
     if (!auction) return 0;
     const inc = Math.max(0, Number(auction.min_increment) || 0);
     return bids.length === 0
       ? Number(auction.starting_price)
-      : Number(auction.current_price) + inc;
-  }, [auction, bids]);
+      : effectiveCurrent + inc;
+  }, [auction, bids, effectiveCurrent]);
 
   // Atajos: +3.000, +5.000, +10.000 (o 3x/5x/10x del incremento si es >1.000)
   const quickIncrements = useMemo(() => {
@@ -119,12 +129,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     return inc <= 1000 ? [3000, 5000, 10000] : [inc * 3, inc * 5, inc * 10];
   }, [auction]);
 
-  // Para los atajos: bid = max(minRequired, current + delta). Sin redondeo.
+  // Para los atajos: bid = max(minRequired, top + delta).
   const applyQuickBid = (delta: number) => {
     setBidErr(null);
     setBidOk(null);
-    const current = Number(auction?.current_price || 0);
-    const candidate = Math.max(minRequired, current + delta);
+    const candidate = Math.max(minRequired, effectiveCurrent + delta);
     setBidAmount(String(candidate));
   };
 
@@ -175,7 +184,28 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
       } catch {
         /* noop */
       }
-      await load();
+      // Actualización optimista: insertamos la puja localmente para que la UI
+      // se refresque sin esperar al polling.
+      const optimisticAlias = `${first} ${last[0]?.toUpperCase() || ''}.`.trim();
+      const optimisticBid = {
+        id: `optimistic-${Date.now()}`,
+        alias: optimisticAlias,
+        amount: amount,
+        created_at: new Date().toISOString(),
+      };
+      setBids((prev) => [optimisticBid, ...prev]);
+      setAuction((prev) =>
+        prev
+          ? {
+              ...prev,
+              current_price: amount,
+              end_at:
+                typeof data?.endAt === 'string' ? data.endAt : prev.end_at,
+            }
+          : prev
+      );
+      // Re-sincronizar con el server inmediatamente
+      load();
     } catch (e: any) {
       setBidErr(e.message);
     } finally {
@@ -196,6 +226,16 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
   }
 
   const image = Array.isArray(auction.product.images) && auction.product.images[0]?.url;
+
+  // Precio mostrado: el máximo entre auction.current_price, la puja top y el
+  // precio de salida. Esto blinda la UI contra cualquier desync entre la
+  // tabla auctions y la tabla bids.
+  const topBidAmount = bids[0]?.amount ? Number(bids[0].amount) : 0;
+  const displayedPrice = Math.max(
+    Number(auction.current_price) || 0,
+    topBidAmount,
+    Number(auction.starting_price) || 0
+  );
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -235,7 +275,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-xs uppercase text-zinc-500">Puja actual</p>
-                  <p className="text-4xl font-black">{formatARS(Number(auction.current_price))}</p>
+                  <p className="text-4xl font-black">{formatARS(displayedPrice)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs uppercase text-zinc-500 flex items-center justify-end gap-1">
@@ -248,6 +288,20 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                 <span>Salida: {formatARS(Number(auction.starting_price))}</span>
                 <span>Incremento mín.: +{formatARS(Number(auction.min_increment))}</span>
                 <span>Pujas: {bids.length}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 text-[11px] text-zinc-500">
+                <span>
+                  {lastUpdate
+                    ? `Actualizado ${lastUpdate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+                    : 'Cargando…'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => load()}
+                  className="text-orange-400 hover:text-orange-300 font-bold uppercase tracking-wider"
+                >
+                  Refrescar
+                </button>
               </div>
             </div>
 
