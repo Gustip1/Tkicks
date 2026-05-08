@@ -83,6 +83,12 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         cache: 'no-store',
       });
       const data = await res.json();
+      console.log(
+        '[AUCTION DETAIL] load',
+        'price:', data?.auction?.current_price,
+        'starting:', data?.auction?.starting_price,
+        'bids:', data?.bids?.length
+      );
       if (!res.ok) throw new Error(data?.error || 'Error');
       setAuction(data.auction);
       setBids(data.bids || []);
@@ -98,12 +104,33 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     load();
   }, [load]);
 
-  // Refresh cada 5s mientras está activa para reflejar pujas en vivo
+  // Refresh cada 5s mientras está activa
   useEffect(() => {
     if (!auction || auction.status !== 'active') return;
     const i = setInterval(load, 5_000);
     return () => clearInterval(i);
   }, [auction, load]);
+
+  // Refresh cuando el usuario vuelve a la pestaña / al foco / al volver con
+  // back-forward cache (iOS Safari es agresivo con esto).
+  useEffect(() => {
+    const onFocus = () => load();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      // persisted=true = restaurado desde bf-cache → forzamos refresh
+      if (e.persisted) load();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, [load]);
 
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
