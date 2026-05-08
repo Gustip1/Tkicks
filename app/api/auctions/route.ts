@@ -51,24 +51,34 @@ export async function GET() {
   const rows = auctions || [];
   const ids = rows.map((a) => a.id);
 
-  let countsByAuction: Record<string, number> = {};
+  // Una sola query trae count + max amount por auction
+  const countsByAuction: Record<string, number> = {};
+  const maxByAuction: Record<string, number> = {};
   if (ids.length) {
     const { data: bids, error: bidsError } = await sb
       .from('bids')
-      .select('auction_id')
+      .select('auction_id, amount')
       .in('auction_id', ids);
     if (bidsError) {
       console.warn('[AUCTIONS] bid count warn:', bidsError);
     }
-    countsByAuction = (bids || []).reduce<Record<string, number>>((acc, b) => {
-      acc[b.auction_id] = (acc[b.auction_id] || 0) + 1;
-      return acc;
-    }, {});
+    (bids || []).forEach((b: any) => {
+      countsByAuction[b.auction_id] = (countsByAuction[b.auction_id] || 0) + 1;
+      const amount = Number(b.amount) || 0;
+      if (!maxByAuction[b.auction_id] || amount > maxByAuction[b.auction_id]) {
+        maxByAuction[b.auction_id] = amount;
+      }
+    });
   }
 
   const mapped = rows.map((a: any) => {
     const product = Array.isArray(a.product) ? a.product[0] : a.product;
     const variant = Array.isArray(a.variant) ? a.variant[0] : a.variant;
+    const tableCurrent = Number(a.current_price) || 0;
+    const starting = Number(a.starting_price) || 0;
+    const topBid = maxByAuction[a.id] || 0;
+    // Reconciliación: el precio mostrado es el max real
+    const reconciledCurrent = Math.max(topBid, starting, tableCurrent);
     return {
       id: a.id,
       product_id: a.product_id,
@@ -77,8 +87,8 @@ export async function GET() {
       product_slug: product?.slug || '',
       product_image: firstImage(product?.images),
       size: variant?.size || '',
-      starting_price: Number(a.starting_price) || 0,
-      current_price: Number(a.current_price) || 0,
+      starting_price: starting,
+      current_price: reconciledCurrent,
       min_increment: Number(a.min_increment) || 0,
       start_at: a.start_at,
       end_at: a.end_at,

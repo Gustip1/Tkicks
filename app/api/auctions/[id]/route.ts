@@ -47,7 +47,7 @@ export async function GET(
     return NextResponse.json({ error: 'Subasta no encontrada' }, { status: 404 });
   }
 
-  const { data: bids } = await sb
+  const { data: bids, error: bidsError } = await sb
     .from('bids')
     .select('id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
     .eq('auction_id', id)
@@ -55,8 +55,13 @@ export async function GET(
     .order('created_at', { ascending: false })
     .limit(50);
 
-  // Anonimización para la vista pública: mostramos nombre + inicial del
-  // apellido. El teléfono nunca se expone afuera.
+  if (bidsError) {
+    console.error('[AUCTION DETAIL] bids error:', bidsError);
+  }
+
+  console.log('[AUCTION DETAIL] auction', id, 'bids:', (bids || []).length);
+
+  // Anonimización para la vista pública: nombre + inicial del apellido.
   const safeBids = (bids || []).map((b) => {
     const first = (b.bidder_first_name || '').trim();
     const last = (b.bidder_last_name || '').trim();
@@ -74,8 +79,19 @@ export async function GET(
     };
   });
 
+  // FUENTE ÚNICA DE VERDAD: el current_price mostrado se calcula a partir de
+  // la puja más alta. Si la tabla auctions tiene un valor desincronizado
+  // (porque se hizo un insert manual o una versión vieja de place_bid no la
+  // actualizó), igual mostramos lo que realmente vale: max(top bid, salida).
+  const topBidAmount = safeBids[0]?.amount || 0;
+  const startingPrice = Number((auction as any).starting_price) || 0;
+  const tableCurrent = Number((auction as any).current_price) || 0;
+  const reconciledCurrent = Math.max(topBidAmount, startingPrice, tableCurrent);
+
+  const reconciledAuction = { ...(auction as any), current_price: reconciledCurrent };
+
   return NextResponse.json(
-    { auction, bids: safeBids, bidCount: safeBids.length },
+    { auction: reconciledAuction, bids: safeBids, bidCount: safeBids.length },
     {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
