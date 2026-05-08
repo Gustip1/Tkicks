@@ -102,31 +102,30 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
-  // Mínimo redondeado al múltiplo de min_increment más cercano hacia arriba
+  // Mínimo crudo: si no hay pujas, el de salida; si ya hubo, current + incremento.
+  // Sin redondeos extra — usamos exactamente lo que el backend va a exigir.
   const minRequired = useMemo(() => {
     if (!auction) return 0;
-    const inc = Math.max(1, Number(auction.min_increment) || 1);
-    const raw =
-      bids.length === 0
-        ? Number(auction.starting_price)
-        : Number(auction.current_price) + inc;
-    return Math.ceil(raw / inc) * inc;
+    const inc = Math.max(0, Number(auction.min_increment) || 0);
+    return bids.length === 0
+      ? Number(auction.starting_price)
+      : Number(auction.current_price) + inc;
   }, [auction, bids]);
 
+  // Atajos: +3.000, +5.000, +10.000 (o 3x/5x/10x del incremento si es >1.000)
   const quickIncrements = useMemo(() => {
     if (!auction) return [] as number[];
     const inc = Math.max(1, Number(auction.min_increment) || 1);
     return inc <= 1000 ? [3000, 5000, 10000] : [inc * 3, inc * 5, inc * 10];
   }, [auction]);
 
+  // Para los atajos: bid = max(minRequired, current + delta). Sin redondeo.
   const applyQuickBid = (delta: number) => {
     setBidErr(null);
     setBidOk(null);
-    const inc = Math.max(1, Number(auction?.min_increment) || 1);
     const current = Number(auction?.current_price || 0);
     const candidate = Math.max(minRequired, current + delta);
-    const rounded = Math.ceil(candidate / inc) * inc;
-    setBidAmount(String(rounded));
+    setBidAmount(String(candidate));
   };
 
   const submitBid = async (e: React.FormEvent) => {
@@ -308,7 +307,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                       type="number"
                       inputMode="numeric"
                       min={minRequired}
-                      step={Math.max(1, Number(auction.min_increment) || 1000)}
+                      step="any"
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       placeholder={String(minRequired)}
@@ -380,36 +379,31 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
-        {/* Historial de pujas */}
-        <section className="mt-10">
-          <h2 className="text-xl font-black uppercase mb-4">Historial de pujas</h2>
+        {/* Quién va ganando */}
+        <section className="mt-8">
           {bids.length === 0 ? (
-            <p className="text-zinc-500 text-sm">Aún no hay pujas. ¡Sé el primero!</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center">
+              <p className="text-zinc-400 text-sm">Aún no hay pujas. ¡Sé el primero!</p>
+            </div>
           ) : (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-800/50">
-                  <tr>
-                    <th className="text-left px-4 py-2 font-bold text-zinc-400 uppercase text-xs">Pujador</th>
-                    <th className="text-right px-4 py-2 font-bold text-zinc-400 uppercase text-xs">Monto</th>
-                    <th className="text-right px-4 py-2 font-bold text-zinc-400 uppercase text-xs">Cuándo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bids.map((b, i) => (
-                    <tr key={b.id} className="border-t border-zinc-800">
-                      <td className="px-4 py-2">
-                        {b.alias}
-                        {i === 0 && <span className="ml-2 text-xs text-orange-400">★ Top</span>}
-                      </td>
-                      <td className="px-4 py-2 text-right font-bold">{formatARS(Number(b.amount))}</td>
-                      <td className="px-4 py-2 text-right text-zinc-500 text-xs">
-                        {new Date(b.created_at).toLocaleString('es-AR')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-gradient-to-br from-orange-500/15 via-zinc-900 to-zinc-900 border border-orange-500/30 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-widest text-orange-400 font-black">
+                  Va ganando
+                </p>
+                <p className="text-2xl sm:text-3xl font-black text-white truncate mt-1">
+                  {bids[0].alias}
+                </p>
+                <p className="text-xs text-zinc-400 mt-1">
+                  {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Con</p>
+                <p className="text-xl sm:text-2xl font-black text-white">
+                  {formatARS(Number(bids[0].amount))}
+                </p>
+              </div>
             </div>
           )}
         </section>

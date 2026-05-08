@@ -62,6 +62,7 @@ export async function POST(
 
   if (error) {
     const msg = String(error.message || '');
+    console.error('[BIDS POST] place_bid error:', { msg, code: error.code, hint: (error as any).hint });
     let userMsg = 'No se pudo registrar la puja';
     if (msg.includes('auction not active')) userMsg = 'La subasta no está activa';
     else if (msg.includes('auction ended')) userMsg = 'La subasta ya finalizó';
@@ -72,7 +73,11 @@ export async function POST(
       userMsg = 'Completá nombre, apellido y teléfono';
     else if (msg.includes('contact too long')) userMsg = 'Datos demasiado largos';
     else if (msg.includes('auction not found')) userMsg = 'Subasta inexistente';
-    return NextResponse.json({ error: userMsg }, { status: 400 });
+    // Si la firma del RPC no existe, casi seguro falta correr la migración
+    else if (msg.includes('function') && msg.includes('does not exist')) {
+      userMsg = 'Faltó aplicar la migración place_bid en Supabase. Avisale al admin.';
+    }
+    return NextResponse.json({ error: userMsg, debug: msg }, { status: 400 });
   }
 
   const row = Array.isArray(data) ? data[0] : data;
