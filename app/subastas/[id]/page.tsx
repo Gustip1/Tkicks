@@ -473,30 +473,94 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
-        {/* Quién va ganando */}
+        {/* Quién va ganando + historial de pujas */}
         <section className="mt-8">
           {bids.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center">
               <p className="text-zinc-400 text-sm">Aún no hay pujas. ¡Sé el primero!</p>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-orange-500/15 via-zinc-900 to-zinc-900 border border-orange-500/30 rounded-2xl p-5 flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-widest text-orange-400 font-black">
-                  Va ganando
-                </p>
-                <p className="text-2xl sm:text-3xl font-black text-white truncate mt-1">
-                  {bids[0].alias}
-                </p>
-                <p className="text-xs text-zinc-400 mt-1">
-                  {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
+            <div className="space-y-3">
+              {/* Top bidder destacado */}
+              <div className="bg-gradient-to-br from-orange-500/15 via-zinc-900 to-zinc-900 border border-orange-500/30 rounded-2xl p-5 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-orange-400 font-black">
+                    Va ganando
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-black text-white truncate mt-1">
+                    {bids[0].alias}
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Con</p>
+                  <p className="text-xl sm:text-2xl font-black text-white">
+                    {formatARS(Number(bids[0].amount))}
+                  </p>
+                </div>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Con</p>
-                <p className="text-xl sm:text-2xl font-black text-white">
-                  {formatARS(Number(bids[0].amount))}
-                </p>
+
+              {/* Historial completo: todas las pujas en orden descendente */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-zinc-800">
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">
+                    Historial de pujas
+                  </p>
+                </div>
+                <ul className="divide-y divide-zinc-800 max-h-80 overflow-y-auto">
+                  {bids.map((b, i) => {
+                    const isTop = i === 0;
+                    return (
+                      <li
+                        key={b.id}
+                        className={`px-4 py-3 flex items-center justify-between gap-3 ${
+                          isTop ? 'bg-orange-500/5' : ''
+                        }`}
+                      >
+                        <div className="min-w-0 flex items-center gap-2">
+                          <span
+                            className={`text-xs font-mono shrink-0 w-6 ${
+                              isTop ? 'text-orange-400' : 'text-zinc-500'
+                            }`}
+                          >
+                            #{bids.length - i}
+                          </span>
+                          <div className="min-w-0">
+                            <p
+                              className={`font-bold truncate ${
+                                isTop ? 'text-white' : 'text-zinc-300'
+                              }`}
+                            >
+                              {b.alias}
+                              {isTop && (
+                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider align-middle">
+                                  Top
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-[10px] text-zinc-500 mt-0.5">
+                              {new Date(b.created_at).toLocaleString('es-AR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <p
+                          className={`font-bold shrink-0 ${
+                            isTop ? 'text-orange-400 text-lg' : 'text-zinc-300 text-sm'
+                          }`}
+                        >
+                          {formatARS(Number(b.amount))}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
           )}
