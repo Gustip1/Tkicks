@@ -173,7 +173,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Error');
+      console.log('[BID POST] response', res.status, data);
+      if (!res.ok) {
+        const fullMsg = data?.debug ? `${data.error || 'Error'} — ${data.debug}` : data?.error || 'Error';
+        throw new Error(fullMsg);
+      }
       setBidOk('¡Puja registrada!');
       setBidAmount('');
       try {
