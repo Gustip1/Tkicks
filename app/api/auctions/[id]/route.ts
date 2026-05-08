@@ -94,7 +94,11 @@ export async function GET(
     { auction: reconciledAuction, bids: safeBids, bidCount: safeBids.length },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        // Estos headers evitan que iOS Safari restaure la página desde
+        // back-forward cache con datos viejos.
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     }
   );

@@ -112,15 +112,18 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
   }, [auction, load]);
 
   // Refresh cuando el usuario vuelve a la pestaña / al foco / al volver con
-  // back-forward cache (iOS Safari es agresivo con esto).
+  // back-forward cache (iOS Safari es agresivo con esto). Si vuelve desde
+  // bfcache hacemos HARD reload — es la única forma 100% confiable.
   useEffect(() => {
     const onFocus = () => load();
     const onVisibility = () => {
       if (document.visibilityState === 'visible') load();
     };
     const onPageShow = (e: PageTransitionEvent) => {
-      // persisted=true = restaurado desde bf-cache → forzamos refresh
-      if (e.persisted) load();
+      if (e.persisted) {
+        // Restaurado desde bf-cache → recarga total para garantizar data fresca
+        window.location.reload();
+      }
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
@@ -285,6 +288,29 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
               </p>
             </div>
 
+            {/* Banner del top bidder — destaca cuando hay alguien ganando */}
+            {bids.length > 0 && (
+              <div className="bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-transparent border border-orange-500/40 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-black font-black text-lg shrink-0">
+                  ★
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-orange-400 font-black leading-none">
+                    Va ganando
+                  </p>
+                  <p className="text-base sm:text-lg font-black text-white truncate mt-1">
+                    {bids[0].alias}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] uppercase text-orange-400 font-bold">Con</p>
+                  <p className="text-sm sm:text-base font-black text-white">
+                    {formatARS(Number(bids[0].amount))}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
               <div className="flex items-end justify-between">
                 <div>
@@ -317,19 +343,6 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   Refrescar
                 </button>
               </div>
-              {/* Debug visible: ayuda a entender qué está devolviendo la API */}
-              <details className="text-[10px] text-zinc-600 border-t border-zinc-800 pt-2">
-                <summary className="cursor-pointer hover:text-zinc-400">Diagnóstico</summary>
-                <div className="mt-2 space-y-0.5 font-mono text-zinc-500">
-                  <div>auction.id: {auction.id.slice(0, 8)}</div>
-                  <div>auction.status: {auction.status}</div>
-                  <div>API current_price: {formatARS(Number(auction.current_price))}</div>
-                  <div>API top bid amount: {bids[0]?.amount ? formatARS(Number(bids[0].amount)) : '—'}</div>
-                  <div>API top bid alias: {bids[0]?.alias || '—'}</div>
-                  <div>bids.length: {bids.length}</div>
-                  <div>displayed price: {formatARS(displayedPrice)}</div>
-                </div>
-              </details>
             </div>
 
             {/* Formulario de puja — sin login, contacto en cada puja */}
