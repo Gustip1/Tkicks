@@ -104,10 +104,10 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     load();
   }, [load]);
 
-  // Refresh cada 5s mientras está activa
+  // Refresh cada 2s mientras está activa
   useEffect(() => {
     if (!auction || auction.status !== 'active') return;
-    const i = setInterval(load, 5_000);
+    const i = setInterval(load, 2_000);
     return () => clearInterval(i);
   }, [auction, load]);
 
@@ -205,7 +205,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         const fullMsg = data?.debug ? `${data.error || 'Error'} — ${data.debug}` : data?.error || 'Error';
         throw new Error(fullMsg);
       }
-      setBidOk('¡Puja registrada!');
+      setBidOk(`¡Puja de ${formatARS(amount)} registrada!`);
       setBidAmount('');
       try {
         localStorage.setItem(
@@ -215,28 +215,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
       } catch {
         /* noop */
       }
-      // Actualización optimista: insertamos la puja localmente para que la UI
-      // se refresque sin esperar al polling.
-      const optimisticAlias = `${first} ${last[0]?.toUpperCase() || ''}.`.trim();
-      const optimisticBid = {
-        id: `optimistic-${Date.now()}`,
-        alias: optimisticAlias,
-        amount: amount,
-        created_at: new Date().toISOString(),
-      };
-      setBids((prev) => [optimisticBid, ...prev]);
-      setAuction((prev) =>
-        prev
-          ? {
-              ...prev,
-              current_price: amount,
-              end_at:
-                typeof data?.endAt === 'string' ? data.endAt : prev.end_at,
-            }
-          : prev
-      );
-      // Re-sincronizar con el server inmediatamente
-      load();
+      // Sin optimistic update: dejamos que el server sea la fuente de verdad.
+      // Forzamos varias recargas seguidas por si la primera no alcanza.
+      await load();
+      setTimeout(load, 500);
+      setTimeout(load, 1500);
     } catch (e: any) {
       setBidErr(e.message);
     } finally {
@@ -334,6 +317,19 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   Refrescar
                 </button>
               </div>
+              {/* Debug visible: ayuda a entender qué está devolviendo la API */}
+              <details className="text-[10px] text-zinc-600 border-t border-zinc-800 pt-2">
+                <summary className="cursor-pointer hover:text-zinc-400">Diagnóstico</summary>
+                <div className="mt-2 space-y-0.5 font-mono text-zinc-500">
+                  <div>auction.id: {auction.id.slice(0, 8)}</div>
+                  <div>auction.status: {auction.status}</div>
+                  <div>API current_price: {formatARS(Number(auction.current_price))}</div>
+                  <div>API top bid amount: {bids[0]?.amount ? formatARS(Number(bids[0].amount)) : '—'}</div>
+                  <div>API top bid alias: {bids[0]?.alias || '—'}</div>
+                  <div>bids.length: {bids.length}</div>
+                  <div>displayed price: {formatARS(displayedPrice)}</div>
+                </div>
+              </details>
             </div>
 
             {/* Formulario de puja — sin login, contacto en cada puja */}
