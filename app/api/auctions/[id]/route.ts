@@ -49,26 +49,30 @@ export async function GET(
 
   const { data: bids } = await sb
     .from('bids')
-    .select('id, user_id, amount, created_at')
+    .select('id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
     .eq('auction_id', id)
     .order('amount', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(50);
 
-  // Anonimiza un poco a los pujadores: nombre desde profiles si existe, sino "Usuario"
-  // (No vamos a exponer email ni user_id completo).
-  const userIds = Array.from(new Set((bids || []).map((b) => b.user_id)));
-  const aliasByUser: Record<string, string> = {};
-  userIds.forEach((uid, i) => {
-    aliasByUser[uid] = `Usuario ${uid.slice(0, 4).toUpperCase()}`;
+  // Anonimización para la vista pública: mostramos nombre + inicial del
+  // apellido. El teléfono nunca se expone afuera.
+  const safeBids = (bids || []).map((b) => {
+    const first = (b.bidder_first_name || '').trim();
+    const last = (b.bidder_last_name || '').trim();
+    let alias = 'Anónimo';
+    if (first) {
+      alias = last ? `${first} ${last[0].toUpperCase()}.` : first;
+    } else if (b.bidder_phone) {
+      alias = `Pujador ${(b.bidder_phone as string).slice(-4)}`;
+    }
+    return {
+      id: b.id,
+      alias,
+      amount: Number(b.amount),
+      created_at: b.created_at,
+    };
   });
-
-  const safeBids = (bids || []).map((b) => ({
-    id: b.id,
-    alias: aliasByUser[b.user_id] || 'Usuario',
-    amount: Number(b.amount),
-    created_at: b.created_at,
-  }));
 
   return NextResponse.json({ auction, bids: safeBids, bidCount: safeBids.length });
 }

@@ -55,10 +55,35 @@ function formatRemaining(endAt: string): string {
 
 interface AdminBidRow {
   id: string;
-  user_id: string;
   amount: number;
   created_at: string;
   contact: ContactInfo | null;
+}
+
+interface RecentBidRow {
+  id: string;
+  auction_id: string;
+  amount: number;
+  created_at: string;
+  bidder_first_name: string | null;
+  bidder_last_name: string | null;
+  bidder_phone: string | null;
+  auction_status: string | null;
+  product_title: string | null;
+  variant_size: string | null;
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 0) return 'recién';
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `hace ${sec}s`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `hace ${min}m`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h}h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d}d`;
 }
 
 export default function AdminSubastasPage() {
@@ -72,6 +97,27 @@ export default function AdminSubastasPage() {
   const [bidsLoading, setBidsLoading] = useState(false);
   const [bidBusy, setBidBusy] = useState<string | null>(null);
   const [bidsErr, setBidsErr] = useState<string | null>(null);
+  const [recent, setRecent] = useState<RecentBidRow[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+
+  const loadRecent = async () => {
+    setRecentLoading(true);
+    try {
+      const res = await fetch('/api/admin/bids/recent', { cache: 'no-store' });
+      const data = await res.json();
+      if (res.ok) setRecent(data.bids || []);
+    } catch {
+      /* noop */
+    } finally {
+      setRecentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRecent();
+    const i = setInterval(loadRecent, 15_000);
+    return () => clearInterval(i);
+  }, []);
 
   useEffect(() => {
     const i = setInterval(() => setTick((x) => x + 1), 30_000);
@@ -225,6 +271,68 @@ export default function AdminSubastasPage() {
       {err && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>
       )}
+
+      {/* Pujas recientes — feed global, ordenado por fecha desc */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">Pujas recientes</h2>
+            <p className="text-xs text-gray-500">Últimas pujas de todas las subastas. Auto-refresh cada 15s.</p>
+          </div>
+          <button
+            onClick={loadRecent}
+            disabled={recentLoading}
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+          >
+            {recentLoading ? '…' : 'Refrescar'}
+          </button>
+        </div>
+        {recent.length === 0 ? (
+          <div className="px-4 py-6 text-center text-sm text-gray-500">
+            Todavía no hubo pujas.
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+            {recent.map((r) => {
+              const name = [r.bidder_first_name, r.bidder_last_name].filter(Boolean).join(' ').trim() || 'Anónimo';
+              return (
+                <li key={r.id} className="px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
+                      <a
+                        href={r.bidder_phone ? `tel:${r.bidder_phone}` : '#'}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {r.bidder_phone || '—'}
+                      </a>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {r.product_title || '—'}
+                      {r.variant_size && <span className="text-gray-400"> · Talle {r.variant_size}</span>}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{timeAgo(r.created_at)} · {new Date(r.created_at).toLocaleString('es-AR')}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold text-gray-900">{formatARS(Number(r.amount))}</p>
+                    <Link
+                      href={`/admin/subastas`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const auction = rows.find((a) => a.id === r.auction_id);
+                        if (auction) openBidsModal(auction);
+                      }}
+                      className="text-[11px] text-blue-600 hover:text-blue-800"
+                    >
+                      Ver subasta
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
       <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">

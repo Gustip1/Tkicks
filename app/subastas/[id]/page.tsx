@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Gavel, Clock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { formatARS } from '@/lib/utils';
-import { createBrowserClient } from '@/lib/supabase/client';
 
 interface AuctionDetail {
   id: string;
@@ -25,6 +23,8 @@ interface SafeBid {
   amount: number;
   created_at: string;
 }
+
+const CONTACT_LS_KEY = 'tkicks:bidder-contact';
 
 function useCountdown(endAt: string) {
   const [now, setNow] = useState(() => Date.now());
@@ -47,17 +47,33 @@ function useCountdown(endAt: string) {
 }
 
 export default function AuctionDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
   const [auction, setAuction] = useState<AuctionDetail | null>(null);
   const [bids, setBids] = useState<SafeBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [authChecked, setAuthChecked] = useState(false);
+
   const [bidAmount, setBidAmount] = useState('');
+  const [contactFirst, setContactFirst] = useState('');
+  const [contactLast, setContactLast] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [bidErr, setBidErr] = useState<string | null>(null);
   const [bidOk, setBidOk] = useState<string | null>(null);
+
+  // Pre-cargar contacto desde el último uso (no es obligatorio, sólo cómodo)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CONTACT_LS_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.firstName) setContactFirst(String(data.firstName));
+        if (data.lastName) setContactLast(String(data.lastName));
+        if (data.phone) setContactPhone(String(data.phone));
+      }
+    } catch {
+      /* noop */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -73,94 +89,20 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     }
   }, [params.id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  // refresh cada 5s mientras está activa para reflejar pujas en vivo
+  // Refresh cada 5s mientras está activa para reflejar pujas en vivo
   useEffect(() => {
     if (!auction || auction.status !== 'active') return;
     const i = setInterval(load, 5_000);
     return () => clearInterval(i);
   }, [auction, load]);
 
-  // auth + perfil
-  const [profile, setProfile] = useState<{ first_name: string | null; last_name: string | null; phone: string | null } | null>(null);
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [contactFirst, setContactFirst] = useState('');
-  const [contactLast, setContactLast] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileErr, setProfileErr] = useState<string | null>(null);
-
-  const refreshProfile = useCallback(async () => {
-    try {
-      const res = await fetch('/api/profile', { cache: 'no-store' });
-      const data = await res.json();
-      if (res.ok) setProfile(data.profile);
-    } catch {
-      /* noop */
-    } finally {
-      setProfileChecked(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const sb = createBrowserClient();
-    sb.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setAuthChecked(true);
-      if (data.user) refreshProfile();
-      else setProfileChecked(true);
-    });
-  }, [refreshProfile]);
-
-  useEffect(() => {
-    if (profile) {
-      setContactFirst(profile.first_name || '');
-      setContactLast(profile.last_name || '');
-      setContactPhone(profile.phone || '');
-    }
-  }, [profile]);
-
-  const hasContactInfo = !!(
-    profile?.first_name?.trim() &&
-    profile?.last_name?.trim() &&
-    profile?.phone?.trim()
-  );
-
-  const saveContact = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileErr(null);
-    if (!contactFirst.trim() || !contactLast.trim() || !contactPhone.trim()) {
-      setProfileErr('Completá nombre, apellido y teléfono.');
-      return;
-    }
-    setSavingProfile(true);
-    try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: contactFirst.trim(),
-          lastName: contactLast.trim(),
-          phone: contactPhone.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Error');
-      await refreshProfile();
-    } catch (err: any) {
-      setProfileErr(err.message);
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
   const cd = useCountdown(auction?.end_at || new Date().toISOString());
 
-  // Mínimo redondeado al múltiplo de min_increment más cercano hacia arriba.
-  // Esto evita que aparezcan números "feos" como 81.001 cuando alguien puja
-  // un peso por encima del mínimo: el siguiente requerido siempre termina en
-  // un valor "limpio" (múltiplo del incremento, normalmente 1.000).
+  // Mínimo redondeado al múltiplo de min_increment más cercano hacia arriba
   const minRequired = useMemo(() => {
     if (!auction) return 0;
     const inc = Math.max(1, Number(auction.min_increment) || 1);
@@ -174,10 +116,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
   const quickIncrements = useMemo(() => {
     if (!auction) return [] as number[];
     const inc = Math.max(1, Number(auction.min_increment) || 1);
-    // Tres atajos: el incremento mínimo, 5x el incremento, 10x el incremento.
-    // Para incrementos típicos de 1.000 esto da +3.000 / +5.000 / +10.000.
-    const base = inc <= 1000 ? [3000, 5000, 10000] : [inc * 3, inc * 5, inc * 10];
-    return base;
+    return inc <= 1000 ? [3000, 5000, 10000] : [inc * 3, inc * 5, inc * 10];
   }, [auction]);
 
   const applyQuickBid = (delta: number) => {
@@ -185,8 +124,6 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     setBidOk(null);
     const inc = Math.max(1, Number(auction?.min_increment) || 1);
     const current = Number(auction?.current_price || 0);
-    // "Sumar X al precio actual" pero nunca por debajo del mínimo, y
-    // redondeado al múltiplo de inc más cercano hacia arriba.
     const candidate = Math.max(minRequired, current + delta);
     const rounded = Math.ceil(candidate / inc) * inc;
     setBidAmount(String(rounded));
@@ -196,6 +133,15 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     e.preventDefault();
     setBidErr(null);
     setBidOk(null);
+
+    const first = contactFirst.trim();
+    const last = contactLast.trim();
+    const phone = contactPhone.trim();
+    if (!first || !last || !phone) {
+      setBidErr('Completá nombre, apellido y teléfono.');
+      return;
+    }
+
     const amount = Number(bidAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
       setBidErr('Ingresá un monto válido.');
@@ -211,12 +157,25 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
       const res = await fetch(`/api/auctions/${params.id}/bids`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount,
+          firstName: first,
+          lastName: last,
+          phone,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Error');
       setBidOk('¡Puja registrada!');
       setBidAmount('');
+      try {
+        localStorage.setItem(
+          CONTACT_LS_KEY,
+          JSON.stringify({ firstName: first, lastName: last, phone })
+        );
+      } catch {
+        /* noop */
+      }
       await load();
     } catch (e: any) {
       setBidErr(e.message);
@@ -230,14 +189,14 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <p className="text-red-400">{err || 'Subasta no encontrada'}</p>
-        <Link href="/subastas" className="text-orange-400 underline">Volver a subastas</Link>
+        <Link href="/subastas" className="text-orange-400 underline">
+          Volver a subastas
+        </Link>
       </div>
     );
   }
 
   const image = Array.isArray(auction.product.images) && auction.product.images[0]?.url;
-  const isWinner = !!user && auction.winner_user_id === user.id;
-  const showCheckout = auction.status === 'ended' && isWinner;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -268,7 +227,9 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
           <div className="space-y-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{auction.product.title}</h1>
-              <p className="text-zinc-400 text-sm mt-1">Talle: <span className="text-white font-bold">{auction.variant.size}</span></p>
+              <p className="text-zinc-400 text-sm mt-1">
+                Talle: <span className="text-white font-bold">{auction.variant.size}</span>
+              </p>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
@@ -291,146 +252,110 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
               </div>
             </div>
 
-            {/* Formulario de puja */}
+            {/* Formulario de puja — sin login, contacto en cada puja */}
             {auction.status === 'active' && !cd.ended && (
-              <form onSubmit={submitBid} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
-                {!authChecked || (user && !profileChecked) ? (
-                  <p className="text-zinc-400 text-sm">Verificando sesión…</p>
-                ) : !user ? (
-                  <div className="text-sm text-zinc-300">
-                    <p className="mb-3">Iniciá sesión para pujar.</p>
-                    <Link
-                      href={`/login?redirect=/subastas/${auction.id}`}
-                      className="inline-block bg-orange-500 text-black font-black px-4 py-2 rounded-lg uppercase text-sm"
-                    >
-                      Iniciar sesión
-                    </Link>
-                  </div>
-                ) : !hasContactInfo ? (
-                  <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-                    <div>
-                      <p className="text-orange-400 font-black uppercase text-xs tracking-wider">
-                        Antes de pujar
-                      </p>
-                      <p className="text-sm text-zinc-300 mt-1">
-                        Necesitamos tu nombre, apellido y teléfono para contactarte si ganás la subasta.
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="block">
-                        <span className="text-[10px] uppercase text-zinc-400 font-bold">Nombre *</span>
-                        <input
-                          type="text"
-                          value={contactFirst}
-                          onChange={(e) => setContactFirst(e.target.value)}
-                          placeholder="Juan"
-                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-[10px] uppercase text-zinc-400 font-bold">Apellido *</span>
-                        <input
-                          type="text"
-                          value={contactLast}
-                          onChange={(e) => setContactLast(e.target.value)}
-                          placeholder="Pérez"
-                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
-                        />
-                      </label>
-                    </div>
-                    <label className="block">
-                      <span className="text-[10px] uppercase text-zinc-400 font-bold">Teléfono *</span>
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
-                        placeholder="+54 9 264..."
-                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
-                      />
-                    </label>
-                    {profileErr && (
-                      <p className="text-red-400 text-sm flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {profileErr}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={saveContact}
-                      disabled={savingProfile}
-                      className="w-full bg-orange-500 text-black font-black uppercase py-3 rounded-lg hover:bg-orange-400 disabled:opacity-50"
-                    >
-                      {savingProfile ? 'Guardando…' : 'Guardar y habilitar puja'}
-                    </button>
-                    <p className="text-[11px] text-zinc-500">
-                      Estos datos se guardan una sola vez. Sólo el admin de Tkicks va a verlos.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <label className="block">
-                      <span className="text-xs uppercase text-zinc-400">Tu puja (ARS) — mínimo {formatARS(minRequired)}</span>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min={minRequired}
-                        step={Math.max(1, Number(auction.min_increment) || 1000)}
-                        value={bidAmount}
-                        onChange={(e) => setBidAmount(e.target.value)}
-                        placeholder={String(minRequired)}
-                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-3 text-lg font-bold text-white"
-                      />
-                    </label>
+              <form onSubmit={submitBid} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+                <div>
+                  <p className="text-orange-400 font-black uppercase text-xs tracking-wider">Tus datos</p>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Necesitamos nombre, apellido y teléfono para contactarte si ganás.
+                  </p>
+                </div>
 
-                    {/* Atajos de puja rápida */}
-                    {quickIncrements.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2">
-                        {quickIncrements.map((delta) => (
-                          <button
-                            key={delta}
-                            type="button"
-                            onClick={() => applyQuickBid(delta)}
-                            className="rounded-lg border border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 active:scale-[0.98] text-orange-300 font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
-                          >
-                            +{formatARS(delta)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block">
+                    <span className="text-[10px] uppercase text-zinc-400 font-bold">Nombre *</span>
+                    <input
+                      type="text"
+                      autoComplete="given-name"
+                      value={contactFirst}
+                      onChange={(e) => setContactFirst(e.target.value)}
+                      placeholder="Juan"
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] uppercase text-zinc-400 font-bold">Apellido *</span>
+                    <input
+                      type="text"
+                      autoComplete="family-name"
+                      value={contactLast}
+                      onChange={(e) => setContactLast(e.target.value)}
+                      placeholder="Pérez"
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-[10px] uppercase text-zinc-400 font-bold">Teléfono *</span>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+54 9 264..."
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-bold text-white"
+                  />
+                </label>
 
-                    {bidErr && <p className="text-red-400 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {bidErr}</p>}
-                    {bidOk && <p className="text-green-400 text-sm">{bidOk}</p>}
-                    <button
-                      type="submit"
-                      disabled={submitting || !bidAmount}
-                      className="w-full bg-orange-500 text-black font-black uppercase py-3 rounded-lg hover:bg-orange-400 disabled:opacity-50"
-                    >
-                      {submitting ? 'Enviando…' : 'Pujar'}
-                    </button>
-                    <p className="text-xs text-zinc-500">
-                      Pago únicamente por transferencia bancaria. Si ganás vas a recibir las instrucciones para pagar.
-                    </p>
-                  </>
+                <div className="border-t border-zinc-800 pt-4">
+                  <label className="block">
+                    <span className="text-xs uppercase text-zinc-400">
+                      Tu puja (ARS) — mínimo {formatARS(minRequired)}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={minRequired}
+                      step={Math.max(1, Number(auction.min_increment) || 1000)}
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder={String(minRequired)}
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-3 text-lg font-bold text-white"
+                    />
+                  </label>
+
+                  {quickIncrements.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {quickIncrements.map((delta) => (
+                        <button
+                          key={delta}
+                          type="button"
+                          onClick={() => applyQuickBid(delta)}
+                          className="rounded-lg border border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 active:scale-[0.98] text-orange-300 font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
+                        >
+                          +{formatARS(delta)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {bidErr && (
+                  <p className="text-red-400 text-sm flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {bidErr}
+                  </p>
                 )}
+                {bidOk && <p className="text-green-400 text-sm">{bidOk}</p>}
+
+                <button
+                  type="submit"
+                  disabled={submitting || !bidAmount}
+                  className="w-full bg-orange-500 text-black font-black uppercase py-3 rounded-lg hover:bg-orange-400 disabled:opacity-50"
+                >
+                  {submitting ? 'Enviando…' : 'Pujar'}
+                </button>
+                <p className="text-xs text-zinc-500">
+                  Pago únicamente por transferencia bancaria. Si ganás te contactamos por WhatsApp con las
+                  instrucciones.
+                </p>
               </form>
             )}
 
-            {auction.status === 'ended' && !isWinner && (
+            {auction.status === 'ended' && (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-zinc-300 text-sm">
-                Esta subasta finalizó. {auction.winner_user_id ? 'Hay ganador.' : 'No hubo pujas.'}
-              </div>
-            )}
-
-            {showCheckout && (
-              <div className="bg-green-900/30 border border-green-700 rounded-2xl p-5 space-y-3">
-                <p className="font-bold text-green-300">¡Ganaste la subasta!</p>
-                <p className="text-sm text-zinc-300">Total a transferir: <span className="font-black text-white">{formatARS(Number(auction.current_price))}</span></p>
-                <button
-                  onClick={() => router.push(`/subastas/${auction.id}/pagar`)}
-                  className="w-full bg-orange-500 text-black font-black uppercase py-3 rounded-lg hover:bg-orange-400"
-                >
-                  Continuar al pago
-                </button>
+                Esta subasta finalizó. {bids.length > 0 ? 'Vamos a contactar al ganador por WhatsApp.' : 'No hubo pujas.'}
               </div>
             )}
 
@@ -474,7 +399,8 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   {bids.map((b, i) => (
                     <tr key={b.id} className="border-t border-zinc-800">
                       <td className="px-4 py-2">
-                        {b.alias}{i === 0 && <span className="ml-2 text-xs text-orange-400">★ Top</span>}
+                        {b.alias}
+                        {i === 0 && <span className="ml-2 text-xs text-orange-400">★ Top</span>}
                       </td>
                       <td className="px-4 py-2 text-right font-bold">{formatARS(Number(b.amount))}</td>
                       <td className="px-4 py-2 text-right text-zinc-500 text-xs">

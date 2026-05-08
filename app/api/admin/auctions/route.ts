@@ -47,55 +47,45 @@ export async function GET() {
     return NextResponse.json({ error: 'No se pudo listar' }, { status: 500 });
   }
 
+  type BidContact = {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+  };
+
   const ids = (auctions || []).map((a) => a.id);
   const countsByAuction: Record<string, number> = {};
-  const topBidderByAuction: Record<string, string> = {};
+  const topBidByAuction: Record<string, BidContact> = {};
   if (ids.length) {
     const { data: bids } = await sb
       .from('bids')
-      .select('auction_id, user_id, amount, created_at')
+      .select('auction_id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
       .in('auction_id', ids)
       .order('amount', { ascending: false })
       .order('created_at', { ascending: false });
-    (bids || []).forEach((b) => {
+    (bids || []).forEach((b: any) => {
       countsByAuction[b.auction_id] = (countsByAuction[b.auction_id] || 0) + 1;
-      if (!topBidderByAuction[b.auction_id]) topBidderByAuction[b.auction_id] = b.user_id;
-    });
-  }
-
-  // Recolectar perfiles de ganadores y top bidders activos
-  const userIds = new Set<string>();
-  (auctions || []).forEach((a) => {
-    if (a.winner_user_id) userIds.add(a.winner_user_id);
-  });
-  Object.values(topBidderByAuction).forEach((uid) => userIds.add(uid));
-
-  const profileMap: Record<string, { first_name: string | null; last_name: string | null; phone: string | null }> = {};
-  if (userIds.size) {
-    const { data: profiles } = await sb
-      .from('profiles')
-      .select('id, first_name, last_name, phone')
-      .in('id', Array.from(userIds));
-    (profiles || []).forEach((p) => {
-      profileMap[p.id] = {
-        first_name: p.first_name,
-        last_name: p.last_name,
-        phone: p.phone,
-      };
+      if (!topBidByAuction[b.auction_id]) {
+        topBidByAuction[b.auction_id] = {
+          first_name: b.bidder_first_name,
+          last_name: b.bidder_last_name,
+          phone: b.bidder_phone,
+        };
+      }
     });
   }
 
   const enriched = (auctions || []).map((a) => {
-    const winnerId = a.winner_user_id;
-    const topBidderId = topBidderByAuction[a.id] || null;
-    const winnerContact = winnerId ? profileMap[winnerId] || null : null;
-    const topBidderContact = topBidderId ? profileMap[topBidderId] || null : null;
+    const topBidContact = topBidByAuction[a.id] || null;
     return {
       ...a,
       bid_count: countsByAuction[a.id] || 0,
-      top_bidder_user_id: topBidderId,
-      winner_contact: winnerContact,
-      top_bidder_contact: topBidderContact,
+      top_bidder_user_id: null,
+      // Para subastas finalizadas/pagadas el "ganador" es la puja más alta
+      // (que coincide con la top, ya que ordenamos por amount desc).
+      winner_contact:
+        a.status === 'ended' || a.status === 'paid' ? topBidContact : null,
+      top_bidder_contact: topBidContact,
     };
   });
 

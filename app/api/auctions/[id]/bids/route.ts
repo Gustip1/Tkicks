@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function service() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+function clean(v: unknown): string {
+  return typeof v === 'string' ? v.trim() : '';
+}
 
 export async function POST(
   req: NextRequest,
@@ -16,35 +27,51 @@ export async function POST(
   }
 
   let body: any;
-  try { body = await req.json(); } catch {
+  try {
+    body = await req.json();
+  } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
+
   const amount = Number(body?.amount);
+  const firstName = clean(body?.firstName);
+  const lastName = clean(body?.lastName);
+  const phone = clean(body?.phone);
+
   if (!Number.isFinite(amount) || amount <= 0) {
-    return NextResponse.json({ error: 'amount inválido' }, { status: 400 });
+    return NextResponse.json({ error: 'Monto inválido' }, { status: 400 });
+  }
+  if (!firstName || !lastName || !phone) {
+    return NextResponse.json(
+      { error: 'Completá nombre, apellido y teléfono' },
+      { status: 400 }
+    );
+  }
+  if (firstName.length > 80 || lastName.length > 80 || phone.length > 30) {
+    return NextResponse.json({ error: 'Datos demasiado largos' }, { status: 400 });
   }
 
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Tenés que iniciar sesión para pujar' }, { status: 401 });
-  }
-
-  const { data, error } = await supabase.rpc('place_bid', {
+  const sb = service();
+  const { data, error } = await sb.rpc('place_bid', {
     p_auction_id: id,
     p_amount: amount,
+    p_first_name: firstName,
+    p_last_name: lastName,
+    p_phone: phone,
   });
 
   if (error) {
-    // Mapeo de errores comunes al mensaje del usuario
     const msg = String(error.message || '');
     let userMsg = 'No se pudo registrar la puja';
     if (msg.includes('auction not active')) userMsg = 'La subasta no está activa';
     else if (msg.includes('auction ended')) userMsg = 'La subasta ya finalizó';
-    else if (msg.includes('bid below minimum')) userMsg = msg.replace('bid below minimum:', 'Mínimo requerido:');
+    else if (msg.includes('bid below minimum'))
+      userMsg = msg.replace('bid below minimum:', 'Mínimo requerido:');
     else if (msg.includes('already top bidder')) userMsg = 'Ya sos el mejor postor';
-    else if (msg.includes('login required')) userMsg = 'Tenés que iniciar sesión';
-    else if (msg.includes('contact info required')) userMsg = 'Completá tu nombre, apellido y teléfono antes de pujar';
+    else if (msg.includes('contact info required'))
+      userMsg = 'Completá nombre, apellido y teléfono';
+    else if (msg.includes('contact too long')) userMsg = 'Datos demasiado largos';
+    else if (msg.includes('auction not found')) userMsg = 'Subasta inexistente';
     return NextResponse.json({ error: userMsg }, { status: 400 });
   }
 

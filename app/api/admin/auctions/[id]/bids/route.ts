@@ -44,7 +44,7 @@ export async function GET(
   const sb = service();
   const { data: bids, error } = await sb
     .from('bids')
-    .select('id, user_id, amount, created_at')
+    .select('id, amount, created_at, bidder_first_name, bidder_last_name, bidder_phone')
     .eq('auction_id', id)
     .order('amount', { ascending: false })
     .order('created_at', { ascending: false });
@@ -54,28 +54,15 @@ export async function GET(
     return NextResponse.json({ error: 'No se pudieron listar las pujas' }, { status: 500 });
   }
 
-  const userIds = Array.from(new Set((bids || []).map((b) => b.user_id)));
-  const profileMap: Record<string, { first_name: string | null; last_name: string | null; phone: string | null }> = {};
-  if (userIds.length) {
-    const { data: profiles } = await sb
-      .from('profiles')
-      .select('id, first_name, last_name, phone')
-      .in('id', userIds);
-    (profiles || []).forEach((p) => {
-      profileMap[p.id] = {
-        first_name: p.first_name,
-        last_name: p.last_name,
-        phone: p.phone,
-      };
-    });
-  }
-
-  const enriched = (bids || []).map((b) => ({
+  const enriched = (bids || []).map((b: any) => ({
     id: b.id,
-    user_id: b.user_id,
     amount: Number(b.amount),
     created_at: b.created_at,
-    contact: profileMap[b.user_id] || null,
+    contact: {
+      first_name: b.bidder_first_name,
+      last_name: b.bidder_last_name,
+      phone: b.bidder_phone,
+    },
   }));
 
   return NextResponse.json({ bids: enriched });
