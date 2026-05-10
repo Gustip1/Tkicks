@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/cart';
 import { useCheckoutStore, PaymentMethod } from '@/store/checkout';
 import { formatCurrency } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
+import { getCardSurchargeRate, isPromoActive } from '@/lib/promo';
 import {
   MapPin,
   Truck,
@@ -67,9 +68,15 @@ export default function CheckoutPage() {
     () => cart.items.reduce((acc, it) => acc + it.price * it.quantity, 0),
     [cart.items]
   );
-  // 10% surcharge for credit card payments
+  // Recargo en tarjeta: 10% normal, 0% durante la promo (11-17/05).
+  // Se calcula client-side via lib/promo (vuelve a 10% solo el 18/05).
   const isCardPayment = checkout.paymentMethod === 'installments_3';
-  const surchargeRate = 0.10;
+  const [surchargeRate, setSurchargeRate] = useState(0.10);
+  const [promoOn, setPromoOn] = useState(false);
+  useEffect(() => {
+    setSurchargeRate(getCardSurchargeRate());
+    setPromoOn(isPromoActive());
+  }, []);
   const totalUSD = isCardPayment ? subtotalUSD * (1 + surchargeRate) : subtotalUSD;
   const totalARS = totalUSD * dolarOficial;
   const subtotalARS = subtotalUSD * dolarOficial;
@@ -416,8 +423,16 @@ export default function CheckoutPage() {
                       selected={checkout.paymentMethod === 'installments_3'}
                       onClick={() => checkout.setPaymentMethod('installments_3')}
                       icon={<CreditCard className="w-5 h-5" />}
-                      title="3 Cuotas sin interés (Tarjeta)"
-                      description="10% de recargo sobre el precio base · Link de pago por WhatsApp"
+                      title={
+                        promoOn
+                          ? '3 Cuotas sin interés (Tarjeta) — PROMO sin recargo'
+                          : '3 Cuotas sin interés (Tarjeta)'
+                      }
+                      description={
+                        promoOn
+                          ? '🔥 PROMO 11-17/05: mismo precio que efectivo · Link de pago por WhatsApp'
+                          : '10% de recargo sobre el precio base · Link de pago por WhatsApp'
+                      }
                     />
                   </div>
                 </div>
@@ -521,8 +536,19 @@ export default function CheckoutPage() {
                         <CreditCard className="w-5 h-5 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-white">3 Cuotas sin interés</p>
-                        <p className="text-xs text-gray-400 font-bold">Se aplica un 10% de recargo sobre el precio base</p>
+                        <p className="text-sm font-black text-white">
+                          3 Cuotas sin interés
+                          {promoOn && (
+                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider align-middle">
+                              Promo
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-400 font-bold">
+                          {promoOn
+                            ? 'Promo 11-17/05: SIN recargo, mismo precio que efectivo'
+                            : 'Se aplica un 10% de recargo sobre el precio base'}
+                        </p>
                       </div>
                     </div>
 
@@ -532,10 +558,12 @@ export default function CheckoutPage() {
                         <span className="text-gray-400 font-bold">Subtotal (precio base)</span>
                         <span className="text-white font-bold">${subtotalUSD.toFixed(2)} USD</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400 font-bold">Recargo tarjeta (10%)</span>
-                        <span className="text-amber-400 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
-                      </div>
+                      {!promoOn && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400 font-bold">Recargo tarjeta (10%)</span>
+                          <span className="text-amber-400 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm pt-2 border-t border-zinc-700">
                         <span className="text-white font-black">Total con tarjeta</span>
                         <div className="text-right">
@@ -556,7 +584,9 @@ export default function CheckoutPage() {
                           .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
                           .join('\n')}\n\n` +
                         `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
-                        `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n` +
+                        (promoOn
+                          ? `🔥 *PROMO 11-17/05: SIN recargo*\n`
+                          : `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
                         `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
                         `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
                         `👤 *Datos:*\n` +
@@ -639,10 +669,16 @@ export default function CheckoutPage() {
                   <span className="text-gray-400 font-bold">Subtotal</span>
                   <span className="text-white font-black">${subtotalUSD.toFixed(2)} USD</span>
                 </div>
-                {isCardPayment && (
+                {isCardPayment && !promoOn && (
                   <div className="flex justify-between text-sm">
                     <span className="text-amber-400 font-bold">Recargo tarjeta (10%)</span>
                     <span className="text-amber-400 font-black">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                  </div>
+                )}
+                {isCardPayment && promoOn && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-orange-400 font-bold">🔥 Promo 11-17/05 · sin recargo</span>
+                    <span className="text-orange-400 font-black">$0.00 USD</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">

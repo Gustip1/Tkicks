@@ -6,6 +6,7 @@ import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { Heart, ShoppingBag } from 'lucide-react';
+import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
 
 interface ProductCardProps {
   product: Product;
@@ -204,15 +205,17 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           </p>
           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Transferencia / Efectivo</p>
 
-          {/* Precio Tarjeta (10% recargo) — 3 cuotas */}
+          {/* Precio Tarjeta — 3 cuotas (recargo según lib/promo) */}
           {!isSoldOut && (() => {
-            const cardPrice = Number(product.price) * 1.10;
+            const cardPrice = Number(product.price) * getCardPriceMultiplier();
             const cardPriceArs = cardPrice * dolarOficial;
             const installment = cardPriceArs / 3;
+            const promoOn = isPromoActive();
             return (
               <div className="pt-1 border-t border-zinc-800 mt-1">
-                <p className="text-xs text-purple-400 font-bold">
+                <p className={cn('text-xs font-bold', promoOn ? 'text-orange-400' : 'text-purple-400')}>
                   💳 3 cuotas de {formatCurrency(installment)}
+                  {promoOn && <span className="ml-1 text-[9px] uppercase">· sin recargo</span>}
                 </p>
                 <p className="text-[10px] text-gray-500 font-semibold">
                   Total tarjeta: {formatCurrency(cardPriceArs)}

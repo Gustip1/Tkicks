@@ -9,6 +9,7 @@ import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star } from 'lucide-react';
+import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -136,17 +137,37 @@ export default function ProductDetailPage() {
             <p className="text-sm md:text-lg text-gray-300 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
-            {/* Precio Tarjeta — 3 cuotas sin interés con 10% recargo */}
+            {/* Precio Tarjeta — 3 cuotas (recargo desde lib/promo) */}
             {(() => {
-              const cardPriceArs = Number(product.price) * 1.10 * dolarOficial;
+              const cardPriceArs = Number(product.price) * getCardPriceMultiplier() * dolarOficial;
               const installment = cardPriceArs / 3;
+              const promoOn = isPromoActive();
               return (
-                <div className="mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                  <p className="text-sm md:text-base text-purple-300 font-black">
+                <div
+                  className={
+                    promoOn
+                      ? 'mt-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/40'
+                      : 'mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30'
+                  }
+                >
+                  <p
+                    className={
+                      promoOn
+                        ? 'text-sm md:text-base text-orange-300 font-black'
+                        : 'text-sm md:text-base text-purple-300 font-black'
+                    }
+                  >
                     💳 3 cuotas sin interés de {formatCurrency(installment)}
+                    {promoOn && (
+                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider align-middle">
+                        Promo
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-gray-400 font-bold">
-                    Total tarjeta: {formatCurrency(cardPriceArs)} (10% recargo incluido)
+                    {promoOn
+                      ? 'Promo 11-17/05: SIN recargo, mismo precio que efectivo'
+                      : `Total tarjeta: ${formatCurrency(cardPriceArs)} (10% recargo incluido)`}
                   </p>
                 </div>
               );
