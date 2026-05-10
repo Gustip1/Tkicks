@@ -1,30 +1,18 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { isPromoAnnouncementActive, PROMO_TEXT, PROMO_ID } from '@/lib/promo';
-
-const LS_KEY = `tkicks:promo-dismissed:${PROMO_ID}`;
+import { isPromoAnnouncementActive, PROMO_TEXT } from '@/lib/promo';
 
 export function PromoModal() {
   const [open, setOpen] = useState(false);
 
+  // Aparece SIEMPRE que entran al sitio (refresh / pestaña nueva /
+  // visita nueva). No usamos localStorage a propósito: queremos
+  // máximo impacto durante la semana de la promo.
   useEffect(() => {
-    if (!isPromoAnnouncementActive()) return;
-    try {
-      if (localStorage.getItem(LS_KEY) === '1') return;
-    } catch {
-      /* localStorage bloqueado: igual mostramos el modal */
-    }
-    setOpen(true);
+    if (isPromoAnnouncementActive()) setOpen(true);
   }, []);
 
-  const dismiss = () => {
-    try {
-      localStorage.setItem(LS_KEY, '1');
-    } catch {
-      /* noop */
-    }
-    setOpen(false);
-  };
+  const dismiss = () => setOpen(false);
 
   if (!open) return null;
 
