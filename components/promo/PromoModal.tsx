@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { isPromoActive, PROMO_TEXT, PROMO_ID } from '@/lib/promo';
+import { isPromoAnnouncementActive, PROMO_TEXT, PROMO_ID } from '@/lib/promo';
 
 const LS_KEY = `tkicks:promo-dismissed:${PROMO_ID}`;
 
@@ -8,7 +8,7 @@ export function PromoModal() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!isPromoActive()) return;
+    if (!isPromoAnnouncementActive()) return;
     try {
       if (localStorage.getItem(LS_KEY) === '1') return;
     } catch {

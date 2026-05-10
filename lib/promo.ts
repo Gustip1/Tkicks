@@ -8,18 +8,29 @@
  * dos constantes de abajo.
  */
 
-// Inicio: 11/05/2026 00:00:00 hora Argentina (UTC-3)
-// Fin:    17/05/2026 23:59:59.999 hora Argentina (UTC-3)
+// Inicio del descuento real (cuando desaparece el 10% de recargo)
+//   Inicio: 11/05/2026 00:00:00 hora Argentina (UTC-3)
+//   Fin:    17/05/2026 23:59:59.999 hora Argentina (UTC-3)
 export const PROMO_START = new Date('2026-05-11T00:00:00-03:00');
 export const PROMO_END = new Date('2026-05-17T23:59:59.999-03:00');
+
+// Inicio del anuncio (popup): se muestra desde antes que arranque la promo
+// para avisarle a los clientes. El popup desaparece cuando termina la promo.
+export const MODAL_START = new Date('2026-05-08T00:00:00-03:00');
 
 export const PROMO_TEXT =
   'Desde el 11 hasta el 17 de mayo todos los productos van a estar en 3 cuotas sin interés al mismo precio de efectivo y transferencia.';
 
-/** Devuelve true si "ahora" cae dentro del rango de la promo. */
+/** Devuelve true si "ahora" cae dentro del rango del DESCUENTO (sin recargo). */
 export function isPromoActive(now: Date = new Date()): boolean {
   const t = now.getTime();
   return t >= PROMO_START.getTime() && t <= PROMO_END.getTime();
+}
+
+/** Devuelve true si hay que mostrar el popup anunciando la promo. */
+export function isPromoAnnouncementActive(now: Date = new Date()): boolean {
+  const t = now.getTime();
+  return t >= MODAL_START.getTime() && t <= PROMO_END.getTime();
 }
 
 /**
