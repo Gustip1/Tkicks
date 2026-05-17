@@ -91,15 +91,19 @@ export default function CheckoutPage() {
       if (!checkout.contact.email.trim()) e.email = 'Email requerido';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkout.contact.email)) e.email = 'Email inválido';
       if (!checkout.contact.phone.trim()) e.phone = 'Teléfono requerido';
-      if (!checkout.contact.document.trim()) e.document = 'Documento requerido';
-      if (!checkout.address.postalCode.trim()) e.postalCode = 'Código postal requerido';
       if (!checkout.address.street.trim()) e.street = 'Dirección requerida';
+      if (!checkout.address.postalCode.trim()) e.postalCode = 'Código postal requerido';
+      if (!checkout.address.city.trim()) e.city = 'Localidad requerida';
+      if (!checkout.address.province.trim()) e.province = 'Provincia requerida';
+      if (!checkout.contact.document.trim()) e.document = 'DNI requerido';
     } else {
-      // Pickup: name, email, phone
+      // Pickup: todos los datos personales
       if (!checkout.contact.firstName.trim()) e.firstName = 'Nombre requerido';
+      if (!checkout.contact.lastName.trim()) e.lastName = 'Apellido requerido';
       if (!checkout.contact.email.trim()) e.email = 'Email requerido';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkout.contact.email)) e.email = 'Email inválido';
       if (!checkout.contact.phone.trim()) e.phone = 'Teléfono requerido';
+      if (!checkout.contact.document.trim()) e.document = 'DNI requerido';
     }
 
     setErrors(e);
@@ -322,48 +326,45 @@ export default function CheckoutPage() {
                   </h2>
 
                   <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Nombre y Apellido */}
                     <InputField label="Nombre *" value={checkout.contact.firstName} error={errors.firstName}
                       autoComplete="given-name" inputMode="text"
                       onChange={(v) => checkout.updateContact({ firstName: v })} />
-                    <InputField label="Apellido" value={checkout.contact.lastName} error={errors.lastName}
+                    <InputField label="Apellido *" value={checkout.contact.lastName} error={errors.lastName}
                       autoComplete="family-name" inputMode="text"
-                      onChange={(v) => checkout.updateContact({ lastName: v })}
-                      required={checkout.fulfillment === 'shipping'} />
+                      onChange={(v) => checkout.updateContact({ lastName: v })} />
+
+                    {/* Email y Teléfono */}
                     <InputField label="Email *" type="email" value={checkout.contact.email} error={errors.email}
                       autoComplete="email" inputMode="email"
                       onChange={(v) => checkout.updateContact({ email: v })} />
                     <InputField label="Teléfono *" type="tel" value={checkout.contact.phone} error={errors.phone}
                       autoComplete="tel" inputMode="tel"
                       onChange={(v) => checkout.updateContact({ phone: v })} />
+
+                    {/* DNI — requerido siempre */}
+                    <InputField label="DNI *" value={checkout.contact.document} error={errors.document}
+                      autoComplete="off" inputMode="numeric"
+                      onChange={(v) => checkout.updateContact({ document: v })} placeholder="Ej: 38123456" />
+
+                    {/* Campos de envío */}
                     {checkout.fulfillment === 'shipping' && (
                       <>
-                        <InputField label="Documento (DNI/CUIT) *" value={checkout.contact.document} error={errors.document}
-                          autoComplete="off" inputMode="numeric"
-                          onChange={(v) => checkout.updateContact({ document: v })} />
+                        <div className="sm:col-span-2">
+                          <InputField label="Dirección *" value={checkout.address.street} error={errors.street}
+                            autoComplete="street-address" inputMode="text"
+                            onChange={(v) => checkout.updateAddress({ street: v })} placeholder="Ej: Av. Libertador 1234, Piso 3 Dto B" />
+                        </div>
                         <InputField label="Código Postal *" value={checkout.address.postalCode} error={errors.postalCode}
                           autoComplete="postal-code" inputMode="numeric"
-                          onChange={(v) => checkout.updateAddress({ postalCode: v })} />
-                        <div className="sm:col-span-2">
-                          <InputField label="Dirección de entrega *" value={checkout.address.street} error={errors.street}
-                            autoComplete="street-address" inputMode="text"
-                            onChange={(v) => checkout.updateAddress({ street: v })} placeholder="Ej: Av. Libertador 1234" />
-                        </div>
-                        <InputField label="Número" value={checkout.address.number}
-                          autoComplete="off" inputMode="numeric"
-                          onChange={(v) => checkout.updateAddress({ number: v })} />
-                        <InputField label="Piso/Depto" value={checkout.address.unit}
-                          autoComplete="off" inputMode="text"
-                          onChange={(v) => checkout.updateAddress({ unit: v })} />
-                        <InputField label="Ciudad" value={checkout.address.city}
+                          onChange={(v) => checkout.updateAddress({ postalCode: v })} placeholder="Ej: 5400" />
+                        <InputField label="Localidad *" value={checkout.address.city} error={errors.city}
                           autoComplete="address-level2" inputMode="text"
-                          onChange={(v) => checkout.updateAddress({ city: v })} />
-                        <InputField label="Provincia" value={checkout.address.province}
-                          autoComplete="address-level1" inputMode="text"
-                          onChange={(v) => checkout.updateAddress({ province: v })} />
+                          onChange={(v) => checkout.updateAddress({ city: v })} placeholder="Ej: San Juan" />
                         <div className="sm:col-span-2">
-                          <InputField label="Observaciones (opcional)" value={checkout.address.notes}
-                            autoComplete="off" inputMode="text"
-                            onChange={(v) => checkout.updateAddress({ notes: v })} />
+                          <InputField label="Provincia *" value={checkout.address.province} error={errors.province}
+                            autoComplete="address-level1" inputMode="text"
+                            onChange={(v) => checkout.updateAddress({ province: v })} placeholder="Ej: San Juan" />
                         </div>
                       </>
                     )}
