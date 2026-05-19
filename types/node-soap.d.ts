@@ -1,4 +1,4 @@
-declare module 'node-soap' {
+declare module 'soap' {
   export function createClient(
     url: string,
     callback: (err: unknown, client: SoapClient) => void,

@@ -1,6 +1,6 @@
 /**
  * arcaService.ts
- * Facturación ARCA (ex-AFIP) vía node-forge (firma PKCS#7) + node-soap (WSAA y WSFEv1).
+ * Facturación ARCA (ex-AFIP) vía node-forge (firma PKCS#7) + soap (WSAA y WSFEv1).
  * Usa import() dinámico para compatibilidad ESM/CJS en Next.js.
  */
 
@@ -86,7 +86,7 @@ async function loadForge(): Promise<any> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mod = await import('node-soap') as any;
+  const mod = await import('soap') as any;
   // CJS modules cargados con import() exponen module.exports en .default
   const soap = mod.default ?? mod;
 
@@ -111,7 +111,7 @@ async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
   const modKeys  = Object.keys(mod).join(', ') || '(vacío)';
   const defKeys  = mod.default ? Object.keys(mod.default).join(', ') : '(sin .default)';
   throw new Error(
-    `node-soap: no se encontró createClient ni createClientAsync.\n` +
+    `soap: no se encontró createClient ni createClientAsync.\n` +
     `  mod keys: ${modKeys}\n` +
     `  mod.default keys: ${defKeys}`,
   );
@@ -120,7 +120,7 @@ async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
 // Llama a un método SOAP del cliente, usando la variante Async si existe.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function callSoap(client: any, method: string, args: unknown): Promise<any> {
-  // node-soap genera automáticamente versiones Async de cada método
+  // soap genera automáticamente versiones Async de cada método
   if (typeof client[`${method}Async`] === 'function') {
     const [result] = await client[`${method}Async`](args);
     return result;
