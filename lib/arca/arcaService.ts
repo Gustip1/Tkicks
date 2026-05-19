@@ -69,9 +69,10 @@ let _standard: AfipInstance = null;
 let _card:     AfipInstance = null;
 
 function loadAfip() {
-  // 'afip' es externo en webpack (next.config.mjs) — solo corre en Vercel (Linux).
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require('afip');
+  const mod = require('afip');
+  // El paquete puede exportar la clase en .default (ESM compilado) o directo
+  return mod.default ?? mod;
 }
 
 function getStandardClient(): AfipInstance {
