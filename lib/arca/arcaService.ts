@@ -1,11 +1,7 @@
 /**
  * arcaService.ts
- * Implementación directa de facturación ARCA (ex-AFIP) usando:
- *   - node-forge  → firma PKCS#7 del TRA para autenticación WSAA
- *   - node-soap   → llamadas SOAP a WSAA y WSFEv1
- *
- * Dos instancias independientes (standard y card) con sus propios
- * certificados y CUIT, manejadas como singletons en memoria.
+ * Facturación ARCA (ex-AFIP) vía node-forge (firma PKCS#7) + node-soap (WSAA y WSFEv1).
+ * Usa import() dinámico para compatibilidad ESM/CJS en Next.js.
  */
 
 import fs from 'fs';
@@ -40,7 +36,7 @@ export interface CAEResult {
   Resultado:  string;
 }
 
-// ─── Config de entorno ────────────────────────────────────────────────────────
+// ─── Config ───────────────────────────────────────────────────────────────────
 
 const PRODUCTION = process.env.ARCA_PRODUCTION === 'true';
 
@@ -52,11 +48,11 @@ const WSFEV1_URL = PRODUCTION
   ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL'
   : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL';
 
-// ─── Helpers de certificados ──────────────────────────────────────────────────
+// ─── Certificados ─────────────────────────────────────────────────────────────
 
 function writeCert(filePath: string, b64EnvVar: string): string {
   const b64 = process.env[b64EnvVar];
-  if (!b64) throw new Error(`Variable ${b64EnvVar} no configurada en Vercel.`);
+  if (!b64) throw new Error(`Variable de entorno ${b64EnvVar} no configurada.`);
   if (!fs.existsSync(filePath)) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
@@ -73,6 +69,75 @@ function getCertPaths(prefix: 'STANDARD' | 'CARD') {
   };
 }
 
+// ─── Loaders de módulos (import() = ESM + CJS compat) ────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadForge(): Promise<any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mod = await import('node-forge') as any;
+  const forge = mod.default ?? mod;
+  if (typeof forge.pki === 'undefined') {
+    throw new Error(`node-forge.pki no encontrado. Keys: ${Object.keys(mod).join(', ')}`);
+  }
+  return forge;
+}
+
+// Retorna una función que crea un cliente SOAP dado un WSDL URL.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mod = await import('node-soap') as any;
+  // CJS modules cargados con import() exponen module.exports en .default
+  const soap = mod.default ?? mod;
+
+  // Intentar createClientAsync (API nativa Promise)
+  if (typeof soap.createClientAsync === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (url: string): Promise<any> => soap.createClientAsync(url);
+  }
+
+  // Fallback: createClient con callback, envuelto en Promise
+  if (typeof soap.createClient === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (url: string): Promise<any> =>
+      new Promise((resolve, reject) =>
+        soap.createClient(url, (err: unknown, client: unknown) =>
+          err ? reject(err) : resolve(client),
+        ),
+      );
+  }
+
+  // Diagnóstico: decirle al usuario exactamente qué hay disponible
+  const modKeys  = Object.keys(mod).join(', ') || '(vacío)';
+  const defKeys  = mod.default ? Object.keys(mod.default).join(', ') : '(sin .default)';
+  throw new Error(
+    `node-soap: no se encontró createClient ni createClientAsync.\n` +
+    `  mod keys: ${modKeys}\n` +
+    `  mod.default keys: ${defKeys}`,
+  );
+}
+
+// Llama a un método SOAP del cliente, usando la variante Async si existe.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function callSoap(client: any, method: string, args: unknown): Promise<any> {
+  // node-soap genera automáticamente versiones Async de cada método
+  if (typeof client[`${method}Async`] === 'function') {
+    const [result] = await client[`${method}Async`](args);
+    return result;
+  }
+  if (typeof client[method] === 'function') {
+    return new Promise((resolve, reject) =>
+      client[method](args, (err: unknown, result: unknown) =>
+        err ? reject(err) : resolve(result),
+      ),
+    );
+  }
+  const available = Object.keys(client)
+    .filter(k => typeof client[k] === 'function')
+    .join(', ');
+  throw new Error(`SOAP: método '${method}' no disponible. Métodos: ${available}`);
+}
+
 // ─── WSAA — Autenticación ─────────────────────────────────────────────────────
 
 interface TicketCache { token: string; sign: string; expiry: number }
@@ -84,22 +149,17 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
     return { token: cached.token, sign: cached.sign };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const forgeMod = require('node-forge');
-  const forge = forgeMod.default ?? forgeMod;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soapMod = require('node-soap');
-  const soap = soapMod.default ?? soapMod;
+  const forge       = await loadForge();
+  const soapFactory = await getSoapFactory();
 
   const { cert: certPath, key: keyPath } = getCertPaths(prefix);
   const certPem = fs.readFileSync(certPath, 'utf8');
   const keyPem  = fs.readFileSync(keyPath,  'utf8');
 
-  // Crear TRA (Ticket de Requerimiento de Acceso)
-  const now     = new Date();
-  const from    = new Date(now.getTime() - 60_000);
-  const to      = new Date(now.getTime() + 600_000); // 10 min
-  const uid     = Math.floor(Date.now() / 1000);
+  const now  = new Date();
+  const from = new Date(now.getTime() - 60_000);
+  const to   = new Date(now.getTime() + 600_000);
+  const uid  = Math.floor(Date.now() / 1000);
 
   const tra = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
@@ -112,10 +172,10 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
 </loginTicketRequest>`;
 
   // Firmar TRA con PKCS#7
-  const cert    = forge.pki.certificateFromPem(certPem);
-  const key     = forge.pki.privateKeyFromPem(keyPem);
-  const p7      = forge.pkcs7.createSignedData();
-  p7.content    = forge.util.createBuffer(tra, 'utf8');
+  const cert = forge.pki.certificateFromPem(certPem);
+  const key  = forge.pki.privateKeyFromPem(keyPem);
+  const p7   = forge.pkcs7.createSignedData();
+  p7.content = forge.util.createBuffer(tra, 'utf8');
   p7.addCertificate(cert);
   p7.addSigner({
     key,
@@ -124,23 +184,21 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
     authenticatedAttributes: [],
   });
   p7.sign({ detached: false });
-  const cmsDer  = forge.asn1.toDer(p7.toAsn1()).getBytes();
-  const cmsB64  = forge.util.encode64(cmsDer);
+  const cmsDer = forge.asn1.toDer(p7.toAsn1()).getBytes();
+  const cmsB64 = forge.util.encode64(cmsDer);
 
   // Llamar WSAA
-  const wsaaClient = await new Promise<ReturnType<typeof soap.createClient>>((resolve, reject) => {
-    soap.createClient(WSAA_URL, (err: unknown, client: unknown) => err ? reject(err) : resolve(client as ReturnType<typeof soap.createClient>));
-  });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [result] = await (wsaaClient as any).loginCmsAsync({ in0: cmsB64 }) as any[];
-  const xml        = (result as { loginCmsReturn: string }).loginCmsReturn;
+  const wsaaClient = await soapFactory(WSAA_URL);
+  const result     = await callSoap(wsaaClient, 'loginCms', { in0: cmsB64 });
+  const xml        = String(result?.loginCmsReturn ?? result ?? '');
 
-  // Parsear respuesta XML
-  const tokenMatch = xml.match(/<token>([^<]+)<\/token>/);
-  const signMatch  = xml.match(/<sign>([^<]+)<\/sign>/);
+  const tokenMatch  = xml.match(/<token>([^<]+)<\/token>/);
+  const signMatch   = xml.match(/<sign>([^<]+)<\/sign>/);
   const expiryMatch = xml.match(/<expirationTime>([^<]+)<\/expirationTime>/);
 
-  if (!tokenMatch || !signMatch) throw new Error('WSAA: respuesta inválida');
+  if (!tokenMatch || !signMatch) {
+    throw new Error(`WSAA: respuesta inválida. Primeros 300 chars: ${xml.slice(0, 300)}`);
+  }
 
   const token  = tokenMatch[1];
   const sign   = signMatch[1];
@@ -152,29 +210,24 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
   return { token, sign };
 }
 
-// ─── WSFEv1 — Facturación ─────────────────────────────────────────────────────
+// ─── WSFEv1 — Último comprobante ──────────────────────────────────────────────
 
 async function getLastCbteNro(
   prefix: 'STANDARD' | 'CARD',
   ptoVta: number,
   cbteTipo: number,
 ): Promise<number> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soapMod = require('node-soap');
-  const soap = soapMod.default ?? soapMod;
+  const soapFactory = await getSoapFactory();
   const { token, sign } = await getTicket(prefix);
   const { cuit } = getCertPaths(prefix);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const client = await new Promise<any>((resolve, reject) => {
-    soap.createClient(WSFEV1_URL, (err: unknown, c: unknown) => err ? reject(err) : resolve(c));
-  });
-  const [res]  = await client.FECompUltimoAutorizadoAsync({
+  const client = await soapFactory(WSFEV1_URL);
+  const res    = await callSoap(client, 'FECompUltimoAutorizado', {
     Auth:     { Token: token, Sign: sign, Cuit: cuit },
     PtoVta:   ptoVta,
     CbteTipo: cbteTipo,
   });
-  return Number(res.FECompUltimoAutorizadoResult.CbteNro ?? 0);
+  return Number(res?.FECompUltimoAutorizadoResult?.CbteNro ?? 0);
 }
 
 // ─── API pública ──────────────────────────────────────────────────────────────
@@ -187,25 +240,19 @@ export async function requestCAE(
   paymentMethod: PaymentMethod,
   data: VoucherData,
 ): Promise<CAEResult> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soapMod = require('node-soap');
-  const soap = soapMod.default ?? soapMod;
-
-  const prefix  = getTitular(paymentMethod) === 'card' ? 'CARD' : 'STANDARD';
+  const soapFactory = await getSoapFactory();
+  const prefix      = getTitular(paymentMethod) === 'card' ? 'CARD' : 'STANDARD';
   const { token, sign } = await getTicket(prefix);
   const { cuit } = getCertPaths(prefix);
 
   const lastNro = await getLastCbteNro(prefix, data.ptoVta, data.cbteTipo);
   const nro     = lastNro + 1;
 
-  const today   = new Date();
-  const fecha   = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const today = new Date();
+  const fecha = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const client = await new Promise<any>((resolve, reject) => {
-    soap.createClient(WSFEV1_URL, (err: unknown, c: unknown) => err ? reject(err) : resolve(c));
-  });
-  const [res]  = await client.FECAESolicitarAsync({
+  const client = await soapFactory(WSFEV1_URL);
+  const res    = await callSoap(client, 'FECAESolicitar', {
     Auth: { Token: token, Sign: sign, Cuit: cuit },
     FeCAEReq: {
       FeCabReq: {
@@ -215,21 +262,21 @@ export async function requestCAE(
       },
       FeDetReq: {
         FECAEDetRequest: {
-          Concepto:  data.concepto,
-          DocTipo:   data.docTipo,
-          DocNro:    data.docNro,
-          CbteDesde: nro,
-          CbteHasta: nro,
-          CbteFch:   fecha,
-          ImpTotal:  data.impTotal,
+          Concepto:   data.concepto,
+          DocTipo:    data.docTipo,
+          DocNro:     data.docNro,
+          CbteDesde:  nro,
+          CbteHasta:  nro,
+          CbteFch:    fecha,
+          ImpTotal:   data.impTotal,
           ImpTotConc: 0,
-          ImpNeto:   data.impNeto,
-          ImpOpEx:   0,
-          ImpIVA:    data.impIVA,
-          ImpTrib:   0,
-          MonId:     'PES',
-          MonCotiz:  1,
-          Iva:       data.iva?.length
+          ImpNeto:    data.impNeto,
+          ImpOpEx:    0,
+          ImpIVA:     data.impIVA,
+          ImpTrib:    0,
+          MonId:      'PES',
+          MonCotiz:   1,
+          Iva: data.iva?.length
             ? { AlicIva: data.iva.map(i => ({ Id: i.Id, BaseImp: i.BaseImp, Importe: i.Importe })) }
             : undefined,
         },
@@ -237,9 +284,12 @@ export async function requestCAE(
     },
   });
 
-  const det = res.FECAESolicitarResult?.FeDetResp?.FECAEDetResponse;
+  const det = res?.FECAESolicitarResult?.FeDetResp?.FECAEDetResponse;
   if (!det || det.Resultado !== 'A') {
-    const obs = det?.Observaciones?.Obs?.map((o: { Msg: string }) => o.Msg).join(', ') ?? 'Rechazado por ARCA';
+    const obsRaw = det?.Observaciones?.Obs;
+    const obs = Array.isArray(obsRaw)
+      ? obsRaw.map((o: { Msg: string }) => o.Msg).join(', ')
+      : obsRaw?.Msg ?? 'Rechazado por ARCA';
     throw new Error(`ARCA rechazó el comprobante: ${obs}`);
   }
 
