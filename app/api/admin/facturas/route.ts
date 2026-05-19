@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as {
-      order_id: string;
+      order_id: string | null;
       payment_method: PaymentMethod;
       pto_vta: number;
       cbte_tipo: TipoComprobante;
@@ -53,19 +53,8 @@ export async function POST(req: NextRequest) {
       descripcion?: string;
     };
 
-    if (!body.order_id || !body.payment_method || !body.imp_total) {
+    if (!body.payment_method || !body.imp_total) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
-    }
-
-    // Verificar que no esté ya facturada
-    const { data: existing } = await sb()
-      .from('facturas')
-      .select('id')
-      .eq('order_id', body.order_id)
-      .single();
-
-    if (existing) {
-      return NextResponse.json({ error: 'Esta orden ya tiene una factura emitida.' }, { status: 409 });
     }
 
     const titular = getTitular(body.payment_method);
