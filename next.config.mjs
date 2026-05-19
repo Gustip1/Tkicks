@@ -2,11 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   // afip solo corre en Linux (Vercel). Excluido del bundle de webpack.
-  serverExternalPackages: ['afip'],
+  serverExternalPackages: ['node-soap', 'node-forge'],
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Webpack no intenta bundlear 'afip' — se carga en runtime en Vercel (Linux).
-      config.externals = [...(Array.isArray(config.externals) ? config.externals : []), 'afip'];
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        'node-soap',
+        'node-forge',
+      ];
     }
     return config;
   },

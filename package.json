@@ -38,7 +38,8 @@
     "tailwindcss": "^3.4.10",
     "zod": "^3.23.8",
     "zustand": "^4.5.4",
-    "afip": "^0.0.11"
+    "node-soap": "^1.0.0",
+    "node-forge": "^1.4.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0",

@@ -1,31 +1,32 @@
 /**
  * arcaService.ts
- * Servicio de facturación electrónica ARCA (ex-AFIP).
+ * Implementación directa de facturación ARCA (ex-AFIP) usando:
+ *   - node-forge  → firma PKCS#7 del TRA para autenticación WSAA
+ *   - node-soap   → llamadas SOAP a WSAA y WSFEv1
  *
- * Los certificados se leen desde variables de entorno en base64
- * (ARCA_STANDARD_CERT_B64, etc.) y se escriben en /tmp/ en runtime.
- * Esto es compatible con Vercel (no tiene filesystem persistente).
+ * Dos instancias independientes (standard y card) con sus propios
+ * certificados y CUIT, manejadas como singletons en memoria.
  */
 
 import fs from 'fs';
 import path from 'path';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+// ─── Tipos públicos ───────────────────────────────────────────────────────────
 
 export type PaymentMethod = 'cash' | 'crypto_transfer' | 'installments_3';
 export type TipoComprobante = 1 | 6 | 11;  // A | B | C
 export type TipoConcepto    = 1 | 2 | 3;   // Productos | Servicios | Mixto
 
 export interface VoucherData {
-  ptoVta:    number;
-  cbteTipo:  TipoComprobante;
-  concepto:  TipoConcepto;
-  docNro:    number;
-  docTipo:   80 | 96 | 99;
-  impTotal:  number;
-  impNeto:   number;
-  impIVA:    number;
-  iva?:      Array<{ Id: number; BaseImp: number; Importe: number }>;
+  ptoVta:     number;
+  cbteTipo:   TipoComprobante;
+  concepto:   TipoConcepto;
+  docNro:     number;
+  docTipo:    80 | 96 | 99;
+  impTotal:   number;
+  impNeto:    number;
+  impIVA:     number;
+  iva?:       Array<{ Id: number; BaseImp: number; Importe: number }>;
   descripcion?: string;
 }
 
@@ -35,16 +36,27 @@ export interface CAEResult {
   CbteDesde:  number;
   CbteHasta:  number;
   CbteTipo:   number;
-  FchProceso: string;
   PtoVta:     number;
   Resultado:  string;
 }
 
-// ─── Escritura de certificados en /tmp ───────────────────────────────────────
+// ─── Config de entorno ────────────────────────────────────────────────────────
 
-function writeCertIfNeeded(filePath: string, b64EnvVar: string): string {
+const PRODUCTION = process.env.ARCA_PRODUCTION === 'true';
+
+const WSAA_URL = PRODUCTION
+  ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL'
+  : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL';
+
+const WSFEV1_URL = PRODUCTION
+  ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL'
+  : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL';
+
+// ─── Helpers de certificados ──────────────────────────────────────────────────
+
+function writeCert(filePath: string, b64EnvVar: string): string {
   const b64 = process.env[b64EnvVar];
-  if (!b64) throw new Error(`Variable de entorno ${b64EnvVar} no configurada en Vercel.`);
+  if (!b64) throw new Error(`Variable ${b64EnvVar} no configurada en Vercel.`);
   if (!fs.existsSync(filePath)) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
@@ -52,113 +64,179 @@ function writeCertIfNeeded(filePath: string, b64EnvVar: string): string {
   return filePath;
 }
 
-function prepareCerts(prefix: 'STANDARD' | 'CARD') {
-  const certPath = `/tmp/arca_${prefix.toLowerCase()}.crt`;
-  const keyPath  = `/tmp/arca_${prefix.toLowerCase()}.key`;
-  writeCertIfNeeded(certPath, `ARCA_${prefix}_CERT_B64`);
-  writeCertIfNeeded(keyPath,  `ARCA_${prefix}_KEY_B64`);
-  return { certPath, keyPath };
+function getCertPaths(prefix: 'STANDARD' | 'CARD') {
+  const p = prefix.toLowerCase();
+  return {
+    cert: writeCert(`/tmp/arca_${p}.crt`, `ARCA_${prefix}_CERT_B64`),
+    key:  writeCert(`/tmp/arca_${p}.key`, `ARCA_${prefix}_KEY_B64`),
+    cuit: process.env[`ARCA_${prefix}_CUIT`] ?? '',
+  };
 }
 
-// ─── Instancias lazy de afip.js ───────────────────────────────────────────────
+// ─── WSAA — Autenticación ─────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AfipInstance = any;
+interface TicketCache { token: string; sign: string; expiry: number }
+const ticketCache: Record<string, TicketCache> = {};
 
-let _standard: AfipInstance = null;
-let _card:     AfipInstance = null;
+async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; sign: string }> {
+  const cached = ticketCache[prefix];
+  if (cached && Date.now() < cached.expiry) {
+    return { token: cached.token, sign: cached.sign };
+  }
 
-function loadAfip() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('afip');
-  // El paquete puede exportar la clase en .default (ESM compilado) o directo
-  return mod.default ?? mod;
+  const forge = require('node-forge');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const soap  = require('node-soap');
+
+  const { cert: certPath, key: keyPath } = getCertPaths(prefix);
+  const certPem = fs.readFileSync(certPath, 'utf8');
+  const keyPem  = fs.readFileSync(keyPath,  'utf8');
+
+  // Crear TRA (Ticket de Requerimiento de Acceso)
+  const now     = new Date();
+  const from    = new Date(now.getTime() - 60_000);
+  const to      = new Date(now.getTime() + 600_000); // 10 min
+  const uid     = Math.floor(Date.now() / 1000);
+
+  const tra = `<?xml version="1.0" encoding="UTF-8"?>
+<loginTicketRequest version="1.0">
+  <header>
+    <uniqueId>${uid}</uniqueId>
+    <generationTime>${from.toISOString()}</generationTime>
+    <expirationTime>${to.toISOString()}</expirationTime>
+  </header>
+  <service>wsfe</service>
+</loginTicketRequest>`;
+
+  // Firmar TRA con PKCS#7
+  const cert    = forge.pki.certificateFromPem(certPem);
+  const key     = forge.pki.privateKeyFromPem(keyPem);
+  const p7      = forge.pkcs7.createSignedData();
+  p7.content    = forge.util.createBuffer(tra, 'utf8');
+  p7.addCertificate(cert);
+  p7.addSigner({
+    key,
+    certificate: cert,
+    digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [],
+  });
+  p7.sign({ detached: false });
+  const cmsDer  = forge.asn1.toDer(p7.toAsn1()).getBytes();
+  const cmsB64  = forge.util.encode64(cmsDer);
+
+  // Llamar WSAA
+  const wsaaClient = await soap.createClientAsync(WSAA_URL);
+  const [result]   = await wsaaClient.loginCmsAsync({ in0: cmsB64 });
+  const xml        = result.loginCmsReturn;
+
+  // Parsear respuesta XML
+  const tokenMatch = xml.match(/<token>([^<]+)<\/token>/);
+  const signMatch  = xml.match(/<sign>([^<]+)<\/sign>/);
+  const expiryMatch = xml.match(/<expirationTime>([^<]+)<\/expirationTime>/);
+
+  if (!tokenMatch || !signMatch) throw new Error('WSAA: respuesta inválida');
+
+  const token  = tokenMatch[1];
+  const sign   = signMatch[1];
+  const expiry = expiryMatch
+    ? new Date(expiryMatch[1]).getTime() - 60_000
+    : Date.now() + 10 * 60 * 1000;
+
+  ticketCache[prefix] = { token, sign, expiry };
+  return { token, sign };
 }
 
-function getStandardClient(): AfipInstance {
-  if (!_standard) {
-    const { certPath, keyPath } = prepareCerts('STANDARD');
-    const Afip = loadAfip();
-    _standard = new Afip({
-      CUIT:       Number(process.env.ARCA_STANDARD_CUIT),
-      cert:       certPath,
-      key:        keyPath,
-      production: process.env.ARCA_PRODUCTION === 'true',
-      res_folder: '/tmp/arca_cache_standard',
-    });
-  }
-  return _standard;
-}
+// ─── WSFEv1 — Facturación ─────────────────────────────────────────────────────
 
-function getCardClient(): AfipInstance {
-  if (!_card) {
-    const { certPath, keyPath } = prepareCerts('CARD');
-    const Afip = loadAfip();
-    _card = new Afip({
-      CUIT:       Number(process.env.ARCA_CARD_CUIT),
-      cert:       certPath,
-      key:        keyPath,
-      production: process.env.ARCA_PRODUCTION === 'true',
-      res_folder: '/tmp/arca_cache_card',
-    });
-  }
-  return _card;
-}
+async function getLastCbteNro(
+  prefix: 'STANDARD' | 'CARD',
+  ptoVta: number,
+  cbteTipo: number,
+): Promise<number> {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const soap = require('node-soap');
+  const { token, sign } = await getTicket(prefix);
+  const { cuit } = getCertPaths(prefix);
 
-// ─── Selección de cliente ─────────────────────────────────────────────────────
-
-export function getClient(paymentMethod: PaymentMethod): AfipInstance {
-  return paymentMethod === 'installments_3' ? getCardClient() : getStandardClient();
-}
-
-export function getTitular(paymentMethod: PaymentMethod): 'standard' | 'card' {
-  return paymentMethod === 'installments_3' ? 'card' : 'standard';
+  const client = await soap.createClientAsync(WSFEV1_URL);
+  const [res]  = await client.FECompUltimoAutorizadoAsync({
+    Auth:     { Token: token, Sign: sign, Cuit: cuit },
+    PtoVta:   ptoVta,
+    CbteTipo: cbteTipo,
+  });
+  return Number(res.FECompUltimoAutorizadoResult.CbteNro ?? 0);
 }
 
 // ─── API pública ──────────────────────────────────────────────────────────────
 
-export async function checkServerStatus(paymentMethod: PaymentMethod) {
-  return getClient(paymentMethod).ElectronicBilling.getServerStatus();
-}
-
-export async function getLastVoucherNumber(
-  paymentMethod: PaymentMethod,
-  ptoVta: number,
-  cbteTipo: TipoComprobante,
-): Promise<number> {
-  return getClient(paymentMethod).ElectronicBilling.getLastVoucher(ptoVta, cbteTipo);
+export function getTitular(paymentMethod: PaymentMethod): 'standard' | 'card' {
+  return paymentMethod === 'installments_3' ? 'card' : 'standard';
 }
 
 export async function requestCAE(
   paymentMethod: PaymentMethod,
   data: VoucherData,
 ): Promise<CAEResult> {
-  const today = new Date();
-  const fechaStr =
-    `${today.getFullYear()}` +
-    `${String(today.getMonth() + 1).padStart(2, '0')}` +
-    `${String(today.getDate()).padStart(2, '0')}`;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const soap = require('node-soap');
 
-  const payload = {
-    CantReg:    1,
-    PtoVta:     data.ptoVta,
-    CbteTipo:   data.cbteTipo,
-    Concepto:   data.concepto,
-    DocTipo:    data.docTipo,
-    DocNro:     data.docNro,
-    CbteDesde:  null,
-    CbteHasta:  null,
-    CbteFch:    fechaStr,
-    ImpTotal:   data.impTotal,
-    ImpTotConc: 0,
-    ImpNeto:    data.impNeto,
-    ImpOpEx:    0,
-    ImpIVA:     data.impIVA,
-    ImpTrib:    0,
-    MonId:      'PES',
-    MonCotiz:   1,
-    Iva:        data.iva ?? [],
+  const prefix  = getTitular(paymentMethod) === 'card' ? 'CARD' : 'STANDARD';
+  const { token, sign } = await getTicket(prefix);
+  const { cuit } = getCertPaths(prefix);
+
+  const lastNro = await getLastCbteNro(prefix, data.ptoVta, data.cbteTipo);
+  const nro     = lastNro + 1;
+
+  const today   = new Date();
+  const fecha   = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+
+  const client = await soap.createClientAsync(WSFEV1_URL);
+  const [res]  = await client.FECAESolicitarAsync({
+    Auth: { Token: token, Sign: sign, Cuit: cuit },
+    FeCAEReq: {
+      FeCabReq: {
+        CantReg:  1,
+        PtoVta:   data.ptoVta,
+        CbteTipo: data.cbteTipo,
+      },
+      FeDetReq: {
+        FECAEDetRequest: {
+          Concepto:  data.concepto,
+          DocTipo:   data.docTipo,
+          DocNro:    data.docNro,
+          CbteDesde: nro,
+          CbteHasta: nro,
+          CbteFch:   fecha,
+          ImpTotal:  data.impTotal,
+          ImpTotConc: 0,
+          ImpNeto:   data.impNeto,
+          ImpOpEx:   0,
+          ImpIVA:    data.impIVA,
+          ImpTrib:   0,
+          MonId:     'PES',
+          MonCotiz:  1,
+          Iva:       data.iva?.length
+            ? { AlicIva: data.iva.map(i => ({ Id: i.Id, BaseImp: i.BaseImp, Importe: i.Importe })) }
+            : undefined,
+        },
+      },
+    },
+  });
+
+  const det = res.FECAESolicitarResult?.FeDetResp?.FECAEDetResponse;
+  if (!det || det.Resultado !== 'A') {
+    const obs = det?.Observaciones?.Obs?.map((o: { Msg: string }) => o.Msg).join(', ') ?? 'Rechazado por ARCA';
+    throw new Error(`ARCA rechazó el comprobante: ${obs}`);
+  }
+
+  return {
+    CAE:       det.CAE,
+    CAEFchVto: det.CAEFchVto,
+    CbteDesde: det.CbteDesde,
+    CbteHasta: det.CbteHasta,
+    CbteTipo:  data.cbteTipo,
+    PtoVta:    data.ptoVta,
+    Resultado: det.Resultado,
   };
-
-  return getClient(paymentMethod).ElectronicBilling.createNextVoucher(payload);
 }
