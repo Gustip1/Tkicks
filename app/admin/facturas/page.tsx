@@ -81,7 +81,7 @@ function EmitirFacturaModal({
   const handleEmitir = async () => {
     setError(null);
     setSubmitting(true);
-    const ptoVta = Number(process.env.NEXT_PUBLIC_ARCA_PTO_VTA ?? 1);
+    const ptoVta = 1; // Cambiá este número si tu punto de venta en ARCA no es 1
     const res = await fetch('/api/admin/facturas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

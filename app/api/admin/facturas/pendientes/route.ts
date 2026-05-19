@@ -10,32 +10,30 @@ const sb = () =>
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-// GET /api/admin/facturas/pendientes
-// Devuelve órdenes pagadas que todavía no tienen factura emitida.
 export async function GET() {
-  // IDs de órdenes ya facturadas
+  // IDs de órdenes que ya tienen factura
   const { data: yaFacturadas } = await sb()
     .from('facturas')
     .select('order_id');
 
-  const idsFacturados = (yaFacturadas ?? [])
+  const idsFacturados: string[] = (yaFacturadas ?? [])
     .map((f: { order_id: string }) => f.order_id)
     .filter(Boolean);
 
-  // Órdenes no canceladas, ordenadas por más recientes
-  let query = sb()
+  // Traer todas las órdenes no canceladas
+  const { data, error } = await sb()
     .from('orders')
     .select('id, order_number, first_name, last_name, email, phone, document, total, subtotal, payment_method, fulfillment, status, created_at')
     .neq('status', 'cancelled')
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(200);
 
-  if (idsFacturados.length > 0) {
-    query = query.not('id', 'in', `(${idsFacturados.join(',')})`);
-  }
-
-  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ orders: data });
+  // Filtrar en JS para evitar el bug del .not('id','in',...) con UUIDs en Supabase
+  const pendientes = idsFacturados.length === 0
+    ? (data ?? [])
+    : (data ?? []).filter((o: { id: string }) => !idsFacturados.includes(o.id));
+
+  return NextResponse.json({ orders: pendientes });
 }
