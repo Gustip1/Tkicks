@@ -69,7 +69,7 @@ let _standard: AfipInstance = null;
 let _card:     AfipInstance = null;
 
 function loadAfip() {
-  // require en runtime — instalar con: npm install afip
+  // 'afip' es externo en webpack (next.config.mjs) — solo corre en Vercel (Linux).
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('afip');
 }

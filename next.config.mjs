@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // afip.js usa módulos SOAP/XML nativos de Node.js — no se pueden bundlear con webpack.
+  // afip solo corre en Linux (Vercel). Excluido del bundle de webpack.
   serverExternalPackages: ['afip'],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Webpack no intenta bundlear 'afip' — se carga en runtime en Vercel (Linux).
+      config.externals = [...(Array.isArray(config.externals) ? config.externals : []), 'afip'];
+    }
+    return config;
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '100mb'
