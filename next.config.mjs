@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   // afip.js usa módulos SOAP/XML nativos de Node.js — no se pueden bundlear con webpack.
-  serverExternalPackages: ['@afipsdk/afip.js'],
+  serverExternalPackages: ['afip'],
   experimental: {
     serverActions: {
       bodySizeLimit: '100mb'

@@ -70,14 +70,8 @@ let _card:     AfipInstance = null;
 
 function loadAfip() {
   // require en runtime — instalar con: npm install afip
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('afip');
-  } catch {
-    throw new Error(
-      'Paquete AFIP no instalado. Ejecutá: npm install afip'
-    );
-  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('afip');
 }
 
 function getStandardClient(): AfipInstance {
