@@ -85,9 +85,11 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
   }
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const forge = require('node-forge');
+  const forgeMod = require('node-forge');
+  const forge = forgeMod.default ?? forgeMod;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soap  = require('node-soap');
+  const soapMod = require('node-soap');
+  const soap = soapMod.default ?? soapMod;
 
   const { cert: certPath, key: keyPath } = getCertPaths(prefix);
   const certPem = fs.readFileSync(certPath, 'utf8');
@@ -126,9 +128,12 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
   const cmsB64  = forge.util.encode64(cmsDer);
 
   // Llamar WSAA
-  const wsaaClient = await soap.createClientAsync(WSAA_URL);
-  const [result]   = await wsaaClient.loginCmsAsync({ in0: cmsB64 });
-  const xml        = result.loginCmsReturn;
+  const wsaaClient = await new Promise<ReturnType<typeof soap.createClient>>((resolve, reject) => {
+    soap.createClient(WSAA_URL, (err: unknown, client: unknown) => err ? reject(err) : resolve(client as ReturnType<typeof soap.createClient>));
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [result] = await (wsaaClient as any).loginCmsAsync({ in0: cmsB64 }) as any[];
+  const xml        = (result as { loginCmsReturn: string }).loginCmsReturn;
 
   // Parsear respuesta XML
   const tokenMatch = xml.match(/<token>([^<]+)<\/token>/);
@@ -155,11 +160,15 @@ async function getLastCbteNro(
   cbteTipo: number,
 ): Promise<number> {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soap = require('node-soap');
+  const soapMod = require('node-soap');
+  const soap = soapMod.default ?? soapMod;
   const { token, sign } = await getTicket(prefix);
   const { cuit } = getCertPaths(prefix);
 
-  const client = await soap.createClientAsync(WSFEV1_URL);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = await new Promise<any>((resolve, reject) => {
+    soap.createClient(WSFEV1_URL, (err: unknown, c: unknown) => err ? reject(err) : resolve(c));
+  });
   const [res]  = await client.FECompUltimoAutorizadoAsync({
     Auth:     { Token: token, Sign: sign, Cuit: cuit },
     PtoVta:   ptoVta,
@@ -179,7 +188,8 @@ export async function requestCAE(
   data: VoucherData,
 ): Promise<CAEResult> {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const soap = require('node-soap');
+  const soapMod = require('node-soap');
+  const soap = soapMod.default ?? soapMod;
 
   const prefix  = getTitular(paymentMethod) === 'card' ? 'CARD' : 'STANDARD';
   const { token, sign } = await getTicket(prefix);
@@ -191,7 +201,10 @@ export async function requestCAE(
   const today   = new Date();
   const fecha   = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
-  const client = await soap.createClientAsync(WSFEV1_URL);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = await new Promise<any>((resolve, reject) => {
+    soap.createClient(WSFEV1_URL, (err: unknown, c: unknown) => err ? reject(err) : resolve(c));
+  });
   const [res]  = await client.FECAESolicitarAsync({
     Auth: { Token: token, Sign: sign, Cuit: cuit },
     FeCAEReq: {
