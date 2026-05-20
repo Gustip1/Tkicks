@@ -40,18 +40,18 @@ export function CategoryShowcase() {
   }, []);
 
   return (
-    <section className="bg-[#F5F4F2] py-12 md:py-20">
+    <section className="bg-[#0A0A0A] py-12 md:py-20">
       <div className="max-w-[1400px] mx-auto px-4">
 
         {/* Section header */}
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Colecciones</p>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
+            <p className="text-xs text-white/40 uppercase tracking-[0.2em] font-bold mb-2">Colecciones</p>
+            <h2 className="text-3xl md:text-5xl font-black text-white leading-none tracking-tight">
               Elegí tu estilo
             </h2>
           </div>
-          <Link href="/productos" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors">
+          <Link href="/productos" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-white/50 hover:text-white transition-colors">
             Ver todo <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -138,17 +138,17 @@ export function CategoryShowcase() {
                 <Link
                   key={sub.label}
                   href={sub.href}
-                  className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-200 flex items-center justify-between px-4 py-4 md:py-5"
+                  className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-200 flex items-center justify-between px-4 py-4 md:py-5"
                 >
                   {loaded && images.streetwear[i % images.streetwear.length] && (
                     <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity">
                       <Image src={images.streetwear[i % images.streetwear.length]} alt="" fill className="object-cover" />
                     </div>
                   )}
-                  <span className="relative text-sm md:text-base font-black text-gray-900 uppercase tracking-tight">
+                  <span className="relative text-sm md:text-base font-black text-white uppercase tracking-tight">
                     {sub.label}
                   </span>
-                  <ArrowRight className="relative w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="relative w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
                 </Link>
               ))}
             </div>
@@ -158,7 +158,7 @@ export function CategoryShowcase() {
 
         {/* CTA mobile */}
         <div className="mt-6 text-center md:hidden">
-          <Link href="/productos" className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-black underline underline-offset-2 transition-colors">
+          <Link href="/productos" className="inline-flex items-center gap-2 text-sm font-bold text-white/60 hover:text-white underline underline-offset-2 transition-colors">
             Ver todos los productos <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
