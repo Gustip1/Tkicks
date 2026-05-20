@@ -307,6 +307,7 @@ export async function requestCAE(
     },
   });
 
+  console.error('[ARCA] FECAESolicitar respuesta completa:', JSON.stringify(res, null, 2));
   const result  = res?.FECAESolicitarResult;
   const det     = result?.FeDetResp?.FECAEDetResponse;
 
