@@ -41,53 +41,43 @@ export function NewArrivals() {
   }
 
   return (
-    <section className="bg-black" aria-labelledby="new-arrivals-title">
-      <div className="max-w-[1600px] mx-auto px-4 space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 id="new-arrivals-title" className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-                Recién llegados
-              </h2>
-              <p className="text-sm text-gray-400 font-bold">Los últimos drops que entraron a la tienda</p>
-            </div>
+    <section className="bg-white py-12 md:py-20" aria-labelledby="new-arrivals-title">
+      <div className="max-w-[1400px] mx-auto px-4">
+
+        {/* Header */}
+        <div className="flex items-end justify-between mb-8 md:mb-12">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Últimos ingresos</p>
+            <h2 id="new-arrivals-title" className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
+              Recién llegados
+            </h2>
           </div>
           <Link
             href="/nuevos-ingresos"
-            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-black hover:bg-gray-100 transition-colors uppercase tracking-tight"
+            className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
           >
-            Ver todos
-            <ArrowRight className="w-4 h-4" />
+            Ver todos <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
+        {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-            {[...Array(8)].map((_, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-zinc-800 bg-zinc-900 animate-pulse h-[220px] md:h-[260px]"
-              />
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="rounded-2xl bg-gray-100 animate-pulse aspect-[3/4]" />
             ))}
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {products.slice(0, 8).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+              {products.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
             </div>
-
-            <div className="flex justify-center pt-2">
+            <div className="flex justify-center mt-8 md:mt-10">
               <Link
                 href="/nuevos-ingresos"
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-white text-black text-sm font-black hover:bg-gray-100 transition-colors uppercase tracking-tight w-full sm:w-auto"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border-2 border-black text-black text-sm font-black uppercase tracking-tight hover:bg-black hover:text-white transition-all"
               >
-                Ver todos
-                <ArrowRight className="w-4 h-4" />
+                Ver todos los ingresos <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </>

@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { Heart, ShoppingBag } from 'lucide-react';
 import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
 
 interface ProductCardProps {
@@ -14,15 +13,15 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
-  const [index, setIndex] = useState(0);
-  const images = product.images || [];
+  const [index, setIndex]       = useState(0);
   const [hovering, setHovering] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const { rate: dolarOficial } = useDolarRate();
-  // Compute total stock from joined variants
+  const [loaded, setLoaded]     = useState(false);
+  const images                  = product.images || [];
+  const { rate: dolarOficial }  = useDolarRate();
+
   const totalStock = useMemo(() => {
-    if (!product.product_variants || product.product_variants.length === 0) return null; // unknown
-    return product.product_variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
+    if (!product.product_variants?.length) return null;
+    return product.product_variants.reduce((s, v) => s + (v.stock ?? 0), 0);
   }, [product.product_variants]);
 
   const isSoldOut = totalStock !== null && totalStock <= 0;
@@ -37,193 +36,123 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
   useEffect(() => {
     if (!hovering || images.length <= 1) return;
-    const timer = window.setInterval(() => setIndex((i) => (i + 1) % images.length), 800);
-    return () => window.clearInterval(timer);
+    const t = window.setInterval(() => setIndex(i => (i + 1) % images.length), 800);
+    return () => window.clearInterval(t);
   }, [hovering, images.length]);
 
-  const priceInArs = Number(product.price) * dolarOficial;
+  const priceInArs  = Number(product.price) * dolarOficial;
+  const cardMult    = getCardPriceMultiplier();
+  const cardArs     = priceInArs * cardMult;
+  const promoOn     = isPromoActive();
+
+  const categoryLabel =
+    product.category === 'streetwear' && product.subcategory
+      ? `Streetwear · ${product.subcategory}`
+      : product.category === 'sneakers'
+      ? 'Sneakers'
+      : product.category;
 
   return (
     <Link
       href={`/producto/${product.slug}`}
-      className="group block rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 hover:border-zinc-700 hover:shadow-2xl hover:shadow-white/5 transition-all duration-300 animate-fadeIn"
+      className="group block rounded-2xl bg-white overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-2xl hover:shadow-black/10 transition-all duration-300"
       onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => {
-        setHovering(false);
-        setIndex(0);
-      }}
+      onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
-      {/* Image container */}
-      <div className={cn(
-        "relative w-full overflow-hidden bg-surface",
-        "aspect-[4/5]"
-      )}>
-        {/* Skeleton loader */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 skeleton" />
-        )}
-        
+      {/* ── Imagen ── */}
+      <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-50">
+        {!loaded && <div className="absolute inset-0 bg-gray-100 animate-pulse" />}
+
         {images[index]?.url && (
           <Image
             src={images[index].url}
             alt={images[index].alt || product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={75}
+            quality={80}
             className={cn(
-              "object-cover transition-all duration-700",
-              imageLoaded ? "opacity-100" : "opacity-0",
-              hovering && "scale-110"
+              'object-cover transition-all duration-500',
+              loaded ? 'opacity-100' : 'opacity-0',
+              hovering && 'scale-105',
             )}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={() => setLoaded(true)}
           />
         )}
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {isSoldOut && (
-            <span className="px-2.5 py-1 rounded-full bg-black/80 text-white text-xs font-black shadow-md border border-zinc-600 backdrop-blur-sm uppercase tracking-wide">
-              Sin Stock
-            </span>
-          )}
-          {product.on_sale && !isSoldOut && (
-            <span className="px-2.5 py-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-md">
-              🔥 SALE
-            </span>
-          )}
-          {!isSoldOut && (
-            <span className="px-2.5 py-1 rounded-full bg-primary text-white text-xs font-semibold shadow-md">
-              Original
-            </span>
-          )}
-        </div>
-        
-        {/* Quick actions - desktop only (hover-only) */}
-        <div className={cn(
-          "hidden md:flex absolute top-3 right-3 flex-col gap-2 transition-all duration-300",
-          hovering ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
-        )}>
-          <button
-            className="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all"
-            aria-label="Agregar a favoritos"
-            onClick={(e) => {
-              e.preventDefault();
-              // TODO: Add to wishlist
-            }}
-          >
-            <Heart className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
 
-        {/* Add to cart button - desktop only (hover-only) */}
-        <div className={cn(
-          "hidden md:block absolute bottom-0 left-0 right-0 p-3 transition-all duration-300",
-          hovering && !isSoldOut ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        )}>
-          <button
-            className={cn(
-              "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-lg",
-              isSoldOut
-                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                : "bg-gray-900 text-white hover:bg-gray-800"
-            )}
-            disabled={isSoldOut}
-            onClick={(e) => {
-              e.preventDefault();
-              if (!isSoldOut) window.location.href = `/producto/${product.slug}`;
-            }}
-          >
-            <ShoppingBag className="w-4 h-4" />
-            {isSoldOut ? 'Sin stock' : 'Ver producto'}
-          </button>
-        </div>
-        
-        {/* Sold out overlay */}
+        {/* Sold-out overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-            <span className="bg-black/80 text-white text-sm font-black px-4 py-2 rounded-lg border border-zinc-600 uppercase tracking-wider backdrop-blur-sm">
-              Sold Out
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+            <span className="bg-gray-900 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider">
+              Agotado
             </span>
           </div>
         )}
-        
-        {/* Image indicators */}
+
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {product.on_sale && !isSoldOut && (
+            <span className="px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase tracking-wide rounded-full shadow-sm">
+              SALE
+            </span>
+          )}
+          {product.is_new && !isSoldOut && (
+            <span className="px-2.5 py-0.5 bg-black text-white text-[10px] font-black uppercase tracking-wide rounded-full shadow-sm">
+              Nuevo
+            </span>
+          )}
+        </div>
+
+        {/* Indicadores de imagen */}
         {images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {images.map((_, idx) => (
-              <span
-                key={idx}
-                className={cn(
-                  "w-1.5 h-1.5 rounded-full transition-all",
-                  index === idx ? "bg-white w-4" : "bg-white/50"
-                )}
-              />
+              <span key={idx} className={cn('h-1 rounded-full transition-all bg-gray-400', index === idx ? 'w-4 bg-gray-700' : 'w-1')} />
             ))}
           </div>
         )}
       </div>
-      
-      {/* Product info */}
-      <div className={cn("p-4", size === 'large' && "p-5")}>
-        {/* Category */}
-        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">
-          {product.category === 'streetwear' && product.subcategory
-            ? `Streetwear · ${product.subcategory === 'remeras' ? 'Remeras' : product.subcategory === 'hoodies' ? 'Hoodies' : product.subcategory === 'pantalones' ? 'Pantalones' : product.subcategory === 'accesorios' ? 'Accesorios' : product.subcategory}`
-            : product.category}
+
+      {/* ── Info ── */}
+      <div className="p-3 md:p-4">
+        {/* Categoría */}
+        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1 capitalize">
+          {categoryLabel}
         </p>
-        
-        {/* Title */}
+
+        {/* Título */}
         <h3 className={cn(
-          "font-bold text-white mb-2 line-clamp-2 group-hover:text-gray-200 transition-colors",
-          size === 'large' ? "text-base min-h-[3rem]" : "text-sm min-h-[2.5rem]"
+          'font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-black transition-colors',
+          size === 'large' ? 'text-base' : 'text-sm',
         )}>
           {product.title}
         </h3>
 
-        {/* Talles disponibles */}
+        {/* Tallas */}
         {availableSizes.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {availableSizes.map((s) => (
-              <span key={s} className="px-2 py-0.5 rounded-md bg-zinc-800 text-[10px] font-bold text-gray-300 uppercase">
+          <div className="flex flex-wrap gap-1 mb-3">
+            {availableSizes.slice(0, 5).map(s => (
+              <span key={s} className="px-1.5 py-0.5 text-[9px] font-bold text-gray-500 border border-gray-200 rounded">
                 {s}
               </span>
             ))}
+            {availableSizes.length > 5 && (
+              <span className="text-[9px] text-gray-400 font-bold self-center">+{availableSizes.length - 5}</span>
+            )}
           </div>
         )}
 
-        {/* Price */}
-        <div className="space-y-1">
-          {/* Precio Base (Transferencia/Efectivo) */}
-          <p className={cn(
-            "font-black text-white",
-            size === 'large' ? "text-xl" : "text-lg"
-          )}>
-            ${Number(product.price).toFixed(2)} USD
-          </p>
-          <p className="text-sm text-gray-400 font-semibold">
+        {/* Precios */}
+        <div className="space-y-0.5">
+          <p className={cn('font-black text-gray-900', size === 'large' ? 'text-xl' : 'text-lg')}>
             {formatCurrency(priceInArs)}
           </p>
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Transferencia / Efectivo</p>
-
-          {/* Precio Tarjeta — 3 cuotas (recargo según lib/promo) */}
-          {!isSoldOut && (() => {
-            const cardPrice = Number(product.price) * getCardPriceMultiplier();
-            const cardPriceArs = cardPrice * dolarOficial;
-            const installment = cardPriceArs / 3;
-            const promoOn = isPromoActive();
-            return (
-              <div className="pt-1 border-t border-zinc-800 mt-1">
-                <p className={cn('text-xs font-bold', promoOn ? 'text-orange-400' : 'text-purple-400')}>
-                  💳 3 cuotas de {formatCurrency(installment)}
-                  {promoOn && <span className="ml-1 text-[9px] uppercase">· sin recargo</span>}
-                </p>
-                <p className="text-[10px] text-gray-500 font-semibold">
-                  Total tarjeta: {formatCurrency(cardPriceArs)}
-                </p>
-              </div>
-            );
-          })()}
-
+          <p className="text-xs text-gray-400">${Number(product.price).toFixed(0)} USD · Transf./Efectivo</p>
+          {!isSoldOut && (
+            <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-500' : 'text-violet-500')}>
+              3 cuotas de {formatCurrency(cardArs / 3)}
+              {promoOn && <span className="ml-1 text-[10px] opacity-80">sin recargo</span>}
+            </p>
+          )}
         </div>
       </div>
     </Link>

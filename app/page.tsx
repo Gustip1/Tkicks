@@ -7,31 +7,26 @@ import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export default function HomePage() {
   return (
-    <div className="bg-black min-h-screen">
-      {/* Hero — animated gradient, product marquee, strong CTA */}
+    <div className="bg-white">
+      {/* Hero — fondo negro, split layout */}
       <HeroSection />
 
-      {/* Anchor for scroll-down */}
-      <div id="content-start" />
-
-      {/* Social proof strip — trust signals */}
+      {/* Trust strip */}
       <SocialProofStrip />
 
-      {/* Sorteo clue — posición 0 */}
-      <div className="flex justify-center py-1">
+      {/* Clue sorteo */}
+      <div className="flex justify-center py-1 bg-white">
         <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
       </div>
 
-      {/* Category showcase — Sneakers / Streetwear cards */}
+      {/* Categorías editoriales */}
       <CategoryShowcase />
 
-      {/* New Arrivals — product grid */}
-      <div className="py-8 md:py-12">
-        <NewArrivals />
-      </div>
+      {/* Nuevos ingresos — fondo blanco */}
+      <NewArrivals />
 
-      {/* Featured Carousels — sales, featured sneakers/streetwear */}
-      <div className="pb-12 md:pb-20">
+      {/* Carruseles destacados */}
+      <div className="bg-[#0A0A0A] py-12 md:py-20">
         <FeaturedCarousels />
       </div>
     </div>
