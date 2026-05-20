@@ -55,13 +55,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   return (
     <Link
       href={`/producto/${product.slug}`}
-      className="group block rounded-2xl bg-white overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-2xl hover:shadow-black/10 transition-all duration-300"
+      className="group block rounded-2xl bg-zinc-900 overflow-hidden border border-white/8 hover:border-white/20 hover:shadow-2xl hover:shadow-black/40 transition-all duration-300"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
       {/* ── Imagen ── */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-50">
-        {!loaded && <div className="absolute inset-0 bg-gray-100 animate-pulse" />}
+      <div className="relative w-full aspect-[3/4] overflow-hidden bg-zinc-800">
+        {!loaded && <div className="absolute inset-0 bg-zinc-800 animate-pulse" />}
 
         {images[index]?.url && (
           <Image
@@ -81,8 +81,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Sold-out overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-            <span className="bg-gray-900 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider">
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <span className="bg-white text-black text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider">
               Agotado
             </span>
           </div>
@@ -106,7 +106,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {images.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {images.map((_, idx) => (
-              <span key={idx} className={cn('h-1 rounded-full transition-all bg-gray-400', index === idx ? 'w-4 bg-gray-700' : 'w-1')} />
+              <span key={idx} className={cn('h-1 rounded-full transition-all bg-white/40', index === idx ? 'w-4 bg-white' : 'w-1')} />
             ))}
           </div>
         )}
@@ -115,13 +115,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       {/* ── Info ── */}
       <div className="p-3 md:p-4">
         {/* Categoría */}
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1 capitalize">
+        <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-1 capitalize">
           {categoryLabel}
         </p>
 
         {/* Título */}
         <h3 className={cn(
-          'font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-black transition-colors',
+          'font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-white/90 transition-colors',
           size === 'large' ? 'text-base' : 'text-sm',
         )}>
           {product.title}
@@ -131,24 +131,24 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {availableSizes.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {availableSizes.slice(0, 5).map(s => (
-              <span key={s} className="px-1.5 py-0.5 text-[9px] font-bold text-gray-500 border border-gray-200 rounded">
+              <span key={s} className="px-1.5 py-0.5 text-[9px] font-bold text-white/60 border border-white/15 rounded">
                 {s}
               </span>
             ))}
             {availableSizes.length > 5 && (
-              <span className="text-[9px] text-gray-400 font-bold self-center">+{availableSizes.length - 5}</span>
+              <span className="text-[9px] text-white/40 font-bold self-center">+{availableSizes.length - 5}</span>
             )}
           </div>
         )}
 
         {/* Precios */}
         <div className="space-y-0.5">
-          <p className={cn('font-black text-gray-900', size === 'large' ? 'text-xl' : 'text-lg')}>
+          <p className={cn('font-black text-white', size === 'large' ? 'text-xl' : 'text-lg')}>
             {formatCurrency(priceInArs)}
           </p>
-          <p className="text-xs text-gray-400">${Number(product.price).toFixed(0)} USD · Transf./Efectivo</p>
+          <p className="text-xs text-white/40">${Number(product.price).toFixed(0)} USD · Transf./Efectivo</p>
           {!isSoldOut && (
-            <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-500' : 'text-violet-500')}>
+            <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-400' : 'text-violet-400')}>
               3 cuotas de {formatCurrency(cardArs / 3)}
               {promoOn && <span className="ml-1 text-[10px] opacity-80">sin recargo</span>}
             </p>
