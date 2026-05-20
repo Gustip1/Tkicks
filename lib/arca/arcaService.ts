@@ -307,9 +307,10 @@ export async function requestCAE(
     },
   });
 
-  console.error('[ARCA] FECAESolicitar respuesta completa:', JSON.stringify(res, null, 2));
   const result  = res?.FECAESolicitarResult;
-  const det     = result?.FeDetResp?.FECAEDetResponse;
+  // ARCA puede devolver FECAEDetResponse como array o como objeto
+  const detRaw  = result?.FeDetResp?.FECAEDetResponse;
+  const det     = Array.isArray(detRaw) ? detRaw[0] : detRaw;
 
   // Errores globales (nivel cabecera)
   const errRaw  = result?.Errors?.Err;
