@@ -171,21 +171,25 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
   <service>wsfe</service>
 </loginTicketRequest>`;
 
-  // Firmar TRA con PKCS#7
+  // Firmar TRA con PKCS#7 — ARCA requiere SHA-256 + authenticated attributes estándar
   const cert = forge.pki.certificateFromPem(certPem);
   const key  = forge.pki.privateKeyFromPem(keyPem);
   const p7   = forge.pkcs7.createSignedData();
-  p7.content = forge.util.createBuffer(tra, 'utf8');
+  p7.content = forge.util.createBuffer(Buffer.from(tra, 'utf8').toString('binary'));
   p7.addCertificate(cert);
   p7.addSigner({
     key,
     certificate: cert,
     digestAlgorithm: forge.pki.oids.sha256,
-    authenticatedAttributes: [],
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType,  value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+      { type: forge.pki.oids.signingTime,  value: new Date() },
+    ],
   });
   p7.sign({ detached: false });
   const cmsDer = forge.asn1.toDer(p7.toAsn1()).getBytes();
-  const cmsB64 = forge.util.encode64(cmsDer);
+  const cmsB64 = Buffer.from(cmsDer, 'binary').toString('base64');
 
   // Llamar WSAA
   const wsaaClient = await soapFactory(WSAA_URL);
