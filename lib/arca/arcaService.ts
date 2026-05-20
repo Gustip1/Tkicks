@@ -171,16 +171,23 @@ async function getTicket(prefix: 'STANDARD' | 'CARD'): Promise<{ token: string; 
   <service>wsfe</service>
 </loginTicketRequest>`;
 
-  // Firmar TRA con PKCS#7 — ARCA requiere SHA-256 + authenticated attributes estándar
+  // Firmar TRA con PKCS#7 — ARCA requiere SHA-1 (manual técnico WSAA)
   const cert = forge.pki.certificateFromPem(certPem);
   const key  = forge.pki.privateKeyFromPem(keyPem);
+
+  // Validar que cert y key coincidan antes de intentar firmar
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((cert.publicKey as any).n.toString() !== (key as any).n.toString()) {
+    throw new Error(`ARCA [${prefix}]: el certificado y la clave privada NO coinciden. Verificá que ARCA_${prefix}_CERT_B64 y ARCA_${prefix}_KEY_B64 sean del mismo par.`);
+  }
+
   const p7   = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(Buffer.from(tra, 'utf8').toString('binary'));
   p7.addCertificate(cert);
   p7.addSigner({
     key,
     certificate: cert,
-    digestAlgorithm: forge.pki.oids.sha256,
+    digestAlgorithm: forge.pki.oids.sha1,
     authenticatedAttributes: [
       { type: forge.pki.oids.contentType,  value: forge.pki.oids.data },
       { type: forge.pki.oids.messageDigest },
