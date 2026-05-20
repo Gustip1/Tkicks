@@ -380,6 +380,7 @@ export default function FacturasPage() {
                   <th className="px-4 py-3 text-left">Vto.</th>
                   <th className="px-4 py-3 text-right">Total</th>
                   <th className="px-4 py-3 text-left">Fecha</th>
+                  <th className="px-4 py-3 text-left">PDF</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -416,6 +417,16 @@ export default function FacturasPage() {
                     <td className="px-4 py-3 text-xs text-gray-400 font-bold whitespace-nowrap">{f.cae_vto}</td>
                     <td className="px-4 py-3 text-right font-black text-gray-900 text-xs whitespace-nowrap">{formatARS(f.imp_total)}</td>
                     <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{formatDate(f.fecha_emision)}</td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={`/admin/facturas/${f.id}/print`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-900 text-white text-[10px] font-black hover:bg-gray-700 transition-colors"
+                      >
+                        <FileText className="w-3 h-3" /> PDF
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>
