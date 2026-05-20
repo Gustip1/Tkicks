@@ -7,9 +7,15 @@
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import crypto from 'crypto';
 
-// Agente HTTPS que acepta las claves DH antiguas de los servidores de ARCA
-const afipAgent = new https.Agent({ ciphers: 'DEFAULT@SECLEVEL=1' });
+// Los servidores de ARCA usan DH de 1024 bits, rechazado por Node.js moderno.
+// Reemplazar el agente global es la única forma confiable de solucionarlo.
+const afipAgent = new https.Agent({
+  ciphers: 'DEFAULT@SECLEVEL=1',
+  secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+});
+https.globalAgent = afipAgent;
 
 // ─── Tipos públicos ───────────────────────────────────────────────────────────
 
