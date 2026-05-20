@@ -78,7 +78,7 @@ function NuevaFacturaForm({ onSuccess }: { onSuccess: () => void }) {
         body: JSON.stringify({
           order_id:       null,
           payment_method: METODO_MAP[metodo].pm,
-          pto_vta:        1,
+          pto_vta:        2,
           cbte_tipo:      cbteTipo,
           concepto:       1,
           imp_total:      Number(impTotal),
