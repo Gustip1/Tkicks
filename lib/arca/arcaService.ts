@@ -6,6 +6,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
+
+// Agente HTTPS que acepta las claves DH antiguas de los servidores de ARCA
+const afipAgent = new https.Agent({ ciphers: 'DEFAULT@SECLEVEL=1' });
 
 // ─── Tipos públicos ───────────────────────────────────────────────────────────
 
@@ -90,10 +94,12 @@ async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
   // CJS modules cargados con import() exponen module.exports en .default
   const soap = mod.default ?? mod;
 
+  const soapOpts = { wsdl_options: { agent: afipAgent } };
+
   // Intentar createClientAsync (API nativa Promise)
   if (typeof soap.createClientAsync === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (url: string): Promise<any> => soap.createClientAsync(url);
+    return (url: string): Promise<any> => soap.createClientAsync(url, soapOpts);
   }
 
   // Fallback: createClient con callback, envuelto en Promise
@@ -101,7 +107,7 @@ async function getSoapFactory(): Promise<(wsdlUrl: string) => Promise<any>> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (url: string): Promise<any> =>
       new Promise((resolve, reject) =>
-        soap.createClient(url, (err: unknown, client: unknown) =>
+        soap.createClient(url, soapOpts, (err: unknown, client: unknown) =>
           err ? reject(err) : resolve(client),
         ),
       );
