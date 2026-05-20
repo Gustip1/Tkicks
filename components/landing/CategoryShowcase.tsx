@@ -6,10 +6,10 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { ArrowRight } from 'lucide-react';
 
 const SUBCATS = [
-  { label: 'Remeras',   href: '/productos?subcategory=remeras' },
-  { label: 'Hoodies',   href: '/productos?subcategory=hoodies' },
-  { label: 'Pantalones',href: '/productos?subcategory=pantalones' },
-  { label: 'Accesorios',href: '/productos?subcategory=accesorios' },
+  { label: 'Remeras',   href: '/productos?sub=remeras' },
+  { label: 'Hoodies',   href: '/productos?sub=hoodies' },
+  { label: 'Pantalones',href: '/productos?sub=pantalones' },
+  { label: 'Accesorios',href: '/productos?sub=accesorios' },
 ];
 
 export function CategoryShowcase() {
