@@ -307,13 +307,25 @@ export async function requestCAE(
     },
   });
 
-  const det = res?.FECAESolicitarResult?.FeDetResp?.FECAEDetResponse;
+  const result  = res?.FECAESolicitarResult;
+  const det     = result?.FeDetResp?.FECAEDetResponse;
+
+  // Errores globales (nivel cabecera)
+  const errRaw  = result?.Errors?.Err;
+  const errMsg  = Array.isArray(errRaw)
+    ? errRaw.map((e: { Code: number; Msg: string }) => `[${e.Code}] ${e.Msg}`).join(', ')
+    : errRaw ? `[${errRaw.Code}] ${errRaw.Msg}` : null;
+
   if (!det || det.Resultado !== 'A') {
+    // Observaciones por comprobante
     const obsRaw = det?.Observaciones?.Obs;
-    const obs = Array.isArray(obsRaw)
-      ? obsRaw.map((o: { Msg: string }) => o.Msg).join(', ')
-      : obsRaw?.Msg ?? 'Rechazado por ARCA';
-    throw new Error(`ARCA rechazó el comprobante: ${obs}`);
+    const obsMsg = Array.isArray(obsRaw)
+      ? obsRaw.map((o: { Code: number; Msg: string }) => `[${o.Code}] ${o.Msg}`).join(', ')
+      : obsRaw ? `[${obsRaw.Code}] ${obsRaw.Msg}` : null;
+
+    const detalle = [errMsg, obsMsg].filter(Boolean).join(' | ');
+    console.error('[ARCA] FECAESolicitar rechazado:', JSON.stringify(result, null, 2));
+    throw new Error(`ARCA rechazó el comprobante: ${detalle || 'sin detalle — ver logs de Vercel'}`);
   }
 
   return {
