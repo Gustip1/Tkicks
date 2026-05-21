@@ -118,6 +118,13 @@ export default function ProductDetailPage() {
             <span className="text-[10px] md:text-sm text-gray-300 font-bold">(Verificado)</span>
           </div>
 
+          {/* Description */}
+          {product.description && (
+            <p className="text-gray-300 leading-relaxed whitespace-pre-wrap font-semibold text-sm md:text-base">
+              {product.description}
+            </p>
+          )}
+
           {/* Price */}
           <div className="space-y-2 pb-3 md:pb-4 border-b border-zinc-800">
             <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio Base · Transferencia / Efectivo</p>
@@ -219,17 +226,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
           
-          {/* Description */}
-          {product.description && (
-            <div className="py-6 border-t border-zinc-800">
-              <h2 className="text-lg font-black text-white mb-4 uppercase tracking-wide">Descripción</h2>
-              <div className="prose prose-gray max-w-none">
-                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap font-semibold">
-                  {product.description}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
