@@ -144,9 +144,9 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Precios */}
         <div className="space-y-0.5">
           <p className={cn('font-black text-white', size === 'large' ? 'text-xl' : 'text-lg')}>
-            {formatCurrency(priceInArs)}
+            ${Number(product.price).toFixed(0)} USD
           </p>
-          <p className="text-xs text-white/40">${Number(product.price).toFixed(0)} USD · Transf./Efectivo</p>
+          <p className="text-xs text-white/40">{formatCurrency(priceInArs)} · Transf./Efectivo</p>
           {!isSoldOut && (
             <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-400' : 'text-violet-400')}>
               3 cuotas de {formatCurrency(cardArs / 3)}
