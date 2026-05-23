@@ -4,29 +4,20 @@ import { useDropzone } from 'react-dropzone';
 import { X, Upload, GripVertical, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { trimWhiteBorders } from '@/lib/image-trim';
-import { prepareImage } from '@/lib/image-convert';
 
 export interface UploadedImage { url: string; alt: string }
 
 export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onChange: (v: UploadedImage[]) => void }) {
   const [loading, setLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState('Subiendo imágenes...');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const onDrop = useCallback(async (accepted: File[]) => {
     setLoading(true);
-    const hasHeic = accepted.some(f => {
-      const t = f.type.toLowerCase();
-      const n = f.name.toLowerCase();
-      return t === 'image/heic' || t === 'image/heif' || n.endsWith('.heic') || n.endsWith('.heif');
-    });
-    setLoadingMsg(hasHeic ? 'Convirtiendo HEIC y optimizando...' : 'Optimizando y subiendo...');
     try {
       const prepared = await Promise.all(
         accepted.map(async (f) => {
           try {
-            const converted = await prepareImage(f);
-            return await trimWhiteBorders(converted);
+            return await trimWhiteBorders(f);
           } catch {
             return f;
           }
@@ -55,7 +46,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop, 
-    accept: { 'image/*': [], 'image/heic': ['.heic'], 'image/heif': ['.heif'] },
+    accept: { 'image/*': [] },
     disabled: loading
   });
 
@@ -102,7 +93,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
           {loading ? (
             <>
               <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm font-medium text-gray-600">{loadingMsg}</p>
+              <p className="text-sm font-medium text-gray-600">Subiendo imágenes...</p>
             </>
           ) : (
             <>
@@ -113,7 +104,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
                 <p className="text-sm font-medium text-gray-700">
                   {isDragActive ? "Soltá las imágenes aquí" : "Arrastrá imágenes o hacé click"}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">JPEG, PNG, WEBP o HEIC · se convierte y optimiza en el navegador · bordes blancos se recortan solos</p>
+                <p className="text-xs text-gray-500 mt-1">JPEG, PNG o WEBP · cualquier resolución · bordes blancos se recortan solos</p>
               </div>
             </>
           )}
