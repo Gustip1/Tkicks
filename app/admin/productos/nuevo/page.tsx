@@ -1,16 +1,18 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { VariantEditor } from '@/components/admin/VariantEditor';
 import { slugify } from '@/lib/utils';
-import { STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 
 export default function NewProductPage() {
   const supabase = createBrowserClient();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'sneakers' | 'streetwear'>('sneakers');
   const [subcategory, setSubcategory] = useState<StreetWearSubcategory | ''>('');
+  const [brand, setBrand] = useState('');
+  const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState('Todos nuestros productos son 100% originales.');
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -20,6 +22,11 @@ export default function NewProductPage() {
   const [active, setActive] = useState(true);
   const [variants, setVariants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('brands').select('*').eq('active', true).order('name')
+      .then(({ data }) => setBrandOptions((data || []) as Brand[]));
+  }, []);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +53,12 @@ export default function NewProductPage() {
         subcategory: category === 'streetwear' && subcategory ? subcategory : null,
         price, 
         description, 
-        images, 
-        featured_sneakers: featuredSneakers, 
-        featured_streetwear: featuredStreetwear, 
+        images,
+        brand: brand || null,
+        featured_sneakers: featuredSneakers,
+        featured_streetwear: featuredStreetwear,
         is_new: isNew,
-        active 
+        active
       })
       .select('*')
       .single();
@@ -103,6 +111,13 @@ export default function NewProductPage() {
               </select>
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium">Marca</label>
+            <select className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" value={brand} onChange={e => setBrand(e.target.value)}>
+              <option value="">— Sin marca —</option>
+              {brandOptions.map(b => <option key={b.id} value={b.slug}>{b.name}</option>)}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium">Descripción</label>
             <textarea className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />

@@ -7,7 +7,7 @@ import { VariantEditor } from '@/components/admin/VariantEditor';
 import { Save, Trash2, ArrowLeft, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +19,8 @@ export default function EditProductPage() {
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState<'sneakers' | 'streetwear'>('sneakers');
   const [subcategory, setSubcategory] = useState<StreetWearSubcategory | ''>('');
+  const [brand, setBrand] = useState('');
+  const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -32,6 +34,11 @@ export default function EditProductPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    supabase.from('brands').select('*').eq('active', true).order('name')
+      .then(({ data }) => setBrandOptions((data || []) as Brand[]));
+  }, []);
+
+  useEffect(() => {
     (async () => {
       setLoading(true);
       const { data: p } = await supabase.from('products').select('*').eq('id', id).single();
@@ -41,6 +48,7 @@ export default function EditProductPage() {
         setSlug(p.slug);
         setCategory(p.category);
         setSubcategory(p.subcategory || '');
+        setBrand(p.brand || '');
         setPrice(Number(p.price));
         setDescription(p.description || '');
         setImages((p.images || []) as UploadedImage[]);
@@ -69,12 +77,13 @@ export default function EditProductPage() {
           slug, 
           category, 
           subcategory: category === 'streetwear' && subcategory ? subcategory : null,
-          price, 
-          description, 
-          images, 
-          featured_sneakers: featuredSneakers, 
+          brand: brand || null,
+          price,
+          description,
+          images,
+          featured_sneakers: featuredSneakers,
           featured_streetwear: featuredStreetwear,
-          on_sale: onSale, 
+          on_sale: onSale,
           is_new: isNew,
           active 
         })
@@ -285,11 +294,23 @@ export default function EditProductPage() {
             )}
             
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Marca</label>
+              <select
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
+                value={brand}
+                onChange={e => setBrand(e.target.value)}
+              >
+                <option value="">— Sin marca —</option>
+                {brandOptions.map(b => <option key={b.id} value={b.slug}>{b.name}</option>)}
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Descripción</label>
-              <textarea 
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all resize-none" 
-                rows={5} 
-                value={description} 
+              <textarea
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all resize-none"
+                rows={5}
+                value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe las características del producto..."
               />

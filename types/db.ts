@@ -27,6 +27,7 @@ export interface Product {
   slug: string;
   category: ProductCategory;
   subcategory: StreetWearSubcategory | null;
+  brand?: string | null;
   price: number;
   description: string | null;
   images: ProductImage[];
@@ -40,6 +41,14 @@ export interface Product {
   updated_at: string | null;
   /** Joined from product_variants when using select('*, product_variants(stock,size)') */
   product_variants?: { stock: number; size?: string }[];
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  created_at: string;
 }
 
 /* ────────────── Orders ────────────── */

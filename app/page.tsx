@@ -2,6 +2,7 @@ import { FeaturedCarousels } from '@/components/landing/FeaturedCarousels';
 import { NewArrivals } from '@/components/landing/NewArrivals';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase } from '@/components/landing/CategoryShowcase';
+import { BrandCarousel } from '@/components/landing/BrandCarousel';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
@@ -22,8 +23,11 @@ export default function HomePage() {
       {/* Categorías editoriales */}
       <CategoryShowcase />
 
-      {/* Nuevos ingresos — fondo blanco */}
+      {/* Nuevos ingresos */}
       <NewArrivals />
+
+      {/* Marcas — carrusel */}
+      <BrandCarousel />
 
       {/* Carruseles destacados */}
       <div className="bg-[#0A0A0A] py-12 md:py-20">

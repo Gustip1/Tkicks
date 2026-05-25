@@ -10,12 +10,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: { [
   const category = typeof searchParams?.sneakers !== 'undefined' ? 'sneakers' : typeof searchParams?.streetwear !== 'undefined' ? 'streetwear' : undefined;
   const subParam = typeof searchParams?.sub === 'string' ? searchParams.sub : undefined;
   const subcategory = subParam && validSubcategories.includes(subParam) ? (subParam as StreetWearSubcategory) : undefined;
+  const brand = typeof searchParams?.brand === 'string' ? searchParams.brand : undefined;
   return (
     <>
       <div className="flex justify-center py-2">
         <GiveawayInlinePriceClue clueId="/productos" label="Productos" position={1} digit="6" />
       </div>
-      <ProductsClient category={category as any} subcategory={subcategory} />
+      <ProductsClient category={category as any} subcategory={subcategory} brand={brand} />
     </>
   );
 }

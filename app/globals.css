@@ -199,6 +199,20 @@ img {
   animation-play-state: paused;
 }
 
+/* Brand carousel marquee */
+@keyframes marquee-brands {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
+.animate-marquee-brands {
+  animation: marquee-brands 25s linear infinite;
+}
+
+.animate-marquee-brands:hover {
+  animation-play-state: paused;
+}
+
 /* Slow pulse for glow orbs */
 .animate-pulse-slow {
   animation: pulse-slow 6s ease-in-out infinite;

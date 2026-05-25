@@ -42,7 +42,7 @@ const subcategoryLabels: Record<string, string> = {
   accesorios: 'ACCESORIOS',
 };
 
-export function ProductsClient({ category, subcategory }: { category?: 'sneakers' | 'streetwear'; subcategory?: StreetWearSubcategory }) {
+export function ProductsClient({ category, subcategory, brand }: { category?: 'sneakers' | 'streetwear'; subcategory?: StreetWearSubcategory; brand?: string }) {
   const supabase = useRef(createBrowserClient());
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 350);
@@ -59,10 +59,11 @@ export function ProductsClient({ category, subcategory }: { category?: 'sneakers
 
   const title = useMemo(
     () => {
+      if (brand) return brand.replace(/-/g, ' ').toUpperCase();
       if (subcategory && subcategoryLabels[subcategory]) return subcategoryLabels[subcategory];
       return category ? categoryConfig[category].title : 'Productos';
     },
-    [category, subcategory]
+    [category, subcategory, brand]
   );
 
   const config = category ? categoryConfig[category] : null;
@@ -90,10 +91,11 @@ export function ProductsClient({ category, subcategory }: { category?: 'sneakers
     
     if (category) query = query.eq('category', category);
     if (subcategory) query = query.eq('subcategory', subcategory);
-    
+    if (brand) query = query.eq('brand', brand);
+
     if (dq) {
       const like = `%${dq}%`;
-      const orParts = [`title.ilike.${like}`, `slug.ilike.${like}`];
+      const orParts = [`title.ilike.${like}`, `slug.ilike.${like}`, `brand.ilike.${like}`];
       if (variantIdsForQ.length > 0) {
         orParts.push(`id.in.(${variantIdsForQ.join(',')})`);
       }

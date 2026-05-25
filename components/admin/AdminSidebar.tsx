@@ -21,6 +21,7 @@ import {
   Gift,
   Gavel,
   Receipt,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +37,7 @@ const navigation = [
   { name: 'Sorteo', href: '/admin/sorteo', icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   { name: 'Subastas', href: '/admin/subastas', icon: Gavel, color: 'text-orange-600', bg: 'bg-orange-50' },
   { name: 'Facturas', href: '/admin/facturas', icon: Receipt, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { name: 'Marcas', href: '/admin/marcas', icon: Tag, color: 'text-violet-600', bg: 'bg-violet-50' },
   { name: 'Imágenes', href: '/admin/uploads', icon: Upload, color: 'text-cyan-600', bg: 'bg-cyan-50' },
   { name: 'Clientes', href: '/admin/clientes', icon: Users, color: 'text-pink-600', bg: 'bg-pink-50' },
   { name: 'Ajustes', href: '/admin/ajustes', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100' },
