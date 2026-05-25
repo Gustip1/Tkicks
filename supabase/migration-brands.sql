@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS brands (
 -- RLS
 ALTER TABLE brands ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "brands_public_read" ON brands;
+DROP POLICY IF EXISTS "brands_admin_all" ON brands;
+
 CREATE POLICY "brands_public_read" ON brands
   FOR SELECT USING (active = true);
 
