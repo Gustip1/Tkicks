@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 import { ProductCard } from './ProductCard';
 import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -52,6 +52,8 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
   const [hasMore, setHasMore] = useState(false);
   const [availableSizes, setAvailableSizes] = useState<{ size: string; count: number }[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [availableBrands, setAvailableBrands] = useState<Brand[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState(brand || '');
   const [showFilters, setShowFilters] = useState(false);
   const [gridSize, setGridSize] = useState<'normal' | 'large'>('normal');
 
@@ -91,7 +93,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
     
     if (category) query = query.eq('category', category);
     if (subcategory) query = query.eq('subcategory', subcategory);
-    if (brand) query = query.eq('brand', brand);
+    if (selectedBrand) query = query.eq('brand', selectedBrand);
 
     if (dq) {
       const like = `%${dq}%`;
@@ -147,12 +149,12 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         const { data: prod } = await prodQuery.limit(1000);
         productIds = (prod || []).map((p: any) => p.id);
       }
-      
+
       let variantsQuery = supabase.current
         .from('product_variants')
         .select('size, product_id');
       if (productIds.length > 0) variantsQuery = variantsQuery.in('product_id', productIds);
-      
+
       const { data: vars } = await variantsQuery;
       const counts = new Map<string, number>();
       (vars || []).forEach((v: any) => {
@@ -160,9 +162,9 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         if (!key) return;
         counts.set(key, (counts.get(key) || 0) + 1);
       });
-      
+
       let sizes = Array.from(counts.entries()).map(([size, count]) => ({ size, count }));
-      
+
       if (category === 'sneakers') {
         const numeric = sizes.filter((s) => /^\d+(?:[.,]\d+)?$/.test(String(s.size)));
         sizes = numeric.sort(
@@ -182,13 +184,25 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         setAvailableSizes([]);
       }
       setSelectedSizes([]);
+
+      // Load brands for streetwear filter
+      if (category === 'streetwear') {
+        const { data: brandsData } = await supabase.current
+          .from('brands')
+          .select('*')
+          .eq('active', true)
+          .order('name');
+        setAvailableBrands((brandsData || []) as Brand[]);
+      } else {
+        setAvailableBrands([]);
+      }
     })();
   }, [category, subcategory]);
 
   useEffect(() => {
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, subcategory, dq, selectedSizes]);
+  }, [category, subcategory, dq, selectedSizes, selectedBrand]);
 
   return (
     <div className="space-y-6 animate-fadeIn bg-black">
@@ -235,30 +249,30 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {/* Filter toggle button */}
-          {availableSizes.length > 0 && (
+          {(availableSizes.length > 0 || availableBrands.length > 0) && (
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                showFilters || selectedSizes.length > 0
+                showFilters || selectedSizes.length > 0 || selectedBrand
                   ? "bg-gray-900 text-white"
                   : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
               )}
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filtrar
-              {selectedSizes.length > 0 && (
+              {(selectedSizes.length > 0 || selectedBrand) && (
                 <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
-                  {selectedSizes.length}
+                  {selectedSizes.length + (selectedBrand ? 1 : 0)}
                 </span>
               )}
             </button>
           )}
-          
-          {/* Active filters */}
-          {selectedSizes.length > 0 && (
+
+          {/* Active filters — limpiar */}
+          {(selectedSizes.length > 0 || selectedBrand) && (
             <button
-              onClick={() => setSelectedSizes([])}
+              onClick={() => { setSelectedSizes([]); setSelectedBrand(''); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
             >
               <X className="w-4 h-4" />
@@ -292,33 +306,59 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         </div>
       </div>
 
-      {/* Size filters */}
-      {showFilters && availableSizes.length > 0 && (
-        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn">
-          <p className="text-sm font-medium text-gray-700 mb-3">Filtrar por talle</p>
-          <div className="flex flex-wrap gap-2">
-            {availableSizes.map(({ size }) => {
-              const active = selectedSizes.includes(size);
-              return (
-                <button
-                  key={size}
-                  className={cn(
-                    "min-w-[3rem] px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                    active 
-                      ? "bg-gray-900 text-white shadow-md scale-105" 
-                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-                  )}
-                  onClick={() =>
-                    setSelectedSizes((prev) =>
-                      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-                    )
-                  }
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
+      {/* Filters panel */}
+      {showFilters && (availableSizes.length > 0 || availableBrands.length > 0) && (
+        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn space-y-4">
+          {availableSizes.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-3">Talle</p>
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map(({ size }) => {
+                  const isActive = selectedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      className={cn(
+                        "min-w-[3rem] px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                        isActive
+                          ? "bg-gray-900 text-white shadow-md scale-105"
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                      )}
+                      onClick={() =>
+                        setSelectedSizes((prev) =>
+                          prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                        )
+                      }
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {availableBrands.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-3">Marca</p>
+              <div className="flex flex-wrap gap-2">
+                {availableBrands.map((b) => (
+                  <button
+                    key={b.id}
+                    className={cn(
+                      "px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      selectedBrand === b.slug
+                        ? "bg-gray-900 text-white shadow-md scale-105"
+                        : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                    )}
+                    onClick={() => setSelectedBrand(prev => prev === b.slug ? '' : b.slug)}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

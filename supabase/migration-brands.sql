@@ -23,9 +23,16 @@ CREATE POLICY "brands_admin_all" ON brands
 
 -- Insert seed brands
 INSERT INTO brands (name, slug) VALUES
-  ('Emestudio',    'emestudio'),
-  ('Nude Project', 'nude-project'),
-  ('Scuffers',     'scuffers'),
-  ('Essentials',   'essentials'),
-  ('Valley',       'valley')
+  ('Emestudio',          'emestudio'),
+  ('Nude Project',       'nude-project'),
+  ('Scuffers',           'scuffers'),
+  ('Essentials',         'essentials'),
+  ('Valley',             'valley'),
+  ('Corteiz',            'corteiz'),
+  ('MixedEmotion',       'mixedemotion'),
+  ('Supreme',            'supreme'),
+  ('OFF White',          'off-white'),
+  ('Syna by Central Cee','syna-by-central-cee'),
+  ('OVO by Drake',       'ovo-by-drake'),
+  ('Bape',               'bape')
 ON CONFLICT (slug) DO NOTHING;
