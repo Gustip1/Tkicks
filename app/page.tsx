@@ -3,6 +3,7 @@ import { NewArrivals } from '@/components/landing/NewArrivals';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase } from '@/components/landing/CategoryShowcase';
 import { BrandCarousel } from '@/components/landing/BrandCarousel';
+import { HowToBuy } from '@/components/landing/HowToBuy';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
@@ -28,6 +29,9 @@ export default function HomePage() {
 
       {/* Marcas — carrusel */}
       <BrandCarousel />
+
+      {/* Cómo comprar */}
+      <HowToBuy />
 
       {/* Carruseles destacados */}
       <div className="bg-[#0A0A0A] py-12 md:py-20">

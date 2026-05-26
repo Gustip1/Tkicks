@@ -12,6 +12,7 @@ import { DolarRateProvider } from '@/components/DolarRateProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
+import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Footer />
             <CartDrawer />
             <PromoModal />
+            <RecentSaleToast />
           </AnalyticsProvider>
         </DolarRateProvider>
       </body>
