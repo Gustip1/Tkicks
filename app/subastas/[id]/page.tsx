@@ -265,7 +265,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           {/* Imagen */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            <div className="aspect-square bg-zinc-800 relative">
+            <div className="aspect-[3/4] bg-zinc-800 relative">
               {image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={image} alt={auction.product.title} className="w-full h-full object-cover" />

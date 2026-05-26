@@ -32,7 +32,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
       href={`/subastas/${a.id}`}
       className="group flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500 transition-colors"
     >
-      <div className="aspect-square bg-zinc-800 relative">
+      <div className="aspect-[3/4] bg-zinc-800 relative">
         {a.product_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={a.product_image} alt={a.product_title} className="w-full h-full object-cover" />
