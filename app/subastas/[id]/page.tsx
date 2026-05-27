@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Gavel, Clock, ArrowLeft, AlertCircle } from 'lucide-react';
+import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { formatARS } from '@/lib/utils';
 
 interface AuctionDetail {
@@ -243,7 +244,9 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     );
   }
 
-  const image = Array.isArray(auction.product.images) && auction.product.images[0]?.url;
+  const images = Array.isArray(auction.product.images)
+    ? auction.product.images.map((img: any) => ({ url: img.url || img, alt: img.alt || auction.product.title }))
+    : [];
 
   // Precio mostrado: el máximo entre auction.current_price, la puja top y el
   // precio de salida. Esto blinda la UI contra cualquier desync entre la
@@ -263,20 +266,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-          {/* Imagen */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            <div className="aspect-[3/4] bg-zinc-800 relative">
-              {image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={image} alt={auction.product.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                  <Gavel className="w-16 h-16" />
-                </div>
-              )}
-              <div className="absolute top-3 left-3 bg-orange-500 text-black text-xs font-black px-2 py-1 rounded-md uppercase">
-                Subasta
-              </div>
+          {/* Imágenes — carrusel igual que producto */}
+          <div className="relative">
+            <ImageCarousel images={images} />
+            <div className="absolute top-3 left-3 z-10 bg-orange-500 text-black text-xs font-black px-2 py-1 rounded-md uppercase">
+              Subasta
             </div>
           </div>
 
