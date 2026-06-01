@@ -40,7 +40,9 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
     return () => window.clearInterval(t);
   }, [hovering, images.length]);
 
-  const priceInArs  = Number(product.price) * dolarOficial;
+  const hasSale     = product.sale_price != null && Number(product.sale_price) > 0;
+  const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
+  const priceInArs  = activePrice * dolarOficial;
   const cardMult    = getCardPriceMultiplier();
   const cardArs     = priceInArs * cardMult;
   const promoOn     = isPromoActive();
@@ -143,9 +145,16 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Precios */}
         <div className="space-y-0.5">
-          <p className={cn('font-black text-white', size === 'large' ? 'text-xl' : 'text-lg')}>
-            ${Number(product.price).toFixed(0)} USD
-          </p>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <p className={cn('font-black text-white', size === 'large' ? 'text-xl' : 'text-lg')}>
+              ${activePrice.toFixed(0)} USD
+            </p>
+            {hasSale && (
+              <p className="text-xs text-white/40 line-through">
+                ${Number(product.price).toFixed(0)}
+              </p>
+            )}
+          </div>
           <p className="text-xs text-white/40">{formatCurrency(priceInArs)} · Transf./Efectivo</p>
           {!isSoldOut && (
             <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-400' : 'text-violet-400')}>

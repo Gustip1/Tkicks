@@ -67,7 +67,9 @@ export default function ProductDetailPage() {
     </div>
   );
 
-  const priceInArs = Number(product.price) * dolarOficial;
+  const hasSale    = product.sale_price != null && Number(product.sale_price) > 0;
+  const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
+  const priceInArs = activePrice * dolarOficial;
   const productClueInfo = getProductClueInfo(product.slug, product.category);
 
   return (
@@ -127,11 +129,16 @@ export default function ProductDetailPage() {
 
           {/* Price */}
           <div className="space-y-2 pb-3 md:pb-4 border-b border-zinc-800">
-            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio Base · Transferencia / Efectivo</p>
-            <div className="flex items-baseline gap-2 md:gap-4">
+            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio · Transferencia / Efectivo</p>
+            <div className="flex items-baseline gap-3 flex-wrap">
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
-                ${Number(product.price).toFixed(2)} USD
+                ${activePrice.toFixed(2)} USD
               </span>
+              {hasSale && (
+                <span className="text-lg md:text-2xl font-black text-white/30 line-through">
+                  ${Number(product.price).toFixed(2)}
+                </span>
+              )}
               {productClueInfo && (
                 <GiveawayInlinePriceClue
                   clueId={`producto:${product.slug}`}
@@ -141,12 +148,17 @@ export default function ProductDetailPage() {
                 />
               )}
             </div>
+            {hasSale && (
+              <p className="text-xs font-black text-red-400 uppercase tracking-wide">
+                ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
+              </p>
+            )}
             <p className="text-sm md:text-lg text-gray-300 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
             {/* Precio Tarjeta — 3 cuotas (recargo desde lib/promo) */}
             {(() => {
-              const cardPriceArs = Number(product.price) * getCardPriceMultiplier() * dolarOficial;
+              const cardPriceArs = activePrice * getCardPriceMultiplier() * dolarOficial;
               const installment = cardPriceArs / 3;
               const promoOn = isPromoActive();
               return (

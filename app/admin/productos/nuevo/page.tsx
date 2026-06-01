@@ -14,6 +14,7 @@ export default function NewProductPage() {
   const [brand, setBrand] = useState('');
   const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
   const [price, setPrice] = useState<number>(0);
+  const [salePrice, setSalePrice] = useState<string>('');
   const [description, setDescription] = useState('Todos nuestros productos son 100% originales.');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [featuredSneakers, setFeaturedSneakers] = useState(false);
@@ -54,6 +55,7 @@ export default function NewProductPage() {
         price, 
         description, 
         images,
+        sale_price: salePrice !== '' ? Number(salePrice) : null,
         brand: brand || null,
         featured_sneakers: featuredSneakers,
         featured_streetwear: featuredStreetwear,
@@ -92,6 +94,13 @@ export default function NewProductPage() {
             <div>
               <label className="block text-sm font-medium">Precio (USD)</label>
               <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" type="number" min={0} value={price} onChange={(e) => setPrice(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Precio especial / Rebaja (USD) <span className="text-gray-400 font-normal">— opcional</span></label>
+              <input className="mt-1 w-full rounded-md border border-red-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none" type="number" min={0} placeholder="Dejar vacío si no hay rebaja" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+              {salePrice !== '' && Number(salePrice) > 0 && Number(salePrice) < price && (
+                <p className="text-xs text-red-600 font-bold mt-1">El precio original (${price}) se mostrará tachado → Rebaja: ${salePrice} USD</p>
+              )}
             </div>
           </div>
           {category === 'streetwear' && (

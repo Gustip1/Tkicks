@@ -29,6 +29,7 @@ export interface Product {
   subcategory: StreetWearSubcategory | null;
   brand?: string | null;
   price: number;
+  sale_price?: number | null;
   description: string | null;
   images: ProductImage[];
   featured_sneakers: boolean;

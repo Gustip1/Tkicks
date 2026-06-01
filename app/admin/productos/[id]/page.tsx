@@ -22,6 +22,7 @@ export default function EditProductPage() {
   const [brand, setBrand] = useState('');
   const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
   const [price, setPrice] = useState<number>(0);
+  const [salePrice, setSalePrice] = useState<string>('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [featuredSneakers, setFeaturedSneakers] = useState(false);
@@ -50,6 +51,7 @@ export default function EditProductPage() {
         setSubcategory(p.subcategory || '');
         setBrand(p.brand || '');
         setPrice(Number(p.price));
+        setSalePrice(p.sale_price != null ? String(p.sale_price) : '');
         setDescription(p.description || '');
         setImages((p.images || []) as UploadedImage[]);
         setFeaturedSneakers(p.featured_sneakers);
@@ -79,6 +81,7 @@ export default function EditProductPage() {
           subcategory: category === 'streetwear' && subcategory ? subcategory : null,
           brand: brand || null,
           price,
+          sale_price: salePrice !== '' ? Number(salePrice) : null,
           description,
           images,
           featured_sneakers: featuredSneakers,
@@ -221,17 +224,45 @@ export default function EditProductPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Precio (USD)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                  <input 
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-8 pr-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all" 
-                    type="number" 
-                    min={0} 
+                  <input
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-8 pr-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
+                    type="number"
+                    min={0}
                     step="0.01"
-                    value={price} 
-                    onChange={(e) => setPrice(Number(e.target.value))} 
+                    value={price}
+                    onChange={(e) => setPrice(Number(e.target.value))}
                     required
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Precio especial / Rebaja */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Precio especial / Rebaja (USD)
+                <span className="ml-2 text-gray-400 font-normal text-xs">— dejar vacío si no hay rebaja</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400">$</span>
+                <input
+                  className="w-full rounded-xl border border-red-200 bg-red-50/40 pl-8 pr-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent focus:bg-white transition-all placeholder-gray-400"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="Ej: 89.99"
+                  value={salePrice}
+                  onChange={(e) => setSalePrice(e.target.value)}
+                />
+              </div>
+              {salePrice !== '' && Number(salePrice) > 0 && Number(salePrice) < price && (
+                <p className="text-xs text-red-600 font-bold mt-1.5">
+                  Se mostrará tachado ${price} → nuevo precio ${salePrice} USD · Ahorro: ${(price - Number(salePrice)).toFixed(2)}
+                </p>
+              )}
+              {salePrice !== '' && Number(salePrice) >= price && (
+                <p className="text-xs text-orange-500 font-bold mt-1.5">⚠ El precio especial debe ser menor al precio original</p>
+              )}
             </div>
             
             <div>
