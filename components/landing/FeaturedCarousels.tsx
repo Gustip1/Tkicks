@@ -13,10 +13,13 @@ import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 function ProductSlide({ product }: { product: Product }) {
   const { rate: dolarOficial } = useDolarRate();
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+
+  const hasSale     = product.sale_price != null && Number(product.sale_price) > 0;
+  const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
+
   return (
-    <Link 
-      href={`/producto/${product.slug}`} 
+    <Link
+      href={`/producto/${product.slug}`}
       className="block rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-2xl hover:shadow-white/5 transition-all"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-950">
@@ -35,17 +38,27 @@ function ProductSlide({ product }: { product: Product }) {
             onLoad={() => setImageLoaded(true)}
           />
         )}
+        {hasSale && (
+          <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase tracking-wide rounded-full shadow-sm">
+            SALE
+          </span>
+        )}
       </div>
       <div className="p-4">
         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">{product.category}</p>
         <h3 className="text-sm font-bold text-white line-clamp-2 mb-2 min-h-[2.5rem]">
           {product.title}
         </h3>
-        <p className="text-lg font-black text-white">
-          ${Number(product.price).toFixed(2)} USD
+        {hasSale && (
+          <p className="text-xs text-white/40 line-through">
+            ${Number(product.price).toFixed(0)} USD
+          </p>
+        )}
+        <p className={cn('text-lg font-black', hasSale ? 'text-red-400' : 'text-white')}>
+          ${activePrice.toFixed(0)} USD
         </p>
         <p className="text-sm text-gray-400 font-bold">
-          {formatCurrency(Number(product.price) * dolarOficial)}
+          {formatCurrency(activePrice * dolarOficial)}
         </p>
       </div>
     </Link>
@@ -236,7 +249,7 @@ export function FeaturedCarousels() {
       supabase
         .from('products')
         .select('*, product_variants(stock,size)')
-        .eq('on_sale', true)
+        .or('on_sale.eq.true,sale_price.gt.0')
         .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(12),

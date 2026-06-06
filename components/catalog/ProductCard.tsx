@@ -92,7 +92,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {product.on_sale && !isSoldOut && (
+          {(hasSale || product.on_sale) && !isSoldOut && (
             <span className="px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase tracking-wide rounded-full shadow-sm">
               SALE
             </span>
@@ -145,16 +145,14 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Precios */}
         <div className="space-y-0.5">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <p className={cn('font-black text-white', size === 'large' ? 'text-xl' : 'text-lg')}>
-              ${activePrice.toFixed(0)} USD
+          {hasSale && (
+            <p className="text-xs text-white/40 line-through">
+              ${Number(product.price).toFixed(0)} USD
             </p>
-            {hasSale && (
-              <p className="text-xs text-white/40 line-through">
-                ${Number(product.price).toFixed(0)}
-              </p>
-            )}
-          </div>
+          )}
+          <p className={cn('font-black', size === 'large' ? 'text-xl' : 'text-lg', hasSale ? 'text-red-400' : 'text-white')}>
+            ${activePrice.toFixed(0)} USD
+          </p>
           <p className="text-xs text-white/40">{formatCurrency(priceInArs)} · Transf./Efectivo</p>
           {!isSoldOut && (
             <p className={cn('text-xs font-semibold', promoOn ? 'text-orange-400' : 'text-violet-400')}>
