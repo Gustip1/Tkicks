@@ -22,6 +22,9 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
     if (qty < 1) setQty(1);
   }, [maxQty, qty]);
 
+  const hasSale     = product.sale_price != null && Number(product.sale_price) > 0;
+  const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
+
   const handleAdd = () => {
     if (!size) return;
     if (maxQty <= 0) return;
@@ -32,7 +35,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         productId: product.id,
         slug: product.slug,
         title: product.title,
-        price: Number(product.price),
+        price: activePrice,
         imageUrl,
         size
       },
@@ -134,7 +137,13 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
 
       {/* WhatsApp CTA */}
       <a
-        href={`https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(`Hola! Me interesa este producto: *${product.title}* 👟\n${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+        href={`https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(
+          `Hola! Me interesa este producto: *${product.title}* 👟\n` +
+          (hasSale
+            ? `💰 Precio: ~~$${Number(product.price).toFixed(0)} USD~~ → *$${activePrice.toFixed(0)} USD* (REBAJA)\n`
+            : `💰 Precio: *$${activePrice.toFixed(0)} USD*\n`) +
+          `${typeof window !== 'undefined' ? window.location.href : ''}`
+        )}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-3 w-full py-3 md:py-4 rounded-xl border-2 border-[#25D366] text-[#25D366] font-black text-sm md:text-base uppercase tracking-wide hover:bg-[#25D366] hover:text-black transition-all duration-200"
