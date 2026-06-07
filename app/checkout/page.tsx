@@ -586,15 +586,22 @@ export default function CheckoutPage() {
                           .join('\n')}\n\n` +
                         `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
                         (promoOn
-                          ? `🔥 *PROMO 11-17/05: SIN recargo*\n`
+                          ? `🔥 *PROMO: SIN recargo*\n`
                           : `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
                         `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
                         `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
-                        `👤 *Datos:*\n` +
+                        `👤 *Datos del comprador:*\n` +
                         `Nombre: ${checkout.contact.firstName} ${checkout.contact.lastName}\n` +
+                        `DNI: ${checkout.contact.document}\n` +
                         `Email: ${checkout.contact.email}\n` +
-                        `${checkout.contact.phone ? `Teléfono: ${checkout.contact.phone}\n` : ''}` +
-                        `${checkout.fulfillment === 'shipping' ? `Envío a: ${checkout.address.street}, CP ${checkout.address.postalCode}` : 'Retiro en Showroom'}`
+                        `Teléfono: ${checkout.contact.phone}\n\n` +
+                        (checkout.fulfillment === 'shipping'
+                          ? `🚚 *Envío a domicilio:*\n` +
+                            `Dirección: ${checkout.address.street}\n` +
+                            `Localidad: ${checkout.address.city}\n` +
+                            `Provincia: ${checkout.address.province}\n` +
+                            `CP: ${checkout.address.postalCode}`
+                          : `🏪 *Retiro en Showroom*`)
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
