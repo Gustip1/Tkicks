@@ -62,8 +62,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
       {/* ── Imagen ── */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-zinc-800">
-        {!loaded && <div className="absolute inset-0 bg-zinc-800 animate-pulse" />}
+      <div className="relative w-full aspect-square overflow-hidden bg-zinc-950">
+        {!loaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse" />}
 
         {images[index]?.url && (
           <Image
@@ -71,11 +71,10 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             alt={images[index].alt || product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={80}
+            quality={85}
             className={cn(
-              'object-cover transition-all duration-500',
+              'object-contain p-3 transition-all duration-500',
               loaded ? 'opacity-100' : 'opacity-0',
-              hovering && 'scale-105',
             )}
             onLoad={() => setLoaded(true)}
           />
