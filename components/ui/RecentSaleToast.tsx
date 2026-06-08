@@ -101,25 +101,25 @@ export function RecentSaleToast() {
 
   return (
     <div className="fixed bottom-24 left-4 z-50 max-w-[280px] animate-slideIn">
-      <div className="flex items-center gap-3 bg-zinc-900 border border-white/15 rounded-2xl px-4 py-3 shadow-2xl">
+      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-xl">
         {/* Imagen o ícono */}
-        <div className="shrink-0 w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 flex items-center justify-center">
+        <div className="shrink-0 w-11 h-11 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
           {current.imageUrl
-            ? <img src={current.imageUrl} alt="" className="w-full h-full object-cover" />
-            : <ShoppingBag className="w-5 h-5 text-white/50" />
+            ? <img src={current.imageUrl} alt="" className="w-full h-full object-contain" />
+            : <ShoppingBag className="w-5 h-5 text-gray-400" />
           }
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-white text-xs font-black leading-tight line-clamp-1">{current.title}</p>
-          <p className="text-white/50 text-[10px] font-bold mt-0.5">
-            Comprado desde <span className="text-white/70">{current.city}</span> · {timeLabel}
+          <p className="text-gray-900 text-xs font-black leading-tight line-clamp-1">{current.title}</p>
+          <p className="text-gray-500 text-[10px] font-bold mt-0.5">
+            Comprado desde <span className="text-gray-700">{current.city}</span> · {timeLabel}
           </p>
         </div>
 
         <button
           onClick={() => setVisible(false)}
-          className="shrink-0 text-white/30 hover:text-white/70 transition-colors ml-1"
+          className="shrink-0 text-gray-400 hover:text-gray-700 transition-colors ml-1"
         >
           <X className="w-3.5 h-3.5" />
         </button>

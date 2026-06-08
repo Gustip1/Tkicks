@@ -188,29 +188,29 @@ export default function CheckoutPage() {
   // ─── Order Complete Screen ───
   if (orderComplete) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-black px-4">
+      <div className="min-h-[80vh] flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500/50 flex items-center justify-center mx-auto">
-            <Check className="w-10 h-10 text-green-400" />
+          <div className="w-20 h-20 rounded-full bg-green-50 border-2 border-green-300 flex items-center justify-center mx-auto">
+            <Check className="w-10 h-10 text-green-500" />
           </div>
-          <h1 className="text-2xl font-black text-white">¡Orden confirmada!</h1>
-          <p className="text-gray-400 font-bold text-sm">
-            Tu orden <span className="text-white font-black">{completedOrderNumber}</span> fue registrada con éxito.
+          <h1 className="text-2xl font-black text-gray-900">¡Orden confirmada!</h1>
+          <p className="text-gray-500 font-bold text-sm">
+            Tu orden <span className="text-gray-900 font-black">{completedOrderNumber}</span> fue registrada con éxito.
             Te notificaremos cuando validemos el pago.
           </p>
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 text-left space-y-2">
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-left space-y-2">
             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Próximos pasos</p>
-            <ul className="text-sm text-gray-300 space-y-1.5">
+            <ul className="text-sm text-gray-600 space-y-1.5">
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
+                <span className="text-green-500 mt-0.5">✓</span>
                 Validaremos tu comprobante de pago
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
+                <span className="text-green-500 mt-0.5">✓</span>
                 Recibirás una notificación con el tracking
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
+                <span className="text-green-500 mt-0.5">✓</span>
                 Te contactaremos por WhatsApp o email con novedades
               </li>
             </ul>
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => router.push('/productos')}
-              className="flex-1 py-3 rounded-xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-colors"
+              className="flex-1 py-3 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors"
             >
               Seguir comprando
             </button>
@@ -229,25 +229,25 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Checkout</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">Checkout</h1>
           {/* Step indicator */}
           <div className="mt-4 flex items-center gap-2">
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-colors ${
-              step >= 1 ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'
+              step >= 1 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'
             }`}>
-              <span className="w-5 h-5 rounded-full bg-black text-white text-xs flex items-center justify-center font-black">1</span>
+              <span className="w-5 h-5 rounded-full bg-white text-gray-900 text-xs flex items-center justify-center font-black">1</span>
               Entrega
             </div>
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-gray-400" />
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-colors ${
-              step >= 2 ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'
+              step >= 2 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'
             }`}>
               <span className={`w-5 h-5 rounded-full text-xs flex items-center justify-center font-black ${
-                step >= 2 ? 'bg-black text-white' : 'bg-zinc-700 text-zinc-400'
+                step >= 2 ? 'bg-white text-gray-900' : 'bg-gray-200 text-gray-500'
               }`}>2</span>
               Pago
             </div>
@@ -261,8 +261,8 @@ export default function CheckoutPage() {
             {step === 1 && (
               <>
                 {/* Delivery method selector */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
+                  <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                     <Package className="w-5 h-5" />
                     Método de entrega
                   </h2>
@@ -272,22 +272,22 @@ export default function CheckoutPage() {
                       onClick={() => checkout.setFulfillment('pickup')}
                       className={`relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                         checkout.fulfillment === 'pickup'
-                          ? 'border-white bg-white/5'
-                          : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 bg-white hover:border-gray-400'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        checkout.fulfillment === 'pickup' ? 'bg-white text-black' : 'bg-zinc-800 text-white'
+                        checkout.fulfillment === 'pickup' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
                       }`}>
                         <Store className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-black text-white">Retiro en Showroom</p>
+                        <p className="text-sm font-black text-gray-900">Retiro en Showroom</p>
                         <p className="text-xs text-gray-400 font-bold">Gratis · San Juan</p>
                       </div>
                       {checkout.fulfillment === 'pickup' && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center">
-                          <Check className="w-3 h-3 text-black" />
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </button>
@@ -296,22 +296,22 @@ export default function CheckoutPage() {
                       onClick={() => checkout.setFulfillment('shipping')}
                       className={`relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                         checkout.fulfillment === 'shipping'
-                          ? 'border-white bg-white/5'
-                          : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 bg-white hover:border-gray-400'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        checkout.fulfillment === 'shipping' ? 'bg-white text-black' : 'bg-zinc-800 text-white'
+                        checkout.fulfillment === 'shipping' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
                       }`}>
                         <Truck className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-black text-white">Envío a domicilio</p>
-                        <p className="text-xs text-emerald-400 font-bold">100% Gratis</p>
+                        <p className="text-sm font-black text-gray-900">Envío a domicilio</p>
+                        <p className="text-xs text-emerald-600 font-bold">100% Gratis</p>
                       </div>
                       {checkout.fulfillment === 'shipping' && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center">
-                          <Check className="w-3 h-3 text-black" />
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </button>
@@ -319,8 +319,8 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Contact info & shipping address */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
+                  <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
                     {checkout.fulfillment === 'shipping' ? 'Datos de envío' : 'Datos de contacto'}
                   </h2>
@@ -372,7 +372,7 @@ export default function CheckoutPage() {
 
                   <button
                     onClick={handleContinueToPayment}
-                    className="w-full py-3.5 rounded-xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors flex items-center justify-center gap-2"
                   >
                     Continuar al pago
                     <ChevronRight className="w-4 h-4" />
@@ -386,14 +386,14 @@ export default function CheckoutPage() {
               <>
                 <button
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-1 text-sm text-gray-400 hover:text-white font-bold transition-colors"
+                  className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-900 font-bold transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Volver a entrega
                 </button>
 
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
+                  <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                     <CreditCard className="w-5 h-5" />
                     Método de pago
                   </h2>
@@ -440,18 +440,18 @@ export default function CheckoutPage() {
 
                 {/* Payment details panel */}
                 {checkout.paymentMethod === 'cash' && (
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-4">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                        <Banknote className="w-5 h-5 text-green-400" />
+                      <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                        <Banknote className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-white">Pago en efectivo</p>
+                        <p className="text-sm font-black text-gray-900">Pago en efectivo</p>
                         <p className="text-xs text-gray-400 font-bold">Aboná al momento de retirar en nuestro showroom</p>
                       </div>
                     </div>
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-                      <p className="text-xs text-gray-400 font-bold">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <p className="text-xs text-gray-500 font-bold">
                         📍 Recordá que tu pedido estará reservado. Te enviaremos la dirección exacta por email.
                       </p>
                     </div>
@@ -459,42 +459,42 @@ export default function CheckoutPage() {
                 )}
 
                 {checkout.paymentMethod === 'crypto_transfer' && (
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-5">
-                    <h3 className="text-sm font-black text-white uppercase tracking-tight">Datos para transferencia</h3>
-                    
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Datos para transferencia</h3>
+
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias (Pesos ARS)</p>
-                        <p className="text-lg font-black text-white font-mono">{PAYMENT_ALIAS_ARS}</p>
+                        <p className="text-lg font-black text-gray-900 font-mono">{PAYMENT_ALIAS_ARS}</p>
                       </div>
-                      <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias (Dólares USD)</p>
-                        <p className="text-lg font-black text-white font-mono">{PAYMENT_ALIAS_USD}</p>
+                        <p className="text-lg font-black text-gray-900 font-mono">{PAYMENT_ALIAS_USD}</p>
                       </div>
                     </div>
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT ERC20 - Red Ethereum)</p>
-                      <p className="text-xs font-bold text-white font-mono break-all">{CRYPTO_WALLET}</p>
+                      <p className="text-xs font-bold text-gray-900 font-mono break-all">{CRYPTO_WALLET}</p>
                     </div>
 
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Monto a transferir</p>
-                      <p className="text-xl font-black text-white">${subtotalUSD.toFixed(2)} USD</p>
-                      <p className="text-sm text-gray-400 font-bold">{formatCurrency(subtotalARS)}</p>
+                      <p className="text-xl font-black text-gray-900">${subtotalUSD.toFixed(2)} USD</p>
+                      <p className="text-sm text-gray-500 font-bold">{formatCurrency(subtotalARS)}</p>
                     </div>
 
                     {/* Proof upload — MANDATORY */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-amber-400" />
-                        <p className="text-sm font-black text-white">Subí tu comprobante de pago *</p>
+                        <Upload className="w-4 h-4 text-amber-500" />
+                        <p className="text-sm font-black text-gray-900">Subí tu comprobante de pago *</p>
                       </div>
                       <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
                         proofUploaded
-                          ? 'border-green-500/50 bg-green-500/10'
+                          ? 'border-green-400 bg-green-50'
                           : errors.proof
-                            ? 'border-red-500/50 bg-red-500/10'
-                            : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
+                            ? 'border-red-400 bg-red-50'
+                            : 'border-gray-300 bg-gray-50 hover:border-gray-500'
                       }`}>
                         {proofUploaded ? (
                           <>
@@ -531,50 +531,50 @@ export default function CheckoutPage() {
                 )}
 
                 {checkout.paymentMethod === 'installments_3' && (
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 md:p-6 space-y-4">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-purple-400" />
+                      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-white">
+                        <p className="text-sm font-black text-gray-900">
                           3 Cuotas sin interés
                           {promoOn && (
-                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider align-middle">
+                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider align-middle">
                               Promo
                             </span>
                           )}
                         </p>
-                        <p className="text-xs text-gray-400 font-bold">
+                        <p className="text-xs text-gray-500 font-bold">
                           {promoOn
-                            ? 'Promo 11-17/05: SIN recargo, mismo precio que efectivo'
+                            ? 'Promo: SIN recargo, mismo precio que efectivo'
                             : 'Se aplica un 10% de recargo sobre el precio base'}
                         </p>
                       </div>
                     </div>
 
                     {/* Surcharge breakdown */}
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-2">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400 font-bold">Subtotal (precio base)</span>
-                        <span className="text-white font-bold">${subtotalUSD.toFixed(2)} USD</span>
+                        <span className="text-gray-500 font-bold">Subtotal (precio base)</span>
+                        <span className="text-gray-900 font-bold">${subtotalUSD.toFixed(2)} USD</span>
                       </div>
                       {!promoOn && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-400 font-bold">Recargo tarjeta (10%)</span>
-                          <span className="text-amber-400 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                          <span className="text-gray-500 font-bold">Recargo tarjeta (10%)</span>
+                          <span className="text-amber-600 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-sm pt-2 border-t border-zinc-700">
-                        <span className="text-white font-black">Total con tarjeta</span>
+                      <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                        <span className="text-gray-900 font-black">Total con tarjeta</span>
                         <div className="text-right">
-                          <p className="text-white font-black">${totalUSD.toFixed(2)} USD</p>
-                          <p className="text-xs text-gray-400 font-bold">{formatCurrency(totalARS)}</p>
+                          <p className="text-gray-900 font-black">${totalUSD.toFixed(2)} USD</p>
+                          <p className="text-xs text-gray-500 font-bold">{formatCurrency(totalARS)}</p>
                         </div>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-purple-400 font-black">3 cuotas de</span>
-                        <span className="text-purple-400 font-black">{formatCurrency(totalARS / 3)}</span>
+                        <span className="text-purple-600 font-black">3 cuotas de</span>
+                        <span className="text-purple-600 font-black">{formatCurrency(totalARS / 3)}</span>
                       </div>
                     </div>
 
@@ -615,9 +615,9 @@ export default function CheckoutPage() {
 
                 {/* Submit error */}
                 {errors.submit && (
-                  <div className="flex items-center gap-2 rounded-xl bg-red-500/15 border border-red-500/30 px-4 py-3">
-                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                    <p className="text-sm text-red-300 font-bold">{errors.submit}</p>
+                  <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <p className="text-sm text-red-600 font-bold">{errors.submit}</p>
                   </div>
                 )}
 
@@ -626,11 +626,11 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleSubmitOrder}
                     disabled={submitting}
-                    className="w-full py-4 rounded-xl bg-white text-black font-black text-sm uppercase tracking-tight hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         Procesando...
                       </>
                     ) : (
@@ -647,65 +647,63 @@ export default function CheckoutPage() {
 
           {/* ═══════════════ ORDER SUMMARY SIDEBAR ═══════════════ */}
           <div className="lg:sticky lg:top-6 lg:self-start space-y-4">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 space-y-4">
-              <h3 className="text-sm font-black text-white uppercase tracking-tight">Resumen del pedido</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+              <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Resumen del pedido</h3>
 
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                 {cart.items.map((it) => (
                   <div key={`${it.productId}-${it.size}`} className="flex gap-3">
                     <div className="relative shrink-0">
                       {it.imageUrl && (
-                        <img src={it.imageUrl} alt={it.title} className="w-14 h-14 rounded-lg object-cover border border-zinc-800" />
+                        <img src={it.imageUrl} alt={it.title} className="w-14 h-14 rounded-lg object-contain bg-gray-50 border border-gray-200" />
                       )}
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-600 text-white text-[10px] font-black flex items-center justify-center">
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-700 text-white text-[10px] font-black flex items-center justify-center">
                         {it.quantity}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white line-clamp-1">{it.title}</p>
+                      <p className="text-xs font-bold text-gray-900 line-clamp-1">{it.title}</p>
                       <p className="text-[10px] text-gray-400 font-bold">Talle: {it.size}</p>
                     </div>
-                    <p className="text-xs font-black text-white whitespace-nowrap">
+                    <p className="text-xs font-black text-gray-900 whitespace-nowrap">
                       ${(it.price * it.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-zinc-800 pt-3 space-y-2">
+              <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400 font-bold">Subtotal</span>
-                  <span className="text-white font-black">${subtotalUSD.toFixed(2)} USD</span>
+                  <span className="text-gray-500 font-bold">Subtotal</span>
+                  <span className="text-gray-900 font-black">${subtotalUSD.toFixed(2)} USD</span>
                 </div>
                 {isCardPayment && !promoOn && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-amber-400 font-bold">Recargo tarjeta (10%)</span>
-                    <span className="text-amber-400 font-black">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                    <span className="text-amber-600 font-bold">Recargo tarjeta (10%)</span>
+                    <span className="text-amber-600 font-black">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
                   </div>
                 )}
                 {isCardPayment && promoOn && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-orange-400 font-bold">🔥 Promo 11-17/05 · sin recargo</span>
-                    <span className="text-orange-400 font-black">$0.00 USD</span>
+                    <span className="text-orange-600 font-bold">🔥 Promo · sin recargo</span>
+                    <span className="text-orange-600 font-black">$0.00 USD</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400 font-bold">Envío</span>
-                  <span className="text-gray-400 font-bold">
-Gratis
-                  </span>
+                  <span className="text-gray-500 font-bold">Envío</span>
+                  <span className="text-gray-500 font-bold">Gratis</span>
                 </div>
-                <div className="flex justify-between text-base pt-2 border-t border-zinc-800">
-                  <span className="text-white font-black uppercase">Total</span>
+                <div className="flex justify-between text-base pt-2 border-t border-gray-200">
+                  <span className="text-gray-900 font-black uppercase">Total</span>
                   <div className="text-right">
-                    <p className="text-white font-black">${totalUSD.toFixed(2)} USD</p>
-                    <p className="text-xs text-gray-400 font-bold">{formatCurrency(totalARS)}</p>
+                    <p className="text-gray-900 font-black">${totalUSD.toFixed(2)} USD</p>
+                    <p className="text-xs text-gray-500 font-bold">{formatCurrency(totalARS)}</p>
                   </div>
                 </div>
                 {isCardPayment && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-purple-400 font-black">3 cuotas de</span>
-                    <span className="text-purple-400 font-black">{formatCurrency(totalARS / 3)}</span>
+                    <span className="text-purple-600 font-black">3 cuotas de</span>
+                    <span className="text-purple-600 font-black">{formatCurrency(totalARS / 3)}</span>
                   </div>
                 )}
               </div>
@@ -713,22 +711,22 @@ Gratis
 
             {/* Timer warning */}
             {cart.getRemainingSeconds() !== null && (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                <p className="text-xs text-amber-300 font-bold">
+              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                <p className="text-xs text-amber-700 font-bold">
                   Completá tu compra antes de que expire el carrito
                 </p>
               </div>
             )}
 
             {/* Security badges */}
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <ShieldCheck className="w-4 h-4 text-green-400" />
+            <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <ShieldCheck className="w-4 h-4 text-green-500" />
                 <span className="font-bold">Compra 100% segura</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Package className="w-4 h-4 text-blue-400" />
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Package className="w-4 h-4 text-blue-500" />
                 <span className="font-bold">Productos originales garantizados</span>
               </div>
             </div>
@@ -772,10 +770,10 @@ function InputField({
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
-        className={`w-full rounded-xl border bg-zinc-900 px-4 py-3 text-base text-white font-bold placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors ${
+        className={`w-full rounded-xl border bg-white px-4 py-3 text-base text-gray-900 font-bold placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-colors ${
           error
-            ? 'border-red-500/50 focus:ring-red-500/30'
-            : 'border-zinc-800 focus:border-white focus:ring-white/10'
+            ? 'border-red-400 focus:ring-red-200'
+            : 'border-gray-300 focus:border-gray-900 focus:ring-gray-100'
         }`}
       />
       <p className={`mt-1 text-xs text-red-400 font-bold min-h-[1rem] ${error ? '' : 'invisible'}`}>{error || ' '}</p>
@@ -802,22 +800,22 @@ function PaymentOption({
       onClick={onClick}
       className={`relative w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
         selected
-          ? 'border-white bg-white/5'
-          : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'
+          ? 'border-gray-900 bg-gray-50'
+          : 'border-gray-200 bg-white hover:border-gray-400'
       }`}
     >
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-        selected ? 'bg-white text-black' : 'bg-zinc-800 text-white'
+        selected ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
       }`}>
         {icon}
       </div>
       <div>
-        <p className="text-sm font-black text-white">{title}</p>
-        <p className="text-xs text-gray-400 font-bold">{description}</p>
+        <p className="text-sm font-black text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500 font-bold">{description}</p>
       </div>
       {selected && (
-        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white flex items-center justify-center">
-          <Check className="w-3 h-3 text-black" />
+        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center">
+          <Check className="w-3 h-3 text-white" />
         </div>
       )}
     </button>

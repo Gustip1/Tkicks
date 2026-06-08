@@ -49,21 +49,21 @@ export default function ProductDetailPage() {
 
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh] bg-black">
+    <div className="flex items-center justify-center min-h-[60vh] bg-white">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-3 border-white border-t-transparent rounded-full animate-spin" />
-        <p className="text-white font-black">Cargando producto...</p>
+        <div className="w-10 h-10 border-3 border-gray-900 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-900 font-black">Cargando producto...</p>
       </div>
     </div>
   );
-  
+
   if (!product) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-black">
-      <div className="w-20 h-20 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-white">
+      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
         <span className="text-4xl">🔍</span>
       </div>
-      <h2 className="text-xl font-black text-white mb-2">Producto no encontrado</h2>
-      <p className="text-gray-400 font-bold">El producto que buscas no existe o fue eliminado.</p>
+      <h2 className="text-xl font-black text-gray-900 mb-2">Producto no encontrado</h2>
+      <p className="text-gray-500 font-bold">El producto que buscas no existe o fue eliminado.</p>
     </div>
   );
 
@@ -73,16 +73,16 @@ export default function ProductDetailPage() {
   const productClueInfo = getProductClueInfo(product.slug, product.category);
 
   return (
-    <div className="max-w-7xl mx-auto animate-fadeIn bg-black min-h-screen overflow-x-hidden">
+    <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden">
       {/* Breadcrumb */}
       <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold">
-        <a href="/" className="hover:text-white transition-colors">Inicio</a>
+        <a href="/" className="hover:text-gray-900 transition-colors">Inicio</a>
         <span>/</span>
-        <a href={`/productos?${product.category}`} className="hover:text-white transition-colors capitalize">
+        <a href={`/productos?${product.category}`} className="hover:text-gray-900 transition-colors capitalize">
           {product.category}
         </a>
         <span>/</span>
-        <span className="text-white font-black truncate max-w-[120px] md:max-w-[200px]">{product.title}</span>
+        <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]">{product.title}</span>
       </nav>
 
       <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">
@@ -95,21 +95,21 @@ export default function ProductDetailPage() {
         <div className="space-y-3 md:space-y-6">
           {/* Category badge */}
           <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-            <span className="inline-flex items-center rounded-full bg-green-500/20 text-green-400 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-green-500/50">
+            <span className="inline-flex items-center rounded-full bg-green-50 text-green-700 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-green-200">
               {product.category}
             </span>
             {product.on_sale && (
-              <span className="inline-flex items-center rounded-full bg-red-500/20 text-red-400 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-500/50">
+              <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-200">
                 🔥 Oferta
               </span>
             )}
           </div>
 
           {/* Title */}
-          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
+          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
             {product.title}
           </h1>
-          
+
           {/* Rating placeholder */}
           <div className="flex items-center gap-1.5 md:gap-2">
             <div className="flex items-center gap-0.5">
@@ -117,25 +117,25 @@ export default function ProductDetailPage() {
                 <Star key={i} className="w-3 h-3 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
-            <span className="text-[10px] md:text-sm text-gray-300 font-bold">(Verificado)</span>
+            <span className="text-[10px] md:text-sm text-gray-500 font-bold">(Verificado)</span>
           </div>
 
           {/* Description */}
           {product.description && (
-            <p className="text-gray-300 leading-relaxed whitespace-pre-wrap font-semibold text-sm md:text-base">
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap font-semibold text-sm md:text-base">
               {product.description}
             </p>
           )}
 
           {/* Price */}
-          <div className="space-y-2 pb-3 md:pb-4 border-b border-zinc-800">
+          <div className="space-y-2 pb-3 md:pb-4 border-b border-gray-200">
             <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio · Transferencia / Efectivo</p>
             <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
+              <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">
                 ${activePrice.toFixed(2)} USD
               </span>
               {hasSale && (
-                <span className="text-lg md:text-2xl font-black text-white/30 line-through">
+                <span className="text-lg md:text-2xl font-black text-gray-400 line-through">
                   ${Number(product.price).toFixed(2)}
                 </span>
               )}
@@ -149,14 +149,13 @@ export default function ProductDetailPage() {
               )}
             </div>
             {hasSale && (
-              <p className="text-xs font-black text-red-400 uppercase tracking-wide">
+              <p className="text-xs font-black text-red-500 uppercase tracking-wide">
                 ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
               </p>
             )}
-            <p className="text-sm md:text-lg text-gray-300 font-bold">
+            <p className="text-sm md:text-lg text-gray-600 font-bold">
               {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
             </p>
-            {/* Precio Tarjeta — 3 cuotas (recargo desde lib/promo) */}
             {(() => {
               const cardPriceArs = activePrice * getCardPriceMultiplier() * dolarOficial;
               const installment = cardPriceArs / 3;
@@ -165,75 +164,75 @@ export default function ProductDetailPage() {
                 <div
                   className={
                     promoOn
-                      ? 'mt-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/40'
-                      : 'mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30'
+                      ? 'mt-2 p-3 rounded-xl bg-orange-50 border border-orange-200'
+                      : 'mt-2 p-3 rounded-xl bg-violet-50 border border-violet-200'
                   }
                 >
                   <p
                     className={
                       promoOn
-                        ? 'text-sm md:text-base text-orange-300 font-black'
-                        : 'text-sm md:text-base text-purple-300 font-black'
+                        ? 'text-sm md:text-base text-orange-600 font-black'
+                        : 'text-sm md:text-base text-violet-600 font-black'
                     }
                   >
                     💳 3 cuotas sin interés de {formatCurrency(installment)}
                     {promoOn && (
-                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider align-middle">
+                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider align-middle">
                         Promo
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-400 font-bold">
+                  <p className="text-xs text-gray-500 font-bold">
                     {promoOn
-                      ? 'Promo 11-17/05: SIN recargo, mismo precio que efectivo'
+                      ? 'Promo: SIN recargo, mismo precio que efectivo'
                       : `Total tarjeta: ${formatCurrency(cardPriceArs)} (10% recargo incluido)`}
                   </p>
                 </div>
               );
             })()}
           </div>
-          
+
           {/* Add to cart section */}
           <div className="py-2 md:py-4">
             <AddToCart product={product} variants={variants} />
           </div>
 
-          {/* Trust badges - SIN CAMBIOS NI DEVOLUCIONES */}
-          <div className="grid grid-cols-2 gap-2 md:gap-4 py-4 md:py-6 border-t border-zinc-800">
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-500/20 shrink-0">
-                <Shield className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+          {/* Trust badges */}
+          <div className="grid grid-cols-2 gap-2 md:gap-4 py-4 md:py-6 border-t border-gray-200">
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-50 shrink-0">
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-white truncate">100% Original</p>
-                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Garantía</p>
+                <p className="text-xs md:text-sm font-black text-gray-900 truncate">100% Original</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Garantía</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500/20 shrink-0">
-                <Truck className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-50 shrink-0">
+                <Truck className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-white truncate">Envío seguro</p>
-                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Todo el país</p>
+                <p className="text-xs md:text-sm font-black text-gray-900 truncate">Envío seguro</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Todo el país</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-500/20 shrink-0">
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-50 shrink-0">
                 <span className="text-sm md:text-lg">💳</span>
               </div>
               <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-white truncate">3 cuotas</p>
-                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Sin interés</p>
+                <p className="text-xs md:text-sm font-black text-gray-900 truncate">3 cuotas</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Sin interés</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-500/20 shrink-0">
-                <Star className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-50 shrink-0">
+                <Star className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-white truncate">Verificado</p>
-                <p className="text-[10px] md:text-xs text-gray-400 font-bold truncate">Auténtico</p>
+                <p className="text-xs md:text-sm font-black text-gray-900 truncate">Verificado</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Auténtico</p>
               </div>
             </div>
           </div>

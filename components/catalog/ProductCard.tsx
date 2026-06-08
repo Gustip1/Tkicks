@@ -60,8 +60,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
       {/* ── Imagen ── */}
-      <div className="relative w-full aspect-square overflow-hidden">
-        {!loaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse rounded-sm" />}
+      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+        {!loaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
 
         {images[index]?.url && (
           <Image
@@ -81,8 +81,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Sold-out overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-white text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest">
+          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+            <span className="bg-black text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
               Agotado
             </span>
           </div>
@@ -96,7 +96,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             </span>
           )}
           {product.is_new && !isSoldOut && (
-            <span className="px-2 py-0.5 bg-white text-black text-[9px] font-black uppercase tracking-widest">
+            <span className="px-2 py-0.5 bg-black text-white text-[9px] font-black uppercase tracking-widest">
               Nuevo
             </span>
           )}
@@ -106,7 +106,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {images.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {images.map((_, idx) => (
-              <span key={idx} className={cn('h-0.5 rounded-full transition-all bg-white/30', index === idx ? 'w-4 bg-white/70' : 'w-1')} />
+              <span key={idx} className={cn('h-0.5 rounded-full transition-all bg-gray-400', index === idx ? 'w-4 bg-gray-700' : 'w-1')} />
             ))}
           </div>
         )}
@@ -114,50 +114,46 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
       {/* ── Info ── */}
       <div className="pt-3">
-        {/* Categoría */}
-        <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold mb-1">
+        <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-1">
           {categoryLabel}
         </p>
 
-        {/* Título */}
         <h3 className={cn(
-          'font-bold text-white uppercase tracking-wide leading-tight line-clamp-2 mb-2 group-hover:text-white/70 transition-colors',
+          'font-bold text-gray-900 uppercase tracking-wide leading-tight line-clamp-2 mb-2 group-hover:text-gray-500 transition-colors',
           size === 'large' ? 'text-sm' : 'text-xs',
         )}>
           {product.title}
         </h3>
 
-        {/* Tallas */}
         {availableSizes.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {availableSizes.slice(0, 4).map(s => (
-              <span key={s} className="text-[9px] font-bold text-white/40 border border-white/10 px-1.5 py-0.5">
+              <span key={s} className="text-[9px] font-bold text-gray-500 border border-gray-300 px-1.5 py-0.5">
                 {s}
               </span>
             ))}
             {availableSizes.length > 4 && (
-              <span className="text-[9px] text-white/30 font-bold self-center">+{availableSizes.length - 4}</span>
+              <span className="text-[9px] text-gray-400 font-bold self-center">+{availableSizes.length - 4}</span>
             )}
           </div>
         )}
 
-        {/* Precios */}
         <div className="space-y-0.5">
           {hasSale && (
-            <p className="text-[10px] text-white/30 line-through">
+            <p className="text-[10px] text-gray-400 line-through">
               ${Number(product.price).toFixed(2)} USD
             </p>
           )}
           <p className={cn(
             'font-bold tracking-wide',
             size === 'large' ? 'text-base' : 'text-sm',
-            hasSale ? 'text-red-400' : 'text-white',
+            hasSale ? 'text-red-500' : 'text-gray-900',
           )}>
             ${activePrice.toFixed(2)} USD
           </p>
-          <p className="text-[10px] text-white/30">{formatCurrency(priceInArs)}</p>
+          <p className="text-[10px] text-gray-400">{formatCurrency(priceInArs)}</p>
           {!isSoldOut && (
-            <p className={cn('text-[10px] font-medium', promoOn ? 'text-orange-400/70' : 'text-violet-400/70')}>
+            <p className={cn('text-[10px] font-medium', promoOn ? 'text-orange-500' : 'text-violet-500')}>
               3 × {formatCurrency(cardArs / 3)}
             </p>
           )}

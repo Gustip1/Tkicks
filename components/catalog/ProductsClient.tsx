@@ -205,10 +205,10 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
   }, [category, subcategory, dq, selectedSizes, selectedBrand]);
 
   return (
-    <div className="space-y-6 animate-fadeIn bg-black">
+    <div className="space-y-6 animate-fadeIn bg-white">
       {/* Simple category title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
           {config ? config.title : title}
         </h1>
       </div>
@@ -222,7 +222,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
               "px-4 py-2 rounded-xl text-sm font-bold transition-all",
               !subcategory
                 ? "bg-white text-black"
-                : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
             )}
           >
             Todo
@@ -235,7 +235,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
                 "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5",
                 subcategory === sub.value
                   ? "bg-white text-black"
-                  : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
               )}
             >
               <span>{sub.icon}</span>

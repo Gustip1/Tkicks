@@ -47,7 +47,7 @@ export function CartDrawer() {
   return (
     <>
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md translate-x-full border-l border-neutral-800 bg-black shadow-xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)] ${
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md translate-x-full border-l border-gray-200 bg-white shadow-xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)] ${
           isOpen ? '!translate-x-0' : ''
         }`}
         role="dialog"
@@ -55,21 +55,21 @@ export function CartDrawer() {
         aria-label="Carrito"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-neutral-800 p-4">
-            <h2 className="text-lg font-black text-white uppercase tracking-tight">Carrito</h2>
+          <div className="flex items-center justify-between border-b border-gray-200 p-4">
+            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">Carrito</h2>
             <div className="flex items-center gap-3">
               {/* Timer display */}
               {items.length > 0 && remainingSeconds !== null && (
                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black ${
                   isLowTime
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
-                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                    ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
+                    : 'bg-amber-50 text-amber-600 border border-amber-200'
                 }`}>
                   <Clock className="w-3.5 h-3.5" />
                   <span>{formatTime(remainingSeconds)}</span>
                 </div>
               )}
-              <button onClick={close} className="rounded-xl px-4 min-h-[44px] text-sm text-white hover:bg-neutral-800 active:bg-neutral-700 font-black border border-zinc-700 hover:border-white transition-all">
+              <button onClick={close} className="rounded-xl px-4 min-h-[44px] text-sm text-gray-900 hover:bg-gray-100 active:bg-gray-200 font-black border border-gray-300 hover:border-gray-900 transition-all">
                 Cerrar
               </button>
             </div>
@@ -77,33 +77,33 @@ export function CartDrawer() {
 
           {/* Expired warning */}
           {expired && items.length === 0 && (
-            <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl bg-red-500/15 border border-red-500/30 px-4 py-3">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-              <p className="text-xs text-red-300 font-bold">
+            <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+              <p className="text-xs text-red-600 font-bold">
                 Tu carrito expiró. Los artículos fueron devueltos al stock. Volvé a agregarlos si los querés.
               </p>
             </div>
           )}
 
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {items.length === 0 && !expired && <p className="text-sm text-neutral-400 font-bold">Tu carrito está vacío.</p>}
+            {items.length === 0 && !expired && <p className="text-sm text-gray-400 font-bold">Tu carrito está vacío.</p>}
             {items.map((it) => (
-              <div key={`${it.productId}-${it.size}`} className="flex gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div key={`${it.productId}-${it.size}`} className="flex gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 {it.imageUrl && (
                   <img
                     src={it.imageUrl}
                     alt={it.title}
                     loading="lazy"
-                    className="h-20 w-20 rounded-lg object-cover"
+                    className="h-20 w-20 rounded-lg object-contain bg-white"
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <Link href={`/producto/${it.slug}`} className="line-clamp-2 text-sm font-black text-white hover:text-gray-300">
+                  <Link href={`/producto/${it.slug}`} className="line-clamp-2 text-sm font-black text-gray-900 hover:text-gray-600">
                     {it.title}
                   </Link>
-                  <div className="mt-1 text-xs text-neutral-400 font-bold">Talle: {it.size}</div>
+                  <div className="mt-1 text-xs text-gray-400 font-bold">Talle: {it.size}</div>
                   <div className="mt-2 flex items-center gap-2">
-                    <label className="text-xs text-white font-black" htmlFor={`qty-${it.productId}-${it.size}`}>
+                    <label className="text-xs text-gray-900 font-black" htmlFor={`qty-${it.productId}-${it.size}`}>
                       Cant.
                     </label>
                     <input
@@ -112,29 +112,29 @@ export function CartDrawer() {
                       inputMode="numeric"
                       pattern="[0-9]*"
                       min={1}
-                      className="h-11 w-16 rounded-lg border border-neutral-600 bg-neutral-800 px-2 text-base text-white font-black text-center focus:border-white focus:outline-none"
+                      className="h-11 w-16 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-900 font-black text-center focus:border-gray-900 focus:outline-none"
                       value={it.quantity}
                       onChange={(e) => updateQty(it.productId, it.size, Number(e.target.value))}
                     />
                     <button
-                      className="ml-auto rounded-lg px-3 min-h-[44px] text-xs text-red-400 hover:bg-red-500/20 active:bg-red-500/30 font-black uppercase transition-colors"
+                      className="ml-auto rounded-lg px-3 min-h-[44px] text-xs text-red-500 hover:bg-red-50 active:bg-red-100 font-black uppercase transition-colors"
                       onClick={() => removeItem(it.productId, it.size)}
                     >
                       Eliminar
                     </button>
                   </div>
                 </div>
-                <div className="text-sm font-black text-white">{formatCurrency(it.price)}</div>
+                <div className="text-sm font-black text-gray-900">{formatCurrency(it.price)}</div>
               </div>
             ))}
           </div>
-          <div className="border-t border-neutral-800 p-4">
+          <div className="border-t border-gray-200 p-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-black text-white uppercase tracking-wide">Subtotal</span>
-              <span className="font-black text-white">{formatCurrency(subtotal)}</span>
+              <span className="font-black text-gray-900 uppercase tracking-wide">Subtotal</span>
+              <span className="font-black text-gray-900">{formatCurrency(subtotal)}</span>
             </div>
             {items.length > 0 && remainingSeconds !== null && (
-              <p className="mt-1 text-xs text-amber-400/80 font-bold">
+              <p className="mt-1 text-xs text-amber-600 font-bold">
                 ⏱ Tenés {formatTime(remainingSeconds)} para completar tu compra
               </p>
             )}
@@ -143,8 +143,8 @@ export function CartDrawer() {
               onClick={close}
               className={`mt-3 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-black uppercase tracking-tight shadow-lg transition-colors ${
                 items.length === 0
-                  ? 'bg-zinc-800 text-zinc-500 pointer-events-none'
-                  : 'bg-white text-black hover:bg-gray-100'
+                  ? 'bg-gray-100 text-gray-400 pointer-events-none'
+                  : 'bg-gray-900 text-white hover:bg-black'
               }`}
             >
               Ir al Checkout
@@ -156,12 +156,11 @@ export function CartDrawer() {
         <button
           aria-label="Cerrar carrito"
           onClick={close}
-          className="fixed inset-0 z-40 bg-black/30"
+          className="fixed inset-0 z-40 bg-black/20"
         />
       )}
     </>
   );
 }
-
 
 

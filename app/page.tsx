@@ -34,7 +34,7 @@ export default function HomePage() {
       <HowToBuy />
 
       {/* Carruseles destacados */}
-      <div className="bg-[#0A0A0A] py-12 md:py-20">
+      <div className="bg-white py-12 md:py-20 border-t border-gray-200">
         <FeaturedCarousels />
       </div>
     </div>

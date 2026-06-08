@@ -48,7 +48,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
     <div className="space-y-4 md:space-y-5">
       {/* Selector de talla */}
       <div>
-        <label className="block text-xs md:text-sm font-black text-white mb-2 md:mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 uppercase tracking-wider">
           Selecciona tu talla
         </label>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 md:gap-3">
@@ -61,17 +61,17 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
               className={`
                 relative min-h-[44px] py-3 md:py-3 px-2 md:px-3 rounded-md md:rounded-lg border-2 text-sm md:text-sm font-black transition-all
                 ${size === v.size
-                  ? 'border-white bg-white text-black'
+                  ? 'border-gray-900 bg-gray-900 text-white'
                   : v.stock > 0
-                    ? 'border-zinc-700 bg-zinc-900 text-white hover:border-white active:border-white active:bg-zinc-800'
-                    : 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed'
+                    ? 'border-gray-300 bg-white text-gray-900 hover:border-gray-900 active:border-gray-900 active:bg-gray-50'
+                    : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
                 }
               `}
             >
               {v.size}
               {v.stock <= 0 && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-0.5 bg-zinc-600 rotate-45" />
+                  <div className="w-full h-0.5 bg-gray-300 rotate-45" />
                 </div>
               )}
             </button>
@@ -86,7 +86,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
 
       {/* Selector de cantidad */}
       <div>
-        <label className="block text-xs md:text-sm font-black text-white mb-2 md:mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 uppercase tracking-wider">
           Cantidad
         </label>
         <div className="flex items-center gap-2 md:gap-3">
@@ -95,12 +95,12 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             onClick={() => setQty(Math.max(1, qty - 1))}
             disabled={!size || maxQty <= 0 || qty <= 1}
             aria-label="Disminuir cantidad"
-            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white active:border-white active:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-gray-300 flex items-center justify-center text-gray-900 font-black hover:border-gray-900 active:border-gray-900 active:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">−</span>
           </button>
           <input
-            className="w-16 h-11 text-center rounded-md md:rounded-lg border-2 border-zinc-700 bg-black text-white text-base font-black focus:outline-none focus:border-white"
+            className="w-16 h-11 text-center rounded-md md:rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-black focus:outline-none focus:border-gray-900"
             type="number"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -119,7 +119,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             onClick={() => setQty(Math.min(maxQty, qty + 1))}
             disabled={!size || maxQty <= 0 || qty >= maxQty}
             aria-label="Aumentar cantidad"
-            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-zinc-700 flex items-center justify-center text-white font-black hover:border-white active:border-white active:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-gray-300 flex items-center justify-center text-gray-900 font-black hover:border-gray-900 active:border-gray-900 active:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">+</span>
           </button>
@@ -155,7 +155,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       </a>
 
       {/* Información adicional - SIN MENCIONAR CAMBIOS/DEVOLUCIONES */}
-      <div className="pt-3 md:pt-4 space-y-1.5 md:space-y-2 text-xs md:text-sm text-gray-300 border-t border-zinc-800">
+      <div className="pt-3 md:pt-4 space-y-1.5 md:space-y-2 text-xs md:text-sm text-gray-500 border-t border-gray-200">
         <p className="flex items-center gap-2 font-bold">
           <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

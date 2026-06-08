@@ -20,7 +20,7 @@ function ProductSlide({ product }: { product: Product }) {
   return (
     <Link href={`/producto/${product.slug}`} className="group block">
       <div className="relative aspect-square w-full overflow-hidden">
-        {!imageLoaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse rounded-sm" />}
+        {!imageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-sm" />}
         {product.images?.[0]?.url && (
           <Image
             src={product.images[0].url}
@@ -36,23 +36,23 @@ function ProductSlide({ product }: { product: Product }) {
           />
         )}
         {hasSale && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest">
+          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-gray-900 text-[9px] font-black uppercase tracking-widest">
             SALE
           </span>
         )}
       </div>
       <div className="pt-3">
-        <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold mb-1">{product.category}</p>
-        <h3 className="text-xs font-bold text-white uppercase tracking-wide line-clamp-2 mb-1.5 group-hover:text-white/70 transition-colors">
+        <p className="text-[9px] text-gray-900/30 uppercase tracking-[0.2em] font-bold mb-1">{product.category}</p>
+        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
           {product.title}
         </h3>
         {hasSale && (
-          <p className="text-[10px] text-white/30 line-through">${Number(product.price).toFixed(0)} USD</p>
+          <p className="text-[10px] text-gray-900/30 line-through">${Number(product.price).toFixed(0)} USD</p>
         )}
-        <p className={cn('text-sm font-bold tracking-wide', hasSale ? 'text-red-400' : 'text-white')}>
+        <p className={cn('text-sm font-bold tracking-wide', hasSale ? 'text-red-400' : 'text-gray-900')}>
           ${activePrice.toFixed(2)} USD
         </p>
-        <p className="text-[10px] text-white/30">{formatCurrency(activePrice * dolarOficial)}</p>
+        <p className="text-[10px] text-gray-900/30">{formatCurrency(activePrice * dolarOficial)}</p>
       </div>
     </Link>
   );
@@ -74,7 +74,7 @@ function SaleSection({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
   
   return (
-    <section className="space-y-6 bg-black">
+    <section className="space-y-6 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -82,31 +82,31 @@ function SaleSection({ products }: { products: Product[] }) {
             <span className="text-2xl">🔥</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
               Ofertas especiales
             </h2>
-            <p className="text-sm text-gray-400 font-bold">No te pierdas estos precios únicos</p>
+            <p className="text-sm text-gray-500 font-bold">No te pierdas estos precios únicos</p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           <button
             onClick={scrollPrev}
-            className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:bg-zinc-700 hover:border-white transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
             aria-label="Anterior"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 text-gray-900" />
           </button>
           <button
             onClick={scrollNext}
-            className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:bg-zinc-700 hover:border-white transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
             aria-label="Siguiente"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-5 h-5 text-gray-900" />
           </button>
           <Link
             href="/ofertas"
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-black hover:from-red-600 hover:to-orange-600 transition-all shadow-md uppercase tracking-tight"
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-black hover:from-red-600 hover:to-orange-600 transition-all shadow-md uppercase tracking-tight"
           >
             Ver todas
             <ArrowRight className="w-4 h-4" />
@@ -128,7 +128,7 @@ function SaleSection({ products }: { products: Product[] }) {
       {/* Mobile CTA */}
       <Link
         href="/ofertas"
-        className="md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-medium"
+        className="md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-medium"
       >
         Ver todas las ofertas
         <ArrowRight className="w-4 h-4" />
@@ -167,7 +167,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
       };
   
   return (
-    <section className="space-y-6 bg-black">
+    <section className="space-y-6 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -175,31 +175,31 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
             <span className="text-2xl">{config.icon}</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
               {title}
             </h2>
-            <p className="text-sm text-gray-400 font-bold">Productos seleccionados para ti</p>
+            <p className="text-sm text-gray-500 font-bold">Productos seleccionados para ti</p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           <button
             onClick={scrollPrev}
-            className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:bg-zinc-700 hover:border-white transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
             aria-label="Anterior"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 text-gray-900" />
           </button>
           <button
             onClick={scrollNext}
-            className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:bg-zinc-700 hover:border-white transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
             aria-label="Siguiente"
           >
             <ChevronRight className="w-5 h-5 text-gray-700" />
           </button>
           <Link
             href={config.linkHref}
-            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-white text-sm font-black hover:opacity-90 transition-all shadow-md uppercase tracking-tight`}
+            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black hover:opacity-90 transition-all shadow-md uppercase tracking-tight`}
           >
             Ver todos
             <ArrowRight className="w-4 h-4" />
@@ -221,7 +221,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
       {/* Mobile CTA */}
       <Link
         href={config.linkHref}
-        className={`md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r ${config.gradient} text-white text-sm font-black uppercase tracking-tight`}
+        className={`md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black uppercase tracking-tight`}
       >
         Ver todos los {type === 'sneakers' ? 'sneakers' : 'streetwear'}
         <ArrowRight className="w-4 h-4" />

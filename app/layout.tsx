@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={cn('min-h-screen bg-black text-white antialiased font-sans font-medium')}>
+      <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-medium')}>
         {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AnalyticsProvider>
             <Header />
             <Sidebar />
-            <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-black overflow-x-hidden">
+            <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white overflow-x-hidden">
               <RouteTransitions>{children}</RouteTransitions>
               <GiveawayClue />
             </main>

@@ -20,28 +20,28 @@ export default async function NuevosIngresosPage() {
   const products = (data ?? []) as Product[];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       <main className="max-w-[1600px] mx-auto px-4 py-8 space-y-8">
         <header className="space-y-3">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
             Catálogo exclusivo
           </p>
-          <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">
             Nuevos ingresos
           </h1>
-          <p className="text-sm md:text-base text-gray-400 font-bold max-w-2xl">
+          <p className="text-sm md:text-base text-gray-500 font-bold max-w-2xl">
             Acá encontrás todos los productos que llegaron hace poco a Tkicks, ordenados del más reciente al más antiguo.
           </p>
         </header>
 
         {products.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-center">
-            <p className="text-sm text-gray-300 font-bold">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
+            <p className="text-sm text-gray-600 font-bold">
               Todavía no hay productos nuevos cargados. Volvé a chequear en unos días.
             </p>
             <Link
               href="/productos"
-              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-xl bg-white text-black text-sm font-black hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-black hover:bg-black transition-colors uppercase tracking-tight"
             >
               Ver catálogo general
             </Link>
