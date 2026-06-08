@@ -64,23 +64,23 @@ export function OfertasClient() {
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
-          <p className="mt-4 text-neutral-400">Cargando ofertas...</p>
+          <p className="mt-4 text-gray-400 font-bold">Cargando ofertas...</p>
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">😔</div>
-          <p className="text-xl text-white font-semibold mb-2">No hay ofertas disponibles en este momento</p>
-          <p className="text-neutral-400">Vuelve pronto para descubrir nuevas ofertas</p>
+          <p className="text-xl text-gray-700 font-semibold mb-2">No hay ofertas disponibles en este momento</p>
+          <p className="text-gray-400">Volvé pronto para descubrir nuevas ofertas</p>
         </div>
       ) : (
         <div>
           {/* Info adicional */}
-          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border-2 border-red-500/30 rounded-xl p-4 mb-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
               <span className="text-2xl">💡</span>
               <div>
-                <h3 className="text-white font-bold mb-1">¡Aprovecha estas ofertas!</h3>
-                <p className="text-neutral-300 text-sm">
+                <h3 className="text-gray-900 font-bold mb-1">¡Aprovecha estas ofertas!</h3>
+                <p className="text-gray-600 text-sm">
                   Todos nuestros productos son 100% originales y están disponibles para retiro en San Juan o envío a todo el país.
                 </p>
               </div>
