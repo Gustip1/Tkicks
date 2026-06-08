@@ -18,12 +18,9 @@ function ProductSlide({ product }: { product: Product }) {
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
 
   return (
-    <Link
-      href={`/producto/${product.slug}`}
-      className="block rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-2xl hover:shadow-white/5 transition-all"
-    >
-      <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
-        {!imageLoaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse" />}
+    <Link href={`/producto/${product.slug}`} className="group block">
+      <div className="relative aspect-square w-full overflow-hidden">
+        {!imageLoaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse rounded-sm" />}
         {product.images?.[0]?.url && (
           <Image
             src={product.images[0].url}
@@ -32,34 +29,30 @@ function ProductSlide({ product }: { product: Product }) {
             sizes="300px"
             quality={85}
             className={cn(
-              "object-contain transition-all duration-500",
+              "object-contain transition-opacity duration-500",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
           />
         )}
         {hasSale && (
-          <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase tracking-wide rounded-full shadow-sm">
+          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest">
             SALE
           </span>
         )}
       </div>
-      <div className="p-4">
-        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">{product.category}</p>
-        <h3 className="text-sm font-bold text-white line-clamp-2 mb-2 min-h-[2.5rem]">
+      <div className="pt-3">
+        <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold mb-1">{product.category}</p>
+        <h3 className="text-xs font-bold text-white uppercase tracking-wide line-clamp-2 mb-1.5 group-hover:text-white/70 transition-colors">
           {product.title}
         </h3>
         {hasSale && (
-          <p className="text-xs text-white/40 line-through">
-            ${Number(product.price).toFixed(0)} USD
-          </p>
+          <p className="text-[10px] text-white/30 line-through">${Number(product.price).toFixed(0)} USD</p>
         )}
-        <p className={cn('text-lg font-black', hasSale ? 'text-red-400' : 'text-white')}>
-          ${activePrice.toFixed(0)} USD
+        <p className={cn('text-sm font-bold tracking-wide', hasSale ? 'text-red-400' : 'text-white')}>
+          ${activePrice.toFixed(2)} USD
         </p>
-        <p className="text-sm text-gray-400 font-bold">
-          {formatCurrency(activePrice * dolarOficial)}
-        </p>
+        <p className="text-[10px] text-white/30">{formatCurrency(activePrice * dolarOficial)}</p>
       </div>
     </Link>
   );
