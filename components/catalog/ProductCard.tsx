@@ -62,7 +62,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
       {/* ── Imagen ── */}
-      <div className="relative w-full aspect-square overflow-hidden bg-zinc-950">
+      <div className="relative w-full aspect-square overflow-hidden bg-zinc-900">
         {!loaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse" />}
 
         {images[index]?.url && (
@@ -73,7 +73,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
             className={cn(
-              'object-contain p-3 transition-all duration-500',
+              'object-contain transition-all duration-500',
               loaded ? 'opacity-100' : 'opacity-0',
             )}
             onLoad={() => setLoaded(true)}

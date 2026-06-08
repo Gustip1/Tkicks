@@ -22,7 +22,7 @@ function ProductSlide({ product }: { product: Product }) {
       href={`/producto/${product.slug}`}
       className="block rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-2xl hover:shadow-white/5 transition-all"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-zinc-950">
+      <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
         {!imageLoaded && <div className="absolute inset-0 bg-zinc-900 animate-pulse" />}
         {product.images?.[0]?.url && (
           <Image
@@ -32,7 +32,7 @@ function ProductSlide({ product }: { product: Product }) {
             sizes="300px"
             quality={85}
             className={cn(
-              "object-contain p-3 transition-all duration-500",
+              "object-contain transition-all duration-500",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
