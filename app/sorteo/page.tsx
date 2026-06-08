@@ -47,8 +47,6 @@ export default function SorteoPage() {
   const [ok, setOk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // foundClues ordenado por foundAt — cada entrada es única por clueId.
-  // El dígito '0' puede aparecer hasta 2 veces (como en el código 260705).
   const discoveryOrder = foundClues;
   const foundCount = foundClues.length;
 
@@ -133,12 +131,10 @@ export default function SorteoPage() {
     } finally { setSubmitting(false); }
   };
 
-  // ─── Loading ──────────────────────────────────────────────────────────────
-
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-red-500" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-red-500" />
       </div>
     );
   }
@@ -148,67 +144,60 @@ export default function SorteoPage() {
     return null;
   }
 
-  // ─── Inactivo ─────────────────────────────────────────────────────────────
-
   if (!active) {
     return (
       <div className="relative mx-auto max-w-lg overflow-hidden px-4 py-20 text-center">
-        {/* Glow de fondo */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-100 blur-3xl" />
 
-        <img src="/logo.jpg" alt="Tkicks" className="relative mx-auto h-16 w-auto rounded-2xl opacity-60" />
+        <img src="/logo.jpg" alt="Tkicks" className="relative mx-auto h-16 w-auto rounded-2xl opacity-70" />
 
-        <p className="relative mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-red-500/70">
+        <p className="relative mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-red-500">
           Tkicks · Sorteo
         </p>
-        <h1 className="relative mt-3 text-5xl font-black uppercase leading-none tracking-tight text-white">
+        <h1 className="relative mt-3 text-5xl font-black uppercase leading-none tracking-tight text-gray-900">
           Muy<br />pronto.
         </h1>
-        <p className="relative mt-5 text-sm font-bold leading-relaxed text-zinc-500">
+        <p className="relative mt-5 text-sm font-bold leading-relaxed text-gray-500">
           Algo se está cocinando. Explorá el sitio,<br />
-          buscá las pistas <span className="text-red-500/70">◈ pista</span> y preparate.
+          buscá las pistas <span className="text-red-500">◈ pista</span> y preparate.
         </p>
 
         <div className="relative mt-8 flex justify-center gap-3">
-          <span className="inline-block h-1 w-8 rounded-full bg-zinc-800" />
-          <span className="inline-block h-1 w-4 rounded-full bg-red-500/40" />
-          <span className="inline-block h-1 w-8 rounded-full bg-zinc-800" />
+          <span className="inline-block h-1 w-8 rounded-full bg-gray-200" />
+          <span className="inline-block h-1 w-4 rounded-full bg-red-400" />
+          <span className="inline-block h-1 w-8 rounded-full bg-gray-200" />
         </div>
       </div>
     );
   }
-
-  // ─── Activo (día del sorteo) ──────────────────────────────────────────────
 
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
       <div className="space-y-3">
 
         {/* ── Hero del día ─────────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-3xl border border-red-500/20 bg-zinc-950 p-6 text-center">
-          {/* Glow */}
-          <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500/15 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-200 blur-3xl" />
 
           <p className="relative text-[9px] font-black uppercase tracking-[0.3em] text-red-500">
             ◈ · Sorteo Tkicks · ◈
           </p>
-          <h1 className="relative mt-2 text-6xl font-black uppercase leading-none tracking-tighter text-white">
+          <h1 className="relative mt-2 text-6xl font-black uppercase leading-none tracking-tighter text-gray-900">
             Hoy.
           </h1>
-          <p className="relative mt-3 text-sm font-bold leading-relaxed text-zinc-400">
+          <p className="relative mt-3 text-sm font-bold leading-relaxed text-gray-600">
             El día llegó. Si encontraste las seis pistas, armá el código<br className="hidden sm:block" />
             y confirmá tu participación antes de que cierre.
           </p>
 
-          {/* Barra de progreso */}
           <div className="relative mt-5">
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Tu progreso</span>
-              <span className="text-[9px] font-black text-zinc-500">
-                <span className={foundCount > 0 ? 'text-red-400' : ''}>{foundCount}</span>/{TOTAL_CLUES} pistas
+              <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Tu progreso</span>
+              <span className="text-[9px] font-black text-gray-500">
+                <span className={foundCount > 0 ? 'text-red-500' : ''}>{foundCount}</span>/{TOTAL_CLUES} pistas
               </span>
             </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full rounded-full bg-red-500 transition-all duration-700"
                 style={{ width: `${(foundCount / TOTAL_CLUES) * 100}%` }}
@@ -217,16 +206,15 @@ export default function SorteoPage() {
           </div>
         </div>
 
-        {/* ── Pistas descubiertas (orden de descubrimiento) ────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+        {/* ── Pistas descubiertas ──────────────────────────────────────────── */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600">
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400">
               Pistas descubiertas
             </p>
-            <p className="text-[9px] italic text-zinc-700">en orden de hallazgo</p>
+            <p className="text-[9px] italic text-gray-400">en orden de hallazgo</p>
           </div>
 
-          {/* Slots visuales — orden de descubrimiento */}
           <div className="mb-3 flex justify-center gap-1.5">
             {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
               const clue = discoveryOrder[i];
@@ -235,8 +223,8 @@ export default function SorteoPage() {
                   key={i}
                   className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition-all duration-300 ${
                     clue
-                      ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-800'
+                      ? 'border-red-300 bg-red-50 text-red-500'
+                      : 'border-gray-200 bg-gray-50 text-gray-300'
                   }`}
                 >
                   {clue ? clue.digit : '·'}
@@ -246,7 +234,7 @@ export default function SorteoPage() {
           </div>
 
           {foundClues.length === 0 ? (
-            <p className="text-center text-xs font-bold italic text-zinc-700">
+            <p className="text-center text-xs font-bold italic text-gray-400">
               Ninguna todavía. Explorá el sitio y buscá ◈ pista.
             </p>
           ) : (
@@ -254,15 +242,15 @@ export default function SorteoPage() {
               {discoveryOrder.map((clue, idx) => (
                 <div
                   key={clue.id}
-                  className="flex items-center gap-3 rounded-lg border border-zinc-800/60 bg-black/30 px-3 py-2"
+                  className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
                 >
-                  <span className="w-4 text-[9px] font-black text-zinc-700">#{idx + 1}</span>
+                  <span className="w-4 text-[9px] font-black text-gray-400">#{idx + 1}</span>
                   <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-red-500 text-sm font-black text-white">
                     {clue.digit}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-black text-zinc-400">{clue.label}</p>
-                    <p className="text-[9px] text-zinc-700">{formatDate(clue.foundAt)}</p>
+                    <p className="truncate text-[11px] font-black text-gray-700">{clue.label}</p>
+                    <p className="text-[9px] text-gray-400">{formatDate(clue.foundAt)}</p>
                   </div>
                 </div>
               ))}
@@ -270,15 +258,15 @@ export default function SorteoPage() {
           )}
 
           {foundCount > 0 && foundCount < TOTAL_CLUES && (
-            <p className="mt-3 text-center text-[9px] italic text-zinc-700">
+            <p className="mt-3 text-center text-[9px] italic text-gray-400">
               Este no es el orden del código — tenés que reordenarlo.
             </p>
           )}
         </div>
 
         {/* ── Ingresar la clave ─────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600">
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-gray-400">
             Ingresar clave
           </p>
 
@@ -290,12 +278,12 @@ export default function SorteoPage() {
               placeholder="······"
               disabled={codeValidated}
               required
-              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3.5 text-center text-2xl font-black tracking-[0.5em] text-red-500 placeholder:tracking-[0.3em] placeholder:text-zinc-800 focus:border-red-500 focus:outline-none disabled:opacity-50"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-center text-2xl font-black tracking-[0.5em] text-red-500 placeholder:tracking-[0.3em] placeholder:text-gray-300 focus:border-red-500 focus:outline-none disabled:opacity-50 transition-colors"
             />
             <button
               type="submit"
               disabled={submitting || codeValidated}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-40"
+              className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm font-black uppercase tracking-wider text-gray-900 transition hover:border-gray-500 hover:bg-gray-100 disabled:opacity-40"
             >
               {submitting ? 'Verificando...' : codeValidated ? '✓ Clave verificada' : 'Verificar clave'}
             </button>
@@ -309,14 +297,14 @@ export default function SorteoPage() {
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Nombre"
                   required
-                  className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-white focus:outline-none"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none transition-colors"
                 />
                 <input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Apellido"
                   required
-                  className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-white focus:outline-none"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none transition-colors"
                 />
               </div>
               <input
@@ -324,12 +312,12 @@ export default function SorteoPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Tu teléfono de contacto"
                 required
-                className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-white focus:outline-none"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none transition-colors"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:bg-red-700 disabled:opacity-50"
+                className="w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:bg-red-600 disabled:opacity-50"
               >
                 {submitting ? 'Registrando...' : 'Confirmar participación'}
               </button>
@@ -337,9 +325,9 @@ export default function SorteoPage() {
           )}
 
           {(ok || message) && (
-            <div className={`mt-3 rounded-xl border px-4 py-3 ${ok ? 'border-green-900/50 bg-green-950/20' : 'border-zinc-800 bg-black'}`}>
+            <div className={`mt-3 rounded-xl border px-4 py-3 ${ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
               {ok && <span className="mr-2 text-green-500">✓</span>}
-              <span className="text-sm font-bold italic text-zinc-300">{message}</span>
+              <span className={`text-sm font-bold italic ${ok ? 'text-green-700' : 'text-red-600'}`}>{message}</span>
             </div>
           )}
         </div>

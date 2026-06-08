@@ -82,7 +82,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Sold-out overlay */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-            <span className="bg-black text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
+            <span className="bg-gray-900 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
               Agotado
             </span>
           </div>
@@ -96,7 +96,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             </span>
           )}
           {product.is_new && !isSoldOut && (
-            <span className="px-2 py-0.5 bg-black text-white text-[9px] font-black uppercase tracking-widest">
+            <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
               Nuevo
             </span>
           )}

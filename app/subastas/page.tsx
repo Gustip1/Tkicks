@@ -30,41 +30,41 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
   return (
     <Link
       href={`/subastas/${a.id}`}
-      className="group flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500 transition-colors"
+      className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-400 hover:shadow-md transition-all"
     >
-      <div className="aspect-[3/4] bg-zinc-800 relative">
+      <div className="aspect-[3/4] bg-gray-50 relative">
         {a.product_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={a.product_image} alt={a.product_title} className="w-full h-full object-cover" />
+          <img src={a.product_image} alt={a.product_title} className="w-full h-full object-contain" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-zinc-600">
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
             <Gavel className="w-12 h-12" />
           </div>
         )}
-        <div className="absolute top-3 left-3 bg-orange-500 text-black text-xs font-black px-2 py-1 rounded-md uppercase">
+        <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
           Subasta
         </div>
       </div>
       <div className="p-4 flex flex-col gap-2">
-        <h3 className="text-white font-bold text-sm line-clamp-2">{a.product_title}</h3>
-        <p className="text-zinc-400 text-xs">Talle: {a.size}</p>
+        <h3 className="text-gray-900 font-bold text-sm line-clamp-2">{a.product_title}</h3>
+        <p className="text-gray-400 text-xs">Talle: {a.size}</p>
         <div className="flex items-end justify-between mt-1">
           <div>
-            <p className="text-xs text-zinc-500">Puja actual</p>
-            <p className="text-2xl font-black text-white leading-tight">{formatARS(Number(a.current_price))}</p>
+            <p className="text-xs text-gray-400">Puja actual</p>
+            <p className="text-2xl font-black text-gray-900 leading-tight">{formatARS(Number(a.current_price))}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-zinc-500 flex items-center gap-1 justify-end">
+            <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
               <Clock className="w-3 h-3" />Termina
             </p>
-            <p className={`text-sm font-bold ${cd.ended ? 'text-red-400' : 'text-orange-400'}`}>{cd.label}</p>
+            <p className={`text-sm font-bold ${cd.ended ? 'text-red-500' : 'text-orange-500'}`}>{cd.label}</p>
           </div>
         </div>
-        <p className="text-xs text-zinc-500 pt-1 border-t border-zinc-800 mt-2">
+        <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-2">
           {a.bid_count} {a.bid_count === 1 ? 'puja' : 'pujas'} · Mínimo +{formatARS(Number(a.min_increment))}
         </p>
         {a.top_bidder_alias && (
-          <p className="text-[11px] text-orange-400 font-bold truncate">
+          <p className="text-[11px] text-orange-500 font-bold truncate">
             ★ Va ganando {a.top_bidder_alias}
           </p>
         )}
@@ -98,24 +98,24 @@ export default function SubastasPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-white">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
             <Gavel className="w-8 h-8 text-orange-500" />
             Subastas
           </h1>
-          <p className="text-zinc-400 mt-2 text-sm">
+          <p className="text-gray-500 mt-2 text-sm font-bold">
             Pujá por kicks y streetwear. Precios en pesos argentinos. Pago únicamente por transferencia bancaria.
           </p>
         </div>
 
-        {loading && <p className="text-zinc-400">Cargando subastas…</p>}
-        {err && <p className="text-red-400">{err}</p>}
+        {loading && <p className="text-gray-400 font-bold">Cargando subastas…</p>}
+        {err && <p className="text-red-500 font-bold">{err}</p>}
         {!loading && !err && items.length === 0 && (
-          <div className="border border-zinc-800 rounded-xl p-8 text-center">
-            <p className="text-zinc-400">No hay subastas activas en este momento.</p>
-            <Link href="/productos" className="text-orange-400 hover:underline mt-2 inline-block">Ver productos</Link>
+          <div className="border border-gray-200 rounded-xl p-8 text-center bg-gray-50">
+            <p className="text-gray-500 font-bold">No hay subastas activas en este momento.</p>
+            <Link href="/productos" className="text-orange-500 hover:underline mt-2 inline-block font-bold">Ver productos</Link>
           </div>
         )}
 

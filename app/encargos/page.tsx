@@ -165,10 +165,10 @@ export default function EncargosPage() {
 
   /* ─── inputs reutilizables ─── */
   const inputCls =
-    "w-full rounded-lg border border-neutral-700 bg-neutral-800/60 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:border-blue-500 focus:outline-none transition";
+    "w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none transition";
   const selectCls =
-    "w-full rounded-lg border border-neutral-700 bg-neutral-800/60 px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none transition appearance-none";
-  const labelCls = "block text-xs font-medium text-neutral-400 mb-1.5";
+    "w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-gray-900 focus:outline-none transition appearance-none";
+  const labelCls = "block text-xs font-medium text-gray-500 mb-1.5";
 
   /* ─────────────── render ─────────────── */
   return (
@@ -176,22 +176,22 @@ export default function EncargosPage() {
       {/* header */}
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-white">Encargos Personalizados</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Encargos Personalizados</h1>
           <GiveawayInlinePriceClue clueId="/encargos" label="Encargos" position={3} digit="7" />
         </div>
-        <p className="mt-1 text-sm text-neutral-400">
+        <p className="mt-1 text-sm text-gray-500">
           Completá los datos de tu pedido y te contactaremos por WhatsApp.
         </p>
       </div>
 
       {/* aviso 100 % */}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 p-4">
+      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
         <span className="text-2xl">💰</span>
         <div>
-          <p className="text-sm font-semibold text-amber-300">Importante: Pago del encargo</p>
-          <p className="text-sm text-amber-200/80">
+          <p className="text-sm font-semibold text-amber-700">Importante: Pago del encargo</p>
+          <p className="text-sm text-amber-600">
             Para realizar tu encargo, se debe abonar el{" "}
-            <span className="font-bold text-amber-200">75% del precio del producto</span> como seña antes de
+            <span className="font-bold text-amber-700">75% del precio del producto</span> como seña antes de
             realizar el pedido.
           </p>
         </div>
@@ -212,8 +212,8 @@ export default function EncargosPage() {
               i === paso
                 ? "bg-blue-600 text-white"
                 : i < paso
-                ? "bg-neutral-700 text-white cursor-pointer hover:bg-neutral-600"
-                : "bg-neutral-800 text-neutral-500 cursor-default"
+                ? "bg-gray-200 text-gray-900 cursor-pointer hover:bg-gray-300"
+                : "bg-gray-100 text-gray-400 cursor-default"
             }`}
           >
             {label}
@@ -223,7 +223,7 @@ export default function EncargosPage() {
 
       {/* errores */}
       {errores.length > 0 && (
-        <div className="rounded-lg border border-red-800 bg-red-950/40 p-3 space-y-1">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-1">
           {errores.map((e, i) => (
             <p key={i} className="text-xs text-red-400">
               ⚠ {e}
@@ -236,9 +236,9 @@ export default function EncargosPage() {
       {paso === 0 && (
         <div className="space-y-6">
           {productos.map((prod, idx) => (
-            <div key={idx} className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 space-y-4">
+            <div key={idx} className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white">Producto a encargar</h3>
+                <h3 className="text-sm font-bold text-gray-900">Producto a encargar</h3>
                 {productos.length > 1 && (
                   <button
                     onClick={() => removeProducto(idx)}
@@ -315,7 +315,7 @@ export default function EncargosPage() {
 
               {/* fotos */}
               <div>
-                <p className="text-xs text-neutral-400 mb-2">Fotos del producto (máximo 3)</p>
+                <p className="text-xs text-gray-500 mb-2">Fotos del producto (máximo 3)</p>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -324,7 +324,7 @@ export default function EncargosPage() {
                   >
                     Seleccionar archivos
                   </button>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-gray-400">
                     {prod.fotos.length > 0
                       ? prod.fotos.map((f) => f.name).join(", ")
                       : "ningún archivo seleccionado"}
@@ -344,7 +344,7 @@ export default function EncargosPage() {
 
           <button
             onClick={addProducto}
-            className="w-full rounded-lg border border-dashed border-neutral-700 py-3 text-sm font-medium text-neutral-400 hover:border-neutral-500 hover:text-white transition"
+            className="w-full rounded-lg border border-dashed border-gray-300 py-3 text-sm font-medium text-gray-400 hover:border-gray-500 hover:text-gray-700 transition"
           >
             + Agregar otro producto
           </button>
@@ -353,8 +353,8 @@ export default function EncargosPage() {
 
       {/* ─── PASO 1: Datos personales ─── */}
       {paso === 1 && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 space-y-4">
-          <h3 className="text-sm font-bold text-white">Datos personales</h3>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900">Datos personales</h3>
 
           <div>
             <label className={labelCls}>Nombre completo *</label>
@@ -428,9 +428,9 @@ export default function EncargosPage() {
 
       {/* ─── PASO 2: Pago ─── */}
       {paso === 2 && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 space-y-5">
-          <h3 className="text-sm font-bold text-white">Método de pago</h3>
-          <p className="text-xs text-neutral-400">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900">Método de pago</h3>
+          <p className="text-xs text-gray-500">
             Seleccioná cómo preferís abonar el 75% del encargo (seña).
           </p>
 
@@ -448,28 +448,28 @@ export default function EncargosPage() {
                 onClick={() => setMetodoPago(m.value)}
                 className={`flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition ${
                   metodoPago === m.value
-                    ? "border-blue-500 bg-blue-950/40"
-                    : "border-neutral-700 bg-neutral-900 hover:border-neutral-500"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 bg-white hover:border-gray-400"
                 }`}
               >
                 <span className="text-2xl">{m.icon}</span>
-                <span className="text-sm font-semibold text-white">{m.label}</span>
-                <span className="text-[11px] text-neutral-400">{m.desc}</span>
+                <span className="text-sm font-semibold text-gray-900">{m.label}</span>
+                <span className="text-[11px] text-gray-500">{m.desc}</span>
               </button>
             ))}
           </div>
 
           {/* resumen */}
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 space-y-2">
-            <h4 className="text-xs font-semibold text-neutral-300">Resumen del encargo</h4>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-2">
+            <h4 className="text-xs font-semibold text-gray-700">Resumen del encargo</h4>
             {productos.map((p, i) => (
-              <div key={i} className="flex justify-between text-xs text-neutral-400">
+              <div key={i} className="flex justify-between text-xs text-gray-500">
                 <span>
                   {p.nombre || `Producto ${i + 1}`} — {p.categoria} — Talle {p.talle || "?"}
                 </span>
               </div>
             ))}
-            <div className="border-t border-neutral-800 pt-2 text-xs text-neutral-400">
+            <div className="border-t border-gray-200 pt-2 text-xs text-gray-500">
               <span>Envío a: {datos.ciudad || "—"}</span>
             </div>
             {metodoPago && (
@@ -486,7 +486,7 @@ export default function EncargosPage() {
         {paso > 0 && (
           <button
             onClick={anterior}
-            className="flex-1 rounded-xl border border-neutral-700 py-3.5 text-sm font-semibold text-white hover:bg-neutral-800 transition"
+            className="flex-1 rounded-xl border border-gray-300 py-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition"
           >
             Anterior
           </button>

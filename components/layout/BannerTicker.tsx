@@ -24,7 +24,7 @@ export function BannerTicker() {
   const items = [installmentMsg, ...BASE_ITEMS];
 
   return (
-    <div className="w-full bg-black text-white border-b border-zinc-800 overflow-hidden">
+    <div className="w-full bg-gray-900 text-white border-b border-gray-700 overflow-hidden">
       <div className="flex items-center justify-between px-2 md:px-4 max-w-[1600px] mx-auto">
         <div className="relative overflow-hidden flex-1 min-w-0" aria-label="Ofertas y mensajes importantes" role="region">
           <div className="animate-marquee whitespace-nowrap py-1.5 md:py-2 will-change-transform">
@@ -36,7 +36,7 @@ export function BannerTicker() {
           </div>
         </div>
         {/* Widget del dólar - OCULTO en móvil, VISIBLE en desktop */}
-        <div className="hidden md:flex shrink-0 border-l border-white/20 pl-4 ml-4">
+        <div className="hidden md:flex shrink-0 border-l border-white/30 pl-4 ml-4">
           <DolarWidget />
         </div>
       </div>

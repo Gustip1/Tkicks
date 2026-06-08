@@ -36,7 +36,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
   return (
     <div className="space-y-2 md:space-y-4">
       {/* Main image carousel */}
-      <div className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-zinc-900 shadow-lg mx-2 md:mx-0">
+      <div className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 shadow-sm border border-gray-200 mx-2 md:mx-0">
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (
@@ -57,7 +57,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
                     onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}
                   />
                   {!imageLoaded[idx] && (
-                    <div className="absolute inset-0 bg-zinc-900 animate-pulse" />
+                    <div className="absolute inset-0 bg-gray-200 animate-pulse" />
                   )}
                 </div>
               </li>

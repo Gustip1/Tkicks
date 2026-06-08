@@ -21,11 +21,7 @@ export default function RegisterPage() {
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          display_name: displayName
-        }
-      }
+      options: { data: { display_name: displayName } }
     });
 
     if (authError) {
@@ -35,14 +31,9 @@ export default function RegisterPage() {
     }
 
     if (data.user) {
-      // Create profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          id: data.user.id,
-          role: 'user',
-          display_name: displayName
-        });
+        .insert({ id: data.user.id, role: 'user', display_name: displayName });
 
       if (profileError) {
         setError('Error creando perfil: ' + profileError.message);
@@ -59,52 +50,50 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-md space-y-6 p-4">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-white">Crear cuenta</h1>
-        <p className="mt-2 text-sm text-neutral-400">
-          Registrate para seguir tus pedidos y más
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">Crear cuenta</h1>
+        <p className="mt-2 text-sm text-gray-500">Registrate para seguir tus pedidos y más</p>
       </div>
 
       <form onSubmit={handleRegister} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-white">Nombre</label>
+          <label className="block text-sm font-medium text-gray-700">Nombre</label>
           <input
             type="text"
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white placeholder-neutral-400 focus:border-neutral-500"
+            className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none"
             placeholder="Tu nombre"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white">Email</label>
+          <label className="block text-sm font-medium text-gray-700">Email</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white placeholder-neutral-400 focus:border-neutral-500"
+            className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none"
             placeholder="tu@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white">Contraseña</label>
+          <label className="block text-sm font-medium text-gray-700">Contraseña</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white placeholder-neutral-400 focus:border-neutral-500"
+            className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none"
             placeholder="••••••••"
             minLength={6}
           />
         </div>
 
         {error && (
-          <div className="rounded border border-red-700/40 bg-red-900/10 p-3 text-sm text-red-400">
+          <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -112,15 +101,15 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-white px-4 py-2 text-sm font-medium text-black disabled:opacity-60"
+          className="w-full rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-60 transition-colors"
         >
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
       </form>
 
-      <div className="text-center text-sm text-neutral-400">
+      <div className="text-center text-sm text-gray-500">
         ¿Ya tienes cuenta?{' '}
-        <Link href="/login" className="text-white hover:underline">
+        <Link href="/login" className="text-gray-900 font-bold hover:underline">
           Iniciar sesión
         </Link>
       </div>
@@ -133,7 +122,7 @@ export default function RegisterPage() {
             const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${origin}/account` } });
             if (error) setError(error.message);
           }}
-          className="w-full rounded bg-white px-4 py-2 text-sm font-medium text-black"
+          className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
         >
           Continuar con Google
         </button>

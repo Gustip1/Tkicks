@@ -19,7 +19,7 @@ function ProductSlide({ product }: { product: Product }) {
 
   return (
     <Link href={`/producto/${product.slug}`} className="group block">
-      <div className="relative aspect-square w-full overflow-hidden">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
         {!imageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-sm" />}
         {product.images?.[0]?.url && (
           <Image
@@ -115,7 +115,7 @@ function SaleSection({ products }: { products: Product[] }) {
       </div>
 
       {/* Carousel */}
-      <div className="overflow-hidden -mx-4 px-4" ref={ref}>
+      <div className="overflow-hidden -mx-4 px-4 bg-white" ref={ref}>
         <div className="-ml-4 flex">
           {products.map((p) => (
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[75%] sm:basis-[280px] md:basis-[300px] pl-4">
@@ -208,7 +208,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
       </div>
 
       {/* Carousel */}
-      <div className="overflow-hidden -mx-4 px-4 bg-black" ref={ref}>
+      <div className="overflow-hidden -mx-4 px-4 bg-white" ref={ref}>
         <div className="-ml-4 flex">
           {products.map((p) => (
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[75%] sm:basis-[280px] md:basis-[300px] pl-4">

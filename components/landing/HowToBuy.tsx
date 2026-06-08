@@ -55,7 +55,7 @@ export function HowToBuy() {
 
               <div className="flex items-center gap-4">
                 <span className="text-3xl">{step.icon}</span>
-                <span className="text-5xl font-black text-gray-100 leading-none select-none">{step.number}</span>
+                <span className="text-5xl font-black text-gray-900 leading-none select-none">{step.number}</span>
               </div>
 
               <div>
