@@ -140,18 +140,18 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         <div className="space-y-0.5">
           {hasSale && (
-            <p className="text-[10px] text-gray-400 line-through">
+            <p className="text-xs text-gray-400 line-through">
               ${Number(product.price).toFixed(2)} USD
             </p>
           )}
           <p className={cn(
-            'font-bold tracking-wide',
-            size === 'large' ? 'text-base' : 'text-sm',
-            hasSale ? 'text-red-500' : 'text-gray-900',
+            'font-black tracking-tight',
+            size === 'large' ? 'text-xl' : 'text-base',
+            hasSale ? 'text-red-600' : 'text-gray-900',
           )}>
             ${activePrice.toFixed(2)} USD
           </p>
-          <p className="text-[10px] text-gray-400">{formatCurrency(priceInArs)}</p>
+          <p className="text-xs text-gray-500 font-medium">{formatCurrency(priceInArs)}</p>
           {!isSoldOut && (
             <p className={cn('text-[10px] font-medium', promoOn ? 'text-orange-500' : 'text-violet-500')}>
               3 × {formatCurrency(cardArs / 3)}

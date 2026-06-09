@@ -47,12 +47,12 @@ function ProductSlide({ product }: { product: Product }) {
           {product.title}
         </h3>
         {hasSale && (
-          <p className="text-[10px] text-gray-900/30 line-through">${Number(product.price).toFixed(0)} USD</p>
+          <p className="text-xs text-gray-400 line-through">${Number(product.price).toFixed(0)} USD</p>
         )}
-        <p className={cn('text-sm font-bold tracking-wide', hasSale ? 'text-red-400' : 'text-gray-900')}>
+        <p className={cn('text-base font-black tracking-tight', hasSale ? 'text-red-600' : 'text-gray-900')}>
           ${activePrice.toFixed(2)} USD
         </p>
-        <p className="text-[10px] text-gray-900/30">{formatCurrency(activePrice * dolarOficial)}</p>
+        <p className="text-xs text-gray-500 font-medium">{formatCurrency(activePrice * dolarOficial)}</p>
       </div>
     </Link>
   );
