@@ -230,14 +230,75 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
   );
 }
 
+function OldStockSection({ products }: { products: Product[] }) {
+  const [ref, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: 'start',
+    slidesToScroll: 1,
+    containScroll: 'trimSnaps',
+  }, [Autoplay({ delay: 4000, stopOnMouseEnter: true, stopOnInteraction: false })]);
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  if (products.length === 0) return null;
+
+  return (
+    <section className="space-y-6 bg-white border-t border-gray-100 pt-10">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center shadow-md">
+            <span className="text-2xl">📦</span>
+          </div>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+              También disponible
+            </h2>
+            <p className="text-sm text-gray-500 font-bold">Stock completo · piezas que siguen esperándote</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={scrollPrev} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-all" aria-label="Anterior">
+            <ChevronLeft className="w-5 h-5 text-gray-900" />
+          </button>
+          <button onClick={scrollNext} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-all" aria-label="Siguiente">
+            <ChevronRight className="w-5 h-5 text-gray-900" />
+          </button>
+          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-black hover:bg-black transition-all uppercase tracking-tight">
+            Ver catálogo <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+
+      <div className="overflow-hidden -mx-4 px-4" ref={ref}>
+        <div className="-ml-4 flex">
+          {products.map((p) => (
+            <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-[75%] sm:basis-[280px] md:basis-[300px] pl-4">
+              <ProductSlide product={p} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Link href="/productos" className="md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-tight">
+        Ver catálogo completo <ArrowRight className="w-4 h-4" />
+      </Link>
+    </section>
+  );
+}
+
 export function FeaturedCarousels() {
   const [sneakers, setSneakers] = useState<Product[]>([]);
   const [streetwear, setStreetwear] = useState<Product[]>([]);
   const [saleProducts, setSaleProducts] = useState<Product[]>([]);
+  const [oldStock, setOldStock] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createBrowserClient();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 21);
+
     Promise.all([
       supabase
         .from('products')
@@ -259,11 +320,28 @@ export function FeaturedCarousels() {
         .eq('featured_streetwear', true)
         .eq('active', true)
         .order('created_at', { ascending: false })
-        .limit(12)
-    ]).then(([sale, a, b]) => {
+        .limit(12),
+      supabase
+        .from('products')
+        .select('*, product_variants(stock,size)')
+        .eq('active', true)
+        .lt('created_at', cutoff.toISOString())
+        .order('created_at', { ascending: true })
+        .limit(14),
+    ]).then(([sale, a, b, old]) => {
       if (sale.data) setSaleProducts(sale.data as unknown as Product[]);
       if (a.data) setSneakers(a.data as unknown as Product[]);
       if (b.data) setStreetwear(b.data as unknown as Product[]);
+      if (old.data) {
+        // exclude products already in featured sections
+        const featuredIds = new Set([
+          ...(a.data || []).map((p: any) => p.id),
+          ...(b.data || []).map((p: any) => p.id),
+          ...(sale.data || []).map((p: any) => p.id),
+        ]);
+        const filtered = (old.data as unknown as Product[]).filter(p => !featuredIds.has(p.id));
+        setOldStock(filtered);
+      }
       setLoading(false);
     });
   }, []);
@@ -303,6 +381,7 @@ export function FeaturedCarousels() {
       {saleProducts.length > 0 && <SaleSection products={saleProducts} />}
       {sneakers.length > 0 && <FeaturedSection title="Sneakers destacados" products={sneakers} type="sneakers" />}
       {streetwear.length > 0 && <FeaturedSection title="Streetwear destacados" products={streetwear} type="streetwear" />}
+      {oldStock.length > 0 && <OldStockSection products={oldStock} />}
     </div>
   );
 }

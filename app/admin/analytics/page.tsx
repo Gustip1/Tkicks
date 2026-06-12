@@ -25,6 +25,8 @@ interface AnalyticsData {
   visitsByOS: { os: string; count: number }[];
   visitsByReferrer: { referrer_domain: string; count: number }[];
   visitsByPage: { page_path: string; count: number; avg_duration: number; bounce_rate: number }[];
+  topProducts: { slug: string; views: number; avg_duration: number }[];
+  topOrderedProducts: { title: string; slug: string; orders: number; units: number; revenue: number }[];
   visitsByHour: { hour: number; count: number }[];
   todayByHour: { hour: number; count: number }[];
   visitsByDay: { day: number; day_name: string; count: number }[];
@@ -42,8 +44,12 @@ interface AnalyticsData {
   scrollDepthAvg: number;
   scrollDepthBuckets: { label: string; count: number }[];
   durationBuckets: { label: string; count: number; pct: number }[];
-  engagementRate: number; // % who stayed > 5s
+  engagementRate: number;
   retentionSteps: { label: string; count: number; pct: number }[];
+  // Revenue
+  monthRevenue: number;
+  totalRevenue: number;
+  pendingOrders: number;
 }
 
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -188,6 +194,48 @@ export default function AnalyticsPage() {
         }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
+
+      // Top productos vistos (de las rutas /producto/slug)
+      const topProducts = Object.entries(pageCounts)
+        .filter(([path]) => path.startsWith('/producto/'))
+        .map(([path, d]) => ({
+          slug: path.replace('/producto/', ''),
+          views: d.count,
+          avg_duration: d.count > 0 ? d.totalDuration / d.count : 0,
+        }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10);
+
+      // Top productos vendidos (order_items)
+      const { data: orderItemsData } = await supabase
+        .from('order_items')
+        .select('title, slug, price, quantity')
+        .gte('created_at' as any, startDateStr);
+
+      const orderedMap: Record<string, { title: string; slug: string; orders: number; units: number; revenue: number }> = {};
+      (orderItemsData || []).forEach((item: any) => {
+        const key = item.slug || item.title;
+        if (!orderedMap[key]) orderedMap[key] = { title: item.title, slug: item.slug || '', orders: 0, units: 0, revenue: 0 };
+        orderedMap[key].orders += 1;
+        orderedMap[key].units += Number(item.quantity) || 1;
+        orderedMap[key].revenue += Number(item.price || 0) * (Number(item.quantity) || 1);
+      });
+      const topOrderedProducts = Object.values(orderedMap)
+        .sort((a, b) => b.units - a.units)
+        .slice(0, 10);
+
+      // Revenue
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('total, status, created_at');
+      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+      const monthRevenue = (allOrders || [])
+        .filter((o: any) => new Date(o.created_at) >= monthStart && o.status !== 'cancelled')
+        .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+      const totalRevenue = (allOrders || [])
+        .filter((o: any) => o.status !== 'cancelled')
+        .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+      const pendingOrders = (allOrders || []).filter((o: any) => o.status === 'paid').length;
 
       const hourCounts: Record<number, number> = {};
       for (let i = 0; i < 24; i++) hourCounts[i] = 0;
@@ -337,6 +385,8 @@ export default function AnalyticsPage() {
         visitsByOS,
         visitsByReferrer,
         visitsByPage,
+        topProducts,
+        topOrderedProducts,
         visitsByHour,
         todayByHour,
         visitsByDay,
@@ -350,6 +400,9 @@ export default function AnalyticsPage() {
         durationBuckets,
         engagementRate,
         retentionSteps,
+        monthRevenue,
+        totalRevenue,
+        pendingOrders,
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -559,7 +612,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── KPIs principales ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <KpiCard
           label="Visitas totales"
           value={(dateRange === '1d' ? data?.todayVisits : data?.totalVisits) ?? 0}
@@ -587,10 +640,25 @@ export default function AnalyticsPage() {
         <KpiCard
           label="Se van rápido"
           value={`${(dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)).toFixed(0)}%`}
-          sub={{ text: dateRange === '1d' ? (data?.todayBounceRate ?? 0) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' : (data?.bounceRate ?? 0) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' }}
+          sub={{ text: (dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' }}
           icon={<Zap className="w-5 h-5" />}
           accent="rose"
           isText
+        />
+        <KpiCard
+          label="Ingresos del mes"
+          value={`$${(data?.monthRevenue ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+          sub={{ text: `Total: $${(data?.totalRevenue ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 })}` }}
+          icon={<ShoppingCart className="w-5 h-5" />}
+          accent="emerald"
+          isText
+        />
+        <KpiCard
+          label="Pedidos pendientes"
+          value={data?.pendingOrders ?? 0}
+          sub={{ text: 'pagados sin enviar' }}
+          icon={<TrendingUp className="w-5 h-5" />}
+          accent="orange"
         />
       </div>
 
@@ -715,18 +783,93 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── Fila media: Páginas + Fuentes ── */}
+      {/* ── Productos más vistos + más vendidos ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Páginas más vistas */}
+        {/* Productos más vistos */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Páginas más visitadas</h2>
-          <p className="text-xs text-gray-400 mb-4">Las secciones que más atraen</p>
+          <h2 className="font-semibold text-gray-900 mb-1">Productos más vistos</h2>
+          <p className="text-xs text-gray-400 mb-4">Páginas de producto con más tráfico en el período</p>
           <div className="space-y-3">
-            {(data?.visitsByPage.length ?? 0) === 0 && (
+            {(data?.topProducts.length ?? 0) === 0 ? (
+              <p className="text-sm text-gray-400">Sin datos todavía</p>
+            ) : (
+              data!.topProducts.map((p, i) => (
+                <div key={p.slug}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
+                      <a
+                        href={`/producto/${p.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:underline truncate"
+                      >
+                        {p.slug}
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className="text-[10px] text-gray-400">{formatDuration(p.avg_duration)}</span>
+                      <span className="text-sm font-bold text-gray-900">{p.views} vistas</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-violet-500 rounded-full transition-all"
+                      style={{ width: `${(p.views / (data!.topProducts[0]?.views || 1)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Productos más vendidos */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Productos más vendidos</h2>
+          <p className="text-xs text-gray-400 mb-4">Por unidades en órdenes del período</p>
+          <div className="space-y-3">
+            {(data?.topOrderedProducts.length ?? 0) === 0 ? (
+              <p className="text-sm text-gray-400">Sin órdenes en este período todavía</p>
+            ) : (
+              data!.topOrderedProducts.map((p, i) => (
+                <div key={p.slug || p.title}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
+                      <span className="text-sm font-medium text-gray-800 truncate">{p.title}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <span className="text-[10px] text-gray-400">{p.units} u.</span>
+                      <span className="text-sm font-bold text-emerald-700">${p.revenue.toFixed(0)}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all"
+                      style={{ width: `${(p.units / (data!.topOrderedProducts[0]?.units || 1)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Páginas más visitadas + Fuentes ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Páginas (no-producto) más vistas */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Secciones más visitadas</h2>
+          <p className="text-xs text-gray-400 mb-4">Páginas del sitio (excluye fichas de producto)</p>
+          <div className="space-y-3">
+            {(data?.visitsByPage.filter(p => !p.page_path.startsWith('/producto/')).length ?? 0) === 0 && (
               <p className="text-sm text-gray-400">Sin datos todavía</p>
             )}
-            {data?.visitsByPage.map((page, i) => (
+            {data?.visitsByPage.filter(p => !p.page_path.startsWith('/producto/')).map((page, i) => (
               <div key={page.page_path}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2 min-w-0">
@@ -1020,7 +1163,7 @@ function KpiCard({
   value: number | string;
   sub?: { pct?: number; text?: string };
   icon: React.ReactNode;
-  accent: 'blue' | 'violet' | 'amber' | 'rose';
+  accent: 'blue' | 'violet' | 'amber' | 'rose' | 'emerald' | 'orange';
   isText?: boolean;
 }) {
   const bg: Record<string, string> = {
@@ -1028,6 +1171,8 @@ function KpiCard({
     violet: 'bg-violet-50 text-violet-600',
     amber: 'bg-amber-50 text-amber-600',
     rose: 'bg-rose-50 text-rose-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    orange: 'bg-orange-50 text-orange-600',
   };
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3">
