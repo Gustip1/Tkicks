@@ -379,9 +379,9 @@ export function FeaturedCarousels() {
   return (
     <div className="space-y-12">
       {saleProducts.length > 0 && <SaleSection products={saleProducts} />}
+      {oldStock.length > 0 && <OldStockSection products={oldStock} />}
       {sneakers.length > 0 && <FeaturedSection title="Sneakers destacados" products={sneakers} type="sneakers" />}
       {streetwear.length > 0 && <FeaturedSection title="Streetwear destacados" products={streetwear} type="streetwear" />}
-      {oldStock.length > 0 && <OldStockSection products={oldStock} />}
     </div>
   );
 }
