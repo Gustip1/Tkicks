@@ -206,11 +206,12 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.views - a.views)
         .slice(0, 10);
 
-      // Top productos vendidos (order_items)
+      // Top productos vendidos (order_items joined con orders para filtrar por fecha)
       const { data: orderItemsData } = await supabase
         .from('order_items')
-        .select('title, slug, price, quantity')
-        .gte('created_at' as any, startDateStr);
+        .select('title, slug, price, quantity, orders!inner(created_at, status)')
+        .gte('orders.created_at', startDateStr)
+        .neq('orders.status', 'cancelled');
 
       const orderedMap: Record<string, { title: string; slug: string; orders: number; units: number; revenue: number }> = {};
       (orderItemsData || []).forEach((item: any) => {
