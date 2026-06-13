@@ -152,12 +152,12 @@ export default function CheckoutPage() {
       const orderId = data.orderId;
       checkout.setOrderId(orderId);
 
-      // Upload proof if provided (optional)
+      // Upload proof if provided (optional) — swallow errors so order success always shows
       if (checkout.paymentMethod === 'crypto_transfer' && proofFile) {
         const fd = new FormData();
         fd.append('file', proofFile);
         fd.append('order_id', orderId);
-        await fetch('/api/upload-proof', { method: 'POST', body: fd });
+        await fetch('/api/upload-proof', { method: 'POST', body: fd }).catch(() => {});
       }
 
       setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
