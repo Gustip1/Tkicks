@@ -46,6 +46,8 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [orderComplete, setOrderComplete] = useState(false);
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string | null>(null);
+  const [completedPaymentMethod, setCompletedPaymentMethod] = useState<string | null>(null);
+  const [completedProofUploaded, setCompletedProofUploaded] = useState(false);
 
   // Check cart expiry
   useEffect(() => {
@@ -118,12 +120,6 @@ export default function CheckoutPage() {
   const handleSubmitOrder = async () => {
     if (!checkout.paymentMethod) return;
 
-    // For crypto/transfer, proof is mandatory
-    if (checkout.paymentMethod === 'crypto_transfer' && !proofUploaded) {
-      setErrors({ proof: 'Debés subir el comprobante de pago' });
-      return;
-    }
-
     setSubmitting(true);
     try {
       const res = await fetch('/api/orders', {
@@ -156,7 +152,7 @@ export default function CheckoutPage() {
       const orderId = data.orderId;
       checkout.setOrderId(orderId);
 
-      // Upload proof if exists
+      // Upload proof if provided (optional)
       if (checkout.paymentMethod === 'crypto_transfer' && proofFile) {
         const fd = new FormData();
         fd.append('file', proofFile);
@@ -165,6 +161,8 @@ export default function CheckoutPage() {
       }
 
       setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
+      setCompletedPaymentMethod(checkout.paymentMethod);
+      setCompletedProofUploaded(proofUploaded);
       setOrderComplete(true);
       cart.clear();
       checkout.reset();
@@ -239,6 +237,8 @@ export default function CheckoutPage() {
       );
 
       setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
+      setCompletedPaymentMethod('installments_3');
+      setCompletedProofUploaded(false);
       setOrderComplete(true);
       cart.clear();
       checkout.reset();
@@ -270,22 +270,40 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-black text-gray-900">¡Orden confirmada!</h1>
           <p className="text-gray-500 font-bold text-sm">
             Tu orden <span className="text-gray-900 font-black">{completedOrderNumber}</span> fue registrada con éxito.
-            Te notificaremos cuando validemos el pago.
           </p>
           <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-left space-y-2">
             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Próximos pasos</p>
             <ul className="text-sm text-gray-600 space-y-1.5">
+              {completedPaymentMethod === 'crypto_transfer' && !completedProofUploaded && (
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-500 mt-0.5">!</span>
+                  Envianos el comprobante de transferencia por WhatsApp al{' '}
+                  <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-green-600 font-black underline">
+                    WhatsApp
+                  </a>
+                </li>
+              )}
+              {completedPaymentMethod === 'crypto_transfer' && completedProofUploaded && (
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  Comprobante recibido — lo validaremos a la brevedad
+                </li>
+              )}
+              {completedPaymentMethod === 'installments_3' && (
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  El equipo de Tkicks te enviará el link de pago con tarjeta por WhatsApp
+                </li>
+              )}
+              {completedPaymentMethod === 'cash' && (
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  Te contactaremos para coordinar el retiro en showroom
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-0.5">✓</span>
-                Validaremos tu comprobante de pago
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-0.5">✓</span>
-                Recibirás una notificación con el tracking
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-0.5">✓</span>
-                Te contactaremos por WhatsApp o email con novedades
+                Recibirás actualizaciones por WhatsApp o email
               </li>
             </ul>
           </div>
@@ -557,18 +575,17 @@ export default function CheckoutPage() {
                       <p className="text-sm text-gray-500 font-bold">{formatCurrency(subtotalARS)}</p>
                     </div>
 
-                    {/* Proof upload — MANDATORY */}
+                    {/* Proof upload — optional, can submit without */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-amber-500" />
-                        <p className="text-sm font-black text-gray-900">Subí tu comprobante de pago *</p>
+                        <Upload className="w-4 h-4 text-gray-400" />
+                        <p className="text-sm font-black text-gray-900">Subí tu comprobante <span className="text-gray-400 font-medium">(opcional)</span></p>
                       </div>
+                      <p className="text-xs text-gray-500 font-medium -mt-1">Podés adjuntarlo ahora o enviárnoslo después por WhatsApp</p>
                       <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
                         proofUploaded
                           ? 'border-green-400 bg-green-50'
-                          : errors.proof
-                            ? 'border-red-400 bg-red-50'
-                            : 'border-gray-300 bg-gray-50 hover:border-gray-500'
+                          : 'border-gray-300 bg-gray-50 hover:border-gray-500'
                       }`}>
                         {proofUploaded ? (
                           <>
