@@ -175,6 +175,80 @@ export default function CheckoutPage() {
     }
   };
 
+  // ─── Installments: register order THEN open WhatsApp ───
+  const handleInstallmentsWhatsApp = async () => {
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.items.map((it) => ({
+            productId: it.productId,
+            title: it.title,
+            slug: it.slug,
+            price: it.price,
+            size: it.size,
+            quantity: it.quantity,
+          })),
+          fulfillment: checkout.fulfillment,
+          paymentMethod: 'installments_3',
+          contact: checkout.contact,
+          address: checkout.fulfillment === 'shipping' ? checkout.address : null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ submit: data.error || 'Error al procesar la orden' });
+        return;
+      }
+
+      const orderId = data.orderId;
+      checkout.setOrderId(orderId);
+
+      const waMessage =
+        `¡Hola! Quiero pagar en *3 cuotas sin interés* con tarjeta de crédito.\n\n` +
+        `📦 *Productos:*\n${cart.items
+          .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
+          .join('\n')}\n\n` +
+        `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
+        (promoOn
+          ? `🔥 *PROMO: SIN recargo*\n`
+          : `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
+        `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
+        `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
+        `👤 *Datos del comprador:*\n` +
+        `Nombre: ${checkout.contact.firstName} ${checkout.contact.lastName}\n` +
+        `DNI: ${checkout.contact.document}\n` +
+        `Email: ${checkout.contact.email}\n` +
+        `Teléfono: ${checkout.contact.phone}\n\n` +
+        (checkout.fulfillment === 'shipping'
+          ? `🚚 *Envío a domicilio:*\n` +
+            `Dirección: ${checkout.address.street}\n` +
+            `Localidad: ${checkout.address.city}\n` +
+            `Provincia: ${checkout.address.province}\n` +
+            `CP: ${checkout.address.postalCode}`
+          : `🏪 *Retiro en Showroom*`) +
+        `\n\n📋 *Pedido registrado:* ${data.orderNumber || `#${orderId.slice(0, 8)}`}`;
+
+      window.open(
+        `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waMessage)}`,
+        '_blank'
+      );
+
+      setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
+      setOrderComplete(true);
+      cart.clear();
+      checkout.reset();
+    } catch {
+      setErrors({ submit: 'Error de conexión. Intentá de nuevo.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ─── Proof Upload ───
   const handleProofUpload = (file: File) => {
     setProofFile(file);
@@ -578,38 +652,24 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    <a
-                      href={`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(
-                        `¡Hola! Quiero pagar en *3 cuotas sin interés* con tarjeta de crédito.\n\n` +
-                        `📦 *Productos:*\n${cart.items
-                          .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
-                          .join('\n')}\n\n` +
-                        `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
-                        (promoOn
-                          ? `🔥 *PROMO: SIN recargo*\n`
-                          : `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
-                        `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
-                        `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
-                        `👤 *Datos del comprador:*\n` +
-                        `Nombre: ${checkout.contact.firstName} ${checkout.contact.lastName}\n` +
-                        `DNI: ${checkout.contact.document}\n` +
-                        `Email: ${checkout.contact.email}\n` +
-                        `Teléfono: ${checkout.contact.phone}\n\n` +
-                        (checkout.fulfillment === 'shipping'
-                          ? `🚚 *Envío a domicilio:*\n` +
-                            `Dirección: ${checkout.address.street}\n` +
-                            `Localidad: ${checkout.address.city}\n` +
-                            `Provincia: ${checkout.address.province}\n` +
-                            `CP: ${checkout.address.postalCode}`
-                          : `🏪 *Retiro en Showroom*`)
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-green-600 text-white font-black text-sm uppercase tracking-tight hover:bg-green-700 transition-colors"
+                    <button
+                      type="button"
+                      onClick={handleInstallmentsWhatsApp}
+                      disabled={submitting}
+                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-green-600 text-white font-black text-sm uppercase tracking-tight hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      Link de pago · WhatsApp
-                    </a>
+                      {submitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-4 h-4" />
+                          Confirmar y abrir WhatsApp
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
 
