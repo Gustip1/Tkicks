@@ -18,7 +18,7 @@ export default function AdminProductsPage() {
       .from('products')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(200)
+      .limit(1000)
       .then(({ data }) => setProducts((data || []) as unknown as Product[]));
   }, []);
 
