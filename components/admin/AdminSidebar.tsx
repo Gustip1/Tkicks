@@ -22,6 +22,7 @@ import {
   Gavel,
   Receipt,
   Tag,
+  LayoutTemplate,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'Stock', href: '/admin/stock', icon: Warehouse, color: 'text-amber-600', bg: 'bg-amber-50' },
   { name: 'Precios', href: '/admin/precios', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { name: 'Destacados', href: '/admin/destacados', icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+  { name: 'Portada', href: '/admin/portada', icon: LayoutTemplate, color: 'text-sky-600', bg: 'bg-sky-50' },
   { name: 'Ofertas', href: '/admin/ofertas', icon: Flame, color: 'text-red-600', bg: 'bg-red-50' },
   { name: 'Sorteo', href: '/admin/sorteo', icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   { name: 'Subastas', href: '/admin/subastas', icon: Gavel, color: 'text-orange-600', bg: 'bg-orange-50' },

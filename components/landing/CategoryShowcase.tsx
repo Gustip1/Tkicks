@@ -11,8 +11,10 @@ const CATS = [
   { label: 'Pantalones', sub: 'pantalones' },
 ] as const;
 
+type TileConfig = { sub: string; label?: string; url?: string };
+
 export function CategoryShowcase() {
-  // Mapa subcategoría -> url de la última foto del producto más reciente
+  // Mapa subcategoría -> url de la imagen a mostrar
   const [images, setImages] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
 
@@ -21,8 +23,25 @@ export function CategoryShowcase() {
     let active = true;
 
     (async () => {
-      const results = await Promise.all(
-        CATS.map((c) =>
+      // 1) Imágenes configuradas a mano desde el admin (settings.homepage_categories)
+      const { data: settingRow } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'homepage_categories')
+        .maybeSingle();
+
+      const configured: Record<string, string> = {};
+      const cfg = (settingRow?.value as TileConfig[] | null) || [];
+      if (Array.isArray(cfg)) {
+        cfg.forEach((t) => {
+          if (t?.sub && t?.url) configured[t.sub] = t.url;
+        });
+      }
+
+      // 2) Para las que no tienen imagen elegida, usamos la última foto del producto más reciente
+      const missing = CATS.filter((c) => !configured[c.sub]);
+      const fallbacks = await Promise.all(
+        missing.map((c) =>
           supabase
             .from('products')
             .select('images')
@@ -35,12 +54,12 @@ export function CategoryShowcase() {
       );
 
       if (!active) return;
-      const map: Record<string, string> = {};
-      results.forEach((res, i) => {
+      const map: Record<string, string> = { ...configured };
+      fallbacks.forEach((res, i) => {
         const imgs = (res.data as any)?.images as { url: string }[] | undefined;
-        // "la última foto" del producto
-        if (imgs?.length) map[CATS[i].sub] = imgs[imgs.length - 1].url;
+        if (imgs?.length) map[missing[i].sub] = imgs[imgs.length - 1].url;
       });
+
       setImages(map);
       setLoaded(true);
     })();
@@ -51,23 +70,9 @@ export function CategoryShowcase() {
   }, []);
 
   return (
-    <section className="bg-white py-12 md:py-20">
+    <section className="bg-white pt-6 pb-12 md:pt-8 md:pb-16">
       <div className="max-w-[1400px] mx-auto px-4">
-
-        {/* Section header */}
-        <div className="flex items-end justify-between mb-8 md:mb-12">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Colecciones</p>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
-              Elegí tu estilo
-            </h2>
-          </div>
-          <Link href="/productos?streetwear" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">
-            Ver todo <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Grilla editorial */}
+        {/* Grilla editorial — accesos directos a categorías */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
           {CATS.map((c) => (
             <Link
