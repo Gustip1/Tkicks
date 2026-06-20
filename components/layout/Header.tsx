@@ -83,8 +83,8 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200 shadow-sm pt-[env(safe-area-inset-top)]">
       <BannerTicker />
 
-      {/* Fila única: nav (izq) · logo centrado · utilidades (der) */}
-      <div className="relative h-14 md:h-16 px-2 md:px-6 flex items-center justify-between gap-2 max-w-[1600px] mx-auto">
+      {/* Fila única: nav (izq) · logo · utilidades (der) */}
+      <div className="h-14 md:h-16 px-2 md:px-6 flex items-center max-w-[1600px] mx-auto">
 
         {/* Izquierda - menú móvil + navegación */}
         <div className="flex items-center gap-1 min-w-0">
@@ -229,17 +229,17 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Centro - Logo */}
+        {/* Centro - Logo (centrado en el espacio libre entre nav e íconos) */}
         <Link
           href="/"
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center"
+          className="mx-auto flex items-center shrink-0 px-2"
           aria-label="Inicio"
         >
           <img src="/logo.jpg" alt="Tkicks" className="h-10 md:h-12 w-auto" />
         </Link>
 
         {/* Derecha - Buscar y acciones */}
-        <div className="flex items-center gap-1.5 md:gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
           <form
             className="relative hidden lg:block"
             onSubmit={(e) => {
