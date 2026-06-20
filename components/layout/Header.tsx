@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, Menu, Search as SearchIcon, X, ChevronDown } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
 import { useCartStore } from '@/store/cart';
@@ -83,20 +83,25 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200 shadow-sm pt-[env(safe-area-inset-top)]">
       <BannerTicker />
       <div className="h-14 md:h-16 px-2 md:px-8 flex items-center justify-between gap-2 md:gap-4 max-w-[1600px] mx-auto">
-        {/* Left - Menu & Nav */}
-        <div className="flex items-center gap-1 md:gap-4">
+        {/* Left - Menu, Logo & Nav */}
+        <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
           <button
             onClick={toggleSidebar}
-            className="inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 md:hidden transition-colors"
+            className="inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 lg:hidden transition-colors"
             aria-label="Abrir menú"
           >
             <Menu className="h-5 w-5" />
           </button>
 
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Logo */}
+          <Link href="/" className="flex items-center shrink-0">
+            <img src="/logo.jpg" alt="Tkicks" className="h-9 md:h-11 w-auto" />
+          </Link>
+
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
             <Link
               href="/nuevos-ingresos"
-              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight whitespace-nowrap"
             >
               New Arrivals
             </Link>
@@ -113,7 +118,7 @@ export function Header() {
                   onClick={() => setBrandsOpen((v) => !v)}
                   aria-expanded={brandsOpen}
                   aria-haspopup="true"
-                  className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2 uppercase tracking-tight"
+                  className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-1.5 uppercase tracking-tight"
                 >
                   Marcas
                   <ChevronDown
@@ -159,18 +164,16 @@ export function Header() {
 
             <Link
               href="/productos?sneakers"
-              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2 uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
             >
-              <span className="text-base">👟</span>
               Sneakers
             </Link>
 
             <div className="relative group">
               <Link
                 href="/productos?streetwear"
-                className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2 uppercase tracking-tight"
+                className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-1.5 uppercase tracking-tight"
               >
-                <span className="text-base">👕</span>
                 Streetwear
                 <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-900 transition-colors" />
               </Link>
@@ -203,35 +206,30 @@ export function Header() {
 
             <Link
               href="/ofertas"
-              className="rounded-xl px-4 py-2 text-sm font-black text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md flex items-center gap-2 uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md uppercase tracking-tight"
             >
-              🔥 Ofertas
+              Ofertas
             </Link>
             <Link
               href="/subastas"
-              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
             >
               Subastas
             </Link>
             <Link
               href="/encargos"
-              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
             >
               Encargos
             </Link>
             <Link
               href="/nosotros"
-              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
             >
               Nosotros
             </Link>
           </nav>
         </div>
-
-        {/* Center - Logo */}
-        <Link href="/" className="flex items-center">
-          <img src="/logo.jpg" alt="Tkicks" className="h-8 md:h-12 w-auto" />
-        </Link>
 
         {/* Right - Search & Actions */}
         <div className="flex items-center gap-2">

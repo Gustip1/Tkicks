@@ -9,8 +9,11 @@ import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 export default function HomePage() {
   return (
     <div className="bg-white">
-      {/* Hero — fondo negro, split layout */}
+      {/* Hero — solo texto + CTAs */}
       <HeroSection />
+
+      {/* Elegí tu estilo — categorías editoriales (debajo del hero) */}
+      <CategoryShowcase />
 
       {/* Trust strip */}
       <SocialProofStrip />
@@ -19,9 +22,6 @@ export default function HomePage() {
       <div className="flex justify-center py-1 bg-white">
         <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
       </div>
-
-      {/* Elegí tu estilo — categorías editoriales */}
-      <CategoryShowcase />
 
       {/* Nuevos ingresos — sección protagonista */}
       <NewArrivals />

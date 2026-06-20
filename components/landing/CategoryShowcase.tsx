@@ -5,38 +5,49 @@ import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { ArrowRight } from 'lucide-react';
 
-const SUBCATS = [
-  { label: 'Remeras',   href: '/productos?sub=remeras' },
-  { label: 'Hoodies',   href: '/productos?sub=hoodies' },
-  { label: 'Pantalones',href: '/productos?sub=pantalones' },
-  { label: 'Accesorios',href: '/productos?sub=accesorios' },
-];
+const CATS = [
+  { label: 'Remeras',    sub: 'remeras' },
+  { label: 'Hoodies',    sub: 'hoodies' },
+  { label: 'Pantalones', sub: 'pantalones' },
+] as const;
 
 export function CategoryShowcase() {
-  const [counts, setCounts]   = useState({ sneakers: 0, streetwear: 0 });
-  const [images, setImages]   = useState<{ sneakers: string[]; streetwear: string[] }>({
-    sneakers: [], streetwear: [],
-  });
-  const [loaded, setLoaded]   = useState(false);
+  // Mapa subcategoría -> url de la última foto del producto más reciente
+  const [images, setImages] = useState<Record<string, string>>({});
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
+    let active = true;
+
     (async () => {
-      const [snRes, swRes] = await Promise.all([
-        supabase.from('products').select('images', { count: 'exact' })
-          .eq('active', true).eq('category', 'sneakers')
-          .order('created_at', { ascending: false }).limit(3),
-        supabase.from('products').select('images', { count: 'exact' })
-          .eq('active', true).eq('category', 'streetwear')
-          .order('created_at', { ascending: false }).limit(3),
-      ]);
-      setCounts({ sneakers: snRes.count || 0, streetwear: swRes.count || 0 });
-      setImages({
-        sneakers:   (snRes.data  || []).map((p: any) => p.images?.[0]?.url).filter(Boolean),
-        streetwear: (swRes.data  || []).map((p: any) => p.images?.[0]?.url).filter(Boolean),
+      const results = await Promise.all(
+        CATS.map((c) =>
+          supabase
+            .from('products')
+            .select('images')
+            .eq('active', true)
+            .eq('subcategory', c.sub)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        )
+      );
+
+      if (!active) return;
+      const map: Record<string, string> = {};
+      results.forEach((res, i) => {
+        const imgs = (res.data as any)?.images as { url: string }[] | undefined;
+        // "la última foto" del producto
+        if (imgs?.length) map[CATS[i].sub] = imgs[imgs.length - 1].url;
       });
+      setImages(map);
       setLoaded(true);
     })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
@@ -51,116 +62,41 @@ export function CategoryShowcase() {
               Elegí tu estilo
             </h2>
           </div>
-          <Link href="/productos" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">
+          <Link href="/productos?streetwear" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">
             Ver todo <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* Grid de categorías */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-
-          {/* ── Sneakers ── */}
-          <Link href="/productos?sneakers" className="group relative overflow-hidden rounded-3xl bg-gray-900 aspect-[4/3] md:aspect-[5/4] block">
-            {/* Fotos collage */}
-            {loaded && images.sneakers.length > 0 ? (
-              <>
-                <Image
-                  src={images.sneakers[0]}
-                  alt="Sneakers"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  quality={85}
-                  className="object-cover opacity-80 group-hover:opacity-90 group-hover:scale-[1.04] transition-all duration-700"
-                />
-                {/* Fotos secundarias superpuestas */}
-                {images.sneakers[1] && (
-                  <div className="absolute bottom-16 md:bottom-20 right-4 md:right-6 w-20 md:w-28 aspect-square rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4 transition-all duration-500 delay-75">
-                    <Image src={images.sneakers[1]} alt="" fill className="object-cover" />
-                  </div>
+        {/* Grilla editorial */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+          {CATS.map((c) => (
+            <Link
+              key={c.sub}
+              href={`/productos?streetwear&sub=${c.sub}`}
+              className="group block"
+            >
+              <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 rounded-2xl">
+                {loaded && images[c.sub] ? (
+                  <Image
+                    src={images[c.sub]}
+                    alt={c.label}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 33vw"
+                    quality={90}
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
                 )}
-              </>
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950 animate-pulse" />
-            )}
-
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            {/* Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <p className="text-white/50 text-xs uppercase tracking-[0.2em] font-bold mb-1">
-                {counts.sneakers > 0 ? `${counts.sneakers} modelos` : 'Colección'}
-              </p>
-              <h3 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4">
-                Sneakers
-              </h3>
-              <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-black rounded-full group-hover:bg-gray-100 transition-colors">
-                Ver colección <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </div>
-          </Link>
-
-          {/* ── Streetwear ── */}
-          <div className="flex flex-col gap-4">
-            {/* Tile principal */}
-            <Link href="/productos?streetwear" className="group relative overflow-hidden rounded-3xl bg-gray-100 aspect-[4/2] block">
-              {loaded && images.streetwear.length > 0 ? (
-                <Image
-                  src={images.streetwear[0]}
-                  alt="Streetwear"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  quality={85}
-                  className="object-cover opacity-80 group-hover:opacity-95 group-hover:scale-[1.04] transition-all duration-700"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 animate-pulse" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 flex items-end justify-between">
-                <div>
-                  <p className="text-white/50 text-xs uppercase tracking-[0.2em] font-bold mb-0.5">
-                    {counts.streetwear > 0 ? `${counts.streetwear} prendas` : 'Colección'}
-                  </p>
-                  <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-                    Streetwear
-                  </h3>
-                </div>
-                <span className="inline-flex items-center gap-1 px-4 py-2 bg-white/10 backdrop-blur-sm text-white text-sm font-bold rounded-full border border-white/20 group-hover:bg-white/20 transition-colors">
-                  Ver todo <ArrowRight className="w-3.5 h-3.5" />
-                </span>
+              </div>
+              <div className="flex items-center justify-between mt-3 md:mt-4">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+                  {c.label}
+                </h3>
+                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
               </div>
             </Link>
-
-            {/* Tiles de subcategorías */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              {SUBCATS.map((sub, i) => (
-                <Link
-                  key={sub.label}
-                  href={sub.href}
-                  className="group relative overflow-hidden rounded-2xl bg-gray-50 border border-gray-200 hover:border-gray-400 hover:bg-gray-100 transition-all duration-200 flex items-center justify-between px-4 py-4 md:py-5"
-                >
-                  {loaded && images.streetwear[i % images.streetwear.length] && (
-                    <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <Image src={images.streetwear[i % images.streetwear.length]} alt="" fill className="object-cover" />
-                    </div>
-                  )}
-                  <span className="relative text-sm md:text-base font-black text-gray-900 uppercase tracking-tight">
-                    {sub.label}
-                  </span>
-                  <ArrowRight className="relative w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* CTA mobile */}
-        <div className="mt-6 text-center md:hidden">
-          <Link href="/productos" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 underline underline-offset-2 transition-colors">
-            Ver todos los productos <ArrowRight className="w-4 h-4" />
-          </Link>
+          ))}
         </div>
       </div>
     </section>
