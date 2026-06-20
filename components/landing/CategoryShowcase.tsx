@@ -72,21 +72,21 @@ export function CategoryShowcase() {
   return (
     <section className="bg-white pt-6 pb-12 md:pt-8 md:pb-16">
       <div className="max-w-[1400px] mx-auto px-4">
-        {/* Grilla editorial — accesos directos a categorías */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+        {/* Grilla editorial — accesos directos a categorías (3 en fila, también en mobile) */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {CATS.map((c) => (
             <Link
               key={c.sub}
               href={`/productos?streetwear&sub=${c.sub}`}
               className="group block"
             >
-              <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 rounded-2xl">
+              <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 rounded-xl sm:rounded-2xl">
                 {loaded && images[c.sub] ? (
                   <Image
                     src={images[c.sub]}
                     alt={c.label}
                     fill
-                    sizes="(max-width: 640px) 100vw, 33vw"
+                    sizes="(max-width: 640px) 33vw, 33vw"
                     quality={90}
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
@@ -94,11 +94,11 @@ export function CategoryShowcase() {
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
                 )}
               </div>
-              <div className="flex items-center justify-between mt-3 md:mt-4">
-                <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+              <div className="flex items-center justify-between gap-1 mt-2 sm:mt-3 md:mt-4">
+                <h3 className="text-xs sm:text-lg md:text-2xl font-black text-gray-900 tracking-tight truncate">
                   {c.label}
                 </h3>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="hidden sm:block w-5 h-5 shrink-0 text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
               </div>
             </Link>
           ))}
