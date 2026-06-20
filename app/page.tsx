@@ -1,8 +1,7 @@
-import { FeaturedCarousels } from '@/components/landing/FeaturedCarousels';
 import { NewArrivals } from '@/components/landing/NewArrivals';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase } from '@/components/landing/CategoryShowcase';
-import { BrandCarousel } from '@/components/landing/BrandCarousel';
+import { BrandShowcase } from '@/components/landing/BrandShowcase';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
@@ -21,22 +20,21 @@ export default function HomePage() {
         <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
       </div>
 
-      {/* Categorías editoriales */}
+      {/* Elegí tu estilo — categorías editoriales */}
       <CategoryShowcase />
 
-      {/* Nuevos ingresos */}
+      {/* Nuevos ingresos — sección protagonista */}
       <NewArrivals />
 
-      {/* Marcas — carrusel */}
-      <BrandCarousel />
+      {/* Marcas destacadas — bloques individuales */}
+      <BrandShowcase title="Eme Studios"   eyebrow="Marca destacada" brandSlug="emestudios"   href="/productos?brand=emestudios" />
+      <BrandShowcase title="Scuffers"      eyebrow="Marca destacada" brandSlug="scuffers"    href="/productos?brand=scuffers" />
+      <BrandShowcase title="Valley"        eyebrow="Vale Forever"    brandSlug="valley"      href="/productos?brand=valley" />
+      <BrandShowcase title="Mixed Emotion" eyebrow="Marca destacada" brandSlug="mixedemotion" href="/productos?brand=mixedemotion" />
+      <BrandShowcase title="Sneakers"      eyebrow="Sneakers"         category="sneakers"     href="/productos?sneakers" />
 
-      {/* Cómo comprar */}
+      {/* Cómo comprar — último bloque antes del footer */}
       <HowToBuy />
-
-      {/* Carruseles destacados */}
-      <div className="bg-white py-12 md:py-20 border-t border-gray-200">
-        <FeaturedCarousels />
-      </div>
     </div>
   );
 }

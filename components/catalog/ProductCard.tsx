@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
@@ -13,10 +13,10 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
-  const [index, setIndex]       = useState(0);
-  const [hovering, setHovering] = useState(false);
   const [loaded, setLoaded]     = useState(false);
   const images                  = product.images || [];
+  const primary                 = images[0];
+  const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
   const { rate: dolarOficial }  = useDolarRate();
 
   const totalStock = useMemo(() => {
@@ -34,12 +34,6 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       .filter(Boolean) as string[];
   }, [product.product_variants]);
 
-  useEffect(() => {
-    if (!hovering || images.length <= 1) return;
-    const t = window.setInterval(() => setIndex(i => (i + 1) % images.length), 800);
-    return () => window.clearInterval(t);
-  }, [hovering, images.length]);
-
   const hasSale     = product.sale_price != null && Number(product.sale_price) > 0;
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
   const priceInArs  = activePrice * dolarOficial;
@@ -56,26 +50,38 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
     <Link
       href={`/producto/${product.slug}`}
       className="group block"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => { setHovering(false); setIndex(0); }}
     >
-      {/* ── Imagen ── */}
+      {/* ── Imagen (swap en hover estilo Shopify) ── */}
       <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
         {!loaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
 
-        {images[index]?.url && (
+        {primary?.url && (
           <Image
-            src={images[index].url}
-            alt={images[index].alt || product.title}
+            src={primary.url}
+            alt={primary.alt || product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
             className={cn(
-              'object-contain transition-opacity duration-500',
+              'object-contain transition-all duration-700 ease-out',
               loaded ? 'opacity-100' : 'opacity-0',
-              hovering && images.length > 1 && 'opacity-90',
+              // al pasar el mouse la primaria se desvanece si hay una segunda imagen
+              secondary?.url && 'group-hover:opacity-0',
+              'group-hover:scale-[1.03]',
             )}
             onLoad={() => setLoaded(true)}
+          />
+        )}
+
+        {/* Imagen secundaria: aparece con crossfade suave al hacer hover */}
+        {secondary?.url && (
+          <Image
+            src={secondary.url}
+            alt={secondary.alt || product.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            quality={85}
+            className="object-contain opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
           />
         )}
 
@@ -102,14 +108,6 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           )}
         </div>
 
-        {/* Indicadores de imagen */}
-        {images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-            {images.map((_, idx) => (
-              <span key={idx} className={cn('h-0.5 rounded-full transition-all bg-gray-400', index === idx ? 'w-4 bg-gray-700' : 'w-1')} />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Info ── */}

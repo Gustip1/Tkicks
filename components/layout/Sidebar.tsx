@@ -1,15 +1,34 @@
 "use client";
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, ChevronDown, Instagram, Gavel } from 'lucide-react';
-import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
+import { X, ChevronRight, ChevronDown, Instagram, Gavel, Sparkles } from 'lucide-react';
+import { STREETWEAR_SUBCATEGORIES, Brand } from '@/types/db';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 export function Sidebar() {
   const isOpen = useUIStore((s) => s.isSidebarOpen);
   const close = useUIStore((s) => s.closeSidebar);
   const [streetwearOpen, setStreetwearOpen] = useState(false);
+  const [marcasOpen, setMarcasOpen] = useState(false);
+  const [brands, setBrands] = useState<Brand[]>([]);
+
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('brands')
+        .select('*')
+        .eq('active', true)
+        .order('name');
+      if (!cancelled && data) setBrands(data as Brand[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
@@ -55,6 +74,60 @@ export function Sidebar() {
             Categorías
           </p>
           <div className="space-y-1">
+            <Link
+              href="/nuevos-ingresos"
+              onClick={close}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-gray-100 text-gray-900"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-100">
+                <Sparkles className="w-5 h-5 text-gray-700" />
+              </div>
+              <div className="flex-1">
+                <p className="font-black uppercase tracking-tight text-gray-900">New Arrivals</p>
+                <p className="text-xs font-bold text-gray-500">Lo último que llegó</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
+
+            {brands.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setMarcasOpen(!marcasOpen)}
+                  className="w-full flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-gray-100 text-gray-900"
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-gray-100">
+                    🏷️
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-black uppercase tracking-tight text-gray-900">Marcas</p>
+                    <p className="text-xs font-bold text-gray-500">Comprá por marca</p>
+                  </div>
+                  <ChevronDown className={cn(
+                    "w-5 h-5 text-gray-400 transition-transform duration-200",
+                    marcasOpen && "rotate-180"
+                  )} />
+                </button>
+
+                <div className={cn(
+                  "overflow-hidden transition-all duration-200 ease-out",
+                  marcasOpen ? "max-h-[480px] opacity-100" : "max-h-0 opacity-0"
+                )}>
+                  <div className="ml-6 pl-4 border-l border-gray-200 grid grid-cols-2 gap-0.5 py-1">
+                    {brands.map((brand) => (
+                      <Link
+                        key={brand.id}
+                        href={`/productos?brand=${brand.slug}`}
+                        onClick={close}
+                        className="rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                      >
+                        {brand.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Link
               href="/productos?sneakers"
               onClick={close}

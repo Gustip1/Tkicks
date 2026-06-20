@@ -6,8 +6,9 @@ import { useEffect, useState, useRef } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
 import { useCartStore } from '@/store/cart';
+import { cn } from '@/lib/utils';
 import { BannerTicker } from './BannerTicker';
-import { STREETWEAR_SUBCATEGORIES } from '@/types/db';
+import { STREETWEAR_SUBCATEGORIES, Brand } from '@/types/db';
 
 export function Header() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
@@ -17,6 +18,8 @@ export function Header() {
   const [user, setUser] = useState<any>(null);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsOpen, setBrandsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const isInAdmin = pathname.startsWith('/admin');
@@ -52,6 +55,28 @@ export function Header() {
     };
   }, []);
 
+  // Cargamos las marcas activas para el megamenú de "Marcas"
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('brands')
+        .select('*')
+        .eq('active', true)
+        .order('name');
+      if (!cancelled && data) setBrands(data as Brand[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Cerramos el dropdown al navegar
+  useEffect(() => {
+    setBrandsOpen(false);
+  }, [pathname]);
+
   if (isInAdmin) return null;
 
   return (
@@ -69,6 +94,69 @@ export function Header() {
           </button>
 
           <nav className="hidden md:flex items-center gap-1">
+            <Link
+              href="/nuevos-ingresos"
+              className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+            >
+              New Arrivals
+            </Link>
+
+            {/* ── Marcas (megamenú: hover o click) ── */}
+            {brands.length > 0 && (
+              <div
+                className="relative"
+                onMouseEnter={() => setBrandsOpen(true)}
+                onMouseLeave={() => setBrandsOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setBrandsOpen((v) => !v)}
+                  aria-expanded={brandsOpen}
+                  aria-haspopup="true"
+                  className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2 uppercase tracking-tight"
+                >
+                  Marcas
+                  <ChevronDown
+                    className={cn(
+                      'w-3.5 h-3.5 text-gray-400 transition-transform duration-200',
+                      brandsOpen && 'rotate-180 text-gray-900'
+                    )}
+                  />
+                </button>
+
+                <div
+                  className={cn(
+                    'absolute left-0 top-full pt-2 z-50 transition-all duration-200',
+                    brandsOpen
+                      ? 'opacity-100 visible translate-y-0'
+                      : 'opacity-0 invisible -translate-y-1 pointer-events-none'
+                  )}
+                >
+                  <div className="w-[420px] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="grid grid-cols-2 gap-0.5 p-2">
+                      {brands.map((brand) => (
+                        <Link
+                          key={brand.id}
+                          href={`/productos?brand=${brand.slug}`}
+                          className="rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                        >
+                          {brand.name}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-200">
+                      <Link
+                        href="/productos"
+                        className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                      >
+                        Ver todas las marcas
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Link
               href="/productos?sneakers"
               className="rounded-xl px-4 py-2 text-sm font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2 uppercase tracking-tight"
