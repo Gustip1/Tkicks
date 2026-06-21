@@ -23,6 +23,7 @@ import {
   Receipt,
   Tag,
   LayoutTemplate,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Precios', href: '/admin/precios', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { name: 'Destacados', href: '/admin/destacados', icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   { name: 'Portada', href: '/admin/portada', icon: LayoutTemplate, color: 'text-sky-600', bg: 'bg-sky-50' },
+  { name: 'Opiniones', href: '/admin/opiniones', icon: MessageSquareQuote, color: 'text-rose-600', bg: 'bg-rose-50' },
   { name: 'Ofertas', href: '/admin/ofertas', icon: Flame, color: 'text-red-600', bg: 'bg-red-50' },
   { name: 'Sorteo', href: '/admin/sorteo', icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   { name: 'Subastas', href: '/admin/subastas', icon: Gavel, color: 'text-orange-600', bg: 'bg-orange-50' },
