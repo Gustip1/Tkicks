@@ -77,11 +77,13 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
     
     let variantIdsForQ: string[] = [];
     if (dq) {
-      const like = `%${dq}%`;
+      // Permite buscar por talle: "42", "talle 42", "M", "talle M"…
+      const sizeToken = dq.replace(/^(talles?|sizes?|t)\s+/i, '').trim();
       const { data: vrows } = await supabase.current
         .from('product_variants')
         .select('product_id')
-        .ilike('size', like);
+        // coincidencia exacta de talle (case-insensitive)
+        .ilike('size', sizeToken);
       variantIdsForQ = Array.from(new Set((vrows || []).map((r: any) => r.product_id)));
     }
 

@@ -252,8 +252,8 @@ export function Header() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar..."
-              className="w-40 xl:w-52 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2 pl-10 text-sm text-gray-900 placeholder-gray-400 font-bold transition-all focus:w-60 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+              placeholder="Buscar por nombre o talle…"
+              className="w-40 xl:w-52 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2 pl-10 text-sm text-gray-900 placeholder-gray-400 font-bold transition-all focus:w-72 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
             />
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           </form>
@@ -314,7 +314,7 @@ export function Header() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="¿Qué estás buscando?"
+                placeholder="Buscá por nombre, marca o talle (ej: 42)"
                 className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-900 placeholder-gray-400 font-bold focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                 autoFocus
               />
