@@ -88,7 +88,7 @@ export function OfertasClient() {
           </div>
 
           {/* Grid de productos */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((p) => (
               <div key={p.id} className="relative">
                 {/* Badge de SALE flotante */}
