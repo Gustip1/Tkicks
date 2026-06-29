@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Gavel, Clock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { formatARS } from '@/lib/utils';
+import { AuctionPolicyModal } from '@/components/subastas/AuctionPolicy';
 
 interface AuctionDetail {
   id: string;
@@ -63,6 +64,8 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
   const [bidErr, setBidErr] = useState<string | null>(null);
   const [bidOk, setBidOk] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -139,6 +142,8 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     e.preventDefault();
     setBidErr(null);
     setBidOk(null);
+
+    if (!acceptedPolicy) { setBidErr('Tenés que aceptar las bases y condiciones de las subastas para pujar.'); return; }
 
     const first = contactFirst.trim();
     const last = contactLast.trim();
@@ -345,6 +350,28 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   )}
                 </div>
 
+                {/* Aceptación de bases y condiciones (obligatorio) */}
+                <label className="flex items-start gap-2.5 cursor-pointer select-none border-t border-gray-200 pt-4">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPolicy}
+                    onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                  />
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    Acepto las{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setPolicyOpen(true); }}
+                      className="text-orange-500 hover:text-orange-600 font-bold underline underline-offset-2"
+                    >
+                      bases y condiciones
+                    </button>{' '}
+                    de las subastas y asumo el compromiso de compra. Sé que no pagar o cancelar implica
+                    baneo permanente.
+                  </span>
+                </label>
+
                 {bidErr && (
                   <p className="text-red-500 text-sm flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" /> {bidErr}
@@ -354,7 +381,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
                 <button
                   type="submit"
-                  disabled={submitting || !bidAmount}
+                  disabled={submitting || !bidAmount || !acceptedPolicy}
                   className="w-full bg-orange-500 text-white font-black uppercase py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Enviando…' : 'Pujar'}
@@ -456,6 +483,8 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
           )}
         </section>
       </div>
+
+      <AuctionPolicyModal open={policyOpen} onClose={() => setPolicyOpen(false)} />
     </div>
   );
 }

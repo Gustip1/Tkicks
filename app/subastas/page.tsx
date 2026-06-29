@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Gavel, Clock } from 'lucide-react';
 import { formatARS } from '@/lib/utils';
 import type { ActiveAuctionRow } from '@/types/db';
+import { AuctionPolicyTrigger } from '@/components/subastas/AuctionPolicy';
 
 function useCountdown(endAt: string) {
   const [now, setNow] = useState(() => Date.now());
@@ -121,6 +122,17 @@ export default function SubastasPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {items.map((a) => <AuctionCard key={a.id} a={a} />)}
+        </div>
+
+        {/* Bases y condiciones */}
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-400 font-medium">
+            La participación en las subastas implica un compromiso de compra absoluto.{' '}
+            <AuctionPolicyTrigger
+              className="text-orange-500 hover:text-orange-600 font-bold underline underline-offset-2"
+              label="Ver bases y condiciones"
+            />
+          </p>
         </div>
       </div>
     </div>
