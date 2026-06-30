@@ -8,7 +8,7 @@ import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
-import { Shield, Truck, Star } from 'lucide-react';
+import { Shield, Truck, Star, Banknote, CreditCard } from 'lucide-react';
 import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
 
 export default function ProductDetailPage() {
@@ -128,69 +128,109 @@ export default function ProductDetailPage() {
           )}
 
           {/* Price */}
-          <div className="space-y-2 pb-3 md:pb-4 border-b border-gray-200">
-            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Precio · Transferencia / Efectivo</p>
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">
-                ${activePrice.toFixed(2)} USD
-              </span>
-              {hasSale && (
-                <span className="text-lg md:text-2xl font-black text-gray-400 line-through">
-                  ${Number(product.price).toFixed(2)}
-                </span>
-              )}
-              {productClueInfo && (
-                <GiveawayInlinePriceClue
-                  clueId={`producto:${product.slug}`}
-                  label={`Producto: ${product.title}`}
-                  position={productClueInfo.position}
-                  digit={productClueInfo.digit}
-                />
-              )}
-            </div>
-            {hasSale && (
-              <p className="text-xs font-black text-red-500 uppercase tracking-wide">
-                ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
-              </p>
-            )}
-            <p className="text-sm md:text-lg text-gray-600 font-bold">
-              {formatCurrency(priceInArs)} <span className="text-xs md:text-sm">(al tipo de cambio actual)</span>
-            </p>
-            {(() => {
-              const cardPriceArs = activePrice * getCardPriceMultiplier() * dolarOficial;
-              const installment = cardPriceArs / 3;
-              const promoOn = isPromoActive();
-              return (
-                <div
-                  className={
-                    promoOn
-                      ? 'mt-2 p-3 rounded-xl bg-orange-50 border border-orange-200'
-                      : 'mt-2 p-3 rounded-xl bg-violet-50 border border-violet-200'
-                  }
-                >
-                  <p
-                    className={
-                      promoOn
-                        ? 'text-sm md:text-base text-orange-600 font-black'
-                        : 'text-sm md:text-base text-violet-600 font-black'
-                    }
-                  >
-                    💳 3 cuotas sin interés de {formatCurrency(installment)}
-                    {promoOn && (
-                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider align-middle">
-                        Promo
+          {(() => {
+            const cardPriceArs = activePrice * getCardPriceMultiplier() * dolarOficial;
+            const installment = cardPriceArs / 3;
+            const promoOn = isPromoActive();
+            const discountPct = hasSale
+              ? Math.round((1 - activePrice / Number(product.price)) * 100)
+              : 0;
+
+            return (
+              <div className="space-y-4 pb-4 md:pb-6 border-b border-gray-200">
+                {/* Precio principal (USD) */}
+                <div>
+                  <div className="flex items-baseline gap-2.5 flex-wrap">
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                      ${activePrice.toFixed(2)}
+                      <span className="text-base md:text-xl text-gray-400 font-black ml-1">USD</span>
+                    </span>
+                    {hasSale && (
+                      <span className="text-lg md:text-2xl font-black text-gray-400 line-through">
+                        ${Number(product.price).toFixed(2)}
                       </span>
                     )}
-                  </p>
-                  <p className="text-xs text-gray-500 font-bold">
-                    {promoOn
-                      ? 'Promo: SIN recargo, mismo precio que efectivo'
-                      : `Total tarjeta: ${formatCurrency(cardPriceArs)} (10% recargo incluido)`}
-                  </p>
+                    {hasSale && discountPct > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-red-500 text-white px-2.5 py-1 text-xs font-black uppercase tracking-wide">
+                        -{discountPct}%
+                      </span>
+                    )}
+                    {productClueInfo && (
+                      <GiveawayInlinePriceClue
+                        clueId={`producto:${product.slug}`}
+                        label={`Producto: ${product.title}`}
+                        position={productClueInfo.position}
+                        digit={productClueInfo.digit}
+                      />
+                    )}
+                  </div>
+                  {hasSale && (
+                    <p className="mt-1.5 text-xs font-black text-red-500 uppercase tracking-wide">
+                      ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
+                    </p>
+                  )}
                 </div>
-              );
-            })()}
-          </div>
+
+                {/* Métodos de pago — precios en ARS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Transferencia / Efectivo */}
+                  <div className="relative rounded-2xl border border-gray-900/10 bg-gray-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 shrink-0">
+                        <Banknote className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
+                        Transferencia<br className="hidden sm:block" /> / Efectivo
+                      </p>
+                    </div>
+                    <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                      {formatCurrency(priceInArs)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-emerald-600 font-bold uppercase tracking-wide">
+                      Mejor precio
+                    </p>
+                  </div>
+
+                  {/* Tarjeta — 3 cuotas */}
+                  <div
+                    className={
+                      'relative rounded-2xl border p-4 ' +
+                      (promoOn ? 'border-orange-200 bg-orange-50' : 'border-violet-200 bg-violet-50')
+                    }
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div
+                        className={
+                          'flex items-center justify-center w-8 h-8 rounded-full shrink-0 ' +
+                          (promoOn ? 'bg-orange-100' : 'bg-violet-100')
+                        }
+                      >
+                        <CreditCard className={'w-4 h-4 ' + (promoOn ? 'text-orange-600' : 'text-violet-600')} />
+                      </div>
+                      <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
+                        Tarjeta<br className="hidden sm:block" /> 3 cuotas s/ interés
+                      </p>
+                      {promoOn && (
+                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider self-start">
+                          Promo
+                        </span>
+                      )}
+                    </div>
+                    <p className={'text-2xl md:text-3xl font-black tracking-tight ' + (promoOn ? 'text-orange-600' : 'text-violet-600')}>
+                      3 × {formatCurrency(installment)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
+                      {promoOn ? 'Sin recargo' : `Total ${formatCurrency(cardPriceArs)}`}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-gray-400 font-medium">
+                  Precios en pesos calculados al tipo de cambio actual. El valor en USD es de referencia.
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Add to cart section */}
           <div className="py-2 md:py-4">
