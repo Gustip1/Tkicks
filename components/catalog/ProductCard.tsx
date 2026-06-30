@@ -136,24 +136,39 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           </div>
         )}
 
-        <div className="space-y-0.5">
-          {hasSale && (
-            <p className="text-xs text-gray-400 line-through">
-              ${Number(product.price).toFixed(2)} USD
-            </p>
-          )}
-          <p className={cn(
-            'font-black tracking-tight',
-            size === 'large' ? 'text-xl' : 'text-base',
-            hasSale ? 'text-red-600' : 'text-gray-900',
-          )}>
-            ${activePrice.toFixed(2)} USD
+        <div className="space-y-1">
+          {/* USD */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className={cn(
+              'font-black tracking-tight',
+              size === 'large' ? 'text-xl' : 'text-base',
+              hasSale ? 'text-red-600' : 'text-gray-900',
+            )}>
+              ${activePrice.toFixed(2)}
+              <span className="text-[10px] text-gray-400 font-black ml-0.5 align-top">USD</span>
+            </span>
+            {hasSale && (
+              <span className="text-xs text-gray-400 line-through font-bold">
+                ${Number(product.price).toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          {/* ARS transferencia */}
+          <p className="text-xs font-bold text-gray-700">
+            {formatCurrency(priceInArs)}
+            <span className="text-[10px] text-gray-400 font-medium ml-1 uppercase tracking-wide">transf.</span>
           </p>
-          <p className="text-xs text-gray-500 font-medium">{formatCurrency(priceInArs)}</p>
+
+          {/* Tarjeta 3 cuotas */}
           {!isSoldOut && (
-            <p className={cn('text-[10px] font-medium', promoOn ? 'text-orange-500' : 'text-violet-500')}>
+            <span className={cn(
+              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
+              promoOn ? 'bg-orange-50 text-orange-600' : 'bg-violet-50 text-violet-600',
+            )}>
               3 × {formatCurrency(cardArs / 3)}
-            </p>
+              <span className="font-bold opacity-70">s/ interés</span>
+            </span>
           )}
         </div>
       </div>
