@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, ProductVariant } from '@/types/db';
@@ -49,10 +50,22 @@ export default function ProductDetailPage() {
 
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh] bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-3 border-gray-900 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-900 font-black">Cargando producto...</p>
+    <div className="max-w-7xl mx-auto bg-white min-h-screen" aria-busy="true" aria-label="Cargando producto">
+      <div className="skeleton h-4 w-48 rounded mb-6" />
+      <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">
+        <div className="skeleton aspect-[4/5] w-full rounded-xl md:rounded-2xl" />
+        <div className="space-y-4">
+          <div className="skeleton h-6 w-24 rounded-full" />
+          <div className="skeleton h-10 w-3/4 rounded" />
+          <div className="skeleton h-4 w-1/2 rounded" />
+          <div className="skeleton h-12 w-2/3 rounded" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="skeleton h-28 rounded-2xl" />
+            <div className="skeleton h-28 rounded-2xl" />
+          </div>
+          <div className="skeleton h-12 w-full rounded-xl" />
+          <div className="skeleton h-12 w-full rounded-xl" />
+        </div>
       </div>
     </div>
   );
@@ -75,14 +88,14 @@ export default function ProductDetailPage() {
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden">
       {/* Breadcrumb */}
-      <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold">
-        <a href="/" className="hover:text-gray-900 transition-colors">Inicio</a>
-        <span>/</span>
-        <a href={`/productos?${product.category}`} className="hover:text-gray-900 transition-colors capitalize">
+      <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold" aria-label="Ruta de navegación">
+        <Link href="/" className="hover:text-gray-900 transition-colors">Inicio</Link>
+        <span aria-hidden="true">/</span>
+        <Link href={`/productos?${product.category}`} className="hover:text-gray-900 transition-colors capitalize">
           {product.category}
-        </a>
-        <span>/</span>
-        <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]">{product.title}</span>
+        </Link>
+        <span aria-hidden="true">/</span>
+        <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]" aria-current="page">{product.title}</span>
       </nav>
 
       <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">

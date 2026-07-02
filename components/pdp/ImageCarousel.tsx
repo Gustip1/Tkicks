@@ -93,6 +93,24 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
         )}
       </div>
       
+      {/* Dots de navegación — sólo móvil (las miniaturas quedan para tablet+) */}
+      {images.length > 1 && (
+        <div className="flex md:hidden items-center justify-center gap-1.5">
+          {images.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              aria-label={`Ir a la imagen ${idx + 1}`}
+              onClick={() => api?.scrollTo(idx)}
+              className={cn(
+                'h-1.5 rounded-full transition-all duration-300',
+                selectedIndex === idx ? 'w-5 bg-gray-900' : 'w-1.5 bg-gray-300 hover:bg-gray-400'
+              )}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Thumbnail navigation - oculto en móvil, visible en tablet+ */}
       {images.length > 1 && (
         <div className="hidden md:flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide px-2 md:px-0">

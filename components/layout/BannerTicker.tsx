@@ -27,7 +27,7 @@ export function BannerTicker() {
     <div className="w-full bg-gray-900 text-white border-b border-gray-700 overflow-hidden">
       <div className="flex items-center justify-between px-2 md:px-4 max-w-[1600px] mx-auto">
         <div className="relative overflow-hidden flex-1 min-w-0" aria-label="Ofertas y mensajes importantes" role="region">
-          <div className="animate-marquee whitespace-nowrap py-1.5 md:py-2 will-change-transform">
+          <div className="animate-marquee motion-reduce:animate-none whitespace-nowrap py-1.5 md:py-2 will-change-transform">
             {[...items, ...items].map((item, idx) => (
               <span key={idx} className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-bold">
                 {item}

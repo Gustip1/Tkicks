@@ -52,7 +52,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       className="group block"
     >
       {/* ── Imagen (swap en hover estilo Shopify) ── */}
-      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+      <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 transition-shadow duration-300 group-hover:shadow-soft">
         {!loaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
 
         {primary?.url && (
@@ -87,7 +87,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Sold-out overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center">
             <span className="bg-gray-900 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
               Agotado
             </span>

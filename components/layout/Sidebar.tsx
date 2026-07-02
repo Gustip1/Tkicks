@@ -30,6 +30,21 @@ export function Sidebar() {
     };
   }, []);
 
+  // ESC to close + lock body scroll while open
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, close]);
+
   return (
     <>
       <div
@@ -59,7 +74,7 @@ export function Sidebar() {
           </Link>
           <button
             onClick={close}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors"
             aria-label="Cerrar menú"
           >
             <X className="w-5 h-5 text-gray-500" />

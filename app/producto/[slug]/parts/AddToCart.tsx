@@ -130,7 +130,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       <Button
         onClick={handleAdd}
         disabled={!size || maxQty <= 0 || qty < 1 || qty > maxQty}
-        className="btn-primary w-full py-3 md:py-4 text-sm md:text-base font-black tracking-wide uppercase shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3 md:py-4 text-sm md:text-base font-black tracking-wide uppercase shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {!size ? 'Selecciona una talla' : maxQty <= 0 ? 'Sin stock' : 'Agregar al carrito'}
       </Button>

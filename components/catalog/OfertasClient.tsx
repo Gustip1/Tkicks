@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
 import { ProductCard } from './ProductCard';
+import { ProductGridSkeleton } from './ProductsClient';
 
 export function OfertasClient() {
   const supabase = useRef(createBrowserClient());
@@ -62,10 +63,7 @@ export function OfertasClient() {
 
       {/* Contenido */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
-          <p className="mt-4 text-gray-400 font-bold">Cargando ofertas...</p>
-        </div>
+        <ProductGridSkeleton count={6} large />
       ) : products.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">😔</div>
@@ -87,18 +85,10 @@ export function OfertasClient() {
             </div>
           </div>
 
-          {/* Grid de productos */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Grid de productos — la card ya trae su propio badge de SALE */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 md:gap-x-8 md:gap-y-14">
             {products.map((p) => (
-              <div key={p.id} className="relative">
-                {/* Badge de SALE flotante */}
-                <div className="absolute -top-2 -right-2 z-10 bg-gradient-to-r from-red-600 to-orange-500 text-white px-4 py-2 rounded-full text-xs font-black uppercase shadow-xl animate-pulse border-2 border-white">
-                  🔥 OFERTA
-                </div>
-                <div className="ring-2 ring-red-500/50 rounded-lg overflow-hidden">
-                  <ProductCard product={p} />
-                </div>
-              </div>
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </div>

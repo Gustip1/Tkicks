@@ -1,11 +1,36 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Brand, Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 import { ProductCard } from './ProductCard';
 import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/** Skeleton con la misma silueta que ProductCard para evitar saltos de layout */
+export function ProductGridSkeleton({ count = 8, large = false }: { count?: number; large?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'grid gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-14',
+        large
+          ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3'
+          : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      )}
+      aria-hidden="true"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i}>
+          <div className="skeleton aspect-square w-full rounded-xl" />
+          <div className="skeleton mt-3 h-2.5 w-1/3 rounded" />
+          <div className="skeleton mt-2 h-3.5 w-3/4 rounded" />
+          <div className="skeleton mt-2 h-4 w-1/2 rounded" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
   const [debounced, setDebounced] = useState(value);
@@ -218,31 +243,31 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
       {/* Subcategory tabs for streetwear */}
       {category === 'streetwear' && (
         <div className="flex flex-wrap items-center gap-2">
-          <a
+          <Link
             href="/productos?streetwear"
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-bold transition-all",
               !subcategory
-                ? "bg-white text-black"
+                ? "bg-gray-900 text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
             )}
           >
             Todo
-          </a>
+          </Link>
           {STREETWEAR_SUBCATEGORIES.map((sub) => (
-            <a
+            <Link
               key={sub.value}
               href={`/productos?streetwear&sub=${sub.value}`}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5",
                 subcategory === sub.value
-                  ? "bg-white text-black"
+                  ? "bg-gray-900 text-white shadow-sm"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
               )}
             >
               <span>{sub.icon}</span>
               {sub.label}
-            </a>
+            </Link>
           ))}
         </div>
       )}
@@ -364,12 +389,9 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         </div>
       )}
 
-      {/* Loading state */}
+      {/* Loading state — skeleton con la silueta real del grid */}
       {loading && products.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-gray-500 font-medium">Cargando productos...</p>
-        </div>
+        <ProductGridSkeleton count={8} large={gridSize === 'large'} />
       )}
       
       {/* Empty state */}
@@ -382,10 +404,10 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           <p className="text-gray-500 max-w-md">
             Intenta ajustar los filtros o buscar con otros términos
           </p>
-          {selectedSizes.length > 0 && (
+          {(selectedSizes.length > 0 || selectedBrand) && (
             <button
-              onClick={() => setSelectedSizes([])}
-              className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
+              onClick={() => { setSelectedSizes([]); setSelectedBrand(''); }}
+              className="mt-4 px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-bold hover:bg-black active:scale-[0.98] transition-all"
             >
               Limpiar filtros
             </button>

@@ -9,7 +9,7 @@ export function HeroSection() {
         <div className="flex flex-col items-center text-center py-12 md:py-16">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 animate-hero-enter hero-delay-1">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -20,7 +20,7 @@ export function HeroSection() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-[2rem] md:text-[3rem] lg:text-[3.5rem] font-black text-gray-900 leading-[0.95] tracking-[-0.02em] mb-5">
+          <h1 className="text-[2rem] md:text-[3rem] lg:text-[3.5rem] font-black text-gray-900 leading-[0.95] tracking-[-0.02em] mb-5 animate-hero-enter hero-delay-2">
             Sneakers{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-600 to-gray-400">
               &amp; Streetwear
@@ -29,13 +29,13 @@ export function HeroSection() {
           </h1>
 
           {/* Subtítulo */}
-          <p className="text-sm md:text-base text-gray-500 leading-relaxed max-w-lg mb-7 font-medium">
+          <p className="text-sm md:text-base text-gray-500 leading-relaxed max-w-lg mb-7 font-medium animate-hero-enter hero-delay-3">
             Selección curada de lo que está de moda.{' '}
             <span className="text-gray-900 font-bold">100% originales</span>, envíos a todo el país.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-10">
+          <div className="flex flex-col sm:flex-row gap-3 mb-10 animate-hero-enter hero-delay-4">
             <Link
               href="/productos"
               className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-gray-900 text-white text-sm font-black uppercase tracking-tight rounded-full hover:bg-black transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -53,7 +53,7 @@ export function HeroSection() {
           </div>
 
           {/* Trust pills */}
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3 animate-hero-enter hero-delay-5">
             {[
               { icon: Shield, text: 'Originales garantizados' },
               { icon: Truck,  text: 'Envíos a todo el país' },

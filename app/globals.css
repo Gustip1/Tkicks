@@ -40,6 +40,12 @@ html, body {
   outline-offset: 2px;
 }
 
+/* Brand selection color */
+::selection {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -280,3 +286,34 @@ img {
 .hero-delay-3 { animation-delay: 150ms; }
 .hero-delay-4 { animation-delay: 200ms; }
 .hero-delay-5 { animation-delay: 250ms; }
+
+/* Cart badge pop when the count changes */
+@keyframes badge-pop {
+  0% { transform: scale(0.5); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-badge-pop {
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Announcement marquee pauses on hover so it stays readable */
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Respect users who opt out of motion: collapse animations/transitions to a single instant frame */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
