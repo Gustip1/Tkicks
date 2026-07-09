@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Syne:wght@700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -286,6 +286,37 @@ img {
 .hero-delay-3 { animation-delay: 150ms; }
 .hero-delay-4 { animation-delay: 200ms; }
 .hero-delay-5 { animation-delay: 250ms; }
+
+/* ── El Cuartito × Tkicks (sección evento) ── */
+
+/* Tipografía de la marca El Cuartito */
+.font-cuartito {
+  font-family: 'Syne', var(--font-sans);
+}
+
+/* Luz cálida que "sale" por la cerradura */
+@keyframes cuartito-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.12); }
+}
+
+.animate-cuartito-glow {
+  animation: cuartito-glow 4s ease-in-out infinite;
+}
+
+/* Marquee del flyer (mismo patrón que marquee-products: contenido duplicado 2x) */
+@keyframes cuartito-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-cuartito-marquee {
+  animation: cuartito-marquee 22s linear infinite;
+}
+
+.animate-cuartito-marquee:hover {
+  animation-play-state: paused;
+}
 
 /* Cart badge pop when the count changes */
 @keyframes badge-pop {

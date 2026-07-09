@@ -4,6 +4,7 @@ import { HomepageBrands } from '@/components/landing/HomepageBrands';
 import { Reviews } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
+import { ElCuartitoEvent } from '@/components/promo/ElCuartitoEvent';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 export default function HomePage() {
@@ -17,6 +18,9 @@ export default function HomePage() {
 
       {/* Trust strip */}
       <SocialProofStrip />
+
+      {/* El Cuartito × Tkicks — evento Día del Amigo (entradas via Passline) */}
+      <ElCuartitoEvent />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">
