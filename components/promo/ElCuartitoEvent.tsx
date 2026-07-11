@@ -1,10 +1,11 @@
 "use client";
 import { ArrowUpRight, Ticket } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics/track';
 
 const TICKETS_URL = 'https://www.passline.com/eventos/el-cuartito-san-juan-dia-del-amigo';
 
 /** Logo oficial de El Cuartito (ojo de cerradura), vectorizado — hereda el color via currentColor */
-function CuartitoLogo({ className }: { className?: string }) {
+export function CuartitoLogo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 118.05 176.83" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
       <g transform="matrix(0.13333333,0,0,-0.13333333,-107.64361,188.41623)">
@@ -33,6 +34,7 @@ export function ElCuartitoEvent() {
           href={TICKETS_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('cuartito_ticket_click', 'promo', { source: 'home_banner', href: TICKETS_URL })}
           aria-label="El Cuartito — Día del Amigo en San Juan: comprá tu entrada en Passline"
           className="group relative block overflow-hidden rounded-3xl bg-[#0a0a0a] border border-white/10 transition-all duration-500 hover:border-orange-500/40 hover:shadow-[0_20px_80px_-20px_rgba(249,115,22,0.35)]"
         >

@@ -4,6 +4,7 @@ import { Product, ProductVariant } from '@/types/db';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
+import { trackEvent } from '@/lib/analytics/track';
 
 const WA_NUMBER = '5492644802994';
 
@@ -41,6 +42,13 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       },
       finalQty
     );
+    trackEvent('add_to_cart', 'ecommerce', {
+      slug: product.slug,
+      title: product.title,
+      size,
+      quantity: finalQty,
+      price: activePrice,
+    });
     openCart();
   };
 
@@ -146,6 +154,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         )}`}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackEvent('whatsapp_click', 'contact', { slug: product.slug, source: 'pdp' })}
         className="flex items-center justify-center gap-3 w-full py-3 md:py-4 rounded-xl border-2 border-[#25D366] text-[#25D366] font-black text-sm md:text-base uppercase tracking-wide hover:bg-[#25D366] hover:text-black transition-all duration-200"
       >
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">

@@ -4,8 +4,9 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import {
   Users, Clock, TrendingUp, Globe, Monitor, Smartphone, Tablet,
   ArrowUpRight, ArrowDownRight, Eye, RefreshCw, ShoppingCart,
-  UserPlus, UserCheck, Zap, ChevronRight
+  UserPlus, UserCheck, Zap, ChevronRight, Ticket
 } from 'lucide-react';
+import { CuartitoLogo } from '@/components/promo/ElCuartitoEvent';
 
 interface AnalyticsData {
   totalVisits: number;
@@ -40,6 +41,12 @@ interface AnalyticsData {
   };
   todayEvents: { event_name: string; count: number }[];
   liveVisitors: number;
+  cuartito: {
+    total: number;
+    today: number;
+    uniquePeople: number;
+    byDay: { date: string; count: number }[];
+  };
   // Retention metrics
   scrollDepthAvg: number;
   scrollDepthBuckets: { label: string; count: number }[];
@@ -281,17 +288,34 @@ export default function AnalyticsPage() {
 
       const { data: eventsData } = await supabase
         .from('analytics_events')
-        .select('event_name')
+        .select('event_name, created_at, session_id, event_data')
         .gte('created_at', startDateStr);
 
       const eventCounts: Record<string, number> = {};
       (eventsData || []).forEach(e => {
         eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1;
       });
+      // Los hitos engaged_* ya se muestran en la sección de retención
       const events = Object.entries(eventCounts)
+        .filter(([name]) => !name.startsWith('engaged_'))
         .map(([event_name, count]) => ({ event_name, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
+
+      // ── El Cuartito: clicks al link de entradas ──
+      const cuartitoEvents = (eventsData || []).filter(e => e.event_name === 'cuartito_ticket_click');
+      const cuartitoToday = cuartitoEvents.filter(e => new Date(e.created_at) >= today).length;
+      const cuartitoPeople = new Set(
+        cuartitoEvents.map((e: any) => e.event_data?.visitor_id || e.session_id)
+      ).size;
+      const cuartitoDayCounts: Record<string, number> = {};
+      cuartitoEvents.forEach(e => {
+        const date = new Date(e.created_at).toISOString().split('T')[0];
+        cuartitoDayCounts[date] = (cuartitoDayCounts[date] || 0) + 1;
+      });
+      const cuartitoByDay = Object.entries(cuartitoDayCounts)
+        .map(([date, count]) => ({ date, count }))
+        .sort((a, b) => a.date.localeCompare(b.date));
 
       const { data: todayEventsData } = await supabase
         .from('analytics_events')
@@ -303,6 +327,7 @@ export default function AnalyticsPage() {
         todayEventCounts[e.event_name] = (todayEventCounts[e.event_name] || 0) + 1;
       });
       const todayEvents = Object.entries(todayEventCounts)
+        .filter(([name]) => !name.startsWith('engaged_'))
         .map(([event_name, count]) => ({ event_name, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
@@ -396,6 +421,12 @@ export default function AnalyticsPage() {
         conversionFunnel,
         todayEvents,
         liveVisitors: liveVisitors || 0,
+        cuartito: {
+          total: cuartitoEvents.length,
+          today: cuartitoToday,
+          uniquePeople: cuartitoPeople,
+          byDay: cuartitoByDay,
+        },
         scrollDepthAvg,
         scrollDepthBuckets,
         durationBuckets,
@@ -501,12 +532,14 @@ export default function AnalyticsPage() {
 
   const getEventLabel = (name: string) => {
     const map: Record<string, string> = {
-      add_to_cart: '🛒 Carrito',
-      checkout_started: '💳 Checkout',
-      checkout: '💳 Checkout',
-      order_paid: '✅ Pagado',
-      purchase: '✅ Pagado',
+      add_to_cart: '🛒 Agregaron al carrito',
+      checkout_started: '💳 Llegaron al checkout',
+      checkout: '💳 Llegaron al checkout',
+      order_paid: '✅ Compraron',
+      purchase: '✅ Compraron',
       page_view: '👁 Vista',
+      cuartito_ticket_click: '🎟 Entradas El Cuartito',
+      whatsapp_click: '💬 Consultaron por WhatsApp',
     };
     return map[name] || name.replace(/_/g, ' ');
   };
@@ -600,6 +633,10 @@ export default function AnalyticsPage() {
                   insights.push(`La principal fuente de tráfico es ${topRef.referrer_domain === 'Directo' ? 'tráfico directo (ponen la URL o te tienen guardado)' : topRef.referrer_domain}.`);
                 }
 
+                if (data.cuartito.total > 0) {
+                  insights.push(`El banner de El Cuartito lleva ${data.cuartito.total} click${data.cuartito.total === 1 ? '' : 's'} al link de entradas (${data.cuartito.uniquePeople} persona${data.cuartito.uniquePeople === 1 ? '' : 's'} distinta${data.cuartito.uniquePeople === 1 ? '' : 's'}).`);
+                }
+
                 if (todayChangePercent !== null && dateRange === '1d') {
                   if (todayChangePercent > 20) insights.push(`Hoy está ${todayChangePercent.toFixed(0)}% por encima de ayer. Buen día.`);
                   else if (todayChangePercent < -20) insights.push(`Hoy hay ${Math.abs(todayChangePercent).toFixed(0)}% menos visitas que ayer.`);
@@ -662,6 +699,84 @@ export default function AnalyticsPage() {
           accent="orange"
         />
       </div>
+
+      {/* ── El Cuartito × Día del Amigo ── */}
+      {data && (
+        <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/10">
+          <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-orange-600/10 blur-3xl pointer-events-none" />
+
+          <div className="relative p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+
+              {/* Identidad del evento */}
+              <div className="flex items-center gap-4 lg:w-64 shrink-0">
+                <CuartitoLogo className="h-14 w-auto text-white drop-shadow-[0_0_18px_rgba(249,115,22,0.4)]" />
+                <div>
+                  <h2 className="font-bold text-white text-lg leading-tight">El Cuartito</h2>
+                  <p className="text-[11px] text-orange-400 font-bold uppercase tracking-[0.2em]">Día del Amigo</p>
+                  <p className="text-[11px] text-white/40 mt-1.5 leading-snug flex items-center gap-1">
+                    <Ticket className="w-3 h-3 shrink-0" /> Clicks al link de entradas
+                  </p>
+                </div>
+              </div>
+
+              {/* Stat tiles */}
+              <div className="grid grid-cols-3 gap-3 flex-1">
+                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
+                  <p className="text-3xl font-bold text-orange-400 tabular-nums">{data.cuartito.total.toLocaleString()}</p>
+                  <p className="text-xs text-white/50 mt-1">Clicks en el período</p>
+                  {data.totalVisits > 0 && data.cuartito.total > 0 && (
+                    <p className="text-[10px] text-white/30 mt-0.5">
+                      {((data.cuartito.total / data.totalVisits) * 100).toFixed(1)}% de las visitas
+                    </p>
+                  )}
+                </div>
+                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
+                  <p className="text-3xl font-bold text-white tabular-nums">{data.cuartito.today.toLocaleString()}</p>
+                  <p className="text-xs text-white/50 mt-1">Hoy</p>
+                </div>
+                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
+                  <p className="text-3xl font-bold text-white tabular-nums">{data.cuartito.uniquePeople.toLocaleString()}</p>
+                  <p className="text-xs text-white/50 mt-1">Personas distintas</p>
+                </div>
+              </div>
+
+              {/* Tendencia por día */}
+              <div className="lg:w-64 shrink-0">
+                {data.cuartito.byDay.length === 0 ? (
+                  <p className="text-xs text-white/40 leading-relaxed lg:text-right">
+                    Todavía sin clicks registrados.<br />
+                    Cada click en el banner de la home suma acá al instante.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex items-end gap-[3px] h-16">
+                      {data.cuartito.byDay.map((d) => {
+                        const maxCuartito = Math.max(...data.cuartito.byDay.map(x => x.count), 1);
+                        return (
+                          <div key={d.date} className="flex-1 flex flex-col items-center group relative">
+                            <div className="hidden group-hover:flex absolute -top-9 left-1/2 -translate-x-1/2 bg-white text-gray-900 text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center shadow-lg">
+                              {formatDate(d.date)}
+                              <span className="font-bold">{d.count} click{d.count === 1 ? '' : 's'}</span>
+                            </div>
+                            <div
+                              className="w-full bg-orange-500 group-hover:bg-orange-400 rounded-t transition-colors"
+                              style={{ height: `${Math.max((d.count / maxCuartito) * 100, 8)}%` }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-white/30 mt-1.5 text-center">Clicks por día</p>
+                  </>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Gráfico de actividad ── */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6">

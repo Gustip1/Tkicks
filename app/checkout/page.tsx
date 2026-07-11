@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart';
@@ -7,6 +7,7 @@ import { useCheckoutStore, PaymentMethod } from '@/store/checkout';
 import { formatCurrency } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { getCardSurchargeRate, isPromoActive } from '@/lib/promo';
+import { trackEvent } from '@/lib/analytics/track';
 import {
   MapPin,
   Truck,
@@ -65,6 +66,18 @@ export default function CheckoutPage() {
       router.push('/productos');
     }
   }, [cart.items.length, orderComplete, router]);
+
+  // Track: llegó al checkout con productos (una vez por visita a la página)
+  const checkoutTrackedRef = useRef(false);
+  useEffect(() => {
+    if (cart.items.length > 0 && !checkoutTrackedRef.current) {
+      checkoutTrackedRef.current = true;
+      trackEvent('checkout_started', 'ecommerce', {
+        items: cart.items.length,
+        units: cart.items.reduce((acc, it) => acc + it.quantity, 0),
+      });
+    }
+  }, [cart.items]);
 
   const subtotalUSD = useMemo(
     () => cart.items.reduce((acc, it) => acc + it.price * it.quantity, 0),
@@ -152,6 +165,12 @@ export default function CheckoutPage() {
       const orderId = data.orderId;
       checkout.setOrderId(orderId);
 
+      trackEvent('purchase', 'ecommerce', {
+        order: data.orderNumber || orderId.slice(0, 8),
+        total_usd: totalUSD,
+        method: checkout.paymentMethod,
+      });
+
       // Upload proof if provided (optional) — swallow errors so order success always shows
       if (checkout.paymentMethod === 'crypto_transfer' && proofFile) {
         const fd = new FormData();
@@ -205,6 +224,12 @@ export default function CheckoutPage() {
 
       const orderId = data.orderId;
       checkout.setOrderId(orderId);
+
+      trackEvent('purchase', 'ecommerce', {
+        order: data.orderNumber || orderId.slice(0, 8),
+        total_usd: totalUSD,
+        method: 'installments_3',
+      });
 
       const waMessage =
         `¡Hola! Quiero pagar en *3 cuotas sin interés* con tarjeta de crédito.\n\n` +
