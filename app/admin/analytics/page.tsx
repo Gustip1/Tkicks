@@ -540,6 +540,7 @@ export default function AnalyticsPage() {
       page_view: '👁 Vista',
       cuartito_ticket_click: '🎟 Entradas El Cuartito',
       whatsapp_click: '💬 Consultaron por WhatsApp',
+      product_card_click: '👟 Abrieron un producto',
     };
     return map[name] || name.replace(/_/g, ' ');
   };

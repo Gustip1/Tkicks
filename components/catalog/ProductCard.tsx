@@ -6,6 +6,7 @@ import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
+import { trackEvent } from '@/lib/analytics/track';
 
 interface ProductCardProps {
   product: Product;
@@ -49,6 +50,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   return (
     <Link
       href={`/producto/${product.slug}`}
+      onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
       className="group block"
     >
       {/* ── Imagen (swap en hover estilo Shopify) ── */}
