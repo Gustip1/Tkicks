@@ -6,7 +6,7 @@ export function HeroSection() {
   return (
     <section className="relative bg-white overflow-hidden border-b border-gray-100">
       <div className="max-w-[1100px] mx-auto px-4 md:px-8">
-        <div className="flex flex-col items-center text-center py-12 md:py-16">
+        <div className="flex flex-col items-center text-center py-10 md:py-14">
 
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 animate-hero-enter hero-delay-1">

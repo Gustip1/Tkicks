@@ -541,6 +541,7 @@ export default function AnalyticsPage() {
       cuartito_ticket_click: '🎟 Entradas El Cuartito',
       whatsapp_click: '💬 Consultaron por WhatsApp',
       product_card_click: '👟 Abrieron un producto',
+      brand_tile_click: '🏷 Entraron a una marca',
     };
     return map[name] || name.replace(/_/g, ' ');
   };
@@ -701,8 +702,8 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      {/* ── El Cuartito × Día del Amigo ── */}
-      {data && (
+      {/* ── El Cuartito × Día del Amigo (solo si hubo clicks en el período) ── */}
+      {data && data.cuartito.total > 0 && (
         <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/10">
           <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-orange-600/10 blur-3xl pointer-events-none" />
