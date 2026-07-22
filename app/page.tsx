@@ -7,11 +7,50 @@ import { HomepageBrands } from '@/components/landing/HomepageBrands';
 import { Reviews } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
+import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
+import {
+  HeroContent,
+  DEFAULT_HERO_CONTENT,
+  HowToBuyContent,
+  DEFAULT_HOW_TO_BUY_CONTENT,
+  SocialProofContent,
+  DEFAULT_SOCIAL_PROOF_CONTENT,
+  PromoBannerContent,
+  DEFAULT_PROMO_BANNER_CONTENT,
+} from '@/lib/homeContent';
 
 // ISR: la home se sirve estática y se refresca cada 5 minutos,
 // así los nuevos ingresos aparecen en el primer render (sin skeletons).
 export const revalidate = 300;
+
+interface HomeContent {
+  hero: HeroContent;
+  howToBuy: HowToBuyContent;
+  socialProof: SocialProofContent;
+  banner: PromoBannerContent;
+}
+
+async function getHomeContent(): Promise<HomeContent> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const { data } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', ['homepage_hero', 'homepage_how_to_buy', 'homepage_social_proof', 'homepage_banner']);
+
+  const byKey = new Map((data ?? []).map((row) => [row.key, row.value]));
+
+  return {
+    hero: { ...DEFAULT_HERO_CONTENT, ...(byKey.get('homepage_hero') as Partial<HeroContent> | undefined) },
+    howToBuy: { ...DEFAULT_HOW_TO_BUY_CONTENT, ...(byKey.get('homepage_how_to_buy') as Partial<HowToBuyContent> | undefined) },
+    socialProof: { ...DEFAULT_SOCIAL_PROOF_CONTENT, ...(byKey.get('homepage_social_proof') as Partial<SocialProofContent> | undefined) },
+    banner: { ...DEFAULT_PROMO_BANNER_CONTENT, ...(byKey.get('homepage_banner') as Partial<PromoBannerContent> | undefined) },
+  };
+}
 
 async function getHomeProducts(): Promise<{ products: Product[]; curated: boolean }> {
   // Cliente anónimo sin cookies: mantiene la página estática (ISR)
@@ -45,12 +84,18 @@ async function getHomeProducts(): Promise<{ products: Product[]; curated: boolea
 }
 
 export default async function HomePage() {
-  const { products, curated } = await getHomeProducts();
+  const [{ products, curated }, content] = await Promise.all([
+    getHomeProducts(),
+    getHomeContent(),
+  ]);
 
   return (
     <div className="bg-white">
       {/* Hero — solo texto + CTAs */}
-      <HeroSection />
+      <HeroSection content={content.hero} />
+
+      {/* Banner promocional — solo se muestra si está habilitado desde /admin/portada */}
+      <PromoBanner content={content.banner} />
 
       {/* Elegí tu estilo — remeras / hoodies / pantalones */}
       <CategoryShowcase />
@@ -59,7 +104,7 @@ export default async function HomePage() {
       <NewArrivalsCarousel products={products} curated={curated} />
 
       {/* Trust strip */}
-      <SocialProofStrip />
+      <SocialProofStrip content={content.socialProof} />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">
@@ -73,7 +118,7 @@ export default async function HomePage() {
       <Reviews />
 
       {/* Cómo comprar — último bloque antes del footer */}
-      <HowToBuy />
+      <HowToBuy content={content.howToBuy} />
     </div>
   );
 }

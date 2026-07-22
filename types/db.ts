@@ -52,6 +52,21 @@ export interface Brand {
   created_at: string;
 }
 
+export type DiscountType = 'percent' | 'fixed';
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  type: DiscountType;
+  value: number;
+  active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  max_uses: number | null;
+  used_count: number;
+  created_at: string;
+}
+
 /* ────────────── Orders ────────────── */
 
 export type OrderStatus = 'draft' | 'paid' | 'fulfilled' | 'cancelled';
@@ -70,6 +85,8 @@ export interface Order {
   phone: string | null;
   document: string | null;
   subtotal: number;
+  discount_code: string | null;
+  discount_amount: number;
   shipping_cost: number;
   total: number;
   carrier: string | null;

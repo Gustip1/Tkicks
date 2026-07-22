@@ -21,17 +21,18 @@ const config: Config = {
         display: ['var(--font-display)', 'Playfair Display', 'Georgia', 'serif']
       },
       colors: {
+        // Definidos una sola vez, como CSS vars, en app/globals.css
         primary: {
-          DEFAULT: '#008060',
-          hover: '#006e52',
-          light: '#e6f4f1'
+          DEFAULT: 'var(--color-primary)',
+          hover: 'var(--color-primary-hover)',
+          light: 'var(--color-primary-light)'
         },
-        accent: '#5c6ac4',
+        accent: 'var(--color-accent)',
         surface: {
-          DEFAULT: '#f6f6f7',
-          dark: '#f1f2f4'
+          DEFAULT: 'var(--color-surface)',
+          dark: 'var(--color-surface-dark)'
         },
-        border: '#e1e3e5'
+        border: 'var(--color-border)'
       },
       keyframes: {
         marquee: {

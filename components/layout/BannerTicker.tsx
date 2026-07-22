@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { DolarWidget } from '@/components/DolarWidget';
-import { isPromoActive } from '@/lib/promo';
 
 const BASE_ITEMS = [
   '✓ Productos 100% originales',
@@ -10,18 +9,11 @@ const BASE_ITEMS = [
 ];
 
 const NORMAL_INSTALLMENT = '💳 3 cuotas sin interés (10% de recargo)';
-const PROMO_INSTALLMENT = '🔥 PROMO 11-17/05: 3 cuotas sin interés SIN recargo';
+const PROMO_INSTALLMENT = '🔥 PROMO: 3 cuotas sin interés SIN recargo';
 
 export function BannerTicker() {
-  // Server siempre renderiza el mensaje normal; el cliente lo cambia
-  // post-mount si la promo está activa, evitando hydration mismatch.
-  const [installmentMsg, setInstallmentMsg] = useState(NORMAL_INSTALLMENT);
-
-  useEffect(() => {
-    setInstallmentMsg(isPromoActive() ? PROMO_INSTALLMENT : NORMAL_INSTALLMENT);
-  }, []);
-
-  const items = [installmentMsg, ...BASE_ITEMS];
+  const { active } = useInstallmentsPromo();
+  const items = [active ? PROMO_INSTALLMENT : NORMAL_INSTALLMENT, ...BASE_ITEMS];
 
   return (
     <div className="w-full bg-gray-900 text-white border-b border-gray-700 overflow-hidden">

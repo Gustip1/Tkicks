@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { publicApiLimiter } from '@/lib/security/rate-limiter';
+import { getClientIp } from '@/lib/security/get-client-ip';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,6 +17,17 @@ type Winner = {
 };
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+
+  // El código del sorteo es un valor fijo de 6 dígitos: sin límite de intentos
+  // sería fuerza-bruteable en minutos con un script.
+  if (publicApiLimiter.isBlocked(clientIp)) {
+    return NextResponse.json(
+      { error: 'Demasiados intentos. Probá de nuevo en un minuto.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const code = String(body?.code || '').trim();
@@ -27,6 +40,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Código requerido' }, { status: 400 });
     }
     if (code !== GIVEAWAY_CODE) {
+      const result = publicApiLimiter.recordFailedAttempt(clientIp);
+      if (result.blocked) {
+        return NextResponse.json(
+          { error: 'Demasiados intentos. Probá de nuevo en un minuto.' },
+          { status: 429 }
+        );
+      }
       return NextResponse.json({ error: 'Código incorrecto' }, { status: 400 });
     }
     if (!firstName || !lastName) {

@@ -4,6 +4,16 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { Brand } from '@/types/db';
 import { ArrowUp, ArrowDown, X, Plus } from 'lucide-react';
+import {
+  HeroContent,
+  DEFAULT_HERO_CONTENT,
+  HowToBuyContent,
+  DEFAULT_HOW_TO_BUY_CONTENT,
+  SocialProofContent,
+  DEFAULT_SOCIAL_PROOF_CONTENT,
+  PromoBannerContent,
+  DEFAULT_PROMO_BANNER_CONTENT,
+} from '@/lib/homeContent';
 
 const CATS = [
   { label: 'Remeras',    sub: 'remeras' },
@@ -24,6 +34,10 @@ export default function AdminPortadaPage() {
   const [tiles, setTiles] = useState<Record<string, UploadedImage[]>>({});
   const [allBrands, setAllBrands] = useState<Brand[]>([]);
   const [entries, setEntries] = useState<HomeBrandEntry[]>([]);
+  const [hero, setHero] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
+  const [howToBuy, setHowToBuy] = useState<HowToBuyContent>(DEFAULT_HOW_TO_BUY_CONTENT);
+  const [socialProof, setSocialProof] = useState<SocialProofContent>(DEFAULT_SOCIAL_PROOF_CONTENT);
+  const [banner, setBanner] = useState<PromoBannerContent>(DEFAULT_PROMO_BANNER_CONTENT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,10 +45,14 @@ export default function AdminPortadaPage() {
   useEffect(() => {
     const supabase = createBrowserClient();
     (async () => {
-      const [catRes, brandRes, brandsTable] = await Promise.all([
+      const [catRes, brandRes, brandsTable, heroRes, howToBuyRes, socialProofRes, bannerRes] = await Promise.all([
         supabase.from('settings').select('value').eq('key', 'homepage_categories').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_brands').maybeSingle(),
         supabase.from('brands').select('*').eq('active', true).order('name'),
+        supabase.from('settings').select('value').eq('key', 'homepage_hero').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'homepage_how_to_buy').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'homepage_social_proof').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'homepage_banner').maybeSingle(),
       ]);
 
       // Imágenes de categorías
@@ -53,9 +71,29 @@ export default function AdminPortadaPage() {
       const brandCfg = brandRes.data?.value as HomeBrandEntry[] | null;
       setEntries(Array.isArray(brandCfg) ? brandCfg : []);
 
+      // Contenido editable: hero, cómo comprar, social proof, banner
+      setHero({ ...DEFAULT_HERO_CONTENT, ...(heroRes.data?.value as Partial<HeroContent> | undefined) });
+      setHowToBuy({ ...DEFAULT_HOW_TO_BUY_CONTENT, ...(howToBuyRes.data?.value as Partial<HowToBuyContent> | undefined) });
+      setSocialProof({ ...DEFAULT_SOCIAL_PROOF_CONTENT, ...(socialProofRes.data?.value as Partial<SocialProofContent> | undefined) });
+      setBanner({ ...DEFAULT_PROMO_BANNER_CONTENT, ...(bannerRes.data?.value as Partial<PromoBannerContent> | undefined) });
+
       setLoading(false);
     })();
   }, []);
+
+  const updateHowToBuyStep = (index: number, patch: Partial<HowToBuyContent['steps'][number]>) => {
+    setHowToBuy((prev) => ({
+      ...prev,
+      steps: prev.steps.map((s, i) => (i === index ? { ...s, ...patch } : s)),
+    }));
+  };
+
+  const updateSocialProofItem = (index: number, patch: Partial<SocialProofContent['items'][number]>) => {
+    setSocialProof((prev) => ({
+      ...prev,
+      items: prev.items.map((it, i) => (i === index ? { ...it, ...patch } : it)),
+    }));
+  };
 
   const setSlot = (sub: string, imgs: UploadedImage[]) => {
     setTiles((prev) => ({ ...prev, [sub]: imgs.slice(-1) }));
@@ -99,13 +137,18 @@ export default function AdminPortadaPage() {
       url: tiles[c.sub]?.[0]?.url || undefined,
     }));
 
-    const [r1, r2] = await Promise.all([
+    const results = await Promise.all([
       supabase.from('settings').upsert({ key: 'homepage_categories', value: categoriesValue }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_brands', value: entries }, { onConflict: 'key' }),
+      supabase.from('settings').upsert({ key: 'homepage_hero', value: hero }, { onConflict: 'key' }),
+      supabase.from('settings').upsert({ key: 'homepage_how_to_buy', value: howToBuy }, { onConflict: 'key' }),
+      supabase.from('settings').upsert({ key: 'homepage_social_proof', value: socialProof }, { onConflict: 'key' }),
+      supabase.from('settings').upsert({ key: 'homepage_banner', value: banner }, { onConflict: 'key' }),
     ]);
 
-    if (r1.error || r2.error) {
-      setMessage(`Error al guardar: ${(r1.error || r2.error)?.message}`);
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) {
+      setMessage(`Error al guardar: ${firstError.message}`);
     } else {
       setMessage('✓ Portada guardada correctamente');
     }
@@ -250,6 +293,98 @@ export default function AdminPortadaPage() {
               </div>
             </div>
           </section>
+
+          {/* ── Hero ── */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Hero (portada principal)</h2>
+              <p className="text-sm text-gray-500">El primer texto que ve cualquiera que entra al sitio.</p>
+            </div>
+            <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Badge" value={hero.badge} onChange={(v) => setHero((h) => ({ ...h, badge: v }))} />
+              <div />
+              <Field label="Título (antes del destacado)" value={hero.headlinePre} onChange={(v) => setHero((h) => ({ ...h, headlinePre: v }))} />
+              <Field label="Título (destacado, con degradé)" value={hero.headlineHighlight} onChange={(v) => setHero((h) => ({ ...h, headlineHighlight: v }))} />
+              <Field label="Título (después del destacado)" value={hero.headlinePost} onChange={(v) => setHero((h) => ({ ...h, headlinePost: v }))} />
+              <div />
+              <Field label="Subtítulo (antes del negrita)" value={hero.subtitlePre} onChange={(v) => setHero((h) => ({ ...h, subtitlePre: v }))} />
+              <Field label="Subtítulo (negrita)" value={hero.subtitleBold} onChange={(v) => setHero((h) => ({ ...h, subtitleBold: v }))} />
+              <Field label="Subtítulo (después del negrita)" value={hero.subtitlePost} onChange={(v) => setHero((h) => ({ ...h, subtitlePost: v }))} />
+              <div />
+              <Field label="Botón principal — texto" value={hero.ctaPrimaryLabel} onChange={(v) => setHero((h) => ({ ...h, ctaPrimaryLabel: v }))} />
+              <Field label="Botón principal — link" value={hero.ctaPrimaryHref} onChange={(v) => setHero((h) => ({ ...h, ctaPrimaryHref: v }))} />
+              <Field label="Botón secundario — texto" value={hero.ctaSecondaryLabel} onChange={(v) => setHero((h) => ({ ...h, ctaSecondaryLabel: v }))} />
+              <Field label="Botón secundario — link" value={hero.ctaSecondaryHref} onChange={(v) => setHero((h) => ({ ...h, ctaSecondaryHref: v }))} />
+              <Field label="Pill de confianza 1" value={hero.trustPill1} onChange={(v) => setHero((h) => ({ ...h, trustPill1: v }))} />
+              <Field label="Pill de confianza 2" value={hero.trustPill2} onChange={(v) => setHero((h) => ({ ...h, trustPill2: v }))} />
+            </div>
+          </section>
+
+          {/* ── Cómo comprar ── */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">¿Cómo comprar?</h2>
+              <p className="text-sm text-gray-500">Los 3 pasos que se muestran antes del footer, y el mensaje prearmado de WhatsApp.</p>
+            </div>
+            <div className="space-y-3">
+              {howToBuy.steps.map((step, i) => (
+                <div key={i} className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-[80px_1fr_2fr] gap-3 items-start">
+                  <Field label="Emoji" value={step.icon} onChange={(v) => updateHowToBuyStep(i, { icon: v })} />
+                  <Field label={`Paso ${i + 1} — título`} value={step.title} onChange={(v) => updateHowToBuyStep(i, { title: v })} />
+                  <Field label={`Paso ${i + 1} — descripción`} value={step.desc} onChange={(v) => updateHowToBuyStep(i, { desc: v })} />
+                </div>
+              ))}
+            </div>
+            <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="WhatsApp — número (sin +)" value={howToBuy.whatsappNumber} onChange={(v) => setHowToBuy((h) => ({ ...h, whatsappNumber: v }))} />
+              <Field label="WhatsApp — mensaje prearmado" value={howToBuy.whatsappMessage} onChange={(v) => setHowToBuy((h) => ({ ...h, whatsappMessage: v }))} />
+            </div>
+          </section>
+
+          {/* ── Social proof ── */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Franja de confianza</h2>
+              <p className="text-sm text-gray-500">Las 4 tarjetas cortas debajo del carrusel de nuevos ingresos.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {socialProof.items.map((it, i) => (
+                <div key={i} className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-2 gap-3">
+                  <Field label="Valor" value={it.value} onChange={(v) => updateSocialProofItem(i, { value: v })} />
+                  <Field label="Descripción" value={it.label} onChange={(v) => updateSocialProofItem(i, { label: v })} />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Banner promocional ── */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Banner promocional</h2>
+              <p className="text-sm text-gray-500">
+                Para anunciar un evento o colaboración (ej. una campaña con otra marca). Se muestra debajo del hero solo si está activado.
+              </p>
+            </div>
+            <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 space-y-4">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={banner.enabled}
+                  onChange={(e) => setBanner((b) => ({ ...b, enabled: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                Mostrar el banner en la home
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Eyebrow (texto chico arriba)" value={banner.eyebrow} onChange={(v) => setBanner((b) => ({ ...b, eyebrow: v }))} />
+                <div />
+                <Field label="Título" value={banner.title} onChange={(v) => setBanner((b) => ({ ...b, title: v }))} />
+                <Field label="Subtítulo" value={banner.subtitle} onChange={(v) => setBanner((b) => ({ ...b, subtitle: v }))} />
+                <Field label="Texto del botón" value={banner.ctaLabel} onChange={(v) => setBanner((b) => ({ ...b, ctaLabel: v }))} />
+                <Field label="Link del botón" value={banner.ctaHref} onChange={(v) => setBanner((b) => ({ ...b, ctaHref: v }))} />
+              </div>
+            </div>
+          </section>
         </>
       )}
 
@@ -262,6 +397,27 @@ export default function AdminPortadaPage() {
           {saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+      />
     </div>
   );
 }

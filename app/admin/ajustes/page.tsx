@@ -9,6 +9,10 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [installmentsPromoActive, setInstallmentsPromoActive] = useState(false);
+  const [savingPromo, setSavingPromo] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
+
   useEffect(() => {
     const supabase = createBrowserClient();
     const fetchRate = async () => {
@@ -18,14 +22,42 @@ export default function AdminSettingsPage() {
         .select('value')
         .eq('key', 'usd_ars_rate')
         .single();
-      
+
       if (data) {
         setRate(Number(data.value));
       }
       setLoading(false);
     };
     void fetchRate();
+
+    const fetchInstallmentsPromo = async () => {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'installments_promo')
+        .maybeSingle();
+      setInstallmentsPromoActive(Boolean((data?.value as { active?: boolean } | null)?.active));
+    };
+    void fetchInstallmentsPromo();
   }, []);
+
+  const handleToggleInstallmentsPromo = async () => {
+    const next = !installmentsPromoActive;
+    setSavingPromo(true);
+    setPromoMessage(null);
+    const supabase = createBrowserClient();
+    const { error: upsertError } = await supabase
+      .from('settings')
+      .upsert({ key: 'installments_promo', value: { active: next } }, { onConflict: 'key' });
+
+    if (upsertError) {
+      setPromoMessage(`Error al guardar: ${upsertError.message}`);
+    } else {
+      setInstallmentsPromoActive(next);
+      setPromoMessage(next ? '✓ Promo activada — se muestra en toda la web' : '✓ Promo desactivada — vuelve el recargo del 10%');
+    }
+    setSavingPromo(false);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +120,36 @@ export default function AdminSettingsPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           {success && <p className="text-sm text-green-600">{success}</p>}
         </form>
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Promo: 3 cuotas sin interés</h2>
+        <p className="text-sm text-gray-500 mb-4 max-w-lg">
+          Cuando está activa, el pago en 3 cuotas con tarjeta no tiene el 10% de recargo (mismo precio que efectivo/transferencia)
+          y se muestra el popup de la promo a todos los visitantes del sitio. Desactivala para volver al recargo normal.
+        </p>
+        <div className="flex items-center gap-3 max-w-sm">
+          <button
+            type="button"
+            onClick={handleToggleInstallmentsPromo}
+            disabled={savingPromo}
+            role="switch"
+            aria-checked={installmentsPromoActive}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+              installmentsPromoActive ? 'bg-emerald-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                installmentsPromoActive ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700">
+            {installmentsPromoActive ? 'Activa — sin recargo' : 'Inactiva — 10% de recargo'}
+          </span>
+        </div>
+        {promoMessage && <p className="mt-3 text-sm text-gray-600">{promoMessage}</p>}
       </div>
     </div>
   );

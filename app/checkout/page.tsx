@@ -6,7 +6,8 @@ import { useCartStore } from '@/store/cart';
 import { useCheckoutStore, PaymentMethod } from '@/store/checkout';
 import { formatCurrency } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { getCardSurchargeRate, isPromoActive } from '@/lib/promo';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { getCardSurchargeRate } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 import {
   MapPin,
@@ -83,18 +84,56 @@ export default function CheckoutPage() {
     () => cart.items.reduce((acc, it) => acc + it.price * it.quantity, 0),
     [cart.items]
   );
-  // Recargo en tarjeta: 10% normal, 0% durante la promo (11-17/05).
-  // Se calcula client-side via lib/promo (vuelve a 10% solo el 18/05).
+  // Recargo en tarjeta: 10% normal, 0% cuando el admin activa la promo en /admin/ajustes.
   const isCardPayment = checkout.paymentMethod === 'installments_3';
-  const [surchargeRate, setSurchargeRate] = useState(0.10);
-  const [promoOn, setPromoOn] = useState(false);
-  useEffect(() => {
-    setSurchargeRate(getCardSurchargeRate());
-    setPromoOn(isPromoActive());
-  }, []);
-  const totalUSD = isCardPayment ? subtotalUSD * (1 + surchargeRate) : subtotalUSD;
+  const { active: promoOn } = useInstallmentsPromo();
+  const surchargeRate = getCardSurchargeRate(promoOn);
+
+  // ─── Cupón de descuento ───
+  const [couponInput, setCouponInput] = useState('');
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const discountAmount = Math.min(checkout.appliedDiscount?.amount ?? 0, subtotalUSD);
+  const discountedSubtotalUSD = subtotalUSD - discountAmount;
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponValidating(true);
+    setCouponError(null);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal: subtotalUSD }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.error || 'No se pudo validar el cupón');
+        checkout.setAppliedDiscount(null);
+        return;
+      }
+      checkout.setAppliedDiscount({
+        code: code.toUpperCase(),
+        type: data.type,
+        value: data.value,
+        amount: data.discountAmount,
+      });
+    } catch {
+      setCouponError('Error de conexión. Intentá de nuevo.');
+    } finally {
+      setCouponValidating(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    checkout.setAppliedDiscount(null);
+    setCouponInput('');
+    setCouponError(null);
+  };
+
+  const totalUSD = isCardPayment ? discountedSubtotalUSD * (1 + surchargeRate) : discountedSubtotalUSD;
   const totalARS = totalUSD * dolarOficial;
-  const subtotalARS = subtotalUSD * dolarOficial;
 
   // ─── Step 1 Validation ───
   const validateStep1 = useCallback((): boolean => {
@@ -151,6 +190,7 @@ export default function CheckoutPage() {
           paymentMethod: checkout.paymentMethod,
           contact: checkout.contact,
           address: checkout.fulfillment === 'shipping' ? checkout.address : null,
+          couponCode: checkout.appliedDiscount?.code ?? null,
         }),
       });
 
@@ -212,6 +252,7 @@ export default function CheckoutPage() {
           paymentMethod: 'installments_3',
           contact: checkout.contact,
           address: checkout.fulfillment === 'shipping' ? checkout.address : null,
+          couponCode: checkout.appliedDiscount?.code ?? null,
         }),
       });
 
@@ -237,9 +278,12 @@ export default function CheckoutPage() {
           .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
           .join('\n')}\n\n` +
         `💰 *Subtotal (precio base):* $${subtotalUSD.toFixed(2)} USD\n` +
+        (discountAmount > 0
+          ? `🎟 *Cupón ${checkout.appliedDiscount?.code}:* -$${discountAmount.toFixed(2)} USD\n`
+          : '') +
         (promoOn
           ? `🔥 *PROMO: SIN recargo*\n`
-          : `➕ *Recargo tarjeta (10%):* +$${(subtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
+          : `➕ *Recargo tarjeta (10%):* +$${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD\n`) +
         `✅ *TOTAL A COBRAR:* $${totalUSD.toFixed(2)} USD (${formatCurrency(totalARS)})\n` +
         `💳 *3 cuotas de:* ${formatCurrency(totalARS / 3)}\n\n` +
         `👤 *Datos del comprador:*\n` +
@@ -596,8 +640,8 @@ export default function CheckoutPage() {
 
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Monto a transferir</p>
-                      <p className="text-xl font-black text-gray-900">${subtotalUSD.toFixed(2)} USD</p>
-                      <p className="text-sm text-gray-500 font-bold">{formatCurrency(subtotalARS)}</p>
+                      <p className="text-xl font-black text-gray-900">${discountedSubtotalUSD.toFixed(2)} USD</p>
+                      <p className="text-sm text-gray-500 font-bold">{formatCurrency(discountedSubtotalUSD * dolarOficial)}</p>
                     </div>
 
                     {/* Proof upload — optional, can submit without */}
@@ -675,10 +719,16 @@ export default function CheckoutPage() {
                         <span className="text-gray-500 font-bold">Subtotal (precio base)</span>
                         <span className="text-gray-900 font-bold">${subtotalUSD.toFixed(2)} USD</span>
                       </div>
+                      {discountAmount > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-emerald-600 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
+                          <span className="text-emerald-600 font-bold">-${discountAmount.toFixed(2)} USD</span>
+                        </div>
+                      )}
                       {!promoOn && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500 font-bold">Recargo tarjeta (10%)</span>
-                          <span className="text-amber-600 font-bold">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                          <span className="text-amber-600 font-bold">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
                         </div>
                       )}
                       <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
@@ -774,15 +824,57 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Cupón de descuento */}
+              <div className="border-t border-gray-200 pt-3">
+                {checkout.appliedDiscount ? (
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+                    <span className="text-xs font-black text-emerald-700">
+                      🎟 {checkout.appliedDiscount.code} aplicado
+                    </span>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-xs font-bold text-emerald-700 underline hover:text-emerald-900"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2">
+                      <input
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        placeholder="¿Tenés un cupón?"
+                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-900"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={couponValidating || !couponInput.trim()}
+                        className="px-4 py-2 rounded-lg bg-gray-900 text-white text-xs font-black uppercase hover:bg-black disabled:opacity-50 transition-colors"
+                      >
+                        {couponValidating ? '...' : 'Aplicar'}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-xs text-red-500 font-bold">{couponError}</p>}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-bold">Subtotal</span>
                   <span className="text-gray-900 font-black">${subtotalUSD.toFixed(2)} USD</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-600 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
+                    <span className="text-emerald-600 font-black">-${discountAmount.toFixed(2)} USD</span>
+                  </div>
+                )}
                 {isCardPayment && !promoOn && (
                   <div className="flex justify-between text-sm">
                     <span className="text-amber-600 font-bold">Recargo tarjeta (10%)</span>
-                    <span className="text-amber-600 font-black">+${(subtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                    <span className="text-amber-600 font-black">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
                   </div>
                 )}
                 {isCardPayment && promoOn && (

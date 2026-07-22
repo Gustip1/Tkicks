@@ -1,16 +1,17 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { isPromoAnnouncementActive, PROMO_TEXT } from '@/lib/promo';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { PROMO_TEXT } from '@/lib/promo';
 
 export function PromoModal() {
+  const { active } = useInstallmentsPromo();
   const [open, setOpen] = useState(false);
 
   // Aparece SIEMPRE que entran al sitio (refresh / pestaña nueva /
-  // visita nueva). No usamos localStorage a propósito: queremos
-  // máximo impacto durante la semana de la promo.
+  // visita nueva) mientras la promo esté activa desde /admin/ajustes.
   useEffect(() => {
-    if (isPromoAnnouncementActive()) setOpen(true);
-  }, []);
+    if (active) setOpen(true);
+  }, [active]);
 
   const dismiss = () => setOpen(false);
 

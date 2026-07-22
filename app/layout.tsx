@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { RouteTransitions } from '@/components/RouteTransitions';
 import { DolarRateProvider } from '@/components/DolarRateProvider';
+import { InstallmentsPromoProvider } from '@/components/InstallmentsPromoProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
@@ -64,18 +65,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* End Meta Pixel Code */}
         
         <DolarRateProvider>
-          <AnalyticsProvider>
-            <Header />
-            <Sidebar />
-            <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white overflow-x-hidden">
-              <RouteTransitions>{children}</RouteTransitions>
-              <GiveawayClue />
-            </main>
-            <Footer />
-            <CartDrawer />
-            <PromoModal />
-            <RecentSaleToast />
-          </AnalyticsProvider>
+          <InstallmentsPromoProvider>
+            <AnalyticsProvider>
+              <Header />
+              <Sidebar />
+              <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white overflow-x-hidden">
+                <RouteTransitions>{children}</RouteTransitions>
+                <GiveawayClue />
+              </main>
+              <Footer />
+              <CartDrawer />
+              <PromoModal />
+              <RecentSaleToast />
+            </AnalyticsProvider>
+          </InstallmentsPromoProvider>
         </DolarRateProvider>
       </body>
     </html>

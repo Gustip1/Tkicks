@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
-import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { getCardPriceMultiplier } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 
 interface ProductCardProps {
@@ -19,6 +20,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const primary                 = images[0];
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
   const { rate: dolarOficial }  = useDolarRate();
+  const { active: promoOn }     = useInstallmentsPromo();
 
   const totalStock = useMemo(() => {
     if (!product.product_variants?.length) return null;
@@ -38,9 +40,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const hasSale     = product.sale_price != null && Number(product.sale_price) > 0;
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
   const priceInArs  = activePrice * dolarOficial;
-  const cardMult    = getCardPriceMultiplier();
+  const cardMult    = getCardPriceMultiplier(promoOn);
   const cardArs     = priceInArs * cardMult;
-  const promoOn     = isPromoActive();
 
   const categoryLabel =
     product.category === 'streetwear' && product.subcategory

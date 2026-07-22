@@ -8,14 +8,16 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star, Banknote, CreditCard } from 'lucide-react';
-import { getCardPriceMultiplier, isPromoActive } from '@/lib/promo';
+import { getCardPriceMultiplier } from '@/lib/promo';
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string }>();
   const supabase = createBrowserClient();
   const { rate: dolarOficial } = useDolarRate();
+  const { active: promoOn } = useInstallmentsPromo();
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,9 +144,8 @@ export default function ProductDetailPage() {
 
           {/* Price */}
           {(() => {
-            const cardPriceArs = activePrice * getCardPriceMultiplier() * dolarOficial;
+            const cardPriceArs = activePrice * getCardPriceMultiplier(promoOn) * dolarOficial;
             const installment = cardPriceArs / 3;
-            const promoOn = isPromoActive();
             const discountPct = hasSale
               ? Math.round((1 - activePrice / Number(product.price)) * 100)
               : 0;

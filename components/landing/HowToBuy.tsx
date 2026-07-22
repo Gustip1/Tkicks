@@ -1,29 +1,12 @@
 "use client";
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { HowToBuyContent, DEFAULT_HOW_TO_BUY_CONTENT } from '@/lib/homeContent';
 
-const STEPS = [
-  {
-    number: '01',
-    title: 'Elegís tu producto',
-    desc: 'Navegá el catálogo, seleccioná el modelo y la talla que querés.',
-    icon: '👟',
-  },
-  {
-    number: '02',
-    title: 'Pagás con el método que prefieras',
-    desc: 'Transferencia, efectivo o 3 cuotas sin interés con tarjeta.',
-    icon: '💳',
-  },
-  {
-    number: '03',
-    title: 'Lo recibís en tu puerta',
-    desc: 'Enviamos a todo el país. También podés pasar a retirar en San Juan.',
-    icon: '📦',
-  },
-];
+export function HowToBuy({ content = DEFAULT_HOW_TO_BUY_CONTENT }: { content?: HowToBuyContent }) {
+  const steps = content.steps.length > 0 ? content.steps : DEFAULT_HOW_TO_BUY_CONTENT.steps;
+  const whatsappHref = `https://api.whatsapp.com/send?phone=${content.whatsappNumber}&text=${encodeURIComponent(content.whatsappMessage)}`;
 
-export function HowToBuy() {
   return (
     <section className="bg-white py-12 md:py-20 border-t border-gray-200">
       <div className="max-w-[1400px] mx-auto px-4">
@@ -44,18 +27,20 @@ export function HowToBuy() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          {STEPS.map((step, i) => (
+          {steps.map((step, i) => (
             <div
-              key={step.number}
+              key={i}
               className="relative flex flex-col gap-5 p-6 md:p-8 rounded-3xl bg-gray-50 border border-gray-200"
             >
-              {i < STEPS.length - 1 && (
+              {i < steps.length - 1 && (
                 <div className="hidden md:block absolute top-10 -right-3 w-6 h-0.5 bg-gray-300 z-10" />
               )}
 
               <div className="flex items-center gap-4">
                 <span className="text-3xl">{step.icon}</span>
-                <span className="text-5xl font-black text-gray-900 leading-none select-none">{step.number}</span>
+                <span className="text-5xl font-black text-gray-900 leading-none select-none">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
               </div>
 
               <div>
@@ -78,7 +63,7 @@ export function HowToBuy() {
             Ver catálogo <ArrowRight className="w-4 h-4" />
           </Link>
           <a
-            href="https://api.whatsapp.com/send?phone=5492644802994&text=Hola%2C%20tengo%20una%20consulta%20sobre%20un%20producto"
+            href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-gray-300 text-gray-900 text-sm font-black uppercase tracking-tight rounded-full hover:bg-gray-50 transition-all"

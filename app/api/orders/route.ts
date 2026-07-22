@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { publicApiLimiter } from '@/lib/security/rate-limiter';
+import { getClientIp } from '@/lib/security/get-client-ip';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +19,7 @@ interface OrderRequestBody {
   items: OrderItemInput[];
   fulfillment: 'pickup' | 'shipping';
   paymentMethod: 'cash' | 'crypto_transfer' | 'installments_3';
+  couponCode?: string | null;
   contact: {
     firstName: string;
     lastName: string;
@@ -36,6 +39,15 @@ interface OrderRequestBody {
 }
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+
+  if (publicApiLimiter.isBlocked(clientIp)) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes. Intenta nuevamente en un minuto.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body: OrderRequestBody = await req.json();
 
@@ -86,16 +98,21 @@ export async function POST(req: NextRequest) {
     const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const supabase = createClient(supabaseUrl, serviceRole);
 
-    // ── Verify stock availability for each item/size ──
+    // ── Verify stock availability and fetch the real (server-side) price for each item/size ──
+    // Never trust item.price from the client body — recompute it from the product row.
+    const resolvedItems: { variantId: string; productId: string; title: string; slug: string; size: string; quantity: number; price: number }[] = [];
+
     for (const item of body.items) {
       const { data: variant, error: varErr } = await supabase
         .from('product_variants')
-        .select('id, stock')
+        .select('id, stock, products(price, sale_price, title, slug, active)')
         .eq('product_id', item.productId)
         .eq('size', item.size)
         .single();
 
-      if (varErr || !variant) {
+      const product = (variant as any)?.products;
+
+      if (varErr || !variant || !product || product.active === false) {
         return NextResponse.json(
           { error: `Talle ${item.size} no encontrado para ${item.title}` },
           { status: 400 }
@@ -108,10 +125,46 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
+      const realPrice = Number(product.sale_price ?? product.price);
+
+      resolvedItems.push({
+        variantId: variant.id,
+        productId: item.productId,
+        title: product.title,
+        slug: product.slug,
+        size: item.size,
+        quantity: item.quantity,
+        price: realPrice,
+      });
     }
 
-    // ── Calculate subtotal ──
-    const subtotal = body.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
+    // ── Calculate subtotal from server-side prices ──
+    const grossSubtotal = resolvedItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
+
+    // ── Apply coupon (optional) — atomic: validates vigencia/máximo de usos y consume un uso ──
+    let discountAmount = 0;
+    let appliedCouponCode: string | null = null;
+
+    if (body.couponCode && body.couponCode.trim()) {
+      const { data: redeemData, error: redeemErr } = await supabase.rpc('redeem_discount_code', {
+        p_code: body.couponCode.trim(),
+        p_subtotal: grossSubtotal,
+      });
+      const redeemRow = Array.isArray(redeemData) ? redeemData[0] : redeemData;
+
+      if (redeemErr || !redeemRow?.ok) {
+        return NextResponse.json(
+          { error: redeemRow?.reason || 'No se pudo aplicar el cupón' },
+          { status: 400 }
+        );
+      }
+
+      discountAmount = Number(redeemRow.discount_amount);
+      appliedCouponCode = body.couponCode.trim().toUpperCase();
+    }
+
+    const subtotal = grossSubtotal - discountAmount;
 
     // ── Create order ──
     const { data: order, error: orderErr } = await supabase
@@ -125,6 +178,8 @@ export async function POST(req: NextRequest) {
         phone: body.contact.phone?.trim() || null,
         document: body.contact.document?.trim() || null,
         subtotal,
+        discount_code: appliedCouponCode,
+        discount_amount: discountAmount,
         shipping_cost: 0,
         payment_method: body.paymentMethod,
         payment_status: body.paymentMethod === 'cash' ? 'pending' : 'pending',
@@ -133,14 +188,18 @@ export async function POST(req: NextRequest) {
       .select('id, order_number')
       .single();
 
+    if ((orderErr || !order) && appliedCouponCode) {
+      await supabase.rpc('release_discount_code_use', { p_code: appliedCouponCode });
+    }
+
     if (orderErr || !order) {
       console.error('[ORDERS] Error creating order:', orderErr);
       return NextResponse.json({ error: 'Error al crear la orden' }, { status: 500 });
     }
 
-    // ── Create order items ──
+    // ── Create order items (server-side price, never the client-supplied one) ──
     const { error: itemsErr } = await supabase.from('order_items').insert(
-      body.items.map((it) => ({
+      resolvedItems.map((it) => ({
         order_id: order.id,
         product_id: it.productId,
         title: it.title,
@@ -155,6 +214,9 @@ export async function POST(req: NextRequest) {
       console.error('[ORDERS] Error creating order items:', itemsErr);
       // Cleanup: delete the order
       await supabase.from('orders').delete().eq('id', order.id);
+      if (appliedCouponCode) {
+        await supabase.rpc('release_discount_code_use', { p_code: appliedCouponCode });
+      }
       return NextResponse.json({ error: 'Error al registrar los productos' }, { status: 500 });
     }
 
@@ -172,38 +234,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── Decrement stock for each variant/size ──
-    for (const item of body.items) {
-      const { error: stockErr } = await supabase.rpc('decrement_variant_stock', {
-        p_variant_id: await getVariantId(supabase, item.productId, item.size),
-        p_quantity: item.quantity,
-      });
+    // ── Decrement stock atomically for all items of this order (rolls back entirely on any shortage) ──
+    const { error: stockErr } = await supabase.rpc('process_order_stock', {
+      p_order_id: order.id,
+    });
 
-      if (stockErr) {
-        console.error(`[ORDERS] Stock decrement failed for ${item.title} size ${item.size}:`, stockErr);
-        // The order is already created, so we log but don't fail
-        // In production, you'd want a transaction here
+    if (stockErr) {
+      console.error(`[ORDERS] Stock processing failed for order ${order.id}:`, stockErr);
+      // Roll back: delete the order (cascades to order_items / shipping_addresses) and release the coupon use
+      await supabase.from('orders').delete().eq('id', order.id);
+      if (appliedCouponCode) {
+        await supabase.rpc('release_discount_code_use', { p_code: appliedCouponCode });
       }
+      return NextResponse.json(
+        { error: 'El stock cambió mientras confirmábamos tu pedido. Actualizá el carrito e intentá de nuevo.' },
+        { status: 409 }
+      );
     }
 
     console.info(`[ORDERS] Order created: ${order.id} (${body.paymentMethod})`);
 
+    publicApiLimiter.recordFailedAttempt(clientIp);
+
     return NextResponse.json({
       orderId: order.id,
       orderNumber: order.order_number,
+      discountAmount,
     });
   } catch (err: any) {
     console.error('[ORDERS] Unexpected error:', err);
     return NextResponse.json({ error: 'Error inesperado al procesar la orden' }, { status: 500 });
   }
-}
-
-async function getVariantId(supabase: any, productId: string, size: string): Promise<string> {
-  const { data } = await supabase
-    .from('product_variants')
-    .select('id')
-    .eq('product_id', productId)
-    .eq('size', size)
-    .single();
-  return data?.id;
 }
