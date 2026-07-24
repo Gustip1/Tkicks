@@ -77,9 +77,9 @@ export function CategoryShowcase() {
 
   return (
     <section className="bg-white pt-6 pb-12 md:pt-8 md:pb-16">
-      <div className="max-w-[1400px] mx-auto px-4">
+      <div className="max-w-[1400px] mx-auto px-2 sm:px-4">
         {/* Grilla editorial — accesos directos a categorías (3 en fila, también en mobile) */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-6">
           {CATS.map((c) => (
             <Link
               key={c.sub}
@@ -104,7 +104,7 @@ export function CategoryShowcase() {
                 )}
               </div>
               <div className="flex items-center justify-between gap-1 mt-2 sm:mt-3 md:mt-4">
-                <h3 className="text-xs sm:text-lg md:text-2xl font-black text-gray-900 tracking-tight truncate">
+                <h3 className="text-sm sm:text-lg md:text-2xl font-black text-gray-900 tracking-tight truncate">
                   {c.label}
                 </h3>
                 <ArrowRight className="hidden sm:block w-5 h-5 shrink-0 text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />

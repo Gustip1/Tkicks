@@ -82,7 +82,7 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
             {products.map((p) => (
               <div
                 key={p.id}
-                className="min-w-0 shrink-0 grow-0 basis-[60%] sm:basis-[40%] md:basis-1/3 xl:basis-1/4 pl-3 md:pl-5"
+                className="min-w-0 shrink-0 grow-0 basis-[44%] sm:basis-[40%] md:basis-1/3 xl:basis-1/4 pl-3 md:pl-5"
               >
                 <ProductCard product={p} />
               </div>
