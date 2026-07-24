@@ -62,6 +62,16 @@ interface AnalyticsData {
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+// Clave de fecha en huso horario LOCAL (no UTC): toISOString() convierte a UTC
+// y desalinea el gráfico de tendencia con las tarjetas "Hoy/Ayer" (que sí usan
+// hora local) — visitas de la noche terminaban contadas en el día siguiente.
+function toLocalDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,60 +100,94 @@ export default function AnalyticsPage() {
     const fiveMinAgoStr = fiveMinAgo.toISOString();
 
     try {
-      const { data: visits, count: totalVisits } = await supabase
+      // .range() explícito: sin esto, Supabase corta en 1000 filas por default
+      // y con tráfico real en ventanas de 30/90 días los desgloses (rebote,
+      // dispositivos, duración, funnel) dejan de coincidir con el total.
+      const { data: visits } = await supabase
         .from('analytics_visits')
-        .select('*', { count: 'exact' })
-        .gte('created_at', startDateStr);
+        .select('*')
+        .gte('created_at', startDateStr)
+        .range(0, 49999);
 
       const { data: todayVisitsList } = await supabase
         .from('analytics_visits')
         .select('*')
-        .gte('created_at', todayStr);
+        .gte('created_at', todayStr)
+        .range(0, 49999);
 
-      const todayVisits = todayVisitsList?.length || 0;
-
-      const { count: yesterdayVisits } = await supabase
+      const { data: yesterdayVisitsList } = await supabase
         .from('analytics_visits')
-        .select('*', { count: 'exact', head: true })
+        .select('session_id')
         .gte('created_at', yesterdayStr)
-        .lt('created_at', todayStr);
+        .lt('created_at', todayStr)
+        .range(0, 49999);
 
-      const { count: liveVisitors } = await supabase
+      const { data: liveVisitsList } = await supabase
         .from('analytics_visits')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', fiveMinAgoStr);
+        .select('session_id')
+        .gte('created_at', fiveMinAgoStr)
+        .range(0, 9999);
 
       const visitsList = visits || [];
+
+      // "Visitas" = sesiones distintas, no filas: cada cambio de página dentro
+      // de la misma sesión inserta una fila nueva en analytics_visits, así que
+      // contar filas inflaba el número (5 páginas vistas = "5 visitas").
+      const totalVisits = new Set(visitsList.map(v => v.session_id)).size;
+      const todayVisits = new Set((todayVisitsList || []).map(v => v.session_id)).size;
+      const yesterdayVisits = new Set((yesterdayVisitsList || []).map(v => v.session_id)).size;
+      const liveVisitors = new Set((liveVisitsList || []).map(v => v.session_id)).size;
+
       const allVisitorIds = visitsList.map(v => v.visitor_id);
       const uniqueVisitors = new Set(allVisitorIds).size;
 
       const todayVisitorIds = (todayVisitsList || []).map(v => v.visitor_id);
       const todayUniqueVisitors = new Set(todayVisitorIds).size;
 
+      // Cada cambio de página agrega una fila nueva en analytics_visits para la
+      // misma sesión (duration_seconds/is_bounce/pages_viewed quedan iguales en
+      // todas esas filas una vez que el visitante sale). Para duración, rebote,
+      // páginas-por-visita y "nuevo vs. recurrente" hay que agregar por sesión,
+      // no por fila, o una sola sesión con muchas páginas vistas pesa de más.
+      const uniqueBySession = (rows: typeof visitsList) => {
+        const bySession = new Map<string, (typeof visitsList)[number]>();
+        rows.forEach((v) => {
+          const existing = bySession.get(v.session_id);
+          // Preferimos la fila que ya tiene exited_at (valores finales de la sesión)
+          if (!existing || (!existing.exited_at && v.exited_at)) {
+            bySession.set(v.session_id, v);
+          }
+        });
+        return Array.from(bySession.values());
+      };
+
+      const sessionRows = uniqueBySession(visitsList);
+
       const visitorCounts: Record<string, number> = {};
-      visitsList.forEach(v => {
+      sessionRows.forEach(v => {
         const vid = v.visitor_id || 'unknown';
         visitorCounts[vid] = (visitorCounts[vid] || 0) + 1;
       });
       const newVisitors = Object.values(visitorCounts).filter(c => c === 1).length;
       const returningVisitors = Object.values(visitorCounts).filter(c => c > 1).length;
 
-      const avgDuration = visitsList.length > 0
-        ? visitsList.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / visitsList.length
+      const avgDuration = sessionRows.length > 0
+        ? sessionRows.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / sessionRows.length
         : 0;
 
-      const bounces = visitsList.filter(v => v.is_bounce).length;
-      const bounceRate = visitsList.length > 0 ? (bounces / visitsList.length) * 100 : 0;
+      const bounces = sessionRows.filter(v => v.is_bounce).length;
+      const bounceRate = sessionRows.length > 0 ? (bounces / sessionRows.length) * 100 : 0;
 
-      const totalPages = visitsList.reduce((sum, v) => sum + (v.pages_viewed || 1), 0);
-      const pagesPerVisit = visitsList.length > 0 ? totalPages / visitsList.length : 0;
+      // Páginas por visita = total de page views / total de sesiones distintas
+      const pagesPerVisit = totalVisits > 0 ? visitsList.length / totalVisits : 0;
 
       const todayList = todayVisitsList || [];
-      const todayAvgDuration = todayList.length > 0
-        ? todayList.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / todayList.length
+      const todaySessionRows = uniqueBySession(todayList);
+      const todayAvgDuration = todaySessionRows.length > 0
+        ? todaySessionRows.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / todaySessionRows.length
         : 0;
-      const todayBounces = todayList.filter(v => v.is_bounce).length;
-      const todayBounceRate = todayList.length > 0 ? (todayBounces / todayList.length) * 100 : 0;
+      const todayBounces = todaySessionRows.filter(v => v.is_bounce).length;
+      const todayBounceRate = todaySessionRows.length > 0 ? (todayBounces / todaySessionRows.length) * 100 : 0;
 
       const deviceCounts: Record<string, number> = {};
       visitsList.forEach(v => {
@@ -214,11 +258,16 @@ export default function AnalyticsPage() {
         .slice(0, 10);
 
       // Top productos vendidos (order_items joined con orders para filtrar por fecha)
+      // Solo ventas confirmadas: toda orden se crea en estado "draft" y el
+      // admin recién la pasa a "paid" cuando confirma el cobro (con cualquier
+      // método, incluido efectivo — payment_status solo aplica a transferencia/
+      // cripto, no sirve como filtro universal). Antes se excluía únicamente
+      // "cancelled", contando pedidos en borrador que nunca se cobraron.
       const { data: orderItemsData } = await supabase
         .from('order_items')
         .select('title, slug, price, quantity, orders!inner(created_at, status)')
         .gte('orders.created_at', startDateStr)
-        .neq('orders.status', 'cancelled');
+        .in('orders.status', ['paid', 'fulfilled']);
 
       const orderedMap: Record<string, { title: string; slug: string; orders: number; units: number; revenue: number }> = {};
       (orderItemsData || []).forEach((item: any) => {
@@ -232,18 +281,20 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.units - a.units)
         .slice(0, 10);
 
-      // Revenue
+      // Revenue — solo ventas confirmadas (status 'paid' o 'fulfilled'), no "draft"
       const { data: allOrders } = await supabase
         .from('orders')
-        .select('total, status, created_at');
+        .select('total, status, created_at')
+        .range(0, 49999);
+      const paidOrders = (allOrders || []).filter((o: any) => o.status === 'paid' || o.status === 'fulfilled');
       const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-      const monthRevenue = (allOrders || [])
-        .filter((o: any) => new Date(o.created_at) >= monthStart && o.status !== 'cancelled')
+      const monthRevenue = paidOrders
+        .filter((o: any) => new Date(o.created_at) >= monthStart)
         .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
-      const totalRevenue = (allOrders || [])
-        .filter((o: any) => o.status !== 'cancelled')
+      const totalRevenue = paidOrders
         .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
       const pendingOrders = (allOrders || []).filter((o: any) => o.status === 'paid').length;
+      const ordersPaidInRange = paidOrders.filter((o: any) => new Date(o.created_at) >= startDate).length;
 
       const hourCounts: Record<number, number> = {};
       for (let i = 0; i < 24; i++) hourCounts[i] = 0;
@@ -277,7 +328,7 @@ export default function AnalyticsPage() {
 
       const dateCounts: Record<string, { total: number; visitors: Set<string> }> = {};
       visitsList.forEach(v => {
-        const date = new Date(v.created_at).toISOString().split('T')[0];
+        const date = toLocalDateKey(new Date(v.created_at));
         if (!dateCounts[date]) dateCounts[date] = { total: 0, visitors: new Set() };
         dateCounts[date].total += 1;
         if (v.visitor_id) dateCounts[date].visitors.add(v.visitor_id);
@@ -289,7 +340,8 @@ export default function AnalyticsPage() {
       const { data: eventsData } = await supabase
         .from('analytics_events')
         .select('event_name, created_at, session_id, event_data')
-        .gte('created_at', startDateStr);
+        .gte('created_at', startDateStr)
+        .range(0, 49999);
 
       const eventCounts: Record<string, number> = {};
       (eventsData || []).forEach(e => {
@@ -310,7 +362,7 @@ export default function AnalyticsPage() {
       ).size;
       const cuartitoDayCounts: Record<string, number> = {};
       cuartitoEvents.forEach(e => {
-        const date = new Date(e.created_at).toISOString().split('T')[0];
+        const date = toLocalDateKey(new Date(e.created_at));
         cuartitoDayCounts[date] = (cuartitoDayCounts[date] || 0) + 1;
       });
       const cuartitoByDay = Object.entries(cuartitoDayCounts)
@@ -336,11 +388,14 @@ export default function AnalyticsPage() {
         pageViews: totalVisits || 0,
         addToCart: eventCounts['add_to_cart'] || 0,
         checkoutStarted: eventCounts['checkout_started'] || eventCounts['checkout'] || 0,
-        ordersPaid: eventCounts['order_paid'] || eventCounts['purchase'] || 0,
+        // El evento 'purchase' se dispara al crear la orden (todavía en borrador,
+        // antes de que se confirme el pago) — usarlo acá inflaba la conversión.
+        // El paso final del funnel sale de pedidos realmente confirmados.
+        ordersPaid: ordersPaidInRange,
       };
 
       // ── Retention & Engagement metrics ──
-      const exitedVisits = visitsList.filter(v => v.exited_at);
+      const exitedVisits = uniqueBySession(visitsList).filter(v => v.exited_at);
 
       // Scroll depth
       const scrollValues = exitedVisits.map(v => v.scroll_depth ?? 0);

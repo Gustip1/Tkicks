@@ -16,6 +16,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [loaded, setLoaded]     = useState(false);
+  const [imgError, setImgError] = useState(false);
   const images                  = product.images || [];
   const primary                 = images[0];
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
@@ -23,7 +24,9 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const { active: promoOn }     = useInstallmentsPromo();
 
   const totalStock = useMemo(() => {
-    if (!product.product_variants?.length) return null;
+    // undefined = no se pidieron variantes en este query (no hay dato, no asumimos agotado).
+    // [] = se pidieron y no hay ninguna: el producto está realmente sin stock.
+    if (product.product_variants === undefined) return null;
     return product.product_variants.reduce((s, v) => s + (v.stock ?? 0), 0);
   }, [product.product_variants]);
 
@@ -56,9 +59,23 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
     >
       {/* ── Imagen (swap en hover estilo Shopify) ── */}
       <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 transition-shadow duration-300 group-hover:shadow-soft">
-        {!loaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
+        {/* El esqueleto solo pulsa mientras hay una imagen real cargando; si no
+            hay imagen o falló, no queda pulsando para siempre. */}
+        {!!primary?.url && !imgError && !loaded && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        )}
 
-        {primary?.url && (
+        {(!primary?.url || imgError) && (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-10 h-10">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+          </div>
+        )}
+
+        {primary?.url && !imgError && (
           <Image
             src={primary.url}
             alt={primary.alt || product.title}
@@ -73,6 +90,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
               'group-hover:scale-[1.03]',
             )}
             onLoad={() => setLoaded(true)}
+            onError={() => setImgError(true)}
           />
         )}
 
@@ -99,7 +117,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {(hasSale || product.on_sale) && !isSoldOut && (
+          {hasSale && !isSoldOut && (
             <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest">
               SALE
             </span>
@@ -170,7 +188,9 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
               promoOn ? 'bg-orange-50 text-orange-600' : 'bg-violet-50 text-violet-600',
             )}>
               3 × {formatCurrency(cardArs / 3)}
-              <span className="font-bold opacity-70">s/ interés</span>
+              <span className="font-bold opacity-70">
+                {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
+              </span>
             </span>
           )}
         </div>

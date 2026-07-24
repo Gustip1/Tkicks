@@ -37,7 +37,9 @@ export function BrandShowcase({
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
-      loop: true,
+      // loop con pocos productos (relativo a los ~4 slides visibles en desktop)
+      // genera saltos/huecos raros en el autoplay — mismo criterio que NewArrivalsCarousel.
+      loop: products.length > 4,
       align: 'start',
       slidesToScroll: 1,
       containScroll: 'trimSnaps',
@@ -54,20 +56,25 @@ export function BrandShowcase({
     let active = true;
 
     (async () => {
-      let query = supabase
-        .from('products')
-        .select('*, product_variants(stock,size)')
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      try {
+        let query = supabase
+          .from('products')
+          .select('*, product_variants(stock,size)')
+          .eq('active', true)
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-      if (category) query = query.eq('category', category);
-      else if (brandSlug) query = query.eq('brand', brandSlug);
+        if (category) query = query.eq('category', category);
+        else if (brandSlug) query = query.eq('brand', brandSlug);
 
-      const { data } = await query;
-      if (!active) return;
-      if (data) setProducts(data as unknown as Product[]);
-      setLoading(false);
+        const { data } = await query;
+        if (!active) return;
+        if (data) setProducts(data as unknown as Product[]);
+      } catch (error) {
+        console.error('Error cargando productos de la sección:', error);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
 
     return () => {

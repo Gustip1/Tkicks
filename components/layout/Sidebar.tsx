@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
-import { X, ChevronRight, ChevronDown, Instagram, Gavel, Sparkles } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Instagram, Gavel, Sparkles, ShieldCheck } from 'lucide-react';
 import { STREETWEAR_SUBCATEGORIES, Brand } from '@/types/db';
 import { createBrowserClient } from '@/lib/supabase/client';
 
@@ -13,6 +13,7 @@ export function Sidebar() {
   const [streetwearOpen, setStreetwearOpen] = useState(false);
   const [marcasOpen, setMarcasOpen] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -24,6 +25,28 @@ export function Sidebar() {
         .eq('active', true)
         .order('name');
       if (!cancelled && data) setBrands(data as Brand[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // El link "Admin" del header desktop está oculto en mobile (hidden sm:flex);
+  // este es el único acceso al panel de administración en la versión móvil.
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    let cancelled = false;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (!cancelled) setIsAdmin(profile?.role === 'admin');
     })();
     return () => {
       cancelled = true;
@@ -263,6 +286,23 @@ export function Sidebar() {
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </Link>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={close}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-gray-100 text-gray-900 border-t border-gray-200 mt-2 pt-4"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-100">
+                  <ShieldCheck className="w-5 h-5 text-gray-700" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-black uppercase tracking-tight text-gray-900">Admin</p>
+                  <p className="text-xs font-bold text-gray-500">Panel de administración</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </Link>
+            )}
           </div>
         </nav>
 

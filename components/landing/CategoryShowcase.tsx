@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
 
 const CATS = [
@@ -23,45 +24,50 @@ export function CategoryShowcase() {
     let active = true;
 
     (async () => {
-      // 1) Imágenes configuradas a mano desde el admin (settings.homepage_categories)
-      const { data: settingRow } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'homepage_categories')
-        .maybeSingle();
+      try {
+        // 1) Imágenes configuradas a mano desde el admin (settings.homepage_categories)
+        const { data: settingRow } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'homepage_categories')
+          .maybeSingle();
 
-      const configured: Record<string, string> = {};
-      const cfg = (settingRow?.value as TileConfig[] | null) || [];
-      if (Array.isArray(cfg)) {
-        cfg.forEach((t) => {
-          if (t?.sub && t?.url) configured[t.sub] = t.url;
+        const configured: Record<string, string> = {};
+        const cfg = (settingRow?.value as TileConfig[] | null) || [];
+        if (Array.isArray(cfg)) {
+          cfg.forEach((t) => {
+            if (t?.sub && t?.url) configured[t.sub] = t.url;
+          });
+        }
+
+        // 2) Para las que no tienen imagen elegida, usamos la última foto del producto más reciente
+        const missing = CATS.filter((c) => !configured[c.sub]);
+        const fallbacks = await Promise.all(
+          missing.map((c) =>
+            supabase
+              .from('products')
+              .select('images')
+              .eq('active', true)
+              .eq('subcategory', c.sub)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          )
+        );
+
+        if (!active) return;
+        const map: Record<string, string> = { ...configured };
+        fallbacks.forEach((res, i) => {
+          const imgs = (res.data as any)?.images as { url: string }[] | undefined;
+          if (imgs?.length) map[missing[i].sub] = imgs[imgs.length - 1].url;
         });
+
+        setImages(map);
+      } catch (error) {
+        console.error('Error cargando imágenes de categorías:', error);
+      } finally {
+        if (active) setLoaded(true);
       }
-
-      // 2) Para las que no tienen imagen elegida, usamos la última foto del producto más reciente
-      const missing = CATS.filter((c) => !configured[c.sub]);
-      const fallbacks = await Promise.all(
-        missing.map((c) =>
-          supabase
-            .from('products')
-            .select('images')
-            .eq('active', true)
-            .eq('subcategory', c.sub)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        )
-      );
-
-      if (!active) return;
-      const map: Record<string, string> = { ...configured };
-      fallbacks.forEach((res, i) => {
-        const imgs = (res.data as any)?.images as { url: string }[] | undefined;
-        if (imgs?.length) map[missing[i].sub] = imgs[imgs.length - 1].url;
-      });
-
-      setImages(map);
-      setLoaded(true);
     })();
 
     return () => {
@@ -81,7 +87,7 @@ export function CategoryShowcase() {
               className="group block"
             >
               <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 rounded-xl sm:rounded-2xl">
-                {loaded && images[c.sub] ? (
+                {images[c.sub] ? (
                   <Image
                     src={images[c.sub]}
                     alt={c.label}
@@ -91,7 +97,10 @@ export function CategoryShowcase() {
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
+                  <div className={cn(
+                    'absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200',
+                    !loaded && 'animate-pulse',
+                  )} />
                 )}
               </div>
               <div className="flex items-center justify-between gap-1 mt-2 sm:mt-3 md:mt-4">

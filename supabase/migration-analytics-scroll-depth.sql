@@ -1,11 +1,7 @@
--- ================================================
--- FIX: columna scroll_depth faltante en analytics_visits
--- La ruta /api/analytics/exit la actualiza en cada salida,
--- pero el esquema original solo la creó en analytics_pageviews.
--- Sin esta columna el update falla y se pierden duración,
--- scroll y rebote de cada visita.
--- Ejecutar en Supabase SQL Editor.
--- ================================================
+-- Migration: agrega scroll_depth a analytics_visits
+-- (existía solo en analytics_pageviews; el endpoint de exit y el dashboard
+-- ya intentaban leer/escribir esta columna en analytics_visits sin que existiera)
 
-alter table public.analytics_visits
-  add column if not exists scroll_depth int default 0;
+ALTER TABLE public.analytics_visits ADD COLUMN IF NOT EXISTS scroll_depth int DEFAULT 0;
+
+CREATE INDEX IF NOT EXISTS idx_visits_scroll_depth ON public.analytics_visits(scroll_depth);

@@ -23,9 +23,15 @@
 }
 
 html, body {
-  height: 100%;
   font-family: var(--font-sans);
+  /* overflow-x: hidden sin overflow-y explícito hace que el spec de CSS Overflow
+     fuerce overflow-y a "auto" (no puede quedar "visible" si el otro eje no lo
+     está), y sumado a un height fijo eso convierte a body en su propio
+     contenedor de scroll interno en vez de dejar que la página scrollee con la
+     ventana. En iOS eso impide que la barra de direcciones se colapse al
+     scrollear, achicando la pantalla útil todo el tiempo. */
   overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* Prevent zoom on input focus on iOS */

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,9 +10,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'session_id required' }, { status: 400 });
     }
 
-    const supabase = await createServerSupabase();
+    // Service role: el visitante es anónimo (nunca cumple la policy de UPDATE,
+    // que exige rol admin), así que con el cliente autenticado normal este
+    // update nunca escribía nada — duración/rebote/scroll quedaban siempre
+    // en su valor por defecto.
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    // Actualizar la última visita de esta sesión
     await supabase
       .from('analytics_visits')
       .update({
@@ -23,9 +29,7 @@ export async function POST(request: NextRequest) {
         exited_at: new Date().toISOString(),
       })
       .eq('session_id', session_id)
-      .is('exited_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .is('exited_at', null);
 
     return NextResponse.json({ success: true });
   } catch (error) {
