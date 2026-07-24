@@ -30,7 +30,7 @@ export function OfertasClient() {
   return (
     <div className="space-y-6">
       {/* Header súper llamativo */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-8 md:p-12 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-black via-gray-900 to-red-700 p-8 md:p-12 shadow-2xl">
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="flex items-center justify-center w-16 h-16 bg-white rounded-full animate-pulse">
@@ -40,12 +40,12 @@ export function OfertasClient() {
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase">
                 ¡Ofertas Especiales!
               </h1>
-              <p className="text-red-100 text-lg font-medium mt-1">
+              <p className="text-gray-300 text-lg font-medium mt-1">
                 Los mejores precios en productos 100% originales
               </p>
             </div>
           </div>
-          
+
           {!loading && products.length > 0 && (
             <div className="mt-4 inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
               <p className="text-white font-bold text-sm">
@@ -54,7 +54,7 @@ export function OfertasClient() {
             </div>
           )}
         </div>
-        
+
         {/* Efectos decorativos */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
@@ -73,7 +73,7 @@ export function OfertasClient() {
       ) : (
         <div>
           {/* Info adicional */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
               <span className="text-2xl">💡</span>
               <div>

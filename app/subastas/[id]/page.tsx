@@ -184,7 +184,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
     return (
       <div className="min-h-screen bg-white p-8">
         <p className="text-red-500 font-bold">{err || 'Subasta no encontrada'}</p>
-        <Link href="/subastas" className="text-orange-500 underline font-bold">Volver a subastas</Link>
+        <Link href="/subastas" className="text-gray-900 underline font-bold">Volver a subastas</Link>
       </div>
     );
   }
@@ -210,7 +210,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           <div className="relative">
             <ImageCarousel images={images} />
-            <div className="absolute top-3 left-3 z-10 bg-orange-500 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
+            <div className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
               Subasta
             </div>
           </div>
@@ -224,14 +224,14 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             </div>
 
             {bids.length > 0 && (
-              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-black text-lg shrink-0">★</div>
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-black text-lg shrink-0">★</div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] uppercase tracking-widest text-orange-500 font-black leading-none">Va ganando</p>
+                  <p className="text-[10px] uppercase tracking-widest text-gray-900 font-black leading-none">Va ganando</p>
                   <p className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] uppercase text-orange-500 font-bold">Con</p>
+                  <p className="text-[10px] uppercase text-gray-900 font-bold">Con</p>
                   <p className="text-sm sm:text-base font-black text-gray-900">{formatARS(Number(bids[0].amount))}</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   <p className="text-xs uppercase text-gray-400 font-bold flex items-center justify-end gap-1">
                     <Clock className="w-3 h-3" /> Termina en
                   </p>
-                  <p className={`text-xl font-bold ${cd.ended ? 'text-red-500' : 'text-orange-500'}`}>{cd.label}</p>
+                  <p className={`text-xl font-bold ${cd.ended ? 'text-red-500' : 'text-gray-900'}`}>{cd.label}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 font-bold pt-3 border-t border-gray-200">
@@ -264,7 +264,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                 <button
                   type="button"
                   onClick={() => load()}
-                  className="text-orange-500 hover:text-orange-600 font-bold uppercase tracking-wider"
+                  className="text-gray-900 hover:text-black font-bold uppercase tracking-wider"
                 >
                   Refrescar
                 </button>
@@ -274,7 +274,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             {auction.status === 'active' && !cd.ended && (
               <form onSubmit={submitBid} className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
                 <div>
-                  <p className="text-orange-500 font-black uppercase text-xs tracking-wider">Tus datos</p>
+                  <p className="text-gray-900 font-black uppercase text-xs tracking-wider">Tus datos</p>
                   <p className="text-xs text-gray-500 mt-1">
                     Necesitamos nombre, apellido y teléfono para contactarte si ganás.
                   </p>
@@ -341,7 +341,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                           key={delta}
                           type="button"
                           onClick={() => applyQuickBid(delta)}
-                          className="rounded-lg border border-orange-300 bg-orange-50 hover:bg-orange-100 active:scale-[0.98] text-orange-600 font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
+                          className="rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] text-black font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
                         >
                           +{formatARS(delta)}
                         </button>
@@ -356,14 +356,14 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     type="checkbox"
                     checked={acceptedPolicy}
                     onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                   />
                   <span className="text-xs text-gray-600 leading-relaxed">
                     Acepto las{' '}
                     <button
                       type="button"
                       onClick={(e) => { e.preventDefault(); setPolicyOpen(true); }}
-                      className="text-orange-500 hover:text-orange-600 font-bold underline underline-offset-2"
+                      className="text-gray-900 hover:text-black font-bold underline underline-offset-2"
                     >
                       bases y condiciones
                     </button>{' '}
@@ -377,12 +377,12 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     <AlertCircle className="w-4 h-4" /> {bidErr}
                   </p>
                 )}
-                {bidOk && <p className="text-green-600 text-sm font-bold">{bidOk}</p>}
+                {bidOk && <p className="text-gray-900 text-sm font-bold">{bidOk}</p>}
 
                 <button
                   type="submit"
                   disabled={submitting || !bidAmount || !acceptedPolicy}
-                  className="w-full bg-orange-500 text-white font-black uppercase py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                  className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Enviando…' : 'Pujar'}
                 </button>
@@ -425,9 +425,9 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="bg-gradient-to-br from-orange-50 via-white to-white border border-orange-200 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div className="bg-gradient-to-br from-gray-50 via-white to-white border border-gray-200 rounded-2xl p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-widest text-orange-500 font-black">Va ganando</p>
+                  <p className="text-[10px] uppercase tracking-widest text-gray-900 font-black">Va ganando</p>
                   <p className="text-2xl sm:text-3xl font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
@@ -449,17 +449,17 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     return (
                       <li
                         key={b.id}
-                        className={`px-4 py-3 flex items-center justify-between gap-3 ${isTop ? 'bg-orange-50' : ''}`}
+                        className={`px-4 py-3 flex items-center justify-between gap-3 ${isTop ? 'bg-gray-50' : ''}`}
                       >
                         <div className="min-w-0 flex items-center gap-2">
-                          <span className={`text-xs font-mono shrink-0 w-6 ${isTop ? 'text-orange-500' : 'text-gray-400'}`}>
+                          <span className={`text-xs font-mono shrink-0 w-6 ${isTop ? 'text-gray-900' : 'text-gray-400'}`}>
                             #{bids.length - i}
                           </span>
                           <div className="min-w-0">
                             <p className={`font-bold truncate ${isTop ? 'text-gray-900' : 'text-gray-600'}`}>
                               {b.alias}
                               {isTop && (
-                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider align-middle">
+                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider align-middle">
                                   Top
                                 </span>
                               )}
@@ -471,7 +471,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                             </p>
                           </div>
                         </div>
-                        <p className={`font-bold shrink-0 ${isTop ? 'text-orange-500 text-lg' : 'text-gray-600 text-sm'}`}>
+                        <p className={`font-bold shrink-0 ${isTop ? 'text-gray-900 text-lg' : 'text-gray-600 text-sm'}`}>
                           {formatARS(Number(b.amount))}
                         </p>
                       </li>

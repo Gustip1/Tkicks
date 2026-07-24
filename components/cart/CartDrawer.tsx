@@ -97,7 +97,7 @@ export function CartDrawer() {
                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black ${
                   isLowTime
                     ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
-                    : 'bg-amber-50 text-amber-600 border border-amber-200'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200'
                 }`}>
                   <Clock className="w-3.5 h-3.5" />
                   <span>{formatTime(remainingSeconds)}</span>
@@ -216,7 +216,7 @@ export function CartDrawer() {
               </div>
             )}
             {items.length > 0 && remainingSeconds !== null && (
-              <p className="mt-1 text-xs text-amber-600 font-bold">
+              <p className="mt-1 text-xs text-gray-600 font-bold">
                 ⏱ Tenés {formatTime(remainingSeconds)} para completar tu compra
               </p>
             )}

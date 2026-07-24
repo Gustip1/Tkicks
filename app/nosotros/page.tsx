@@ -12,6 +12,7 @@ import {
   Play,
 } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
+import { getInstagramPosts } from '@/lib/instagram';
 
 export const metadata: Metadata = {
   title: 'Nosotros | Tkicks',
@@ -19,35 +20,9 @@ export const metadata: Metadata = {
     'Conocé Tkicks: el reseller de sneakers y streetwear originales en San Juan. Nuestra historia, nuestros valores y el feed en vivo de nuestras redes.',
 };
 
-type InstagramItem = {
-  id: string;
-  caption?: string;
-  media_type: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM' | string;
-  media_url?: string;
-  thumbnail_url?: string;
-  permalink: string;
-  timestamp?: string;
-};
-
 const INSTAGRAM_URL = 'https://www.instagram.com/tkicks.sj';
 const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5492644802994';
-
-async function getInstagramFeed(): Promise<InstagramItem[]> {
-  const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const userId = process.env.INSTAGRAM_USER_ID;
-  if (!accessToken || !userId) return [];
-
-  const url = `https://graph.instagram.com/${userId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=9&access_token=${accessToken}`;
-  try {
-    const res = await fetch(url, { next: { revalidate: 600 } });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { data?: InstagramItem[] };
-    return data.data || [];
-  } catch {
-    return [];
-  }
-}
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -58,7 +33,7 @@ function TikTokIcon({ className }: { className?: string }) {
 }
 
 export default async function NosotrosPage() {
-  const feed = await getInstagramFeed();
+  const feed = await getInstagramPosts(9);
 
   return (
     <div className="bg-white text-gray-900 -mx-2 md:-mx-8 lg:-mx-12 -my-3 md:-my-8 overflow-hidden">
@@ -66,16 +41,16 @@ export default async function NosotrosPage() {
       {/* ───────────────────────── HERO ───────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -left-32 h-[420px] w-[420px] rounded-full bg-emerald-300/30 blur-[120px] animate-pulse-slow" />
-          <div className="absolute top-40 -right-24 h-[380px] w-[380px] rounded-full bg-cyan-300/20 blur-[120px] animate-pulse-slow animation-delay-2000" />
-          <div className="absolute bottom-0 left-1/2 h-[320px] w-[520px] -translate-x-1/2 rounded-full bg-purple-300/15 blur-[140px]" />
+          <div className="absolute -top-24 -left-32 h-[420px] w-[420px] rounded-full bg-gray-300/30 blur-[120px] animate-pulse-slow" />
+          <div className="absolute top-40 -right-24 h-[380px] w-[380px] rounded-full bg-gray-200/30 blur-[120px] animate-pulse-slow animation-delay-2000" />
+          <div className="absolute bottom-0 left-1/2 h-[320px] w-[520px] -translate-x-1/2 rounded-full bg-gray-300/20 blur-[140px]" />
         </div>
 
         <div className="relative max-w-[1200px] mx-auto px-5 md:px-10 pt-16 md:pt-28 pb-16 md:pb-24">
           <div className="animate-hero-enter inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 md:mb-8">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-900" />
             </span>
             <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.18em] text-gray-700">
               Nosotros · Tkicks
@@ -86,7 +61,7 @@ export default async function NosotrosPage() {
           <h1 className="animate-hero-enter hero-delay-1 text-[2.5rem] leading-[0.95] md:text-7xl lg:text-8xl font-black tracking-tighter max-w-5xl text-gray-900">
             Cultura urbana,
             <br />
-            <span className="text-emerald-600">hecha en San&nbsp;Juan.</span>
+            <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">hecha en San&nbsp;Juan.</span>
           </h1>
 
           <p className="animate-hero-enter hero-delay-2 mt-6 md:mt-8 max-w-2xl text-base md:text-xl leading-relaxed text-gray-600 font-medium">
@@ -115,9 +90,9 @@ export default async function NosotrosPage() {
           </div>
 
           <div className="animate-hero-enter hero-delay-4 mt-10 md:mt-14 flex flex-wrap gap-x-6 gap-y-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-500">
-            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 100% originales</span>
-            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Showroom físico</span>
-            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Envíos a todo el país</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> 100% originales</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Showroom físico</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Envíos a todo el país</span>
           </div>
         </div>
       </section>
@@ -133,7 +108,7 @@ export default async function NosotrosPage() {
           ].map((s, i) => (
             <div key={s.v} className="animate-fade-up text-center md:text-left" style={{ animationDelay: `${i * 80}ms` }}>
               <p className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tighter">{s.k}</p>
-              <p className="mt-2 text-[11px] md:text-xs font-black uppercase tracking-widest text-emerald-600">{s.v}</p>
+              <p className="mt-2 text-[11px] md:text-xs font-black uppercase tracking-widest text-gray-900">{s.v}</p>
               <p className="mt-1 text-[11px] md:text-xs font-bold text-gray-400">{s.sub}</p>
             </div>
           ))}
@@ -144,8 +119,8 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 grid gap-10 md:gap-16 md:grid-cols-[1fr_1.1fr] md:items-center">
           <div>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
-              <span className="h-px w-8 bg-emerald-500" /> Nuestra historia
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+              <span className="h-px w-8 bg-gray-900" /> Nuestra historia
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
               Empezó con una idea simple:<br className="hidden md:block" />
@@ -167,8 +142,8 @@ export default async function NosotrosPage() {
 
           <div className="relative">
             <div className="relative rounded-3xl border border-gray-200 bg-gray-50 p-6 md:p-10 overflow-hidden shadow-sm">
-              <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-emerald-100 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-cyan-100 blur-3xl" />
+              <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-gray-200 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-gray-100 blur-3xl" />
               <div className="relative grid grid-cols-2 gap-3">
                 {[
                   { icon: Shield, title: 'Autenticidad', desc: 'Cada par, 100% original.' },
@@ -177,8 +152,8 @@ export default async function NosotrosPage() {
                   { icon: Users, title: 'Comunidad', desc: 'Tkicks Fam, real.' },
                 ].map(({ icon: Icon, title, desc }) => (
                   <div key={title} className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 hover:border-gray-400 hover:shadow-sm transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
-                      <Icon className="w-5 h-5 text-emerald-600" />
+                    <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center mb-3">
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
                     <p className="text-sm md:text-base font-black text-gray-900">{title}</p>
                     <p className="text-[11px] md:text-xs text-gray-500 font-bold mt-1">{desc}</p>
@@ -194,8 +169,8 @@ export default async function NosotrosPage() {
       <section className="relative bg-gray-50 border-y border-gray-200">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
-              <span className="h-px w-8 bg-emerald-500" /> Lo que nos define
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+              <span className="h-px w-8 bg-gray-900" /> Lo que nos define
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
               No somos otro reseller. <span className="text-gray-400">Somos el tuyo.</span>
@@ -216,8 +191,8 @@ export default async function NosotrosPage() {
                 className="group animate-fade-up rounded-2xl border border-gray-200 bg-white p-5 md:p-6 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5 transition-all"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-colors">
-                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:border-gray-900 transition-colors">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-gray-900 group-hover:text-white transition-colors" />
                 </div>
                 <h3 className="text-base md:text-lg font-black text-gray-900 tracking-tight">{title}</h3>
                 <p className="mt-2 text-sm text-gray-500 font-medium leading-relaxed">{desc}</p>
@@ -231,11 +206,11 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
-              <span className="h-px w-8 bg-emerald-500" /> Seguinos en las redes
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+              <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
-              Todo pasa en <span className="text-emerald-600">@tkicks.sj</span>
+              Todo pasa en <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">@tkicks.sj</span>
             </h2>
             <p className="mt-4 text-sm md:text-base text-gray-500 font-medium">
               Drops, rifas, unboxings y outfits. Si no estás en las redes, te estás perdiendo la mitad de la tienda.
@@ -247,11 +222,11 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="group relative overflow-hidden rounded-3xl border border-gray-200 p-6 md:p-8 bg-gradient-to-br from-pink-50 via-orange-50 to-yellow-50 hover:border-pink-300 hover:shadow-md transition-all active:scale-[0.99]"
+              className="group relative overflow-hidden rounded-3xl border-2 border-gray-900 p-6 md:p-8 bg-white hover:shadow-md transition-all active:scale-[0.99]"
             >
               <div className="relative flex flex-col gap-5 md:gap-7 h-full">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 border-0 flex items-center justify-center">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-900 flex items-center justify-center">
                     <Instagram className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
                   <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500">Instagram</p>
@@ -275,15 +250,15 @@ export default async function NosotrosPage() {
               rel="noreferrer"
               className="group relative overflow-hidden rounded-3xl border border-gray-200 p-6 md:p-8 bg-gray-900 hover:border-gray-600 hover:shadow-md transition-all active:scale-[0.99]"
             >
-              <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[#25F4EE]/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#FE2C55]/20 blur-3xl" />
+              <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
               <div className="relative flex flex-col gap-5 md:gap-7 h-full">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
                     <TikTokIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
                   <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/70">TikTok</p>
-                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-[#FE2C55] text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">Nuevo</span>
+                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">Nuevo</span>
                 </div>
                 <div>
                   <p className="text-2xl md:text-4xl font-black text-white tracking-tight leading-none">@tkicks.sj</p>
@@ -304,8 +279,8 @@ export default async function NosotrosPage() {
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="flex flex-wrap items-end justify-between gap-3 mb-8 md:mb-10">
             <div>
-              <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
-                <span className="h-px w-8 bg-emerald-500" /> En vivo
+              <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+                <span className="h-px w-8 bg-gray-900" /> En vivo
               </span>
               <h2 className="mt-3 text-2xl md:text-4xl font-black tracking-tight text-gray-900">Último contenido del feed</h2>
               <p className="mt-2 text-xs md:text-sm font-bold text-gray-500">Los posteos más recientes de @tkicks.sj.</p>
@@ -314,7 +289,7 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 text-xs font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-100 transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-900 bg-white text-xs font-black uppercase tracking-widest text-gray-900 hover:bg-gray-900 hover:text-white transition-all active:scale-[0.98]"
             >
               Ver perfil completo
               <ArrowRight className="w-3.5 h-3.5" />
@@ -339,7 +314,7 @@ export default async function NosotrosPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-4">
               {feed.map((item) => {
-                const preview = item.media_type === 'VIDEO' ? item.thumbnail_url || item.media_url : item.media_url;
+                const preview = item.imageUrl;
                 return (
                   <a
                     key={item.id}
@@ -362,9 +337,9 @@ export default async function NosotrosPage() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span className="absolute left-2 top-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 border border-gray-200">
-                        {item.media_type === 'VIDEO' ? 'Video' : item.media_type === 'CAROUSEL_ALBUM' ? 'Carrusel' : 'Post'}
+                        {item.mediaType === 'VIDEO' ? 'Video' : item.mediaType === 'CAROUSEL_ALBUM' ? 'Carrusel' : 'Post'}
                       </span>
-                      {item.media_type === 'VIDEO' && (
+                      {item.mediaType === 'VIDEO' && (
                         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-2xl">
                             <Play className="w-5 h-5 text-gray-900 fill-gray-900 translate-x-0.5" />
@@ -388,16 +363,16 @@ export default async function NosotrosPage() {
       {/* ───────────────────────── FINAL CTA ───────────────────────── */}
       <section className="relative overflow-hidden border-t border-gray-200">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-72 w-[700px] rounded-full bg-emerald-100 blur-[120px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-72 w-[700px] rounded-full bg-gray-100 blur-[120px]" />
         </div>
         <div className="relative max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-600">
-            <MapPin className="w-3.5 h-3.5 text-emerald-500" /> Showroom · San Juan
+            <MapPin className="w-3.5 h-3.5 text-gray-900" /> Showroom · San Juan
           </span>
           <h2 className="mt-5 text-3xl md:text-6xl font-black tracking-tighter leading-[0.95] max-w-3xl mx-auto text-gray-900">
             Vení, probate un par
             <br />
-            <span className="text-emerald-600">y llevate lo que buscabas.</span>
+            <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">y llevate lo que buscabas.</span>
           </h2>
           <p className="mt-5 max-w-xl mx-auto text-sm md:text-base text-gray-500 font-medium">
             Te esperamos en el showroom o coordinamos por WhatsApp. Siempre hay alguien del otro lado para ayudarte.
@@ -414,7 +389,7 @@ export default async function NosotrosPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-emerald-500 text-white font-black text-sm uppercase tracking-tight hover:bg-emerald-600 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl border-2 border-gray-900 bg-white text-gray-900 font-black text-sm uppercase tracking-tight hover:bg-gray-900 hover:text-white transition-all active:scale-[0.98]"
             >
               Escribinos por WhatsApp
             </a>

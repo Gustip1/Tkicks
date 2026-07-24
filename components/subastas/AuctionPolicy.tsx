@@ -73,7 +73,7 @@ export function AuctionPolicyModal({ open, onClose }: { open: boolean; onClose: 
       >
         <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
           <h2 className="text-lg font-black tracking-tight text-gray-900 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            <AlertTriangle className="w-5 h-5 text-gray-900" />
             Políticas y compromiso de subastas
           </h2>
           <button

@@ -61,7 +61,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
     return (
       <div className="min-h-screen bg-white p-8">
         <p className="text-gray-700 font-bold">Tenés que iniciar sesión.</p>
-        <Link href={`/login?redirect=/subastas/${params.id}/pagar`} className="text-orange-500 underline font-bold">Iniciar sesión</Link>
+        <Link href={`/login?redirect=/subastas/${params.id}/pagar`} className="text-gray-900 underline font-bold">Iniciar sesión</Link>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
     return (
       <div className="min-h-screen bg-white p-8 space-y-3">
         <p className="text-gray-700 font-bold">Esta subasta ya tiene una orden creada.</p>
-        <Link href="/account" className="text-orange-500 underline font-bold">Ver mis órdenes</Link>
+        <Link href="/account" className="text-gray-900 underline font-bold">Ver mis órdenes</Link>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
     return (
       <div className="min-h-screen bg-white p-8 space-y-3">
         <p className="text-gray-700 font-bold">No sos el ganador de esta subasta o todavía no terminó.</p>
-        <Link href={`/subastas/${params.id}`} className="text-orange-500 underline font-bold">Volver</Link>
+        <Link href={`/subastas/${params.id}`} className="text-gray-900 underline font-bold">Volver</Link>
       </div>
     );
   }
@@ -137,8 +137,8 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-300 flex items-center justify-center mx-auto">
-            <Check className="w-8 h-8 text-green-500" />
+          <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
+            <Check className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-black text-gray-900">¡Comprobante recibido!</h1>
           <p className="text-gray-500 text-sm">
@@ -223,7 +223,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
             <button
               onClick={submit}
               disabled={submitting}
-              className="w-full bg-orange-500 text-white font-black uppercase py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Procesando…' : 'Continuar'}
             </button>
@@ -251,7 +251,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
               <button
                 onClick={uploadProof}
                 disabled={!proofFile || proofUploading}
-                className="w-full bg-orange-500 text-white font-black uppercase py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
               >
                 {proofUploading ? 'Subiendo…' : 'Confirmar pago'}
               </button>

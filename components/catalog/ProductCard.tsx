@@ -67,7 +67,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {(!primary?.url || imgError) && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-300">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-10 h-10">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6 sm:w-8 sm:h-8">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none" />
               <path d="M21 15l-5-5L5 21" />
@@ -185,7 +185,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {!isSoldOut && (
             <span className={cn(
               'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
-              promoOn ? 'bg-orange-50 text-orange-600' : 'bg-violet-50 text-violet-600',
+              promoOn ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700',
             )}>
               3 × {formatCurrency(cardArs / 3)}
               <span className="font-bold opacity-70">

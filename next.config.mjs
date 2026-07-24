@@ -25,7 +25,10 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
-      { protocol: 'https', hostname: 'images.unsplash.com' }
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      // Fotos del feed de Instagram (@tkicks.sj)
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' }
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

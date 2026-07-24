@@ -79,7 +79,7 @@ export function Footer() {
           ].map(({ icon: Icon, title, sub }) => (
             <div key={title} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 md:p-4">
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
+                <Icon className="w-4 h-4 md:w-5 md:h-5 text-gray-900" />
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] md:text-sm font-black text-gray-900 leading-tight truncate">{title}</p>
@@ -130,7 +130,7 @@ export function Footer() {
           <div>
             <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Ubicación</p>
             <div className="flex items-start gap-2 text-sm font-bold text-gray-600">
-              <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <MapPin className="w-4 h-4 text-gray-900 shrink-0 mt-0.5" />
               <span>San Juan · Argentina<br /><span className="text-gray-400 font-medium text-xs">Showroom con cita previa</span></span>
             </div>
           </div>

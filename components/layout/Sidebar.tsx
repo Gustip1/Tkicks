@@ -230,7 +230,7 @@ export function Sidebar() {
             <Link
               href="/ofertas"
               onClick={close}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-red-600 text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl bg-white/20">
                 🔥
@@ -245,16 +245,16 @@ export function Sidebar() {
             <Link
               href="/subastas"
               onClick={close}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-md hover:shadow-lg hover:scale-[1.02]"
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black bg-gray-900 text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-black/15">
-                <Gavel className="w-5 h-5 text-black" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/15">
+                <Gavel className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-black">Subastas</p>
-                <p className="text-xs font-bold text-black/70">Pujá en pesos</p>
+                <p className="font-black uppercase tracking-tight text-white">Subastas</p>
+                <p className="text-xs font-bold text-white/70">Pujá en pesos</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-black/60" />
+              <ChevronRight className="w-5 h-5 text-white/60" />
             </Link>
 
             <Link
@@ -343,10 +343,10 @@ export function Sidebar() {
             </a>
           </div>
           <div className="flex items-center justify-center gap-1.5">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black border border-emerald-200">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black border border-gray-200">
               ✓ Originales
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black border border-blue-200">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black border border-gray-200">
               📦 Envío nacional
             </span>
           </div>

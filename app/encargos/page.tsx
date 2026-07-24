@@ -185,13 +185,13 @@ export default function EncargosPage() {
       </div>
 
       {/* aviso 100 % */}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+      <div className="flex items-start gap-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
         <span className="text-2xl">💰</span>
         <div>
-          <p className="text-sm font-semibold text-amber-700">Importante: Pago del encargo</p>
-          <p className="text-sm text-amber-600">
+          <p className="text-sm font-semibold text-gray-900">Importante: Pago del encargo</p>
+          <p className="text-sm text-gray-600">
             Para realizar tu encargo, se debe abonar el{" "}
-            <span className="font-bold text-amber-700">75% del precio del producto</span> como seña antes de
+            <span className="font-bold text-gray-900">75% del precio del producto</span> como seña antes de
             realizar el pedido.
           </p>
         </div>
@@ -210,7 +210,7 @@ export default function EncargosPage() {
             }}
             className={`rounded-lg py-2.5 text-sm font-semibold transition ${
               i === paso
-                ? "bg-blue-600 text-white"
+                ? "bg-gray-900 text-white"
                 : i < paso
                 ? "bg-gray-200 text-gray-900 cursor-pointer hover:bg-gray-300"
                 : "bg-gray-100 text-gray-400 cursor-default"
@@ -320,7 +320,7 @@ export default function EncargosPage() {
                   <button
                     type="button"
                     onClick={() => fileRefs.current[idx]?.click()}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition"
+                    className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black transition"
                   >
                     Seleccionar archivos
                   </button>
@@ -448,7 +448,7 @@ export default function EncargosPage() {
                 onClick={() => setMetodoPago(m.value)}
                 className={`flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition ${
                   metodoPago === m.value
-                    ? "border-blue-500 bg-blue-50"
+                    ? "border-gray-900 bg-gray-50"
                     : "border-gray-200 bg-white hover:border-gray-400"
                 }`}
               >
@@ -473,7 +473,7 @@ export default function EncargosPage() {
               <span>Envío a: {datos.ciudad || "—"}</span>
             </div>
             {metodoPago && (
-              <div className="text-xs text-blue-400">
+              <div className="text-xs text-gray-500">
                 Pago: {metodoLabel[metodoPago]}
               </div>
             )}
@@ -493,7 +493,7 @@ export default function EncargosPage() {
         )}
         <button
           onClick={siguiente}
-          className="flex-1 rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-700 transition"
+          className="flex-1 rounded-xl bg-gray-900 py-3.5 text-sm font-bold text-white hover:bg-black transition"
         >
           {paso === 2 ? "Enviar pedido por WhatsApp" : "Siguiente"}
         </button>

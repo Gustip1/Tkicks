@@ -31,7 +31,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
   return (
     <Link
       href={`/subastas/${a.id}`}
-      className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-400 hover:shadow-md transition-all"
+      className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-400 hover:shadow-md transition-all"
     >
       <div className="aspect-[3/4] bg-gray-50 relative">
         {a.product_image ? (
@@ -42,7 +42,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
             <Gavel className="w-12 h-12" />
           </div>
         )}
-        <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
+        <div className="absolute top-3 left-3 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
           Subasta
         </div>
       </div>
@@ -58,14 +58,14 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
             <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
               <Clock className="w-3 h-3" />Termina
             </p>
-            <p className={`text-sm font-bold ${cd.ended ? 'text-red-500' : 'text-orange-500'}`}>{cd.label}</p>
+            <p className={`text-sm font-bold ${cd.ended ? 'text-red-500' : 'text-gray-900'}`}>{cd.label}</p>
           </div>
         </div>
         <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-2">
           {a.bid_count} {a.bid_count === 1 ? 'puja' : 'pujas'} · Mínimo +{formatARS(Number(a.min_increment))}
         </p>
         {a.top_bidder_alias && (
-          <p className="text-[11px] text-orange-500 font-bold truncate">
+          <p className="text-[11px] text-gray-900 font-bold truncate">
             ★ Va ganando {a.top_bidder_alias}
           </p>
         )}
@@ -103,7 +103,7 @@ export default function SubastasPage() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
-            <Gavel className="w-8 h-8 text-orange-500" />
+            <Gavel className="w-8 h-8 text-gray-900" />
             Subastas
           </h1>
           <p className="text-gray-500 mt-2 text-sm font-bold">
@@ -116,7 +116,7 @@ export default function SubastasPage() {
         {!loading && !err && items.length === 0 && (
           <div className="border border-gray-200 rounded-xl p-8 text-center bg-gray-50">
             <p className="text-gray-500 font-bold">No hay subastas activas en este momento.</p>
-            <Link href="/productos" className="text-orange-500 hover:underline mt-2 inline-block font-bold">Ver productos</Link>
+            <Link href="/productos" className="text-gray-900 hover:underline mt-2 inline-block font-bold">Ver productos</Link>
           </div>
         )}
 
@@ -129,7 +129,7 @@ export default function SubastasPage() {
           <p className="text-xs text-gray-400 font-medium">
             La participación en las subastas implica un compromiso de compra absoluto.{' '}
             <AuctionPolicyTrigger
-              className="text-orange-500 hover:text-orange-600 font-bold underline underline-offset-2"
+              className="text-gray-900 hover:text-black font-bold underline underline-offset-2"
               label="Ver bases y condiciones"
             />
           </p>

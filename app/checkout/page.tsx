@@ -232,42 +232,11 @@ export default function CheckoutPage() {
     }
   };
 
-  // ─── Installments: register order THEN open WhatsApp ───
-  const handleInstallmentsWhatsApp = async () => {
+  // ─── Installments: solo abre WhatsApp con el link de pago — no crea ninguna orden ───
+  const handleInstallmentsWhatsApp = () => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: cart.items.map((it) => ({
-            productId: it.productId,
-            title: it.title,
-            slug: it.slug,
-            price: it.price,
-            size: it.size,
-            quantity: it.quantity,
-          })),
-          fulfillment: checkout.fulfillment,
-          paymentMethod: 'installments_3',
-          contact: checkout.contact,
-          address: checkout.fulfillment === 'shipping' ? checkout.address : null,
-          couponCode: checkout.appliedDiscount?.code ?? null,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrors({ submit: data.error || 'Error al procesar la orden' });
-        return;
-      }
-
-      const orderId = data.orderId;
-      checkout.setOrderId(orderId);
-
-      trackEvent('purchase', 'ecommerce', {
-        order: data.orderNumber || orderId.slice(0, 8),
+      trackEvent('installments_link_requested', 'ecommerce', {
         total_usd: totalUSD,
         method: 'installments_3',
       });
@@ -297,22 +266,19 @@ export default function CheckoutPage() {
             `Localidad: ${checkout.address.city}\n` +
             `Provincia: ${checkout.address.province}\n` +
             `CP: ${checkout.address.postalCode}`
-          : `🏪 *Retiro en Showroom*`) +
-        `\n\n📋 *Pedido registrado:* ${data.orderNumber || `#${orderId.slice(0, 8)}`}`;
+          : `🏪 *Retiro en Showroom*`);
 
       window.open(
         `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waMessage)}`,
         '_blank'
       );
 
-      setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
+      setCompletedOrderNumber(null);
       setCompletedPaymentMethod('installments_3');
       setCompletedProofUploaded(false);
       setOrderComplete(true);
       cart.clear();
       checkout.reset();
-    } catch {
-      setErrors({ submit: 'Error de conexión. Intentá de nuevo.' });
     } finally {
       setSubmitting(false);
     }
@@ -333,45 +299,51 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-green-50 border-2 border-green-300 flex items-center justify-center mx-auto">
-            <Check className="w-10 h-10 text-green-500" />
+          <div className="w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
+            <Check className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900">¡Orden confirmada!</h1>
+          <h1 className="text-2xl font-black text-gray-900">
+            {completedPaymentMethod === 'installments_3' ? '¡Listo!' : '¡Orden confirmada!'}
+          </h1>
           <p className="text-gray-500 font-bold text-sm">
-            Tu orden <span className="text-gray-900 font-black">{completedOrderNumber}</span> fue registrada con éxito.
+            {completedPaymentMethod === 'installments_3' ? (
+              'Te enviamos tu pedido por WhatsApp para coordinar el link de pago con tarjeta.'
+            ) : (
+              <>Tu orden <span className="text-gray-900 font-black">{completedOrderNumber}</span> fue registrada con éxito.</>
+            )}
           </p>
           <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-left space-y-2">
             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Próximos pasos</p>
             <ul className="text-sm text-gray-600 space-y-1.5">
               {completedPaymentMethod === 'crypto_transfer' && !completedProofUploaded && (
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">!</span>
+                  <span className="text-gray-900 mt-0.5">!</span>
                   Envianos el comprobante de transferencia por WhatsApp al{' '}
-                  <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-green-600 font-black underline">
+                  <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-gray-900 font-black underline">
                     WhatsApp
                   </a>
                 </li>
               )}
               {completedPaymentMethod === 'crypto_transfer' && completedProofUploaded && (
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-gray-900 mt-0.5">✓</span>
                   Comprobante recibido — lo validaremos a la brevedad
                 </li>
               )}
               {completedPaymentMethod === 'installments_3' && (
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-gray-900 mt-0.5">✓</span>
                   El equipo de Tkicks te enviará el link de pago con tarjeta por WhatsApp
                 </li>
               )}
               {completedPaymentMethod === 'cash' && (
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-gray-900 mt-0.5">✓</span>
                   Te contactaremos para coordinar el retiro en showroom
                 </li>
               )}
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-0.5">✓</span>
+                <span className="text-gray-900 mt-0.5">✓</span>
                 Recibirás actualizaciones por WhatsApp o email
               </li>
             </ul>
@@ -468,7 +440,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-black text-gray-900">Envío a domicilio</p>
-                        <p className="text-xs text-emerald-600 font-bold">100% Gratis</p>
+                        <p className="text-xs text-gray-500 font-bold">100% Gratis</p>
                       </div>
                       {checkout.fulfillment === 'shipping' && (
                         <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center">
@@ -603,8 +575,8 @@ export default function CheckoutPage() {
                 {checkout.paymentMethod === 'cash' && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                        <Banknote className="w-5 h-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <Banknote className="w-5 h-5 text-gray-900" />
                       </div>
                       <div>
                         <p className="text-sm font-black text-gray-900">Pago en efectivo</p>
@@ -653,13 +625,13 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-500 font-medium -mt-1">Podés adjuntarlo ahora o enviárnoslo después por WhatsApp</p>
                       <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
                         proofUploaded
-                          ? 'border-green-400 bg-green-50'
+                          ? 'border-gray-900 bg-gray-50'
                           : 'border-gray-300 bg-gray-50 hover:border-gray-500'
                       }`}>
                         {proofUploaded ? (
                           <>
-                            <Check className="w-6 h-6 text-green-400" />
-                            <p className="text-sm text-green-400 font-black">{proofFile?.name}</p>
+                            <Check className="w-6 h-6 text-gray-900" />
+                            <p className="text-sm text-gray-900 font-black">{proofFile?.name}</p>
                             <p className="text-xs text-gray-400 font-bold">Click para cambiar</p>
                           </>
                         ) : (
@@ -693,14 +665,14 @@ export default function CheckoutPage() {
                 {checkout.paymentMethod === 'installments_3' && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-gray-900" />
                       </div>
                       <div>
                         <p className="text-sm font-black text-gray-900">
                           3 Cuotas sin interés
                           {promoOn && (
-                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider align-middle">
+                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider align-middle">
                               Promo
                             </span>
                           )}
@@ -721,14 +693,14 @@ export default function CheckoutPage() {
                       </div>
                       {discountAmount > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-emerald-600 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
-                          <span className="text-emerald-600 font-bold">-${discountAmount.toFixed(2)} USD</span>
+                          <span className="text-gray-900 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
+                          <span className="text-gray-900 font-bold">-${discountAmount.toFixed(2)} USD</span>
                         </div>
                       )}
                       {!promoOn && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500 font-bold">Recargo tarjeta (10%)</span>
-                          <span className="text-amber-600 font-bold">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                          <span className="text-gray-700 font-bold">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
                         </div>
                       )}
                       <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
@@ -739,8 +711,8 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-purple-600 font-black">3 cuotas de</span>
-                        <span className="text-purple-600 font-black">{formatCurrency(totalARS / 3)}</span>
+                        <span className="text-gray-900 font-black">3 cuotas de</span>
+                        <span className="text-gray-900 font-black">{formatCurrency(totalARS / 3)}</span>
                       </div>
                     </div>
 
@@ -748,7 +720,7 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={handleInstallmentsWhatsApp}
                       disabled={submitting}
-                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-green-600 text-white font-black text-sm uppercase tracking-tight hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? (
                         <>
@@ -827,13 +799,13 @@ export default function CheckoutPage() {
               {/* Cupón de descuento */}
               <div className="border-t border-gray-200 pt-3">
                 {checkout.appliedDiscount ? (
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
-                    <span className="text-xs font-black text-emerald-700">
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-3 py-2">
+                    <span className="text-xs font-black text-white">
                       🎟 {checkout.appliedDiscount.code} aplicado
                     </span>
                     <button
                       onClick={handleRemoveCoupon}
-                      className="text-xs font-bold text-emerald-700 underline hover:text-emerald-900"
+                      className="text-xs font-bold text-white underline hover:text-gray-300"
                     >
                       Quitar
                     </button>
@@ -867,20 +839,20 @@ export default function CheckoutPage() {
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-emerald-600 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
-                    <span className="text-emerald-600 font-black">-${discountAmount.toFixed(2)} USD</span>
+                    <span className="text-gray-900 font-bold">Cupón {checkout.appliedDiscount?.code}</span>
+                    <span className="text-gray-900 font-black">-${discountAmount.toFixed(2)} USD</span>
                   </div>
                 )}
                 {isCardPayment && !promoOn && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-amber-600 font-bold">Recargo tarjeta (10%)</span>
-                    <span className="text-amber-600 font-black">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
+                    <span className="text-gray-500 font-bold">Recargo tarjeta (10%)</span>
+                    <span className="text-gray-700 font-black">+${(discountedSubtotalUSD * surchargeRate).toFixed(2)} USD</span>
                   </div>
                 )}
                 {isCardPayment && promoOn && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-orange-600 font-bold">🔥 Promo · sin recargo</span>
-                    <span className="text-orange-600 font-black">$0.00 USD</span>
+                    <span className="text-gray-900 font-bold">🔥 Promo · sin recargo</span>
+                    <span className="text-gray-900 font-black">$0.00 USD</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
@@ -896,8 +868,8 @@ export default function CheckoutPage() {
                 </div>
                 {isCardPayment && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-purple-600 font-black">3 cuotas de</span>
-                    <span className="text-purple-600 font-black">{formatCurrency(totalARS / 3)}</span>
+                    <span className="text-gray-900 font-black">3 cuotas de</span>
+                    <span className="text-gray-900 font-black">{formatCurrency(totalARS / 3)}</span>
                   </div>
                 )}
               </div>
@@ -905,9 +877,9 @@ export default function CheckoutPage() {
 
             {/* Timer warning */}
             {cart.getRemainingSeconds() !== null && (
-              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                <p className="text-xs text-amber-700 font-bold">
+              <div className="rounded-xl bg-gray-100 border border-gray-200 px-4 py-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-700 shrink-0" />
+                <p className="text-xs text-gray-700 font-bold">
                   Completá tu compra antes de que expire el carrito
                 </p>
               </div>
@@ -916,11 +888,11 @@ export default function CheckoutPage() {
             {/* Security badges */}
             <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-2">
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <ShieldCheck className="w-4 h-4 text-green-500" />
+                <ShieldCheck className="w-4 h-4 text-gray-900" />
                 <span className="font-bold">Compra 100% segura</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Package className="w-4 h-4 text-blue-500" />
+                <Package className="w-4 h-4 text-gray-900" />
                 <span className="font-bold">Productos originales garantizados</span>
               </div>
             </div>

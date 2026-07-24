@@ -12,8 +12,8 @@ export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: Hero
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 animate-hero-enter hero-delay-1">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-900" />
             </span>
             <span className="text-xs text-gray-700 font-bold uppercase tracking-[0.15em]">
               {content.badge}
@@ -49,7 +49,7 @@ export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: Hero
               href={content.ctaSecondaryHref}
               className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-transparent text-gray-900 text-sm font-black uppercase tracking-tight rounded-full border border-gray-300 hover:border-gray-600 hover:bg-gray-50 transition-all"
             >
-              <Zap className="w-4 h-4 text-yellow-500" />
+              <Zap className="w-4 h-4 text-gray-900" />
               {content.ctaSecondaryLabel}
             </Link>
           </div>

@@ -13,6 +13,10 @@ export default function AdminSettingsPage() {
   const [savingPromo, setSavingPromo] = useState(false);
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
 
+  const [instagramToken, setInstagramToken] = useState('');
+  const [savingInstagram, setSavingInstagram] = useState(false);
+  const [instagramMessage, setInstagramMessage] = useState<string | null>(null);
+
   useEffect(() => {
     const supabase = createBrowserClient();
     const fetchRate = async () => {
@@ -39,6 +43,17 @@ export default function AdminSettingsPage() {
       setInstallmentsPromoActive(Boolean((data?.value as { active?: boolean } | null)?.active));
     };
     void fetchInstallmentsPromo();
+
+    const fetchInstagramToken = async () => {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'instagram_access_token')
+        .maybeSingle();
+      const value = data?.value as { token?: string } | null;
+      if (value?.token) setInstagramToken(value.token);
+    };
+    void fetchInstagramToken();
   }, []);
 
   const handleToggleInstallmentsPromo = async () => {
@@ -57,6 +72,21 @@ export default function AdminSettingsPage() {
       setPromoMessage(next ? '✓ Promo activada — se muestra en toda la web' : '✓ Promo desactivada — vuelve el recargo del 10%');
     }
     setSavingPromo(false);
+  };
+
+  const handleSaveInstagramToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingInstagram(true);
+    setInstagramMessage(null);
+    const supabase = createBrowserClient();
+    const { error: upsertError } = await supabase
+      .from('settings')
+      .upsert({ key: 'instagram_access_token', value: { token: instagramToken.trim() } }, { onConflict: 'key' });
+
+    setInstagramMessage(
+      upsertError ? `Error al guardar: ${upsertError.message}` : '✓ Token guardado — el feed de Instagram lo usa en la próxima carga'
+    );
+    setSavingInstagram(false);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -150,6 +180,43 @@ export default function AdminSettingsPage() {
           </span>
         </div>
         {promoMessage && <p className="mt-3 text-sm text-gray-600">{promoMessage}</p>}
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Instagram (@tkicks.sj)</h2>
+        <p className="text-sm text-gray-500 mb-4 max-w-lg">
+          Pegá acá el access token de Instagram para mostrar tus últimos posts en la home. Se genera desde
+          developers.facebook.com (producto &quot;Instagram API with Instagram Login&quot;) conectando tu cuenta profesional.
+          El token de larga duración vence cada ~60 días — cuando venza, generá uno nuevo y pegalo acá de nuevo.
+        </p>
+        <form onSubmit={handleSaveInstagramToken} className="space-y-4 max-w-lg">
+          <div>
+            <label htmlFor="instagram_token" className="block text-sm font-medium text-gray-700">
+              Access token
+            </label>
+            <div className="mt-1">
+              <input
+                type="password"
+                id="instagram_token"
+                name="instagram_token"
+                value={instagramToken}
+                onChange={(e) => setInstagramToken(e.target.value)}
+                placeholder="IGQ..."
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <button
+              type="submit"
+              disabled={savingInstagram}
+              className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {savingInstagram ? 'Guardando...' : 'Guardar token'}
+            </button>
+          </div>
+          {instagramMessage && <p className="text-sm text-gray-600">{instagramMessage}</p>}
+        </form>
       </div>
     </div>
   );

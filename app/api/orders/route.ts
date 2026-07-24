@@ -167,29 +167,44 @@ export async function POST(req: NextRequest) {
     const subtotal = grossSubtotal - discountAmount;
 
     // ── Create order ──
-    const { data: order, error: orderErr } = await supabase
+    const orderPayload: Record<string, any> = {
+      status: 'draft',
+      fulfillment: body.fulfillment,
+      first_name: body.contact.firstName.trim(),
+      last_name: body.contact.lastName?.trim() || null,
+      email: body.contact.email.trim().toLowerCase(),
+      phone: body.contact.phone?.trim() || null,
+      document: body.contact.document?.trim() || null,
+      subtotal,
+      discount_code: appliedCouponCode,
+      discount_amount: discountAmount,
+      shipping_cost: 0,
+      payment_method: body.paymentMethod,
+      payment_status: 'pending',
+      payment_alias: 'gus.p21',
+    };
+
+    let { data: order, error: orderErr } = await supabase
       .from('orders')
-      .insert({
-        status: body.paymentMethod === 'cash' ? 'draft' : 'draft',
-        fulfillment: body.fulfillment,
-        first_name: body.contact.firstName.trim(),
-        last_name: body.contact.lastName?.trim() || null,
-        email: body.contact.email.trim().toLowerCase(),
-        phone: body.contact.phone?.trim() || null,
-        document: body.contact.document?.trim() || null,
-        subtotal,
-        discount_code: appliedCouponCode,
-        discount_amount: discountAmount,
-        shipping_cost: 0,
-        payment_method: body.paymentMethod,
-        payment_status: body.paymentMethod === 'cash' ? 'pending' : 'pending',
-        payment_alias: 'gus.p21',
-      })
+      .insert(orderPayload)
       .select('id, order_number')
       .single();
 
+    // Fallback de compatibilidad: si todavía no se corrió la migración de cupones
+    // (supabase/migration-discount-codes.sql), discount_code/discount_amount no
+    // existen en la tabla y el insert de ARRIBA falla siempre — reintentamos sin
+    // esos dos campos en vez de romper el checkout completo por una migración
+    // pendiente.
+    if (orderErr && /column .*discount_(code|amount).* does not exist/i.test(orderErr.message || '')) {
+      console.warn('[ORDERS] Faltan las columnas discount_code/discount_amount (correr migration-discount-codes.sql). Reintentando sin cupón.');
+      const { discount_code, discount_amount, ...fallbackPayload } = orderPayload;
+      const retry = await supabase.from('orders').insert(fallbackPayload).select('id, order_number').single();
+      order = retry.data;
+      orderErr = retry.error;
+    }
+
     if ((orderErr || !order) && appliedCouponCode) {
-      await supabase.rpc('release_discount_code_use', { p_code: appliedCouponCode });
+      await supabase.rpc('release_discount_code_use', { p_code: appliedCouponCode }).then(null, () => {});
     }
 
     if (orderErr || !order) {

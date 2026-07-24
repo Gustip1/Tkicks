@@ -204,7 +204,7 @@ export function Header() {
 
             <Link
               href="/ofertas"
-              className="rounded-xl px-3 py-2 text-sm font-black text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md uppercase tracking-tight"
+              className="rounded-xl px-3 py-2 text-sm font-black text-white bg-red-600 hover:bg-red-700 transition-all shadow-sm hover:shadow-md uppercase tracking-tight"
             >
               Ofertas
             </Link>

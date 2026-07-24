@@ -7,6 +7,7 @@ import { HomepageBrands } from '@/components/landing/HomepageBrands';
 import { Reviews } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
+import { InstagramFeed } from '@/components/landing/InstagramFeed';
 import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import {
@@ -116,6 +117,9 @@ export default async function HomePage() {
 
       {/* Opiniones de clientes */}
       <Reviews />
+
+      {/* Feed de Instagram @tkicks.sj — se oculta sola si no hay token cargado */}
+      <InstagramFeed />
 
       {/* Cómo comprar — último bloque antes del footer */}
       <HowToBuy content={content.howToBuy} />

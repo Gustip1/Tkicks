@@ -110,10 +110,10 @@ export default function ProductDetailPage() {
         <div className="space-y-3 md:space-y-6">
           {/* Category badge */}
           <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-            <span className="inline-flex items-center rounded-full bg-green-50 text-green-700 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-green-200">
+            <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-gray-200">
               {product.category}
             </span>
-            {product.on_sale && (
+            {hasSale && (
               <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-200">
                 🔥 Oferta
               </span>
@@ -188,10 +188,10 @@ export default function ProductDetailPage() {
                 {/* Métodos de pago — precios en ARS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Transferencia / Efectivo */}
-                  <div className="relative rounded-2xl border border-gray-900/10 bg-gray-50 p-4">
+                  <div className="relative rounded-2xl border-2 border-gray-900 bg-gray-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 shrink-0">
-                        <Banknote className="w-4 h-4 text-emerald-600" />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 shrink-0">
+                        <Banknote className="w-4 h-4 text-white" />
                       </div>
                       <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
                         Transferencia<br className="hidden sm:block" /> / Efectivo
@@ -200,37 +200,27 @@ export default function ProductDetailPage() {
                     <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
                       {formatCurrency(priceInArs)}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-emerald-600 font-bold uppercase tracking-wide">
+                    <p className="mt-0.5 text-[11px] text-gray-900 font-bold uppercase tracking-wide">
                       Mejor precio
                     </p>
                   </div>
 
                   {/* Tarjeta — 3 cuotas */}
-                  <div
-                    className={
-                      'relative rounded-2xl border p-4 ' +
-                      (promoOn ? 'border-orange-200 bg-orange-50' : 'border-violet-200 bg-violet-50')
-                    }
-                  >
+                  <div className="relative rounded-2xl border border-gray-200 bg-white p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div
-                        className={
-                          'flex items-center justify-center w-8 h-8 rounded-full shrink-0 ' +
-                          (promoOn ? 'bg-orange-100' : 'bg-violet-100')
-                        }
-                      >
-                        <CreditCard className={'w-4 h-4 ' + (promoOn ? 'text-orange-600' : 'text-violet-600')} />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 shrink-0">
+                        <CreditCard className="w-4 h-4 text-gray-900" />
                       </div>
                       <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
                         Tarjeta<br className="hidden sm:block" /> 3 cuotas s/ interés
                       </p>
                       {promoOn && (
-                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider self-start">
+                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider self-start">
                           Promo
                         </span>
                       )}
                     </div>
-                    <p className={'text-2xl md:text-3xl font-black tracking-tight ' + (promoOn ? 'text-orange-600' : 'text-violet-600')}>
+                    <p className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
                       3 × {formatCurrency(installment)}
                     </p>
                     <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
@@ -254,8 +244,8 @@ export default function ProductDetailPage() {
           {/* Trust badges */}
           <div className="grid grid-cols-2 gap-2 md:gap-4 py-4 md:py-6 border-t border-gray-200">
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-50 shrink-0">
-                <Shield className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs md:text-sm font-black text-gray-900 truncate">100% Original</p>
@@ -263,8 +253,8 @@ export default function ProductDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-50 shrink-0">
-                <Truck className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
+                <Truck className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs md:text-sm font-black text-gray-900 truncate">Envío seguro</p>
@@ -272,7 +262,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-50 shrink-0">
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
                 <span className="text-sm md:text-lg">💳</span>
               </div>
               <div className="min-w-0">
@@ -281,8 +271,8 @@ export default function ProductDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-50 shrink-0">
-                <Star className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
+                <Star className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs md:text-sm font-black text-gray-900 truncate">Verificado</p>
