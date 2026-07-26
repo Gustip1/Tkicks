@@ -1,7 +1,8 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Info } from 'lucide-react';
 import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
@@ -14,9 +15,24 @@ interface ProductCardProps {
   size?: 'normal' | 'large';
 }
 
+type InfoPopover = 'usd' | 'installments' | null;
+
 export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [loaded, setLoaded]     = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!activeInfo) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setActiveInfo(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [activeInfo]);
   const images                  = product.images || [];
   const primary                 = images[0];
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
@@ -53,6 +69,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
   return (
     <Link
+      ref={cardRef}
       href={`/producto/${product.slug}`}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
       className="group block"
@@ -158,7 +175,24 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}
 
         <div className="space-y-1">
-          {/* ARS — precio principal (lo que se paga en efectivo/transferencia) */}
+          {/* USD — precio principal */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className={cn(
+              'font-black tracking-tight',
+              size === 'large' ? 'text-2xl' : 'text-lg',
+              hasSale ? 'text-red-600' : 'text-gray-900',
+            )}>
+              ${activePrice.toFixed(2)}
+              <span className="text-[10px] text-gray-400 font-black ml-0.5 align-top">USD</span>
+            </span>
+            {hasSale && (
+              <span className="text-xs text-gray-400 line-through font-bold">
+                ${Number(product.price).toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          {/* ARS — mismo tamaño que el USD */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
               'font-black tracking-tight',
@@ -174,23 +208,55 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             )}
           </div>
 
-          {/* USD — referencia */}
-          <p className="text-xs font-bold text-gray-500">
-            ${activePrice.toFixed(2)}
-            <span className="text-[10px] text-gray-400 font-medium ml-1 uppercase tracking-wide">USD · transf./efectivo</span>
-          </p>
+          {/* Aclaración: precios en USD, conversión a cambio oficial */}
+          <div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setActiveInfo((v) => (v === 'usd' ? null : 'usd'));
+              }}
+              className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wide hover:text-gray-600 transition-colors"
+            >
+              <Info className="w-3 h-3" />
+              Precios en USD
+            </button>
+            {activeInfo === 'usd' && (
+              <div className="mt-1 w-full rounded-lg bg-gray-900 text-white text-[11px] font-medium leading-snug p-2.5">
+                Todos los precios están expresados en USD. Las conversiones a pesos son al cambio oficial.
+              </div>
+            )}
+          </div>
 
-          {/* Tarjeta 3 cuotas */}
+          {/* Tarjeta 3 cuotas — clickeable, comparte la aclaración con el de arriba */}
           {!isSoldOut && (
-            <span className={cn(
-              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
-              promoOn ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700',
-            )}>
-              3 × {formatCurrency(cardArs / 3)}
-              <span className="font-bold opacity-70">
-                {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
-              </span>
-            </span>
+            <div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setActiveInfo((v) => (v === 'installments' ? null : 'installments'));
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
+                  promoOn ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700',
+                )}
+              >
+                3 × {formatCurrency(cardArs / 3)}
+                <span className="font-bold opacity-70">
+                  {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
+                </span>
+              </button>
+              {activeInfo === 'installments' && (
+                <div className="mt-1 w-full rounded-lg bg-gray-900 text-white text-[11px] font-medium leading-snug p-2.5">
+                  {promoOn
+                    ? 'Promo activa: 3 cuotas sin interés, al mismo precio que efectivo/transferencia.'
+                    : 'Pagando en 3 cuotas con tarjeta se aplica un 10% de recargo sobre el precio base.'}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
