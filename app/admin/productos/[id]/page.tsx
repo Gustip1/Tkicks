@@ -212,13 +212,16 @@ export default function EditProductPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Slug (URL)</label>
-                <input 
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all" 
-                  value={slug} 
-                  onChange={(e) => setSlug(e.target.value)} 
+                <input
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
                   placeholder="nike-air-max-90"
                   required
                 />
+                <p className="mt-1 text-xs text-amber-600 font-medium">
+                  ⚠️ Si cambiás esto, cualquier link que ya compartiste (WhatsApp, Instagram) deja de funcionar.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Precio (USD)</label>

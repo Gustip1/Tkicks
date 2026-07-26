@@ -158,27 +158,26 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}
 
         <div className="space-y-1">
-          {/* USD */}
+          {/* ARS — precio principal (lo que se paga en efectivo/transferencia) */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
               'font-black tracking-tight',
-              size === 'large' ? 'text-xl' : 'text-base',
+              size === 'large' ? 'text-2xl' : 'text-lg',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
-              ${activePrice.toFixed(2)}
-              <span className="text-[10px] text-gray-400 font-black ml-0.5 align-top">USD</span>
+              {formatCurrency(priceInArs)}
             </span>
             {hasSale && (
               <span className="text-xs text-gray-400 line-through font-bold">
-                ${Number(product.price).toFixed(2)}
+                {formatCurrency(Number(product.price) * dolarOficial)}
               </span>
             )}
           </div>
 
-          {/* ARS transferencia */}
-          <p className="text-xs font-bold text-gray-700">
-            {formatCurrency(priceInArs)}
-            <span className="text-[10px] text-gray-400 font-medium ml-1 uppercase tracking-wide">transf.</span>
+          {/* USD — referencia */}
+          <p className="text-xs font-bold text-gray-500">
+            ${activePrice.toFixed(2)}
+            <span className="text-[10px] text-gray-400 font-medium ml-1 uppercase tracking-wide">USD · transf./efectivo</span>
           </p>
 
           {/* Tarjeta 3 cuotas */}

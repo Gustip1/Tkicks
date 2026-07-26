@@ -24,12 +24,14 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     const loadProduct = async () => {
+      // ilike + trim: tolera links viejos con mayúsculas/espacios distintos al slug real
+      const cleanSlug = String(params.slug || '').trim();
       const { data: productData } = await supabase
         .from('products')
         .select('*')
-        .eq('slug', params.slug)
-        .single();
-      
+        .ilike('slug', cleanSlug)
+        .maybeSingle();
+
       if (!productData) {
         setLoading(false);
         return;
@@ -73,12 +75,21 @@ export default function ProductDetailPage() {
   );
 
   if (!product) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-white">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-white px-4">
       <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
         <span className="text-4xl">🔍</span>
       </div>
       <h2 className="text-xl font-black text-gray-900 mb-2">Producto no encontrado</h2>
-      <p className="text-gray-500 font-bold">El producto que buscas no existe o fue eliminado.</p>
+      <p className="text-gray-500 font-bold mb-6 max-w-sm">
+        Este link puede estar desactualizado. Puede que el producto haya cambiado o ya no esté disponible —
+        pero seguro encontrás algo parecido en el catálogo.
+      </p>
+      <Link
+        href="/productos"
+        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors"
+      >
+        Ver catálogo
+      </Link>
     </div>
   );
 
