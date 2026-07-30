@@ -241,10 +241,10 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                 }}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
-                  promoOn ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700',
+                  promoOn ? 'bg-red-600 text-white animate-pulse' : 'bg-gray-100 text-gray-700',
                 )}
               >
-                3 × {formatCurrency(cardArs / 3)}
+                {promoOn && '🔥'} 3 × {formatCurrency(cardArs / 3)}
                 <span className="font-bold opacity-70">
                   {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
                 </span>

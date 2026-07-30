@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, ProductVariant } from '@/types/db';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
+import { MakeOffer } from './parts/MakeOffer';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
@@ -217,21 +218,27 @@ export default function ProductDetailPage() {
                   </div>
 
                   {/* Tarjeta — 3 cuotas */}
-                  <div className="relative rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className={cn(
+                    'relative rounded-2xl border p-4',
+                    promoOn ? 'border-2 border-red-600 bg-red-50' : 'border-gray-200 bg-white',
+                  )}>
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 shrink-0">
-                        <CreditCard className="w-4 h-4 text-gray-900" />
+                      <div className={cn(
+                        'flex items-center justify-center w-8 h-8 rounded-full shrink-0',
+                        promoOn ? 'bg-red-600' : 'bg-gray-100',
+                      )}>
+                        <CreditCard className={cn('w-4 h-4', promoOn ? 'text-white' : 'text-gray-900')} />
                       </div>
                       <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
                         Tarjeta<br className="hidden sm:block" /> 3 cuotas s/ interés
                       </p>
                       {promoOn && (
-                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider self-start">
-                          Promo
+                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black uppercase tracking-wider self-start animate-pulse">
+                          🔥 Promo
                         </span>
                       )}
                     </div>
-                    <p className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
+                    <p className={cn('text-2xl md:text-3xl font-black tracking-tight', promoOn ? 'text-red-600' : 'text-gray-900')}>
                       3 × {formatCurrency(installment)}
                     </p>
                     <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
@@ -246,6 +253,9 @@ export default function ProductDetailPage() {
               </div>
             );
           })()}
+
+          {/* Hacer una oferta — negociación por WhatsApp, no crea ninguna orden */}
+          <MakeOffer productTitle={product.title} productSlug={product.slug} />
 
           {/* Add to cart section */}
           <div className="py-2 md:py-4">

@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ReactNode } from 'react';
+import { DM_Sans, Playfair_Display } from 'next/font/google';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
@@ -14,6 +15,20 @@ import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
 import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
+
+// Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
+// que antes bloqueaba el render ~500-600ms en cada carga).
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -36,11 +51,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
+    <html lang="es" suppressHydrationWarning className={cn(dmSans.variable, playfairDisplay.variable)}>
       <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-medium')}>
         {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">

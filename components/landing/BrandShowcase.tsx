@@ -22,6 +22,12 @@ interface BrandShowcaseProps {
   href: string;
   /** Cantidad máxima de productos a traer */
   limit?: number;
+  /**
+   * Productos ya resueltos server-side (app/page.tsx). Si vienen, este
+   * componente no dispara ningún fetch propio — evita que cada carrusel de
+   * marca haga su propio round-trip a Supabase en el cliente.
+   */
+  initialProducts?: Product[];
 }
 
 export function BrandShowcase({
@@ -31,9 +37,10 @@ export function BrandShowcase({
   category,
   href,
   limit = 10,
+  initialProducts,
 }: BrandShowcaseProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [loading, setLoading] = useState(initialProducts === undefined);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -52,6 +59,9 @@ export function BrandShowcase({
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   useEffect(() => {
+    // Ya vienen resueltos desde el servidor (app/page.tsx) — no repetir el fetch.
+    if (initialProducts !== undefined) return;
+
     const supabase = createBrowserClient();
     let active = true;
 
@@ -80,7 +90,7 @@ export function BrandShowcase({
     return () => {
       active = false;
     };
-  }, [brandSlug, category, limit]);
+  }, [brandSlug, category, limit, initialProducts]);
 
   // No renderizamos secciones vacías
   if (!loading && products.length === 0) return null;

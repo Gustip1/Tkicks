@@ -24,10 +24,10 @@ export function PromoModal() {
       aria-labelledby="promo-title"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
     >
-      <div className="relative max-w-md w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-white rounded-2xl shadow-2xl shadow-black/40 p-6 sm:p-8 text-center">
+      <div className="relative max-w-md w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-red-600 rounded-2xl shadow-2xl shadow-red-600/30 p-6 sm:p-8 text-center animate-promo-glow">
         <div className="flex justify-center mb-3">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest">
-            🔥 Promo por tiempo limitado
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-widest">
+            🔥🔥 Promo por tiempo limitado 🔥🔥
           </span>
         </div>
 
@@ -35,7 +35,7 @@ export function PromoModal() {
           id="promo-title"
           className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3"
         >
-          3 cuotas sin interés
+          3 cuotas <span className="text-red-500">sin interés</span>
         </h2>
 
         <p className="text-sm sm:text-base text-zinc-300 leading-relaxed mb-6">
@@ -45,7 +45,7 @@ export function PromoModal() {
         <button
           type="button"
           onClick={dismiss}
-          className="w-full sm:w-auto sm:min-w-[180px] px-6 py-3 rounded-xl bg-white hover:bg-gray-200 text-black font-black uppercase tracking-wider text-sm transition-colors active:scale-95"
+          className="w-full sm:w-auto sm:min-w-[180px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider text-sm transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           autoFocus
         >
           Entendido

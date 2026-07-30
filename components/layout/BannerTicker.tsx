@@ -20,11 +20,20 @@ export function BannerTicker() {
       <div className="flex items-center justify-between px-2 md:px-4 max-w-[1600px] mx-auto">
         <div className="relative overflow-hidden flex-1 min-w-0" aria-label="Ofertas y mensajes importantes" role="region">
           <div className="animate-marquee motion-reduce:animate-none whitespace-nowrap py-1.5 md:py-2 will-change-transform">
-            {[...items, ...items].map((item, idx) => (
-              <span key={idx} className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-bold">
-                {item}
-              </span>
-            ))}
+            {[...items, ...items].map((item, idx) =>
+              active && item === PROMO_INSTALLMENT ? (
+                <span
+                  key={idx}
+                  className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-black uppercase tracking-tight bg-red-600 text-white px-2.5 py-0.5 rounded-full animate-pulse"
+                >
+                  {item}
+                </span>
+              ) : (
+                <span key={idx} className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-bold">
+                  {item}
+                </span>
+              )
+            )}
           </div>
         </div>
         {/* Widget del dólar - OCULTO en móvil, VISIBLE en desktop */}

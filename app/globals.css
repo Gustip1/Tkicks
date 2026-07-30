@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Syne:wght@700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,9 +5,8 @@
 :root {
   --header-height: 90px;
   --header-height-mobile: 76px;
-  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-  
+  /* --font-sans / --font-display las define next/font/google en app/layout.tsx */
+
   /* Shopify-inspired colors — única fuente de verdad (tailwind.config.ts las referencia via var()) */
   --color-primary: #008060;
   --color-primary-hover: #006e52;
@@ -292,6 +289,16 @@ img {
 .hero-delay-2 { animation-delay: 100ms; }
 .hero-delay-3 { animation-delay: 150ms; }
 .hero-delay-4 { animation-delay: 200ms; }
+
+/* ── Promo de 3 cuotas activa: resplandor rojo para que llame la atención ── */
+@keyframes promo-glow {
+  0%, 100% { box-shadow: 0 0 0px 0px rgba(220,38,38,0.35); }
+  50%      { box-shadow: 0 0 28px 6px rgba(220,38,38,0.45); }
+}
+
+.animate-promo-glow {
+  animation: promo-glow 2.2s ease-in-out infinite;
+}
 .hero-delay-5 { animation-delay: 250ms; }
 
 /* Cart badge pop when the count changes */
