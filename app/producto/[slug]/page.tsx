@@ -21,17 +21,19 @@ export default function ProductDetailPage() {
   const { active: promoOn } = useInstallmentsPromo();
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [offersEnabled, setOffersEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProduct = async () => {
       // ilike + trim: tolera links viejos con mayúsculas/espacios distintos al slug real
       const cleanSlug = String(params.slug || '').trim();
-      const { data: productData } = await supabase
-        .from('products')
-        .select('*')
-        .ilike('slug', cleanSlug)
-        .maybeSingle();
+      const [{ data: productData }, { data: offersRow }] = await Promise.all([
+        supabase.from('products').select('*').ilike('slug', cleanSlug).maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
+      ]);
+
+      setOffersEnabled(Boolean((offersRow?.value as { active?: boolean } | null)?.active));
 
       if (!productData) {
         setLoading(false);
@@ -254,8 +256,8 @@ export default function ProductDetailPage() {
             );
           })()}
 
-          {/* Hacer una oferta — negociación por WhatsApp, no crea ninguna orden */}
-          <MakeOffer productTitle={product.title} productSlug={product.slug} />
+          {/* Hacer una oferta — negociación por WhatsApp, no crea ninguna orden. Se puede activar/desactivar desde /admin/ajustes */}
+          {offersEnabled && <MakeOffer productTitle={product.title} productSlug={product.slug} />}
 
           {/* Add to cart section */}
           <div className="py-2 md:py-4">

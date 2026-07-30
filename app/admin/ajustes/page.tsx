@@ -17,6 +17,10 @@ export default function AdminSettingsPage() {
   const [savingInstagram, setSavingInstagram] = useState(false);
   const [instagramMessage, setInstagramMessage] = useState<string | null>(null);
 
+  const [offersEnabled, setOffersEnabled] = useState(false);
+  const [savingOffers, setSavingOffers] = useState(false);
+  const [offersMessage, setOffersMessage] = useState<string | null>(null);
+
   useEffect(() => {
     const supabase = createBrowserClient();
     const fetchRate = async () => {
@@ -54,6 +58,16 @@ export default function AdminSettingsPage() {
       if (value?.token) setInstagramToken(value.token);
     };
     void fetchInstagramToken();
+
+    const fetchOffersEnabled = async () => {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'offers_enabled')
+        .maybeSingle();
+      setOffersEnabled(Boolean((data?.value as { active?: boolean } | null)?.active));
+    };
+    void fetchOffersEnabled();
   }, []);
 
   const handleToggleInstallmentsPromo = async () => {
@@ -72,6 +86,24 @@ export default function AdminSettingsPage() {
       setPromoMessage(next ? '✓ Promo activada — se muestra en toda la web' : '✓ Promo desactivada — vuelve el recargo del 10%');
     }
     setSavingPromo(false);
+  };
+
+  const handleToggleOffers = async () => {
+    const next = !offersEnabled;
+    setSavingOffers(true);
+    setOffersMessage(null);
+    const supabase = createBrowserClient();
+    const { error: upsertError } = await supabase
+      .from('settings')
+      .upsert({ key: 'offers_enabled', value: { active: next } }, { onConflict: 'key' });
+
+    if (upsertError) {
+      setOffersMessage(`Error al guardar: ${upsertError.message}`);
+    } else {
+      setOffersEnabled(next);
+      setOffersMessage(next ? '✓ Activado — aparece en cada producto' : '✓ Desactivado');
+    }
+    setSavingOffers(false);
   };
 
   const handleSaveInstagramToken = async (e: React.FormEvent) => {
@@ -180,6 +212,36 @@ export default function AdminSettingsPage() {
           </span>
         </div>
         {promoMessage && <p className="mt-3 text-sm text-gray-600">{promoMessage}</p>}
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Ofertas (negociar precio)</h2>
+        <p className="text-sm text-gray-500 mb-4 max-w-lg">
+          Cuando está activo, en cada producto aparece el botón &quot;Hacer una oferta&quot;: el cliente elige pesos o
+          dólares, pone un monto y te llega el mensaje por WhatsApp para negociar. No crea ningún pedido.
+        </p>
+        <div className="flex items-center gap-3 max-w-sm">
+          <button
+            type="button"
+            onClick={handleToggleOffers}
+            disabled={savingOffers}
+            role="switch"
+            aria-checked={offersEnabled}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+              offersEnabled ? 'bg-emerald-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                offersEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700">
+            {offersEnabled ? 'Activo — visible en cada producto' : 'Inactivo'}
+          </span>
+        </div>
+        {offersMessage && <p className="mt-3 text-sm text-gray-600">{offersMessage}</p>}
       </div>
 
       <div className="bg-white shadow-sm rounded-lg p-6">

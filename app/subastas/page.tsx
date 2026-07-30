@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Gavel, Clock } from 'lucide-react';
 import { formatARS } from '@/lib/utils';
@@ -33,10 +34,15 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
       href={`/subastas/${a.id}`}
       className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-400 hover:shadow-md transition-all"
     >
-      <div className="aspect-[3/4] bg-gray-50 relative">
+      <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden">
         {a.product_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={a.product_image} alt={a.product_title} className="w-full h-full object-contain" />
+          <Image
+            src={a.product_image}
+            alt={a.product_title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-contain"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
             <Gavel className="w-12 h-12" />
@@ -120,7 +126,7 @@ export default function SubastasPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 items-start">
           {items.map((a) => <AuctionCard key={a.id} a={a} />)}
         </div>
 
