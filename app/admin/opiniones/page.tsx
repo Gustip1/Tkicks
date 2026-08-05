@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Star, Trash2, Plus } from 'lucide-react';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 type Review = { id: string; name: string; rating: number; text: string };
 
@@ -35,8 +36,12 @@ export default function AdminOpinionesPage() {
     const { error } = await supabase
       .from('settings')
       .upsert({ key: 'homepage_reviews', value: next }, { onConflict: 'key' });
-    if (error) setMessage(`Error al guardar: ${error.message}`);
-    else setMessage('✓ Opiniones guardadas');
+    if (error) {
+      setMessage(`Error al guardar: ${error.message}`);
+    } else {
+      setMessage('✓ Opiniones guardadas');
+      await revalidateHome();
+    }
     setSaving(false);
   };
 

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function AdminSettingsPage() {
   const [rate, setRate] = useState<number>(0);
@@ -84,6 +85,7 @@ export default function AdminSettingsPage() {
     } else {
       setInstallmentsPromoActive(next);
       setPromoMessage(next ? '✓ Promo activada — se muestra en toda la web' : '✓ Promo desactivada — vuelve el recargo del 10%');
+      await revalidateHome();
     }
     setSavingPromo(false);
   };
@@ -102,6 +104,7 @@ export default function AdminSettingsPage() {
     } else {
       setOffersEnabled(next);
       setOffersMessage(next ? '✓ Activado — aparece en cada producto' : '✓ Desactivado');
+      await revalidateHome();
     }
     setSavingOffers(false);
   };
@@ -118,6 +121,7 @@ export default function AdminSettingsPage() {
     setInstagramMessage(
       upsertError ? `Error al guardar: ${upsertError.message}` : '✓ Token guardado — el feed de Instagram lo usa en la próxima carga'
     );
+    if (!upsertError) await revalidateHome();
     setSavingInstagram(false);
   };
 
@@ -137,6 +141,7 @@ export default function AdminSettingsPage() {
       setError('Error al guardar. Intenta de nuevo.');
     } else {
       setSuccess('Tipo de cambio guardado con éxito.');
+      await revalidateHome();
     }
     setSaving(false);
   };

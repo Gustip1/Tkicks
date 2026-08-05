@@ -4,6 +4,7 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { Brand } from '@/types/db';
 import { ArrowUp, ArrowDown, X, Plus } from 'lucide-react';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 import {
   HeroContent,
   DEFAULT_HERO_CONTENT,
@@ -151,6 +152,7 @@ export default function AdminPortadaPage() {
       setMessage(`Error al guardar: ${firstError.message}`);
     } else {
       setMessage('✓ Portada guardada correctamente');
+      await revalidateHome();
     }
     setSaving(false);
   };
