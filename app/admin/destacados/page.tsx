@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function AdminFeaturedPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,9 +34,10 @@ export default function AdminFeaturedPage() {
       setMessage(`Error: ${error.message}`);
     } else {
       setMessage('✓ Actualizado correctamente');
-      setProducts((prev) => 
+      setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, [key]: value } as any : p))
       );
+      await revalidateHome();
     }
   };
 

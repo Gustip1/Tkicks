@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function AdminOfertasPage() {
   const supabase = createBrowserClient();
@@ -32,9 +33,10 @@ export default function AdminOfertasPage() {
       setMessage(`Error: ${error.message}`);
     } else {
       setMessage('✓ Actualizado correctamente');
-      setProducts((prev) => 
+      setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, on_sale: value } as any : p))
       );
+      await revalidateHome();
     }
   };
 

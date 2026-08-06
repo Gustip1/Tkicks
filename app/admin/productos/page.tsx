@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, STREETWEAR_SUBCATEGORIES } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -47,6 +48,7 @@ export default function AdminProductsPage() {
       alert(`Error al eliminar: ${error.message}`);
     } else {
       setProducts(prev => prev.filter(p => p.active));
+      await revalidateHome();
     }
     setDeleting(false);
   };
@@ -59,6 +61,7 @@ export default function AdminProductsPage() {
       alert(`Error al eliminar: ${error.message}`);
     } else {
       setProducts(prev => prev.filter(p => p.id !== id));
+      await revalidateHome();
     }
   };
 

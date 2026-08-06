@@ -8,6 +8,7 @@ import { Save, Trash2, ArrowLeft, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -107,6 +108,7 @@ export default function EditProductPage() {
       
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
+      await revalidateHome();
     } finally {
       setSaving(false);
     }
@@ -116,6 +118,7 @@ export default function EditProductPage() {
     if (!confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) return alert(error.message);
+    await revalidateHome();
     router.push('/admin/productos');
   };
 

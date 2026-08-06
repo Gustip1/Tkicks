@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product, ProductVariant } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 interface ProductWithVariants extends Product {
   variants?: ProductVariant[];
@@ -102,6 +103,7 @@ export default function AdminStockPage() {
       ? '✓ Guardado — producto marcado como inactivo (stock 0)'
       : '✓ Cambios guardados correctamente');
     await loadProducts();
+    await revalidateHome();
     setEditingId(null);
   };
 

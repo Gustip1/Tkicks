@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function BulkPricingPage() {
   const supabase = createBrowserClient();
@@ -20,7 +21,10 @@ export default function BulkPricingPage() {
       p_category: category || null
     });
     if (error) setMessage(error.message);
-    else setMessage('Precios actualizados');
+    else {
+      setMessage('Precios actualizados');
+      await revalidateHome();
+    }
   };
 
   return (

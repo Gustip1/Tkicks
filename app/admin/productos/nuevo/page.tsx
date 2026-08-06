@@ -5,6 +5,7 @@ import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { VariantEditor } from '@/components/admin/VariantEditor';
 import { slugify } from '@/lib/utils';
 import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function NewProductPage() {
   const supabase = createBrowserClient();
@@ -70,6 +71,7 @@ export default function NewProductPage() {
       const { error: vErr } = await supabase.from('product_variants').insert(toInsert);
       if (vErr) return setError(vErr.message);
     }
+    await revalidateHome();
     window.location.href = `/admin/productos/${product!.id}`;
   };
 
