@@ -73,16 +73,14 @@ async function resolveCategoryImages(
   if (missing.length === 0) return configured;
 
   const fallbacks = await Promise.all(
-    missing.map((c) =>
-      supabase
-        .from('products')
-        .select('images')
-        .eq('active', true)
-        .eq('subcategory', c.sub)
+    missing.map((c) => {
+      // "sneakers" es una categoría propia, no una subcategoría de streetwear
+      const query = supabase.from('products').select('images').eq('active', true);
+      return (c.sub === 'sneakers' ? query.eq('category', 'sneakers') : query.eq('subcategory', c.sub))
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle()
-    )
+        .maybeSingle();
+    })
   );
 
   const map = { ...configured };

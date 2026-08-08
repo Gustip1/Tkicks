@@ -20,6 +20,7 @@ const CATS = [
   { label: 'Remeras',    sub: 'remeras' },
   { label: 'Hoodies',    sub: 'hoodies' },
   { label: 'Pantalones', sub: 'pantalones' },
+  { label: 'Sneakers',   sub: 'sneakers' },
 ] as const;
 
 type TileConfig = { sub: string; label?: string; url?: string };
@@ -184,7 +185,7 @@ export default function AdminPortadaPage() {
                 Si no subís ninguna, se usa la última foto del producto más reciente de esa categoría.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {CATS.map((c) => (
                 <div key={c.sub} className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 space-y-3">
                   <div className="flex items-center justify-between">
