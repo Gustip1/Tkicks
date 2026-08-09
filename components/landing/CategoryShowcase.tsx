@@ -19,8 +19,8 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
   return (
     <section className="bg-white pt-6 pb-12 md:pt-8 md:pb-16">
       <div className="max-w-[1400px] mx-auto px-1.5 sm:px-4">
-        {/* Grilla editorial — accesos directos a categorías (2×2 en mobile, 4 en fila en desktop) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-4 md:gap-6">
+        {/* Grilla editorial — accesos directos a categorías (4 en fila, también en mobile) */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-4 md:gap-6">
           {CATEGORY_TILES.map((c) => (
             <Link
               key={c.sub}
@@ -43,7 +43,7 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
 
                 {/* Etiqueta superpuesta — un solo bloque visual grande, no una fila chica debajo */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pt-10 pb-2.5 sm:pb-3.5 px-1.5">
-                  <h3 className="text-base sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight truncate text-center">
+                  <h3 className="text-[11px] sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight truncate text-center">
                     {c.label}
                   </h3>
                 </div>
