@@ -14,6 +14,7 @@ export function Sidebar() {
   const [marcasOpen, setMarcasOpen] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -40,7 +41,11 @@ export function Sidebar() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        if (!cancelled) setHasSession(false);
+        return;
+      }
+      if (!cancelled) setHasSession(true);
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -299,6 +304,26 @@ export function Sidebar() {
                 <div className="flex-1">
                   <p className="font-black uppercase tracking-tight text-gray-900">Admin</p>
                   <p className="text-xs font-bold text-gray-500">Panel de administración</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </Link>
+            )}
+
+            {/* Si la sesión se venció o nunca inició (ej. tras borrar caché/cookies
+                del navegador), sin este link no había forma de volver a entrar al
+                admin desde el celular — el header desktop sí tiene este fallback. */}
+            {!isAdmin && !hasSession && (
+              <Link
+                href="/login"
+                onClick={close}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all font-black hover:bg-gray-100 text-gray-900 border-t border-gray-200 mt-2 pt-4"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-100">
+                  <ShieldCheck className="w-5 h-5 text-gray-700" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-black uppercase tracking-tight text-gray-900">Admin</p>
+                  <p className="text-xs font-bold text-gray-500">Iniciar sesión</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
               </Link>
