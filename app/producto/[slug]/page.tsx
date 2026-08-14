@@ -7,6 +7,7 @@ import { Product, ProductVariant } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { MakeOffer } from './parts/MakeOffer';
+import { MobileBuyBar } from './parts/MobileBuyBar';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
@@ -102,7 +103,7 @@ export default function ProductDetailPage() {
   const productClueInfo = getProductClueInfo(product.slug, product.category);
 
   return (
-    <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden">
+    <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden pb-24 lg:pb-0">
       {/* Breadcrumb */}
       <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold" aria-label="Ruta de navegación">
         <Link href="/" className="hover:text-gray-900 transition-colors">Inicio</Link>
@@ -260,7 +261,7 @@ export default function ProductDetailPage() {
           {offersEnabled && <MakeOffer productTitle={product.title} productSlug={product.slug} />}
 
           {/* Add to cart section */}
-          <div className="py-2 md:py-4">
+          <div id="comprar-section" className="py-2 md:py-4 scroll-mt-24">
             <AddToCart product={product} variants={variants} />
           </div>
 
@@ -306,6 +307,9 @@ export default function ProductDetailPage() {
           
         </div>
       </div>
+
+      {/* Barra de compra fija (solo mobile) */}
+      <MobileBuyBar priceUsd={activePrice} priceArs={priceInArs} targetId="comprar-section" />
     </div>
   );
 }

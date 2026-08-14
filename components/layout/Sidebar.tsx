@@ -85,14 +85,14 @@ export function Sidebar() {
 
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-white border-r border-gray-200 shadow-2xl transition-transform duration-300 ease-out md:hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)]',
+          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-white border-r border-gray-200 shadow-2xl transition-transform duration-300 ease-out md:hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] flex flex-col',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
           <Link href="/" onClick={close} className="flex items-center gap-3">
             <img src="/logo.jpg" alt="Tkicks" className="h-10 w-auto" />
             <div>
@@ -109,10 +109,11 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav
-          className="p-4 overflow-y-auto"
-          style={{ maxHeight: 'calc(100svh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}
-        >
+        {/* flex-1 + min-h-0: el nav ocupa exactamente el espacio entre el
+            encabezado y el bloque "Seguinos", así el scroll siempre llega
+            hasta el último ítem (Admin) sin quedar tapado. overscroll-contain
+            evita que al llegar al fondo siga scrolleando la página de atrás. */}
+        <nav className="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain">
           <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 px-2">
             Categorías
           </p>
@@ -331,7 +332,7 @@ export function Sidebar() {
           </div>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-white space-y-2.5">
+        <div className="shrink-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-white space-y-2.5">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Seguinos</p>
           <div className="grid grid-cols-2 gap-2">
             <a

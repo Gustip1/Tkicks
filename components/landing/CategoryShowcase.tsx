@@ -46,20 +46,10 @@ function CategoryTile({ c, images, className }: { c: (typeof CATEGORY_TILES)[num
 export function CategoryShowcase({ images }: { images: Record<string, string> }) {
   return (
     <section className="bg-white pt-6 pb-12 md:pt-8 md:pb-16">
-      {/* Mobile: tira deslizable con scroll-snap — las 4 no entran cómodas
-          en una grilla fija sin quedar chiquitas, así que se ven 2 y pico
-          por vez y se desliza para el resto, igual que los otros carruseles. */}
-      <div className="sm:hidden overflow-x-auto -mx-1.5 px-1.5 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex gap-1.5 snap-x snap-mandatory">
-          {CATEGORY_TILES.map((c) => (
-            <CategoryTile key={c.sub} c={c} images={images} className="shrink-0 grow-0 basis-[42%] snap-start" />
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop / tablet: grilla fija, las 4 entran cómodas en una fila */}
-      <div className="hidden sm:block max-w-[1400px] mx-auto px-4">
-        <div className="grid grid-cols-4 gap-4 md:gap-6">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
+        {/* Grilla fija (sin deslizar): 2×2 en mobile con tiles grandes,
+            4 en fila en desktop/tablet donde entran cómodas */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {CATEGORY_TILES.map((c) => (
             <CategoryTile key={c.sub} c={c} images={images} />
           ))}
