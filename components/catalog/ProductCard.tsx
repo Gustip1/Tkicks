@@ -13,11 +13,13 @@ import { trackEvent } from '@/lib/analytics/track';
 interface ProductCardProps {
   product: Product;
   size?: 'normal' | 'large';
+  /** Producto en camino al showroom (sección Próximos ingresos) */
+  comingSoon?: boolean;
 }
 
 type InfoPopover = 'usd' | 'installments' | null;
 
-export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
+export function ProductCard({ product, size = 'normal', comingSoon = false }: ProductCardProps) {
   const [loaded, setLoaded]     = useState(false);
   const [imgError, setImgError] = useState(false);
   const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
@@ -134,12 +136,17 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {comingSoon && (
+            <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
+              🚚 En camino
+            </span>
+          )}
           {hasSale && !isSoldOut && (
             <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest">
               SALE
             </span>
           )}
-          {product.is_new && !isSoldOut && (
+          {product.is_new && !isSoldOut && !comingSoon && (
             <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
               Nuevo
             </span>

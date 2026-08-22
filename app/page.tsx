@@ -3,6 +3,7 @@ import { Product } from '@/types/db';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase, CATEGORY_TILES, CategoryTileConfig } from '@/components/landing/CategoryShowcase';
 import { NewArrivalsCarousel } from '@/components/landing/NewArrivalsCarousel';
+import { ComingSoonCarousel } from '@/components/landing/ComingSoonCarousel';
 import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/components/landing/HomepageBrands';
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
@@ -33,7 +34,11 @@ const SETTINGS_KEYS = [
   'homepage_categories',
   'homepage_brands',
   'homepage_reviews',
+  'coming_soon',
 ] as const;
+
+/** Config de "Próximos ingresos": productos en camino al showroom. Se administra desde /admin/proximos. */
+export type ComingSoonConfig = { active: boolean; ids: string[] };
 
 interface HomeContent {
   hero: HeroContent;
@@ -43,6 +48,7 @@ interface HomeContent {
   categoryImages: Record<string, string>;
   brandEntries: HomeBrandEntry[];
   reviews: Review[];
+  comingSoon: ComingSoonConfig;
 }
 
 function supabaseAnon() {
@@ -156,6 +162,7 @@ async function getHomeContent(): Promise<HomeContent> {
     : DEFAULT_HOME_BRAND_ENTRIES;
 
   const rawReviews = byKey.get('homepage_reviews') as Review[] | undefined;
+  const rawComingSoon = byKey.get('coming_soon') as Partial<ComingSoonConfig> | undefined;
 
   const categoryImages = await resolveCategoryImages(
     supabase,
@@ -170,7 +177,33 @@ async function getHomeContent(): Promise<HomeContent> {
     categoryImages,
     brandEntries,
     reviews: Array.isArray(rawReviews) ? rawReviews : [],
+    comingSoon: {
+      active: Boolean(rawComingSoon?.active),
+      ids: Array.isArray(rawComingSoon?.ids)
+        ? rawComingSoon!.ids.filter((x): x is string => typeof x === 'string')
+        : [],
+    },
   };
+}
+
+/** Productos de "Próximos ingresos", respetando el orden en que el admin los marcó. */
+async function getComingSoonProducts(
+  supabase: ReturnType<typeof supabaseAnon>,
+  cfg: ComingSoonConfig
+): Promise<Product[]> {
+  if (!cfg.active || cfg.ids.length === 0) return [];
+
+  const { data } = await supabase
+    .from('products')
+    .select('*, product_variants(stock,size)')
+    .eq('active', true)
+    .in('id', cfg.ids)
+    .limit(24);
+
+  const position = new Map(cfg.ids.map((id, i) => [id, i]));
+  return ((data ?? []) as unknown as Product[]).sort(
+    (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0)
+  );
 }
 
 async function getHomeProducts(): Promise<{ products: Product[]; curated: boolean }> {
@@ -207,7 +240,10 @@ export default async function HomePage() {
     getHomeContent(),
   ]);
 
-  const brandProducts = await getHomeBrandProducts(supabaseAnon(), content.brandEntries);
+  const [brandProducts, comingSoonProducts] = await Promise.all([
+    getHomeBrandProducts(supabaseAnon(), content.brandEntries),
+    getComingSoonProducts(supabaseAnon(), content.comingSoon),
+  ]);
 
   return (
     <div className="bg-white">
@@ -222,6 +258,9 @@ export default async function HomePage() {
 
       {/* Nuevos ingresos en carrusel — server-rendered */}
       <NewArrivalsCarousel products={products} curated={curated} />
+
+      {/* Próximos ingresos — productos en camino al showroom, se activa desde /admin/proximos */}
+      <ComingSoonCarousel products={comingSoonProducts} />
 
       {/* Trust strip */}
       <SocialProofStrip content={content.socialProof} />

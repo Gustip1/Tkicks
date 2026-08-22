@@ -23,18 +23,22 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [offersEnabled, setOffersEnabled] = useState(false);
+  const [comingSoonIds, setComingSoonIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProduct = async () => {
       // ilike + trim: tolera links viejos con mayúsculas/espacios distintos al slug real
       const cleanSlug = String(params.slug || '').trim();
-      const [{ data: productData }, { data: offersRow }] = await Promise.all([
+      const [{ data: productData }, { data: offersRow }, { data: comingSoonRow }] = await Promise.all([
         supabase.from('products').select('*').ilike('slug', cleanSlug).maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'coming_soon').maybeSingle(),
       ]);
 
       setOffersEnabled(Boolean((offersRow?.value as { active?: boolean } | null)?.active));
+      const rawComingSoonIds = (comingSoonRow?.value as { ids?: string[] } | null)?.ids;
+      setComingSoonIds(Array.isArray(rawComingSoonIds) ? rawComingSoonIds : []);
 
       if (!productData) {
         setLoading(false);
@@ -101,6 +105,7 @@ export default function ProductDetailPage() {
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
   const priceInArs = activePrice * dolarOficial;
   const productClueInfo = getProductClueInfo(product.slug, product.category);
+  const isComingSoon = comingSoonIds.includes(product.id);
 
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden pb-24 lg:pb-0">
@@ -131,6 +136,11 @@ export default function ProductDetailPage() {
             {hasSale && (
               <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-200">
                 🔥 Oferta
+              </span>
+            )}
+            {isComingSoon && (
+              <span className="inline-flex items-center rounded-full bg-gray-900 text-white px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide">
+                🚚 Próximo ingreso
               </span>
             )}
           </div>
@@ -259,6 +269,22 @@ export default function ProductDetailPage() {
 
           {/* Hacer una oferta — negociación por WhatsApp, no crea ninguna orden. Se puede activar/desactivar desde /admin/ajustes */}
           {offersEnabled && <MakeOffer productTitle={product.title} productSlug={product.slug} />}
+
+          {/* Aviso de compra anticipada — producto en camino al showroom */}
+          {isComingSoon && (
+            <div className="flex items-start gap-3 rounded-2xl border-2 border-gray-900 bg-gray-50 p-4">
+              <span className="text-2xl" aria-hidden="true">🚚</span>
+              <div>
+                <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                  En camino al showroom
+                </p>
+                <p className="text-xs md:text-sm text-gray-600 font-bold mt-0.5">
+                  Este producto todavía no llegó. Podés comprarlo ahora de forma anticipada y
+                  te avisamos apenas esté disponible para retiro o envío.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Add to cart section */}
           <div id="comprar-section" className="py-2 md:py-4 scroll-mt-24">

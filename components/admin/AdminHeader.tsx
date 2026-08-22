@@ -21,6 +21,7 @@ export function AdminHeader() {
     if (pathname.startsWith('/admin/precios')) return { title: 'Precios', subtitle: 'Ajusta tus precios' };
     if (pathname.startsWith('/admin/destacados')) return { title: 'Destacados', subtitle: 'Productos destacados' };
     if (pathname.startsWith('/admin/ofertas')) return { title: 'Ofertas', subtitle: 'Productos en oferta' };
+    if (pathname.startsWith('/admin/proximos')) return { title: 'Próximos ingresos', subtitle: 'Productos en camino al showroom' };
     if (pathname.startsWith('/admin/uploads')) return { title: 'Imágenes', subtitle: 'Galería de medios' };
     if (pathname.startsWith('/admin/clientes')) return { title: 'Clientes', subtitle: 'Base de clientes' };
     if (pathname.startsWith('/admin/ajustes')) return { title: 'Ajustes', subtitle: 'Configuración' };

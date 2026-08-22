@@ -25,6 +25,7 @@ import {
   LayoutTemplate,
   MessageSquareQuote,
   Ticket,
+  Truck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ const navigation = [
   { name: 'Portada', href: '/admin/portada', icon: LayoutTemplate, color: 'text-sky-600', bg: 'bg-sky-50' },
   { name: 'Opiniones', href: '/admin/opiniones', icon: MessageSquareQuote, color: 'text-rose-600', bg: 'bg-rose-50' },
   { name: 'Ofertas', href: '/admin/ofertas', icon: Flame, color: 'text-red-600', bg: 'bg-red-50' },
+  { name: 'Próximos', href: '/admin/proximos', icon: Truck, color: 'text-sky-600', bg: 'bg-sky-50' },
   { name: 'Sorteo', href: '/admin/sorteo', icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   { name: 'Subastas', href: '/admin/subastas', icon: Gavel, color: 'text-orange-600', bg: 'bg-orange-50' },
   { name: 'Facturas', href: '/admin/facturas', icon: Receipt, color: 'text-teal-600', bg: 'bg-teal-50' },
