@@ -88,25 +88,19 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
           </h2>
         </div>
 
-        {/* ── Mobile: bento asimétrico — Sneakers y Pantalones llevan el tile
-              grande de cada fila; alturas fijas por fila para que nada se
-              desalinee, todo a la vista sin deslizar ── */}
-        <div className="sm:hidden space-y-3">
-          <div className="flex gap-3 h-44">
+        {/* ── Bento asimétrico en todos los tamaños — Sneakers y Pantalones
+              llevan el tile grande de cada fila; alturas fijas por fila para
+              que nada se desalinee, todo a la vista sin deslizar. En desktop
+              es el mismo layout que en mobile, escalado. ── */}
+        <div className="space-y-3 md:space-y-5">
+          <div className="flex gap-3 md:gap-5 h-44 sm:h-64 md:h-80 lg:h-96">
             <CategoryTile c={bySub.sneakers} images={images} className="flex-[3]" imgSizes="60vw" />
             <CategoryTile c={bySub.remeras} images={images} className="flex-[2]" imgSizes="40vw" />
           </div>
-          <div className="flex gap-3 h-44">
+          <div className="flex gap-3 md:gap-5 h-44 sm:h-64 md:h-80 lg:h-96">
             <CategoryTile c={bySub.hoodies} images={images} className="flex-[2]" imgSizes="40vw" />
             <CategoryTile c={bySub.pantalones} images={images} className="flex-[3]" imgSizes="60vw" />
           </div>
-        </div>
-
-        {/* ── Desktop / tablet: las 4 en fila ── */}
-        <div className="hidden sm:grid grid-cols-4 gap-4 md:gap-6">
-          {CATEGORY_TILES.map((c) => (
-            <CategoryTile key={c.sub} c={c} images={images} className="aspect-[3/4]" imgSizes="25vw" />
-          ))}
         </div>
       </div>
     </section>

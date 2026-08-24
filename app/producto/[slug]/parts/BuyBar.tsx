@@ -4,16 +4,19 @@ import { createPortal } from 'react-dom';
 import { formatCurrency, cn } from '@/lib/utils';
 
 /**
- * Barra de compra fija al pie, solo mobile: el botón de agregar al carrito
- * queda lejos (descripción + precios + oferta arriba), así que esta barra
- * mantiene el precio y un acceso directo siempre a mano. Se oculta sola
- * cuando la sección de compra ya está a la vista, para no duplicarla.
+ * Barra de compra fija al pie (mobile y desktop): el botón de agregar al
+ * carrito queda lejos al scrollear (descripción + precios + oferta arriba),
+ * así que esta barra mantiene el precio y un acceso directo siempre a mano.
+ * Se oculta sola cuando la sección de compra ya está a la vista, para no
+ * duplicarla.
  */
-export function MobileBuyBar({
+export function BuyBar({
+  productTitle,
   priceUsd,
   priceArs,
   targetId,
 }: {
+  productTitle: string;
   priceUsd: number;
   priceArs: number;
   targetId: string;
@@ -47,12 +50,16 @@ export function MobileBuyBar({
   return createPortal(
     <div
       className={cn(
-        'lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] transition-transform duration-300',
+        'fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:py-3 transition-transform duration-300',
         hidden && 'translate-y-full'
       )}
     >
-      <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-        <div className="min-w-0">
+      <div className="flex items-center justify-between gap-3 lg:gap-6 max-w-lg lg:max-w-5xl mx-auto">
+        {/* Título — solo desktop, en mobile el espacio es del precio */}
+        <p className="hidden lg:block flex-1 min-w-0 truncate text-base font-black text-gray-900 uppercase tracking-tight">
+          {productTitle}
+        </p>
+        <div className="min-w-0 lg:text-right">
           <p className="text-lg font-black text-gray-900 leading-tight truncate">
             {formatCurrency(priceArs)}
           </p>
@@ -62,7 +69,7 @@ export function MobileBuyBar({
         </div>
         <button
           onClick={scrollToBuy}
-          className="shrink-0 px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-tight active:scale-95 transition-transform"
+          className="shrink-0 px-6 lg:px-10 py-3 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-tight hover:bg-black active:scale-95 transition-all"
         >
           Comprar
         </button>
