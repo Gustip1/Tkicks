@@ -63,7 +63,7 @@ export function OfertasClient() {
 
       {/* Contenido */}
       {loading ? (
-        <ProductGridSkeleton count={6} large />
+        <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">😔</div>
@@ -85,8 +85,9 @@ export function OfertasClient() {
             </div>
           </div>
 
-          {/* Grid de productos — la card ya trae su propio badge de SALE */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 md:gap-x-8 md:gap-y-14">
+          {/* Grid de productos — misma grilla que el catálogo para que las
+              imágenes ocupen el mismo espacio en toda la web */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-x-8 md:gap-y-14">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
