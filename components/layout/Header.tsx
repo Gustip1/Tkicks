@@ -1,5 +1,9 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
+// Import estático: la URL lleva un hash del contenido, así el logo nuevo
+// nunca queda tapado por el viejo en la caché del navegador.
+import logo from '@/public/logo.jpg';
 import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, Menu, Search as SearchIcon, X, ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -235,7 +239,7 @@ export function Header() {
           className="mx-auto flex items-center shrink-0 px-2"
           aria-label="Inicio"
         >
-          <img src="/logo.jpg" alt="Tkicks" className="h-12 md:h-14 w-auto" />
+          <Image src={logo} alt="Tkicks" priority className="h-12 md:h-14 w-auto" />
         </Link>
 
         {/* Derecha - Buscar y acciones */}

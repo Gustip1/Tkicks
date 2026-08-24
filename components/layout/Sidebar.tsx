@@ -1,5 +1,7 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
+import logo from '@/public/logo.jpg';
 import { useEffect, useState } from 'react';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
@@ -94,7 +96,7 @@ export function Sidebar() {
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
           <Link href="/" onClick={close} className="flex items-center gap-3">
-            <img src="/logo.jpg" alt="Tkicks" className="h-12 w-auto" />
+            <Image src={logo} alt="Tkicks" className="h-12 w-auto" />
             <div>
               <p className="font-black text-gray-900 uppercase tracking-tight">Tkicks</p>
               <p className="text-xs text-gray-500 font-bold">Sneakers & Streetwear</p>

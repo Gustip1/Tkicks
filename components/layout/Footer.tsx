@@ -1,5 +1,10 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Instagram, MapPin, MessageCircle, ArrowUpRight, Shield, Truck, CreditCard } from 'lucide-react';
+// Import estático: Next le pone un hash de contenido a la URL, así al cambiar
+// el archivo del logo la URL cambia sola y ningún navegador sirve el viejo
+// desde su caché (antes con "/logo.jpg" fijo quedaba cacheado).
+import logo from '@/public/logo.jpg';
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -23,7 +28,7 @@ export function Footer() {
         <div className="grid gap-6 md:gap-8 md:grid-cols-[1.1fr_1fr] items-start">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="Tkicks" className="h-10 w-auto rounded-md" />
+              <Image src={logo} alt="Tkicks" priority className="h-10 w-auto rounded-md" />
               <div>
                 <p className="font-black text-gray-900 text-lg uppercase tracking-tight leading-none">Tkicks</p>
                 <p className="text-[11px] md:text-xs text-gray-500 font-bold mt-1">Sneakers & Streetwear · San Juan</p>

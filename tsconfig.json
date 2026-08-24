@@ -24,6 +24,9 @@
       ],
       "@/types/*": [
         "types/*"
+      ],
+      "@/public/*": [
+        "public/*"
       ]
     },
     "noEmit": true,
