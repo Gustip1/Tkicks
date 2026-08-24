@@ -71,24 +71,6 @@ export const DEFAULT_HOW_TO_BUY_CONTENT: HowToBuyContent = {
   whatsappMessage: 'Hola, tengo una consulta sobre un producto',
 };
 
-export interface SocialProofItem {
-  value: string;
-  label: string;
-}
-
-export interface SocialProofContent {
-  items: SocialProofItem[];
-}
-
-export const DEFAULT_SOCIAL_PROOF_CONTENT: SocialProofContent = {
-  items: [
-    { value: 'San Juan', label: 'Showroom físico' },
-    { value: '100%', label: 'Originales' },
-    { value: 'Únicos', label: 'y exclusivos' },
-    { value: 'Comunidad', label: 'Tkicks fam' },
-  ],
-};
-
 export interface PromoBannerContent {
   enabled: boolean;
   eyebrow: string;

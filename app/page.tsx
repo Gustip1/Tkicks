@@ -7,7 +7,6 @@ import { ComingSoonCarousel } from '@/components/landing/ComingSoonCarousel';
 import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/components/landing/HomepageBrands';
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
-import { SocialProofStrip } from '@/components/landing/SocialProofStrip';
 import { InstagramFeed } from '@/components/landing/InstagramFeed';
 import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
@@ -16,8 +15,6 @@ import {
   DEFAULT_HERO_CONTENT,
   HowToBuyContent,
   DEFAULT_HOW_TO_BUY_CONTENT,
-  SocialProofContent,
-  DEFAULT_SOCIAL_PROOF_CONTENT,
   PromoBannerContent,
   DEFAULT_PROMO_BANNER_CONTENT,
 } from '@/lib/homeContent';
@@ -29,7 +26,6 @@ export const revalidate = 300;
 const SETTINGS_KEYS = [
   'homepage_hero',
   'homepage_how_to_buy',
-  'homepage_social_proof',
   'homepage_banner',
   'homepage_categories',
   'homepage_brands',
@@ -43,7 +39,6 @@ export type ComingSoonConfig = { active: boolean; ids: string[] };
 interface HomeContent {
   hero: HeroContent;
   howToBuy: HowToBuyContent;
-  socialProof: SocialProofContent;
   banner: PromoBannerContent;
   categoryImages: Record<string, string>;
   brandEntries: HomeBrandEntry[];
@@ -172,7 +167,6 @@ async function getHomeContent(): Promise<HomeContent> {
   return {
     hero: { ...DEFAULT_HERO_CONTENT, ...(byKey.get('homepage_hero') as Partial<HeroContent> | undefined) },
     howToBuy: { ...DEFAULT_HOW_TO_BUY_CONTENT, ...(byKey.get('homepage_how_to_buy') as Partial<HowToBuyContent> | undefined) },
-    socialProof: { ...DEFAULT_SOCIAL_PROOF_CONTENT, ...(byKey.get('homepage_social_proof') as Partial<SocialProofContent> | undefined) },
     banner: { ...DEFAULT_PROMO_BANNER_CONTENT, ...(byKey.get('homepage_banner') as Partial<PromoBannerContent> | undefined) },
     categoryImages,
     brandEntries,
@@ -261,9 +255,6 @@ export default async function HomePage() {
 
       {/* Próximos ingresos — productos en camino al showroom, se activa desde /admin/proximos */}
       <ComingSoonCarousel products={comingSoonProducts} />
-
-      {/* Trust strip */}
-      <SocialProofStrip content={content.socialProof} />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">

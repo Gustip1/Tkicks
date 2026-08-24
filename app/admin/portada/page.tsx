@@ -10,8 +10,6 @@ import {
   DEFAULT_HERO_CONTENT,
   HowToBuyContent,
   DEFAULT_HOW_TO_BUY_CONTENT,
-  SocialProofContent,
-  DEFAULT_SOCIAL_PROOF_CONTENT,
   PromoBannerContent,
   DEFAULT_PROMO_BANNER_CONTENT,
 } from '@/lib/homeContent';
@@ -38,7 +36,6 @@ export default function AdminPortadaPage() {
   const [entries, setEntries] = useState<HomeBrandEntry[]>([]);
   const [hero, setHero] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
   const [howToBuy, setHowToBuy] = useState<HowToBuyContent>(DEFAULT_HOW_TO_BUY_CONTENT);
-  const [socialProof, setSocialProof] = useState<SocialProofContent>(DEFAULT_SOCIAL_PROOF_CONTENT);
   const [banner, setBanner] = useState<PromoBannerContent>(DEFAULT_PROMO_BANNER_CONTENT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,13 +44,12 @@ export default function AdminPortadaPage() {
   useEffect(() => {
     const supabase = createBrowserClient();
     (async () => {
-      const [catRes, brandRes, brandsTable, heroRes, howToBuyRes, socialProofRes, bannerRes] = await Promise.all([
+      const [catRes, brandRes, brandsTable, heroRes, howToBuyRes, bannerRes] = await Promise.all([
         supabase.from('settings').select('value').eq('key', 'homepage_categories').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_brands').maybeSingle(),
         supabase.from('brands').select('*').eq('active', true).order('name'),
         supabase.from('settings').select('value').eq('key', 'homepage_hero').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_how_to_buy').maybeSingle(),
-        supabase.from('settings').select('value').eq('key', 'homepage_social_proof').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_banner').maybeSingle(),
       ]);
 
@@ -73,10 +69,9 @@ export default function AdminPortadaPage() {
       const brandCfg = brandRes.data?.value as HomeBrandEntry[] | null;
       setEntries(Array.isArray(brandCfg) ? brandCfg : []);
 
-      // Contenido editable: hero, cómo comprar, social proof, banner
+      // Contenido editable: hero, cómo comprar, banner
       setHero({ ...DEFAULT_HERO_CONTENT, ...(heroRes.data?.value as Partial<HeroContent> | undefined) });
       setHowToBuy({ ...DEFAULT_HOW_TO_BUY_CONTENT, ...(howToBuyRes.data?.value as Partial<HowToBuyContent> | undefined) });
-      setSocialProof({ ...DEFAULT_SOCIAL_PROOF_CONTENT, ...(socialProofRes.data?.value as Partial<SocialProofContent> | undefined) });
       setBanner({ ...DEFAULT_PROMO_BANNER_CONTENT, ...(bannerRes.data?.value as Partial<PromoBannerContent> | undefined) });
 
       setLoading(false);
@@ -87,13 +82,6 @@ export default function AdminPortadaPage() {
     setHowToBuy((prev) => ({
       ...prev,
       steps: prev.steps.map((s, i) => (i === index ? { ...s, ...patch } : s)),
-    }));
-  };
-
-  const updateSocialProofItem = (index: number, patch: Partial<SocialProofContent['items'][number]>) => {
-    setSocialProof((prev) => ({
-      ...prev,
-      items: prev.items.map((it, i) => (i === index ? { ...it, ...patch } : it)),
     }));
   };
 
@@ -144,7 +132,6 @@ export default function AdminPortadaPage() {
       supabase.from('settings').upsert({ key: 'homepage_brands', value: entries }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_hero', value: hero }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_how_to_buy', value: howToBuy }, { onConflict: 'key' }),
-      supabase.from('settings').upsert({ key: 'homepage_social_proof', value: socialProof }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_banner', value: banner }, { onConflict: 'key' }),
     ]);
 
@@ -341,22 +328,6 @@ export default function AdminPortadaPage() {
             <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="WhatsApp — número (sin +)" value={howToBuy.whatsappNumber} onChange={(v) => setHowToBuy((h) => ({ ...h, whatsappNumber: v }))} />
               <Field label="WhatsApp — mensaje prearmado" value={howToBuy.whatsappMessage} onChange={(v) => setHowToBuy((h) => ({ ...h, whatsappMessage: v }))} />
-            </div>
-          </section>
-
-          {/* ── Social proof ── */}
-          <section className="space-y-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Franja de confianza</h2>
-              <p className="text-sm text-gray-500">Las 4 tarjetas cortas debajo del carrusel de nuevos ingresos.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {socialProof.items.map((it, i) => (
-                <div key={i} className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 grid grid-cols-2 gap-3">
-                  <Field label="Valor" value={it.value} onChange={(v) => updateSocialProofItem(i, { value: v })} />
-                  <Field label="Descripción" value={it.label} onChange={(v) => updateSocialProofItem(i, { label: v })} />
-                </div>
-              ))}
             </div>
           </section>
 

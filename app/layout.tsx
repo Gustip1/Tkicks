@@ -15,6 +15,7 @@ import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
 import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
+import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <CartDrawer />
               <PromoModal />
               <RecentSaleToast />
+              <WhatsAppFab />
             </AnalyticsProvider>
           </InstallmentsPromoProvider>
         </DolarRateProvider>
