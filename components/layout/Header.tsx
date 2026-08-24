@@ -235,7 +235,7 @@ export function Header() {
           className="mx-auto flex items-center shrink-0 px-2"
           aria-label="Inicio"
         >
-          <img src="/logo.jpg" alt="Tkicks" className="h-10 md:h-12 w-auto" />
+          <img src="/logo.jpg" alt="Tkicks" className="h-12 md:h-14 w-auto" />
         </Link>
 
         {/* Derecha - Buscar y acciones */}
