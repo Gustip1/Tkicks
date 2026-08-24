@@ -335,7 +335,13 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Barra de compra fija — mobile y desktop, se oculta cuando la sección de compra está a la vista */}
-      <BuyBar productTitle={product.title} priceUsd={activePrice} priceArs={priceInArs} targetId="comprar-section" />
+      <BuyBar
+        product={product}
+        variants={variants}
+        priceUsd={activePrice}
+        priceArs={priceInArs}
+        targetId="comprar-section"
+      />
     </div>
   );
 }

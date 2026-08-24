@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 
 const WA_NUMBER = '5492644802994';
-const WA_MESSAGE = 'Hola! Tengo una consulta 👋';
+const WA_MESSAGE = 'Hola! Vengo de la web de Tkicks 👟 Quería hacerte una consulta.';
 
 /**
  * Botón flotante de WhatsApp — acceso directo a la consulta desde cualquier
