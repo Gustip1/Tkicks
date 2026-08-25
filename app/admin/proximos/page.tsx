@@ -6,16 +6,17 @@ import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 /**
  * Próximos ingresos: productos en camino al showroom que todavía no llegaron.
- * Acá se elige qué productos van al carrusel de la home y se activa/desactiva
- * la sección entera. Se guarda en settings (key "coming_soon") — no usa
- * ninguna columna nueva, así que no requiere migración.
+ * Marcar un producto acá le pone la etiqueta "🚚 En camino" sobre la foto en
+ * todo el sitio y el aviso de compra anticipada en su página. Se guarda en
+ * settings (key "coming_soon") — no usa ninguna columna nueva, así que no
+ * requiere migración.
  */
-type ComingSoonConfig = { active: boolean; ids: string[] };
+type ComingSoonConfig = { ids: string[] };
 
 export default function AdminProximosPage() {
   const supabase = createBrowserClient();
   const [products, setProducts] = useState<Product[]>([]);
-  const [config, setConfig] = useState<ComingSoonConfig>({ active: false, ids: [] });
+  const [config, setConfig] = useState<ComingSoonConfig>({ ids: [] });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +30,6 @@ export default function AdminProximosPage() {
       setProducts((productsData || []) as any);
       const raw = settingRow?.value as Partial<ComingSoonConfig> | undefined;
       setConfig({
-        active: Boolean(raw?.active),
         ids: Array.isArray(raw?.ids) ? raw!.ids.filter((x): x is string => typeof x === 'string') : [],
       });
       setLoading(false);
@@ -49,8 +49,6 @@ export default function AdminProximosPage() {
     setMessage('✓ Guardado correctamente');
     await revalidateHome();
   };
-
-  const toggleSection = () => persist({ ...config, active: !config.active });
 
   const toggleProduct = (id: string) => {
     const marked = config.ids.includes(id);
@@ -74,34 +72,10 @@ export default function AdminProximosPage() {
         <div className="text-sm text-neutral-600">{markedCount} productos en camino</div>
       </div>
 
-      {/* Activar / desactivar la sección en la home */}
-      <div className={`rounded-lg border p-4 flex items-center justify-between gap-4 ${
-        config.active ? 'border-green-300 bg-green-50' : 'border-neutral-200 bg-white'
-      }`}>
-        <div>
-          <p className="font-bold text-black">Mostrar sección en la home</p>
-          <p className="text-sm text-neutral-600 mt-0.5">
-            {config.active
-              ? 'La sección "Próximos ingresos" está visible en la página principal.'
-              : 'La sección está oculta — los productos marcados no se muestran hasta activarla.'}
-          </p>
-        </div>
-        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-          <input
-            type="checkbox"
-            checked={config.active}
-            onChange={toggleSection}
-            disabled={loading}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-        </label>
-      </div>
-
       <p className="text-sm text-neutral-600">
-        Marcá los productos que están en tránsito al showroom. Aparecen en el carrusel con la
-        etiqueta &quot;🚚 En camino&quot; y en su página se avisa que es una compra anticipada.
-        Cuando el producto llegue, desmarcalo y listo.
+        Marcá los productos que están en tránsito al showroom. En todo el sitio (catálogo,
+        carruseles, buscador) su foto lleva la etiqueta &quot;🚚 En camino&quot;, y en su página
+        se avisa que es una compra anticipada. Cuando el producto llegue, desmarcalo y listo.
       </p>
 
       {/* Buscador */}

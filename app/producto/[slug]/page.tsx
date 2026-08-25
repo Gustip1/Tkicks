@@ -11,6 +11,7 @@ import { BuyBar } from './parts/BuyBar';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { useIsComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star, Banknote, CreditCard } from 'lucide-react';
 import { getCardPriceMultiplier } from '@/lib/promo';
@@ -23,22 +24,19 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [offersEnabled, setOffersEnabled] = useState(false);
-  const [comingSoonIds, setComingSoonIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const comingSoonFlag = useIsComingSoon(product?.id);
 
   useEffect(() => {
     const loadProduct = async () => {
       // ilike + trim: tolera links viejos con mayúsculas/espacios distintos al slug real
       const cleanSlug = String(params.slug || '').trim();
-      const [{ data: productData }, { data: offersRow }, { data: comingSoonRow }] = await Promise.all([
+      const [{ data: productData }, { data: offersRow }] = await Promise.all([
         supabase.from('products').select('*').ilike('slug', cleanSlug).maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
-        supabase.from('settings').select('value').eq('key', 'coming_soon').maybeSingle(),
       ]);
 
       setOffersEnabled(Boolean((offersRow?.value as { active?: boolean } | null)?.active));
-      const rawComingSoonIds = (comingSoonRow?.value as { ids?: string[] } | null)?.ids;
-      setComingSoonIds(Array.isArray(rawComingSoonIds) ? rawComingSoonIds : []);
 
       if (!productData) {
         setLoading(false);
@@ -105,7 +103,7 @@ export default function ProductDetailPage() {
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
   const priceInArs = activePrice * dolarOficial;
   const productClueInfo = getProductClueInfo(product.slug, product.category);
-  const isComingSoon = comingSoonIds.includes(product.id);
+  const isComingSoon = comingSoonFlag;
 
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden pb-24">

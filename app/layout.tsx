@@ -11,6 +11,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer';
 import { RouteTransitions } from '@/components/RouteTransitions';
 import { DolarRateProvider } from '@/components/DolarRateProvider';
 import { InstallmentsPromoProvider } from '@/components/InstallmentsPromoProvider';
+import { ComingSoonProvider } from '@/components/ComingSoonProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         
         <DolarRateProvider>
           <InstallmentsPromoProvider>
+            <ComingSoonProvider>
             <AnalyticsProvider>
               <Header />
               <Sidebar />
@@ -91,6 +93,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <RecentSaleToast />
               <WhatsAppFab />
             </AnalyticsProvider>
+            </ComingSoonProvider>
           </InstallmentsPromoProvider>
         </DolarRateProvider>
       </body>

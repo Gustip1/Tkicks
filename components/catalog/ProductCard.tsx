@@ -7,19 +7,18 @@ import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { useIsComingSoon } from '@/components/ComingSoonProvider';
 import { getCardPriceMultiplier } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 
 interface ProductCardProps {
   product: Product;
   size?: 'normal' | 'large';
-  /** Producto en camino al showroom (sección Próximos ingresos) */
-  comingSoon?: boolean;
 }
 
 type InfoPopover = 'usd' | 'installments' | null;
 
-export function ProductCard({ product, size = 'normal', comingSoon = false }: ProductCardProps) {
+export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [loaded, setLoaded]     = useState(false);
   const [imgError, setImgError] = useState(false);
   const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
@@ -40,6 +39,8 @@ export function ProductCard({ product, size = 'normal', comingSoon = false }: Pr
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
   const { rate: dolarOficial }  = useDolarRate();
   const { active: promoOn }     = useInstallmentsPromo();
+  // Marcado como próximo ingreso desde /admin/proximos
+  const comingSoon              = useIsComingSoon(product.id);
 
   const totalStock = useMemo(() => {
     // undefined = no se pidieron variantes en este query (no hay dato, no asumimos agotado).
