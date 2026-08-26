@@ -2,12 +2,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 
-const ComingSoonContext = createContext<Set<string>>(new Set());
+/** id del producto → texto de cuándo llega ('' si no se cargó fecha) */
+type ComingSoonMap = Map<string, string>;
 
-/** true si el producto está marcado como "próximo ingreso" desde /admin/proximos. */
-export function useIsComingSoon(productId: string | undefined) {
-  const ids = useContext(ComingSoonContext);
-  return productId ? ids.has(productId) : false;
+const ComingSoonContext = createContext<ComingSoonMap>(new Map());
+
+/**
+ * Estado de "próximo ingreso" de un producto: si está en camino y, si el admin
+ * la cargó, la fecha estimada de llegada ("2 semanas", "15/03", etc.).
+ */
+export function useComingSoon(productId: string | undefined) {
+  const map = useContext(ComingSoonContext);
+  if (!productId || !map.has(productId)) return { isComingSoon: false, eta: '' };
+  return { isComingSoon: true, eta: map.get(productId) || '' };
 }
 
 // Mismo criterio que InstallmentsPromoProvider: el layout raíz no se remonta
@@ -16,7 +23,7 @@ export function useIsComingSoon(productId: string | undefined) {
 const REFRESH_INTERVAL_MS = 60_000;
 
 export function ComingSoonProvider({ children }: { children: ReactNode }) {
-  const [ids, setIds] = useState<string[]>([]);
+  const [raw, setRaw] = useState<{ ids: string[]; eta: Record<string, string> }>({ ids: [], eta: {} });
 
   const fetchIds = useCallback(async () => {
     const supabase = createBrowserClient();
@@ -25,8 +32,11 @@ export function ComingSoonProvider({ children }: { children: ReactNode }) {
       .select('value')
       .eq('key', 'coming_soon')
       .maybeSingle();
-    const raw = (data?.value as { ids?: unknown } | null)?.ids;
-    setIds(Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : []);
+    const value = data?.value as { ids?: unknown; eta?: unknown } | null;
+    setRaw({
+      ids: Array.isArray(value?.ids) ? value!.ids.filter((x): x is string => typeof x === 'string') : [],
+      eta: value?.eta && typeof value.eta === 'object' ? (value.eta as Record<string, string>) : {},
+    });
   }, []);
 
   useEffect(() => {
@@ -42,7 +52,10 @@ export function ComingSoonProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchIds]);
 
-  const value = useMemo(() => new Set(ids), [ids]);
+  const value = useMemo(
+    () => new Map(raw.ids.map((id) => [id, typeof raw.eta[id] === 'string' ? raw.eta[id] : ''])),
+    [raw]
+  );
 
   return <ComingSoonContext.Provider value={value}>{children}</ComingSoonContext.Provider>;
 }

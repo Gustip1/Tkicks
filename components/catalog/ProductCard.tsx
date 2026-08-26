@@ -7,7 +7,7 @@ import { Product } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
-import { useIsComingSoon } from '@/components/ComingSoonProvider';
+import { useComingSoon } from '@/components/ComingSoonProvider';
 import { getCardPriceMultiplier } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 
@@ -39,8 +39,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
   const { rate: dolarOficial }  = useDolarRate();
   const { active: promoOn }     = useInstallmentsPromo();
-  // Marcado como próximo ingreso desde /admin/proximos
-  const comingSoon              = useIsComingSoon(product.id);
+  // Marcado como próximo ingreso desde /admin/proximos (con fecha estimada opcional)
+  const { isComingSoon: comingSoon, eta: comingSoonEta } = useComingSoon(product.id);
 
   const totalStock = useMemo(() => {
     // undefined = no se pidieron variantes en este query (no hay dato, no asumimos agotado).
@@ -139,7 +139,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {comingSoon && (
             <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
-              🚚 En camino
+              🚚 En camino{comingSoonEta && ` · ${comingSoonEta}`}
             </span>
           )}
           {hasSale && !isSoldOut && (

@@ -11,7 +11,7 @@ import { BuyBar } from './parts/BuyBar';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
-import { useIsComingSoon } from '@/components/ComingSoonProvider';
+import { useComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Star, Banknote, CreditCard } from 'lucide-react';
 import { getCardPriceMultiplier } from '@/lib/promo';
@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [offersEnabled, setOffersEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
-  const comingSoonFlag = useIsComingSoon(product?.id);
+  const { isComingSoon: comingSoonFlag, eta: comingSoonEta } = useComingSoon(product?.id);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -138,7 +138,7 @@ export default function ProductDetailPage() {
             )}
             {isComingSoon && (
               <span className="inline-flex items-center rounded-full bg-gray-900 text-white px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide">
-                🚚 Próximo ingreso
+                🚚 Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
               </span>
             )}
           </div>
@@ -274,11 +274,12 @@ export default function ProductDetailPage() {
               <span className="text-2xl" aria-hidden="true">🚚</span>
               <div>
                 <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
-                  En camino al showroom
+                  En camino al showroom{comingSoonEta && ` · Llega ${comingSoonEta}`}
                 </p>
                 <p className="text-xs md:text-sm text-gray-600 font-bold mt-0.5">
-                  Este producto todavía no llegó. Podés comprarlo ahora de forma anticipada y
-                  te avisamos apenas esté disponible para retiro o envío.
+                  Este producto todavía no llegó{comingSoonEta ? `, lo esperamos ${comingSoonEta}` : ''}.
+                  Podés comprarlo ahora de forma anticipada y te avisamos apenas esté disponible
+                  para retiro o envío.
                 </p>
               </div>
             </div>
