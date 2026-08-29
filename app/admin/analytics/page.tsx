@@ -1,70 +1,63 @@
 "use client";
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import {
-  Users, Clock, TrendingUp, Globe, Monitor, Smartphone, Tablet,
-  ArrowUpRight, ArrowDownRight, Eye, RefreshCw, ShoppingCart,
-  UserPlus, UserCheck, Zap, ChevronRight, Ticket
+  Users, Clock, TrendingUp, TrendingDown, Minus, Eye, RefreshCw, ShoppingCart,
+  MessageCircle, DollarSign, Smartphone, Monitor, Tablet, Info, ArrowRight,
 } from 'lucide-react';
-import { CuartitoLogo } from '@/components/promo/ElCuartitoEvent';
 
-interface AnalyticsData {
-  totalVisits: number;
-  todayVisits: number;
-  yesterdayVisits: number;
-  uniqueVisitors: number;
-  todayUniqueVisitors: number;
-  newVisitors: number;
-  returningVisitors: number;
-  avgDuration: number;
-  todayAvgDuration: number;
-  bounceRate: number;
-  todayBounceRate: number;
-  pagesPerVisit: number;
-  visitsByDevice: { device_type: string; count: number }[];
-  visitsByBrowser: { browser: string; count: number }[];
-  visitsByOS: { os: string; count: number }[];
-  visitsByReferrer: { referrer_domain: string; count: number }[];
-  visitsByPage: { page_path: string; count: number; avg_duration: number; bounce_rate: number }[];
-  topProducts: { slug: string; views: number; avg_duration: number }[];
-  topOrderedProducts: { title: string; slug: string; orders: number; units: number; revenue: number }[];
-  visitsByHour: { hour: number; count: number }[];
-  todayByHour: { hour: number; count: number }[];
-  visitsByDay: { day: number; day_name: string; count: number }[];
-  visitsTrend: { date: string; count: number; unique: number }[];
-  events: { event_name: string; count: number }[];
-  conversionFunnel: {
-    pageViews: number;
-    addToCart: number;
-    checkoutStarted: number;
-    ordersPaid: number;
-  };
-  todayEvents: { event_name: string; count: number }[];
-  liveVisitors: number;
-  cuartito: {
-    total: number;
-    today: number;
-    uniquePeople: number;
-    byDay: { date: string; count: number }[];
-  };
-  // Retention metrics
-  scrollDepthAvg: number;
-  scrollDepthBuckets: { label: string; count: number }[];
-  durationBuckets: { label: string; count: number; pct: number }[];
-  engagementRate: number;
-  retentionSteps: { label: string; count: number; pct: number }[];
-  // Revenue
-  monthRevenue: number;
-  totalRevenue: number;
-  pendingOrders: number;
-}
+/* ────────────────────────────────────────────────────────────────────────────
+   Panel de analíticas.
+
+   Criterios de precisión (por qué los números son los que son):
+
+   1. Una "visita" es una SESIÓN, no una fila. Cada cambio de página inserta
+      una fila nueva en analytics_visits para la misma sesión, así que contar
+      filas multiplicaba las visitas.
+
+   2. Duración, rebote y scroll SOLO se calculan sobre las sesiones que
+      alcanzaron a mandar el beacon de salida (exited_at). Las que no lo
+      mandaron (~14%) tienen duración 0 y is_bounce en su valor por defecto:
+      mezclarlas hundía la duración promedio e inflaba el rebote a más del
+      doble del real. Se muestra la cobertura para ser transparentes.
+
+   3. Se muestra MEDIANA además del promedio: unas pocas pestañas olvidadas
+      abiertas horas inflan el promedio y dan una idea equivocada.
+
+   4. El embudo se mide en SESIONES ÚNICAS en todos sus pasos, así cada paso
+      es un subconjunto del anterior y los porcentajes cierran. Antes mezclaba
+      sesiones con cantidad de eventos.
+
+   5. La conversión real del negocio incluye los CONTACTOS por WhatsApp,
+      ofertas y pedidos de link de cuotas: la mayoría de las ventas se cierra
+      por ahí, no en el checkout web. Medir solo el checkout hacía parecer que
+      la tienda no convertía.
+   ──────────────────────────────────────────────────────────────────────── */
 
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const RANGES = [
+  { key: '1d', label: 'Hoy', days: 1 },
+  { key: '7d', label: '7 días', days: 7 },
+  { key: '30d', label: '30 días', days: 30 },
+  { key: '90d', label: '90 días', days: 90 },
+  { key: '365d', label: '1 año', days: 365 },
+] as const;
+type RangeKey = (typeof RANGES)[number]['key'];
 
-// Clave de fecha en huso horario LOCAL (no UTC): toISOString() convierte a UTC
-// y desalinea el gráfico de tendencia con las tarjetas "Hoy/Ayer" (que sí usan
-// hora local) — visitas de la noche terminaban contadas en el día siguiente.
+/** Eventos que significan "esta persona quiso comprar / negociar" */
+const LEAD_EVENTS = ['whatsapp_click', 'offer_requested', 'installments_link_requested'];
+
+const EVENT_LABELS: Record<string, string> = {
+  whatsapp_click: 'Consultas por WhatsApp',
+  offer_requested: 'Ofertas enviadas',
+  installments_link_requested: 'Pidieron link de 3 cuotas',
+  add_to_cart: 'Agregados al carrito',
+  checkout_started: 'Checkouts iniciados',
+  purchase: 'Órdenes creadas',
+  product_card_click: 'Clicks en productos',
+  cuartito_ticket_click: 'Clicks entradas El Cuartito',
+};
+
 function toLocalDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -72,1300 +65,674 @@ function toLocalDateKey(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function median(values: number[]): number {
+  if (!values.length) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function formatDuration(seconds: number): string {
+  if (!seconds) return '0s';
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  if (mins < 60) return `${mins}m ${secs}s`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
+
+const fmtInt = (n: number) => new Intl.NumberFormat('es-AR').format(Math.round(n));
+const fmtUsd = (n: number) => `USD $${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n)}`;
+const pct = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
+const fmtPct = (n: number) => `${n.toFixed(n < 10 ? 1 : 0)}%`;
+
+/**
+ * Trae TODAS las filas: Supabase corta en 1000 por request, así que hay que
+ * paginar. Las páginas se piden EN PARALELO (en tandas) porque en serie, con
+ * 30-90 días de tráfico, el panel tardaba casi un minuto en cargar.
+ */
+async function fetchAll<T>(
+  count: number,
+  build: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+  hardLimit = 80000
+): Promise<T[]> {
+  const page = 1000;
+  const total = Math.min(count, hardLimit);
+  if (total <= 0) return [];
+
+  const ranges: [number, number][] = [];
+  for (let from = 0; from < total; from += page) ranges.push([from, from + page - 1]);
+
+  const out: T[] = [];
+  const CONCURRENCY = 8;
+  for (let i = 0; i < ranges.length; i += CONCURRENCY) {
+    const batch = await Promise.all(
+      ranges.slice(i, i + CONCURRENCY).map(([f, t]) => build(f, t))
+    );
+    batch.forEach(r => { if (r.data) out.push(...r.data); });
+  }
+  return out;
+}
+
+/** Cuenta filas sin traerlas, para saber cuántas páginas pedir. */
+async function countRows(q: PromiseLike<{ count: number | null }>): Promise<number> {
+  const { count } = await q;
+  return count ?? 0;
+}
+
+interface VisitRow {
+  session_id: string;
+  visitor_id: string | null;
+  page_path: string | null;
+  device_type: string | null;
+  referrer_domain: string | null;
+  duration_seconds: number | null;
+  is_bounce: boolean | null;
+  scroll_depth: number | null;
+  exited_at: string | null;
+  created_at: string;
+}
+interface EventRow {
+  session_id: string;
+  event_name: string;
+  event_data: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface Stats {
+  coverage: number;            // % de sesiones con datos de salida
+  sessions: number;
+  visitors: number;
+  recurring: number;           // visitantes con más de una sesión en el período
+  prevSessions: number;
+  prevVisitors: number;
+  live: number;
+
+  leadSessions: number;        // sesiones que contactaron (WhatsApp/oferta/cuotas)
+  prevLeadSessions: number;
+
+  funnel: { label: string; hint: string; count: number }[];
+  leadBreakdown: { name: string; label: string; count: number }[];
+
+  orders: number;
+  revenue: number;
+  avgTicket: number;
+  revenueAllTime: number;
+  ordersAllTime: number;
+
+  avgDuration: number;
+  medianDuration: number;
+  bounceRate: number;
+  avgScroll: number;
+  pagesPerSession: number;
+
+  bySource: { source: string; sessions: number; leads: number }[];
+  byDevice: { device: string; sessions: number }[];
+  byPage: { path: string; sessions: number }[];
+  topViewed: { slug: string; sessions: number }[];
+  topSold: { title: string; units: number; revenue: number }[];
+  byDay: { day: string; sessions: number }[];
+  byHour: { hour: number; sessions: number }[];
+  trend: { date: string; sessions: number; leads: number }[];
+  otherEvents: { label: string; count: number }[];
+}
+
 export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<'1d' | '7d' | '30d' | '90d'>('7d');
-  const supabase = createBrowserClient();
+  const [range, setRange] = useState<RangeKey>('30d');
 
-  const loadAnalytics = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    const supabase = createBrowserClient();
+    const days = RANGES.find(r => r.key === range)!.days;
 
-    const daysAgo = dateRange === '1d' ? 1 : dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysAgo);
-    startDate.setHours(0, 0, 0, 0);
-    const startDateStr = startDate.toISOString();
+    const now = new Date();
+    const start = new Date();
+    if (days === 1) start.setHours(0, 0, 0, 0);
+    else start.setDate(start.getDate() - days);
+    // Período anterior del mismo largo, para comparar
+    const prevStart = new Date(start);
+    prevStart.setDate(prevStart.getDate() - days);
+    const liveFrom = new Date(now.getTime() - 5 * 60 * 1000);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString();
-
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString();
-
-    const fiveMinAgo = new Date();
-    fiveMinAgo.setMinutes(fiveMinAgo.getMinutes() - 5);
-    const fiveMinAgoStr = fiveMinAgo.toISOString();
+    const startIso = start.toISOString();
+    const prevStartIso = prevStart.toISOString();
 
     try {
-      // .range() explícito: sin esto, Supabase corta en 1000 filas por default
-      // y con tráfico real en ventanas de 30/90 días los desgloses (rebote,
-      // dispositivos, duración, funnel) dejan de coincidir con el total.
-      const { data: visits } = await supabase
-        .from('analytics_visits')
-        .select('*')
-        .gte('created_at', startDateStr)
-        .range(0, 49999);
+      // Primero contamos (requests baratos, sin traer filas) para poder pedir
+      // todas las páginas en paralelo en vez de una atrás de otra.
+      const [nVisits, nPrevVisits, nEvents, nPrevEvents] = await Promise.all([
+        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true })
+          .gte('created_at', startIso)),
+        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true })
+          .gte('created_at', prevStartIso).lt('created_at', startIso)),
+        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true })
+          .gte('created_at', startIso)),
+        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true })
+          .gte('created_at', prevStartIso).lt('created_at', startIso)
+          .in('event_name', LEAD_EVENTS)),
+      ]);
 
-      const { data: todayVisitsList } = await supabase
-        .from('analytics_visits')
-        .select('*')
-        .gte('created_at', todayStr)
-        .range(0, 49999);
+      const [visits, prevVisits, events, prevEvents, liveRows, orders, items] = await Promise.all([
+        fetchAll<VisitRow>(nVisits, (f, t) => supabase.from('analytics_visits')
+          .select('session_id,visitor_id,page_path,device_type,referrer_domain,duration_seconds,is_bounce,scroll_depth,exited_at,created_at')
+          .gte('created_at', startIso).range(f, t)),
+        fetchAll<{ session_id: string; visitor_id: string | null }>(nPrevVisits, (f, t) => supabase.from('analytics_visits')
+          .select('session_id,visitor_id')
+          .gte('created_at', prevStartIso).lt('created_at', startIso).range(f, t)),
+        fetchAll<EventRow>(nEvents, (f, t) => supabase.from('analytics_events')
+          .select('session_id,event_name,event_data,created_at')
+          .gte('created_at', startIso).range(f, t)),
+        fetchAll<{ session_id: string; event_name: string }>(nPrevEvents, (f, t) => supabase.from('analytics_events')
+          .select('session_id,event_name')
+          .gte('created_at', prevStartIso).lt('created_at', startIso)
+          .in('event_name', LEAD_EVENTS).range(f, t)),
+        supabase.from('analytics_visits').select('session_id').gte('created_at', liveFrom.toISOString()).limit(2000),
+        supabase.from('orders').select('total,status,created_at').limit(5000),
+        supabase.from('order_items')
+          .select('title,price,quantity,orders!inner(created_at,status)')
+          .gte('orders.created_at', startIso)
+          .in('orders.status', ['paid', 'fulfilled']).limit(5000),
+      ]);
 
-      const { data: yesterdayVisitsList } = await supabase
-        .from('analytics_visits')
-        .select('session_id')
-        .gte('created_at', yesterdayStr)
-        .lt('created_at', todayStr)
-        .range(0, 49999);
-
-      const { data: liveVisitsList } = await supabase
-        .from('analytics_visits')
-        .select('session_id')
-        .gte('created_at', fiveMinAgoStr)
-        .range(0, 9999);
-
-      const visitsList = visits || [];
-
-      // "Visitas" = sesiones distintas, no filas: cada cambio de página dentro
-      // de la misma sesión inserta una fila nueva en analytics_visits, así que
-      // contar filas inflaba el número (5 páginas vistas = "5 visitas").
-      const totalVisits = new Set(visitsList.map(v => v.session_id)).size;
-      const todayVisits = new Set((todayVisitsList || []).map(v => v.session_id)).size;
-      const yesterdayVisits = new Set((yesterdayVisitsList || []).map(v => v.session_id)).size;
-      const liveVisitors = new Set((liveVisitsList || []).map(v => v.session_id)).size;
-
-      const allVisitorIds = visitsList.map(v => v.visitor_id);
-      const uniqueVisitors = new Set(allVisitorIds).size;
-
-      const todayVisitorIds = (todayVisitsList || []).map(v => v.visitor_id);
-      const todayUniqueVisitors = new Set(todayVisitorIds).size;
-
-      // Cada cambio de página agrega una fila nueva en analytics_visits para la
-      // misma sesión (duration_seconds/is_bounce/pages_viewed quedan iguales en
-      // todas esas filas una vez que el visitante sale). Para duración, rebote,
-      // páginas-por-visita y "nuevo vs. recurrente" hay que agregar por sesión,
-      // no por fila, o una sola sesión con muchas páginas vistas pesa de más.
-      const uniqueBySession = (rows: typeof visitsList) => {
-        const bySession = new Map<string, (typeof visitsList)[number]>();
-        rows.forEach((v) => {
-          const existing = bySession.get(v.session_id);
-          // Preferimos la fila que ya tiene exited_at (valores finales de la sesión)
-          if (!existing || (!existing.exited_at && v.exited_at)) {
-            bySession.set(v.session_id, v);
-          }
-        });
-        return Array.from(bySession.values());
-      };
-
-      const sessionRows = uniqueBySession(visitsList);
-
-      const visitorCounts: Record<string, number> = {};
-      sessionRows.forEach(v => {
-        const vid = v.visitor_id || 'unknown';
-        visitorCounts[vid] = (visitorCounts[vid] || 0) + 1;
+      // ── Sesiones: una fila por sesión, priorizando la que tiene exited_at ──
+      const bySession = new Map<string, VisitRow>();
+      visits.forEach(v => {
+        const prev = bySession.get(v.session_id);
+        if (!prev || (!prev.exited_at && v.exited_at)) bySession.set(v.session_id, v);
       });
-      const newVisitors = Object.values(visitorCounts).filter(c => c === 1).length;
-      const returningVisitors = Object.values(visitorCounts).filter(c => c > 1).length;
+      const S = [...bySession.values()];
+      const sessions = S.length;
+      const closed = S.filter(v => v.exited_at);          // solo estas tienen datos reales
+      const coverage = pct(closed.length, sessions);
 
-      const avgDuration = sessionRows.length > 0
-        ? sessionRows.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / sessionRows.length
-        : 0;
+      const visitorIds = new Set(S.map(v => v.visitor_id).filter(Boolean) as string[]);
+      const sessionsPerVisitor: Record<string, number> = {};
+      S.forEach(v => { if (v.visitor_id) sessionsPerVisitor[v.visitor_id] = (sessionsPerVisitor[v.visitor_id] || 0) + 1; });
+      const recurring = Object.values(sessionsPerVisitor).filter(c => c > 1).length;
 
-      const bounces = sessionRows.filter(v => v.is_bounce).length;
-      const bounceRate = sessionRows.length > 0 ? (bounces / sessionRows.length) * 100 : 0;
+      // ── Embudo, todo en sesiones únicas para que los pasos cierren ──
+      const sessionsWith = (pred: (e: EventRow) => boolean) =>
+        new Set(events.filter(pred).map(e => e.session_id));
+      const productSessions = new Set(
+        visits.filter(v => v.page_path?.startsWith('/producto/')).map(v => v.session_id)
+      );
+      const cartSessions = sessionsWith(e => e.event_name === 'add_to_cart');
+      const checkoutSessions = sessionsWith(e => e.event_name === 'checkout_started');
+      const leadSet = sessionsWith(e => LEAD_EVENTS.includes(e.event_name));
 
-      // Páginas por visita = total de page views / total de sesiones distintas
-      const pagesPerVisit = totalVisits > 0 ? visitsList.length / totalVisits : 0;
+      const paidOrders = orders.data?.filter((o: any) => o.status === 'paid' || o.status === 'fulfilled') ?? [];
+      const ordersInRange = paidOrders.filter((o: any) => new Date(o.created_at) >= start);
+      const revenue = ordersInRange.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
 
-      const todayList = todayVisitsList || [];
-      const todaySessionRows = uniqueBySession(todayList);
-      const todayAvgDuration = todaySessionRows.length > 0
-        ? todaySessionRows.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / todaySessionRows.length
-        : 0;
-      const todayBounces = todaySessionRows.filter(v => v.is_bounce).length;
-      const todayBounceRate = todaySessionRows.length > 0 ? (todayBounces / todaySessionRows.length) * 100 : 0;
+      // Cada paso se arma como "llegó AL MENOS hasta acá": el de intención
+      // incluye el checkout y el de producto incluye a los dos siguientes. Sin
+      // esto el embudo podía crecer de un paso al otro (el botón de WhatsApp
+      // está en toda la web, así que alguien puede escribir sin abrir una
+      // ficha) y los porcentajes daban más de 100%.
+      const intentSessions = new Set([...cartSessions, ...leadSet, ...checkoutSessions]);
+      const interestSessions = new Set([...productSessions, ...intentSessions]);
 
-      const deviceCounts: Record<string, number> = {};
-      visitsList.forEach(v => {
-        const device = v.device_type || 'unknown';
-        deviceCounts[device] = (deviceCounts[device] || 0) + 1;
-      });
-      const visitsByDevice = Object.entries(deviceCounts)
-        .map(([device_type, count]) => ({ device_type, count }))
-        .sort((a, b) => b.count - a.count);
+      const funnel = [
+        { label: 'Entraron a la web', hint: 'Personas distintas', count: sessions },
+        { label: 'Se engancharon con un producto', hint: 'Abrieron una ficha o preguntaron por uno', count: interestSessions.size },
+        { label: 'Quisieron comprar', hint: 'Carrito, WhatsApp, oferta o cuotas', count: intentSessions.size },
+        { label: 'Iniciaron el checkout', hint: 'Llegaron al formulario de compra', count: checkoutSessions.size },
+        { label: 'Compraron', hint: 'Pedidos confirmados en la web', count: ordersInRange.length },
+      ];
 
-      const browserCounts: Record<string, number> = {};
-      visitsList.forEach(v => {
-        const browser = v.browser || 'unknown';
-        browserCounts[browser] = (browserCounts[browser] || 0) + 1;
-      });
-      const visitsByBrowser = Object.entries(browserCounts)
-        .map(([browser, count]) => ({ browser, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      const osCounts: Record<string, number> = {};
-      visitsList.forEach(v => {
-        const os = v.os || 'unknown';
-        osCounts[os] = (osCounts[os] || 0) + 1;
-      });
-      const visitsByOS = Object.entries(osCounts)
-        .map(([os, count]) => ({ os, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      const referrerCounts: Record<string, number> = {};
-      visitsList.forEach(v => {
-        const ref = v.referrer_domain || 'Directo';
-        referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
-      });
-      const visitsByReferrer = Object.entries(referrerCounts)
-        .map(([referrer_domain, count]) => ({ referrer_domain, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      const pageCounts: Record<string, { count: number; totalDuration: number; bounces: number }> = {};
-      visitsList.forEach(v => {
-        const page = v.page_path || '/';
-        if (!pageCounts[page]) pageCounts[page] = { count: 0, totalDuration: 0, bounces: 0 };
-        pageCounts[page].count += 1;
-        pageCounts[page].totalDuration += v.duration_seconds || 0;
-        if (v.is_bounce) pageCounts[page].bounces += 1;
-      });
-      const visitsByPage = Object.entries(pageCounts)
-        .map(([page_path, d]) => ({
-          page_path,
-          count: d.count,
-          avg_duration: d.count > 0 ? d.totalDuration / d.count : 0,
-          bounce_rate: d.count > 0 ? (d.bounces / d.count) * 100 : 0
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      // Top productos vistos (de las rutas /producto/slug)
-      const topProducts = Object.entries(pageCounts)
-        .filter(([path]) => path.startsWith('/producto/'))
-        .map(([path, d]) => ({
-          slug: path.replace('/producto/', ''),
-          views: d.count,
-          avg_duration: d.count > 0 ? d.totalDuration / d.count : 0,
-        }))
-        .sort((a, b) => b.views - a.views)
-        .slice(0, 10);
-
-      // Top productos vendidos (order_items joined con orders para filtrar por fecha)
-      // Solo ventas confirmadas: toda orden se crea en estado "draft" y el
-      // admin recién la pasa a "paid" cuando confirma el cobro (con cualquier
-      // método, incluido efectivo — payment_status solo aplica a transferencia/
-      // cripto, no sirve como filtro universal). Antes se excluía únicamente
-      // "cancelled", contando pedidos en borrador que nunca se cobraron.
-      const { data: orderItemsData } = await supabase
-        .from('order_items')
-        .select('title, slug, price, quantity, orders!inner(created_at, status)')
-        .gte('orders.created_at', startDateStr)
-        .in('orders.status', ['paid', 'fulfilled']);
-
-      const orderedMap: Record<string, { title: string; slug: string; orders: number; units: number; revenue: number }> = {};
-      (orderItemsData || []).forEach((item: any) => {
-        const key = item.slug || item.title;
-        if (!orderedMap[key]) orderedMap[key] = { title: item.title, slug: item.slug || '', orders: 0, units: 0, revenue: 0 };
-        orderedMap[key].orders += 1;
-        orderedMap[key].units += Number(item.quantity) || 1;
-        orderedMap[key].revenue += Number(item.price || 0) * (Number(item.quantity) || 1);
-      });
-      const topOrderedProducts = Object.values(orderedMap)
-        .sort((a, b) => b.units - a.units)
-        .slice(0, 10);
-
-      // Revenue — solo ventas confirmadas (status 'paid' o 'fulfilled'), no "draft"
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('total, status, created_at')
-        .range(0, 49999);
-      const paidOrders = (allOrders || []).filter((o: any) => o.status === 'paid' || o.status === 'fulfilled');
-      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-      const monthRevenue = paidOrders
-        .filter((o: any) => new Date(o.created_at) >= monthStart)
-        .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
-      const totalRevenue = paidOrders
-        .reduce((s: number, o: any) => s + Number(o.total || 0), 0);
-      const pendingOrders = (allOrders || []).filter((o: any) => o.status === 'paid').length;
-      const ordersPaidInRange = paidOrders.filter((o: any) => new Date(o.created_at) >= startDate).length;
-
-      const hourCounts: Record<number, number> = {};
-      for (let i = 0; i < 24; i++) hourCounts[i] = 0;
-      visitsList.forEach(v => {
-        const hour = new Date(v.created_at).getHours();
-        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-      });
-      const visitsByHour = Object.entries(hourCounts)
-        .map(([hour, count]) => ({ hour: parseInt(hour), count }))
-        .sort((a, b) => a.hour - b.hour);
-
-      const todayHourCounts: Record<number, number> = {};
-      for (let i = 0; i < 24; i++) todayHourCounts[i] = 0;
-      todayList.forEach(v => {
-        const hour = new Date(v.created_at).getHours();
-        todayHourCounts[hour] = (todayHourCounts[hour] || 0) + 1;
-      });
-      const todayByHour = Object.entries(todayHourCounts)
-        .map(([hour, count]) => ({ hour: parseInt(hour), count }))
-        .sort((a, b) => a.hour - b.hour);
-
-      const dayCounts: Record<number, number> = {};
-      for (let i = 0; i < 7; i++) dayCounts[i] = 0;
-      visitsList.forEach(v => {
-        const day = new Date(v.created_at).getDay();
-        dayCounts[day] = (dayCounts[day] || 0) + 1;
-      });
-      const visitsByDay = Object.entries(dayCounts)
-        .map(([day, count]) => ({ day: parseInt(day), day_name: DAYS_ES[parseInt(day)], count }))
-        .sort((a, b) => a.day - b.day);
-
-      const dateCounts: Record<string, { total: number; visitors: Set<string> }> = {};
-      visitsList.forEach(v => {
-        const date = toLocalDateKey(new Date(v.created_at));
-        if (!dateCounts[date]) dateCounts[date] = { total: 0, visitors: new Set() };
-        dateCounts[date].total += 1;
-        if (v.visitor_id) dateCounts[date].visitors.add(v.visitor_id);
-      });
-      const visitsTrend = Object.entries(dateCounts)
-        .map(([date, d]) => ({ date, count: d.total, unique: d.visitors.size }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      const { data: eventsData } = await supabase
-        .from('analytics_events')
-        .select('event_name, created_at, session_id, event_data')
-        .gte('created_at', startDateStr)
-        .range(0, 49999);
+      const prevLeadSessions = new Set(prevEvents.map(e => e.session_id)).size;
 
       const eventCounts: Record<string, number> = {};
-      (eventsData || []).forEach(e => {
-        eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1;
-      });
-      // Los hitos engaged_* ya se muestran en la sección de retención
-      const events = Object.entries(eventCounts)
-        .filter(([name]) => !name.startsWith('engaged_'))
-        .map(([event_name, count]) => ({ event_name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
+      events.forEach(e => { eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1; });
+      const leadBreakdown = LEAD_EVENTS.map(name => ({
+        name, label: EVENT_LABELS[name] ?? name, count: eventCounts[name] || 0,
+      })).sort((a, b) => b.count - a.count);
 
-      // ── El Cuartito: clicks al link de entradas ──
-      const cuartitoEvents = (eventsData || []).filter(e => e.event_name === 'cuartito_ticket_click');
-      const cuartitoToday = cuartitoEvents.filter(e => new Date(e.created_at) >= today).length;
-      const cuartitoPeople = new Set(
-        cuartitoEvents.map((e: any) => e.event_data?.visitor_id || e.session_id)
-      ).size;
-      const cuartitoDayCounts: Record<string, number> = {};
-      cuartitoEvents.forEach(e => {
-        const date = toLocalDateKey(new Date(e.created_at));
-        cuartitoDayCounts[date] = (cuartitoDayCounts[date] || 0) + 1;
+      // ── Comportamiento (solo sesiones con datos de salida) ──
+      const durations = closed.map(v => v.duration_seconds || 0);
+      const avgDuration = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+      const bounceRate = pct(closed.filter(v => v.is_bounce).length, closed.length);
+      const scrolls = closed.map(v => v.scroll_depth ?? 0);
+      const avgScroll = scrolls.length ? scrolls.reduce((a, b) => a + b, 0) / scrolls.length : 0;
+      const pagesPerSession = sessions ? visits.length / sessions : 0;
+
+      // ── Cortes ──
+      const tally = <T,>(arr: T[], key: (x: T) => string) => {
+        const m: Record<string, number> = {};
+        arr.forEach(x => { const k = key(x); m[k] = (m[k] || 0) + 1; });
+        return m;
+      };
+      const sourceCounts = tally(S, v => v.referrer_domain || 'Directo / guardado');
+      const bySource = Object.entries(sourceCounts)
+        .map(([source, n]) => ({
+          source,
+          sessions: n,
+          leads: S.filter(v => (v.referrer_domain || 'Directo / guardado') === source && leadSet.has(v.session_id)).length,
+        }))
+        .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
+
+      const byDevice = Object.entries(tally(S, v => v.device_type || 'desconocido'))
+        .map(([device, sessions]) => ({ device, sessions })).sort((a, b) => b.sessions - a.sessions);
+
+      // páginas y productos: sesiones distintas por ruta (no filas)
+      const pathSessions: Record<string, Set<string>> = {};
+      visits.forEach(v => {
+        const p = v.page_path || '/';
+        (pathSessions[p] ||= new Set()).add(v.session_id);
       });
-      const cuartitoByDay = Object.entries(cuartitoDayCounts)
-        .map(([date, count]) => ({ date, count }))
+      const byPage = Object.entries(pathSessions)
+        .filter(([p]) => !p.startsWith('/producto/'))
+        .map(([path, s]) => ({ path, sessions: s.size }))
+        .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
+      const topViewed = Object.entries(pathSessions)
+        .filter(([p]) => p.startsWith('/producto/'))
+        .map(([p, s]) => ({ slug: p.replace('/producto/', ''), sessions: s.size }))
+        .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
+
+      const soldMap: Record<string, { title: string; units: number; revenue: number }> = {};
+      (items.data ?? []).forEach((it: any) => {
+        const k = it.title || '—';
+        soldMap[k] ||= { title: k, units: 0, revenue: 0 };
+        soldMap[k].units += Number(it.quantity) || 1;
+        soldMap[k].revenue += Number(it.price || 0) * (Number(it.quantity) || 1);
+      });
+      const topSold = Object.values(soldMap).sort((a, b) => b.units - a.units).slice(0, 8);
+
+      const dayCounts = tally(S, v => DAYS_ES[new Date(v.created_at).getDay()]);
+      const byDay = DAYS_ES.map(d => ({ day: d, sessions: dayCounts[d] || 0 }));
+      const hourCounts = tally(S, v => String(new Date(v.created_at).getHours()));
+      const byHour = Array.from({ length: 24 }, (_, h) => ({ hour: h, sessions: hourCounts[String(h)] || 0 }));
+
+      const trendMap: Record<string, { s: Set<string>; l: Set<string> }> = {};
+      S.forEach(v => {
+        const k = toLocalDateKey(new Date(v.created_at));
+        (trendMap[k] ||= { s: new Set(), l: new Set() }).s.add(v.session_id);
+        if (leadSet.has(v.session_id)) trendMap[k].l.add(v.session_id);
+      });
+      const trend = Object.entries(trendMap)
+        .map(([date, v]) => ({ date, sessions: v.s.size, leads: v.l.size }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
-      const { data: todayEventsData } = await supabase
-        .from('analytics_events')
-        .select('event_name')
-        .gte('created_at', todayStr);
+      const otherEvents = Object.entries(eventCounts)
+        .filter(([n]) => !n.startsWith('engaged_') && !LEAD_EVENTS.includes(n))
+        .map(([n, count]) => ({ label: EVENT_LABELS[n] ?? n, count }))
+        .sort((a, b) => b.count - a.count).slice(0, 8);
 
-      const todayEventCounts: Record<string, number> = {};
-      (todayEventsData || []).forEach(e => {
-        todayEventCounts[e.event_name] = (todayEventCounts[e.event_name] || 0) + 1;
+      setStats({
+        coverage, sessions, visitors: visitorIds.size, recurring,
+        prevSessions: new Set(prevVisits.map(v => v.session_id)).size,
+        prevVisitors: new Set(prevVisits.map(v => v.visitor_id).filter(Boolean)).size,
+        live: new Set((liveRows.data ?? []).map((v: any) => v.session_id)).size,
+        leadSessions: leadSet.size, prevLeadSessions,
+        funnel, leadBreakdown,
+        orders: ordersInRange.length, revenue,
+        avgTicket: ordersInRange.length ? revenue / ordersInRange.length : 0,
+        revenueAllTime: paidOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0),
+        ordersAllTime: paidOrders.length,
+        avgDuration, medianDuration: median(durations), bounceRate, avgScroll, pagesPerSession,
+        bySource, byDevice, byPage, topViewed, topSold, byDay, byHour, trend, otherEvents,
       });
-      const todayEvents = Object.entries(todayEventCounts)
-        .filter(([name]) => !name.startsWith('engaged_'))
-        .map(([event_name, count]) => ({ event_name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      const conversionFunnel = {
-        pageViews: totalVisits || 0,
-        addToCart: eventCounts['add_to_cart'] || 0,
-        checkoutStarted: eventCounts['checkout_started'] || eventCounts['checkout'] || 0,
-        // El evento 'purchase' se dispara al crear la orden (todavía en borrador,
-        // antes de que se confirme el pago) — usarlo acá inflaba la conversión.
-        // El paso final del funnel sale de pedidos realmente confirmados.
-        ordersPaid: ordersPaidInRange,
-      };
-
-      // ── Retention & Engagement metrics ──
-      const exitedVisits = uniqueBySession(visitsList).filter(v => v.exited_at);
-
-      // Scroll depth
-      const scrollValues = exitedVisits.map(v => v.scroll_depth ?? 0);
-      const scrollDepthAvg = scrollValues.length > 0
-        ? scrollValues.reduce((s, v) => s + v, 0) / scrollValues.length
-        : 0;
-
-      const scrollBucketDefs = [
-        { label: '0%', min: 0, max: 0 },
-        { label: '1–25%', min: 1, max: 25 },
-        { label: '26–50%', min: 26, max: 50 },
-        { label: '51–75%', min: 51, max: 75 },
-        { label: '76–100%', min: 76, max: 100 },
-      ];
-      const scrollDepthBuckets = scrollBucketDefs.map(b => ({
-        label: b.label,
-        count: scrollValues.filter(v => v >= b.min && v <= b.max).length,
-      }));
-
-      // Duration buckets
-      const durations = exitedVisits.map(v => v.duration_seconds ?? 0);
-      const total = durations.length || 1;
-      const durBucketDefs = [
-        { label: '< 5s', min: 0, max: 4 },
-        { label: '5–15s', min: 5, max: 15 },
-        { label: '15–30s', min: 16, max: 30 },
-        { label: '30s–1m', min: 31, max: 60 },
-        { label: '1–3m', min: 61, max: 180 },
-        { label: '> 3m', min: 181, max: Infinity },
-      ];
-      const durationBuckets = durBucketDefs.map(b => {
-        const count = durations.filter(d => d >= b.min && d <= b.max).length;
-        return { label: b.label, count, pct: (count / total) * 100 };
-      });
-
-      // Engagement rate = % who stayed > 5s
-      const engaged = durations.filter(d => d >= 5).length;
-      const engagementRate = total > 0 ? (engaged / total) * 100 : 0;
-
-      // Retention funnel
-      const retentionThresholds = [
-        { label: 'Entraron', sec: 0 },
-        { label: '> 5 seg', sec: 5 },
-        { label: '> 15 seg', sec: 15 },
-        { label: '> 30 seg', sec: 30 },
-        { label: '> 1 min', sec: 60 },
-      ];
-      const retentionSteps = retentionThresholds.map(t => {
-        const count = durations.filter(d => d >= t.sec).length;
-        return { label: t.label, count, pct: (count / total) * 100 };
-      });
-
-      setData({
-        totalVisits: totalVisits || 0,
-        todayVisits,
-        yesterdayVisits: yesterdayVisits || 0,
-        uniqueVisitors,
-        todayUniqueVisitors,
-        newVisitors,
-        returningVisitors,
-        avgDuration,
-        todayAvgDuration,
-        bounceRate,
-        todayBounceRate,
-        pagesPerVisit,
-        visitsByDevice,
-        visitsByBrowser,
-        visitsByOS,
-        visitsByReferrer,
-        visitsByPage,
-        topProducts,
-        topOrderedProducts,
-        visitsByHour,
-        todayByHour,
-        visitsByDay,
-        visitsTrend,
-        events,
-        conversionFunnel,
-        todayEvents,
-        liveVisitors: liveVisitors || 0,
-        cuartito: {
-          total: cuartitoEvents.length,
-          today: cuartitoToday,
-          uniquePeople: cuartitoPeople,
-          byDay: cuartitoByDay,
-        },
-        scrollDepthAvg,
-        scrollDepthBuckets,
-        durationBuckets,
-        engagementRate,
-        retentionSteps,
-        monthRevenue,
-        totalRevenue,
-        pendingOrders,
-      });
-    } catch (error) {
-      console.error('Error loading analytics:', error);
+    } catch (err) {
+      console.error('Error cargando analíticas:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [range]);
 
-  useEffect(() => {
-    loadAnalytics();
-    let interval: NodeJS.Timeout | null = null;
-    if (dateRange === '1d') {
-      interval = setInterval(loadAnalytics, 60000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange]);
+  useEffect(() => { load(); }, [load]);
 
-  const formatDuration = (seconds: number): string => {
-    if (seconds < 60) return `${Math.round(seconds)}s`;
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60);
-    if (mins < 60) return `${mins}m ${secs}s`;
-    const hours = Math.floor(mins / 60);
-    return `${hours}h ${mins % 60}m`;
-  };
-
-  const formatDate = (dateStr: string): string => {
-    const d = new Date(dateStr);
-    return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
-  };
-
-  const peakHour = useMemo(() => {
-    if (!data?.visitsByHour.length) return null;
-    return data.visitsByHour.reduce((max, h) => h.count > max.count ? h : max, data.visitsByHour[0]);
-  }, [data?.visitsByHour]);
-
-  const peakDay = useMemo(() => {
-    if (!data?.visitsByDay.length) return null;
-    return data.visitsByDay.reduce((max, d) => d.count > max.count ? d : max, data.visitsByDay[0]);
-  }, [data?.visitsByDay]);
-
-  const todayPeakHour = useMemo(() => {
-    if (!data?.todayByHour.length) return null;
-    return data.todayByHour.reduce((max, h) => h.count > max.count ? h : max, data.todayByHour[0]);
-  }, [data?.todayByHour]);
-
-  const todayChangePercent = useMemo(() => {
-    if (!data || data.yesterdayVisits === 0) return null;
-    return ((data.todayVisits - data.yesterdayVisits) / data.yesterdayVisits * 100);
-  }, [data]);
-
-  const maxHourCount = Math.max(...(data?.visitsByHour.map(h => h.count) || [1]), 1);
-  const maxTodayHourCount = Math.max(...(data?.todayByHour.map(h => h.count) || [1]), 1);
-  const maxTrendCount = Math.max(...(data?.visitsTrend.map(t => t.count) || [1]), 1);
-  const maxDayCount = Math.max(...(data?.visitsByDay.map(d => d.count) || [1]), 1);
-
-  const getDeviceIcon = (device: string) => {
-    if (device === 'mobile') return <Smartphone className="w-4 h-4" />;
-    if (device === 'tablet') return <Tablet className="w-4 h-4" />;
-    return <Monitor className="w-4 h-4" />;
-  };
-
-  const getDeviceLabel = (device: string) => {
-    if (device === 'mobile') return 'Celular';
-    if (device === 'tablet') return 'Tablet';
-    if (device === 'desktop') return 'Computadora';
-    return device;
-  };
-
-  const getPageLabel = (path: string) => {
-    const map: Record<string, string> = {
-      '/': 'Inicio',
-      '/productos': 'Productos',
-      '/ofertas': 'Ofertas',
-      '/encargos': 'Encargos',
-      '/nosotros': 'Nosotros',
-      '/checkout': 'Checkout',
-      '/sorteo': 'Sorteo',
-    };
-    if (map[path]) return map[path];
-    if (path.startsWith('/producto/')) return `Producto: ${path.replace('/producto/', '')}`;
-    return path;
-  };
-
-  const getReferrerIcon = (ref: string) => {
-    if (ref === 'Directo') return '🔗';
-    if (ref.includes('instagram')) return '📸';
-    if (ref.includes('google')) return '🔍';
-    if (ref.includes('facebook')) return '👥';
-    if (ref.includes('whatsapp')) return '💬';
-    if (ref.includes('tiktok')) return '🎵';
-    return '🌐';
-  };
-
-  const getEventLabel = (name: string) => {
-    const map: Record<string, string> = {
-      add_to_cart: '🛒 Agregaron al carrito',
-      checkout_started: '💳 Llegaron al checkout',
-      checkout: '💳 Llegaron al checkout',
-      order_paid: '✅ Compraron',
-      purchase: '✅ Compraron',
-      page_view: '👁 Vista',
-      cuartito_ticket_click: '🎟 Entradas El Cuartito',
-      whatsapp_click: '💬 Consultaron por WhatsApp',
-      product_card_click: '👟 Abrieron un producto',
-      brand_tile_click: '🏷 Entraron a una marca',
-    };
-    return map[name] || name.replace(/_/g, ' ');
-  };
-
-  if (loading && !data) {
+  /* ── UI helpers ── */
+  const Delta = ({ now, before }: { now: number; before: number }) => {
+    if (!before) return <span className="text-xs font-medium text-gray-400">sin datos previos</span>;
+    const diff = pct(now - before, before);
+    const Icon = diff > 1 ? TrendingUp : diff < -1 ? TrendingDown : Minus;
+    const color = diff > 1 ? 'text-green-600' : diff < -1 ? 'text-red-600' : 'text-gray-500';
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <RefreshCw className="w-8 h-8 animate-spin text-gray-300" />
-        <p className="text-sm text-gray-400">Cargando estadísticas...</p>
+      <span className={`inline-flex items-center gap-1 text-xs font-bold ${color}`}>
+        <Icon className="w-3.5 h-3.5" />
+        {diff > 0 ? '+' : ''}{diff.toFixed(0)}% vs período anterior
+      </span>
+    );
+  };
+
+  const Kpi = ({ icon: Icon, label, value, sub, delta, accent }: {
+    icon: any; label: string; value: string; sub?: string;
+    delta?: { now: number; before: number }; accent?: string;
+  }) => (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent ?? 'bg-gray-100 text-gray-700'}`}>
+          <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
+        </div>
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>
+      </div>
+      <p className="text-3xl font-black text-gray-900 leading-none">{value}</p>
+      {sub && <p className="mt-1.5 text-xs font-semibold text-gray-500">{sub}</p>}
+      {delta && <div className="mt-2">{<Delta now={delta.now} before={delta.before} />}</div>}
+    </div>
+  );
+
+  const Section = ({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) => (
+    <section className="bg-white rounded-xl border border-gray-200 p-5">
+      <h2 className="text-base font-black text-gray-900">{title}</h2>
+      {help && <p className="mt-1 mb-4 text-xs font-medium text-gray-500 leading-relaxed">{help}</p>}
+      {!help && <div className="mb-4" />}
+      {children}
+    </section>
+  );
+
+  const BarList = ({ rows, unit = '' }: { rows: { label: string; value: number; extra?: string }[]; unit?: string }) => {
+    const max = Math.max(1, ...rows.map(r => r.value));
+    if (!rows.length) return <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>;
+    return (
+      <div className="space-y-2.5">
+        {rows.map(r => (
+          <div key={r.label}>
+            <div className="flex items-baseline justify-between gap-3 mb-1">
+              <span className="text-sm font-bold text-gray-800 truncate">{r.label}</span>
+              <span className="text-sm font-black text-gray-900 shrink-0">
+                {fmtInt(r.value)}{unit}
+                {r.extra && <span className="ml-2 text-xs font-bold text-gray-400">{r.extra}</span>}
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div className="h-full rounded-full bg-gray-900" style={{ width: `${(r.value / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  if (loading && !stats) {
+    return (
+      <div className="text-center py-24">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-current border-r-transparent text-gray-400" />
+        <p className="mt-3 text-gray-500 font-bold">Calculando analíticas…</p>
       </div>
     );
   }
+  if (!stats) return <p className="text-gray-500">No se pudieron cargar las analíticas.</p>;
 
-  const activeHours = dateRange === '1d' ? data?.todayByHour : data?.visitsByHour;
-  const activePeakHour = dateRange === '1d' ? todayPeakHour : peakHour;
-  const maxActiveHour = dateRange === '1d' ? maxTodayHourCount : maxHourCount;
+  const s = stats;
+  const rangeLabel = RANGES.find(r => r.key === range)!.label.toLowerCase();
+  const maxTrend = Math.max(1, ...s.trend.map(t => t.sessions));
 
   return (
-    <div className="space-y-6 pb-8">
-
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="space-y-6 pb-10">
+      {/* ── Encabezado ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analíticas</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          <h1 className="text-2xl font-black text-gray-900">📊 Analíticas</h1>
+          <p className="text-sm text-gray-500 font-semibold mt-0.5">
+            {s.live > 0
+              ? <><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-pulse" />{s.live} {s.live === 1 ? 'persona' : 'personas'} navegando ahora</>
+              : 'Nadie navegando en los últimos 5 minutos'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {(data?.liveVisitors ?? 0) > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-xs font-semibold text-emerald-700">{data!.liveVisitors} en línea ahora</span>
-            </div>
-          )}
-          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-            {(['1d', '7d', '30d', '90d'] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setDateRange(r)}
-                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${dateRange === r ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-              >
-                {r === '1d' ? 'Hoy' : r === '7d' ? '7 días' : r === '30d' ? '30 días' : '90 días'}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {RANGES.map(r => (
+            <button
+              key={r.key}
+              onClick={() => setRange(r.key)}
+              className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wide transition-colors ${
+                range === r.key ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
           <button
-            onClick={loadAnalytics}
+            onClick={load}
             disabled={loading}
-            title="Actualizar"
-            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-gray-400 disabled:opacity-50"
+            aria-label="Actualizar"
           >
-            <RefreshCw className={`w-4 h-4 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* ── Resumen inteligente ── */}
-      {data && (
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 border border-blue-100 rounded-2xl p-5 space-y-2">
-          <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-blue-500" /> Resumen rápido
-          </h2>
-          <ul className="space-y-1.5 text-sm text-gray-600">
-            {(() => {
-              const insights: string[] = [];
-              const br = dateRange === '1d' ? (data.todayBounceRate ?? 0) : (data.bounceRate ?? 0);
-              const dur = dateRange === '1d' ? (data.todayAvgDuration ?? 0) : (data.avgDuration ?? 0);
-              const visits = dateRange === '1d' ? data.todayVisits : data.totalVisits;
-              const topDevice = data.visitsByDevice[0];
-              const topRef = data.visitsByReferrer[0];
-
-              if (visits === 0) {
-                insights.push('Todavía no hay visitas en este período.');
-              } else {
-                if (br >= 70) insights.push(`El ${br.toFixed(0)}% de la gente se va sin explorar. Esto indica que el primer impacto no está enganchando lo suficiente.`);
-                else if (br >= 50) insights.push(`El ${br.toFixed(0)}% se va rápido. Hay que mejorar lo primero que ven al entrar.`);
-                else insights.push(`Solo el ${br.toFixed(0)}% se va sin explorar. La mayoría se queda y navega.`);
-
-                if (dur < 5) insights.push(`La gente se queda en promedio ${Math.round(dur)} segundos. Es muy poco: no llegan a ver los productos.`);
-                else if (dur < 30) insights.push(`Promedio de ${Math.round(dur)} segundos por visita. Hay interés pero se pierde rápido.`);
-                else insights.push(`Promedio de ${formatDuration(dur)} por visita. Buen nivel de exploración.`);
-
-                if (topDevice) {
-                  const pct = ((topDevice.count / (data.totalVisits || 1)) * 100).toFixed(0);
-                  const label = topDevice.device_type === 'mobile' ? 'celular' : topDevice.device_type === 'desktop' ? 'computadora' : 'tablet';
-                  insights.push(`El ${pct}% entra desde ${label}. ${topDevice.device_type === 'mobile' ? 'La experiencia mobile es clave.' : ''}`);
-                }
-
-                if (topRef) {
-                  insights.push(`La principal fuente de tráfico es ${topRef.referrer_domain === 'Directo' ? 'tráfico directo (ponen la URL o te tienen guardado)' : topRef.referrer_domain}.`);
-                }
-
-                if (data.cuartito.total > 0) {
-                  insights.push(`El banner de El Cuartito lleva ${data.cuartito.total} click${data.cuartito.total === 1 ? '' : 's'} al link de entradas (${data.cuartito.uniquePeople} persona${data.cuartito.uniquePeople === 1 ? '' : 's'} distinta${data.cuartito.uniquePeople === 1 ? '' : 's'}).`);
-                }
-
-                if (todayChangePercent !== null && dateRange === '1d') {
-                  if (todayChangePercent > 20) insights.push(`Hoy está ${todayChangePercent.toFixed(0)}% por encima de ayer. Buen día.`);
-                  else if (todayChangePercent < -20) insights.push(`Hoy hay ${Math.abs(todayChangePercent).toFixed(0)}% menos visitas que ayer.`);
-                }
-              }
-
-              return insights.map((ins, i) => <li key={i} className="flex items-start gap-2"><span className="text-blue-400 mt-0.5 shrink-0">&#8226;</span>{ins}</li>);
-            })()}
-          </ul>
-        </div>
-      )}
-
-      {/* ── KPIs principales ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <KpiCard
-          label="Visitas totales"
-          value={(dateRange === '1d' ? data?.todayVisits : data?.totalVisits) ?? 0}
-          sub={dateRange === '1d' && todayChangePercent !== null
-            ? { pct: todayChangePercent, text: 'vs ayer' }
-            : dateRange !== '1d' ? { text: `Hoy: ${data?.todayVisits ?? 0}` } : undefined}
-          icon={<Eye className="w-5 h-5" />}
-          accent="blue"
-        />
-        <KpiCard
-          label="Personas únicas"
-          value={(dateRange === '1d' ? data?.todayUniqueVisitors : data?.uniqueVisitors) ?? 0}
-          sub={{ text: `${data?.newVisitors ?? 0} nuevas · ${data?.returningVisitors ?? 0} repiten` }}
-          icon={<Users className="w-5 h-5" />}
-          accent="violet"
-        />
-        <KpiCard
-          label="Tiempo promedio"
-          value={formatDuration(dateRange === '1d' ? (data?.todayAvgDuration ?? 0) : (data?.avgDuration ?? 0))}
-          sub={{ text: `${(data?.pagesPerVisit ?? 0).toFixed(1)} páginas por visita` }}
-          icon={<Clock className="w-5 h-5" />}
-          accent="amber"
-          isText
-        />
-        <KpiCard
-          label="Se van rápido"
-          value={`${(dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)).toFixed(0)}%`}
-          sub={{ text: (dateRange === '1d' ? (data?.todayBounceRate ?? 0) : (data?.bounceRate ?? 0)) >= 60 ? 'Hay que mejorar el enganche' : 'Buen enganche' }}
-          icon={<Zap className="w-5 h-5" />}
-          accent="rose"
-          isText
-        />
-        <KpiCard
-          label="Ingresos del mes"
-          value={`$${(data?.monthRevenue ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
-          sub={{ text: `Total: $${(data?.totalRevenue ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 })}` }}
-          icon={<ShoppingCart className="w-5 h-5" />}
-          accent="emerald"
-          isText
-        />
-        <KpiCard
-          label="Pedidos pendientes"
-          value={data?.pendingOrders ?? 0}
-          sub={{ text: 'pagados sin enviar' }}
-          icon={<TrendingUp className="w-5 h-5" />}
-          accent="orange"
-        />
+      {/* ── Resumen ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Kpi icon={Users} label="Visitas" value={fmtInt(s.sessions)}
+             sub={`${fmtInt(s.visitors)} personas distintas`}
+             delta={{ now: s.sessions, before: s.prevSessions }} />
+        <Kpi icon={MessageCircle} label="Te contactaron" value={fmtInt(s.leadSessions)}
+             sub={`${fmtPct(pct(s.leadSessions, s.sessions))} de las visitas · WhatsApp, ofertas y cuotas`}
+             delta={{ now: s.leadSessions, before: s.prevLeadSessions }}
+             accent="bg-green-100 text-green-700" />
+        <Kpi icon={ShoppingCart} label="Ventas confirmadas" value={fmtInt(s.orders)}
+             sub={s.orders ? `Ticket promedio ${fmtUsd(s.avgTicket)}` : 'Sin ventas web en el período'}
+             accent="bg-blue-100 text-blue-700" />
+        <Kpi icon={DollarSign} label="Facturación" value={fmtUsd(s.revenue)}
+             sub={`Histórico: ${fmtUsd(s.revenueAllTime)} en ${s.ordersAllTime} ventas`}
+             accent="bg-amber-100 text-amber-700" />
       </div>
 
-      {/* ── El Cuartito × Día del Amigo (solo si hubo clicks en el período) ── */}
-      {data && data.cuartito.total > 0 && (
-        <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/10">
-          <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-orange-600/10 blur-3xl pointer-events-none" />
-
-          <div className="relative p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-
-              {/* Identidad del evento */}
-              <div className="flex items-center gap-4 lg:w-64 shrink-0">
-                <CuartitoLogo className="h-14 w-auto text-white drop-shadow-[0_0_18px_rgba(249,115,22,0.4)]" />
-                <div>
-                  <h2 className="font-bold text-white text-lg leading-tight">El Cuartito</h2>
-                  <p className="text-[11px] text-orange-400 font-bold uppercase tracking-[0.2em]">Día del Amigo</p>
-                  <p className="text-[11px] text-white/40 mt-1.5 leading-snug flex items-center gap-1">
-                    <Ticket className="w-3 h-3 shrink-0" /> Clicks al link de entradas
+      {/* ── Embudo ── */}
+      <Section
+        title="¿En qué parte se cae la gente?"
+        help="Cada escalón cuenta personas distintas, así que siempre es un subconjunto del anterior. Debajo de cada uno ves qué porcentaje del escalón anterior siguió adelante."
+      >
+        <div className="space-y-3">
+          {s.funnel.map((step, i) => {
+            const prev = i === 0 ? step.count : s.funnel[i - 1].count;
+            const share = pct(step.count, s.funnel[0].count);
+            const conv = i === 0 ? 100 : pct(step.count, prev);
+            const lost = prev - step.count;
+            return (
+              <div key={step.label}>
+                <div className="flex items-baseline justify-between gap-3 mb-1">
+                  <div className="min-w-0">
+                    <span className="text-sm font-black text-gray-900">{step.label}</span>
+                    <span className="ml-2 text-xs font-semibold text-gray-400">{step.hint}</span>
+                  </div>
+                  <span className="text-sm font-black text-gray-900 shrink-0">{fmtInt(step.count)}</span>
+                </div>
+                <div className="h-7 rounded-lg bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-lg flex items-center px-2 ${i === s.funnel.length - 1 ? 'bg-green-600' : 'bg-gray-900'}`}
+                    style={{ width: `${Math.max(share, 2)}%` }}
+                  >
+                    <span className="text-[10px] font-black text-white whitespace-nowrap">{fmtPct(share)}</span>
+                  </div>
+                </div>
+                {i > 0 && (
+                  <p className="mt-1 text-xs font-semibold text-gray-500">
+                    Siguió el {fmtPct(conv)} del paso anterior
+                    {lost > 0 && <span className="text-red-600"> · se fueron {fmtInt(lost)}</span>}
                   </p>
-                </div>
-              </div>
-
-              {/* Stat tiles */}
-              <div className="grid grid-cols-3 gap-3 flex-1">
-                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
-                  <p className="text-3xl font-bold text-orange-400 tabular-nums">{data.cuartito.total.toLocaleString()}</p>
-                  <p className="text-xs text-white/50 mt-1">Clicks en el período</p>
-                  {data.totalVisits > 0 && data.cuartito.total > 0 && (
-                    <p className="text-[10px] text-white/30 mt-0.5">
-                      {((data.cuartito.total / data.totalVisits) * 100).toFixed(1)}% de las visitas
-                    </p>
-                  )}
-                </div>
-                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
-                  <p className="text-3xl font-bold text-white tabular-nums">{data.cuartito.today.toLocaleString()}</p>
-                  <p className="text-xs text-white/50 mt-1">Hoy</p>
-                </div>
-                <div className="bg-white/[0.06] border border-white/10 rounded-xl p-4">
-                  <p className="text-3xl font-bold text-white tabular-nums">{data.cuartito.uniquePeople.toLocaleString()}</p>
-                  <p className="text-xs text-white/50 mt-1">Personas distintas</p>
-                </div>
-              </div>
-
-              {/* Tendencia por día */}
-              <div className="lg:w-64 shrink-0">
-                {data.cuartito.byDay.length === 0 ? (
-                  <p className="text-xs text-white/40 leading-relaxed lg:text-right">
-                    Todavía sin clicks registrados.<br />
-                    Cada click en el banner de la home suma acá al instante.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-end gap-[3px] h-16">
-                      {data.cuartito.byDay.map((d) => {
-                        const maxCuartito = Math.max(...data.cuartito.byDay.map(x => x.count), 1);
-                        return (
-                          <div key={d.date} className="flex-1 flex flex-col items-center group relative">
-                            <div className="hidden group-hover:flex absolute -top-9 left-1/2 -translate-x-1/2 bg-white text-gray-900 text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center shadow-lg">
-                              {formatDate(d.date)}
-                              <span className="font-bold">{d.count} click{d.count === 1 ? '' : 's'}</span>
-                            </div>
-                            <div
-                              className="w-full bg-orange-500 group-hover:bg-orange-400 rounded-t transition-colors"
-                              style={{ height: `${Math.max((d.count / maxCuartito) * 100, 8)}%` }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="text-[10px] text-white/30 mt-1.5 text-center">Clicks por día</p>
-                  </>
                 )}
               </div>
-
-            </div>
-          </div>
+            );
+          })}
         </div>
-      )}
-
-      {/* ── Gráfico de actividad ── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="font-semibold text-gray-900">
-              {dateRange === '1d' ? 'Actividad de hoy por hora' : 'Visitas por día'}
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {dateRange === '1d'
-                ? `Hora pico: ${activePeakHour ? `${activePeakHour.hour.toString().padStart(2, '0')}:00 (${activePeakHour.count} visitas)` : 'sin datos'}`
-                : `Día más activo: ${peakDay?.day_name ?? 'sin datos'}`
-              }
-            </p>
-          </div>
-          {dateRange === '1d' && (
-            <span className="text-xs text-gray-400">
-              Ahora: {new Date().getHours().toString().padStart(2, '0')}:{new Date().getMinutes().toString().padStart(2, '0')}
-            </span>
-          )}
-        </div>
-
-        {dateRange === '1d' ? (
-          /* Hourly bars */
-          <div className="flex items-end gap-[3px] h-36">
-            {activeHours?.map((h) => {
-              const currentHour = new Date().getHours();
-              const isCurrent = (h as {hour:number}).hour === currentHour;
-              const isFuture = (h as {hour:number}).hour > currentHour;
-              const pct = maxActiveHour > 0 ? ((h as {count:number}).count / maxActiveHour) * 100 : 0;
-              return (
-                <div key={(h as {hour:number}).hour} className="flex-1 flex flex-col items-center group relative">
-                  <div className="hidden group-hover:flex absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center">
-                    {(h as {hour:number}).hour.toString().padStart(2, '0')}:00
-                    <span className="font-bold">{(h as {count:number}).count} visitas</span>
-                  </div>
-                  <div
-                    className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : isFuture ? 'bg-gray-100' : 'bg-blue-500 hover:bg-blue-600'}`}
-                    style={{ height: `${Math.max(pct, isFuture ? 0 : (h as {count:number}).count > 0 ? 3 : 0)}%`, minHeight: (h as {count:number}).count > 0 ? '4px' : undefined }}
-                  />
-                  {(h as {hour:number}).hour % 4 === 0 && (
-                    <span className={`text-[10px] mt-1 ${isCurrent ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>
-                      {(h as {hour:number}).hour.toString().padStart(2, '0')}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Daily trend bars */
-          <div className="flex items-end gap-[3px] h-36">
-            {data?.visitsTrend.map((t, i) => {
-              const pct = maxTrendCount > 0 ? (t.count / maxTrendCount) * 100 : 0;
-              const show = data.visitsTrend.length <= 14 || i % Math.ceil(data.visitsTrend.length / 10) === 0;
-              return (
-                <div key={t.date} className="flex-1 flex flex-col items-center group relative">
-                  <div className="hidden group-hover:flex absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 flex-col items-center">
-                    {formatDate(t.date)}
-                    <span className="font-bold">{t.count} visitas</span>
-                  </div>
-                  <div
-                    className="w-full bg-blue-500 hover:bg-blue-600 rounded-t-md transition-all"
-                    style={{ height: `${Math.max(pct, t.count > 0 ? 3 : 0)}%` }}
-                  />
-                  {show && <span className="text-[9px] text-gray-400 mt-1">{formatDate(t.date)}</span>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {dateRange === '1d' && (
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-blue-500 inline-block" />Pasadas</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" />Hora actual</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-100 inline-block" />Por venir</span>
-          </div>
-        )}
-      </div>
-
-      {/* ── Embudo de conversión ── */}
-      {(data?.conversionFunnel.addToCart ?? 0) > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">¿Cuántos llegan a comprar?</h2>
-          <p className="text-xs text-gray-400 mb-5">De cada 100 visitantes, así avanza el proceso</p>
-          <div className="flex items-end gap-3">
-            {[
-              { label: 'Visitaron la web', value: data?.conversionFunnel.pageViews ?? 0, color: 'bg-blue-500', emoji: '👁' },
-              { label: 'Agregaron al carrito', value: data?.conversionFunnel.addToCart ?? 0, color: 'bg-amber-500', emoji: '🛒' },
-              { label: 'Fueron al checkout', value: data?.conversionFunnel.checkoutStarted ?? 0, color: 'bg-purple-500', emoji: '💳' },
-              { label: 'Completaron la compra', value: data?.conversionFunnel.ordersPaid ?? 0, color: 'bg-emerald-500', emoji: '✅' },
-            ].map((step, i, arr) => {
-              const base = arr[0].value || 1;
-              const pct = ((step.value / base) * 100).toFixed(1);
-              const dropPct = i > 0 ? ((step.value / (arr[i-1].value || 1)) * 100).toFixed(0) : null;
-              return (
-                <div key={step.label} className="flex-1 flex flex-col items-center gap-2">
-                  {i > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                      <ChevronRight className="w-3 h-3" />
-                      <span>{dropPct}% continúa</span>
-                    </div>
-                  )}
-                  <div className="w-full flex flex-col items-center">
-                    <div
-                      className={`w-full ${step.color} rounded-xl transition-all`}
-                      style={{ height: `${Math.max((step.value / base) * 120, step.value > 0 ? 8 : 0)}px` }}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-gray-900">{step.value.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500 mt-0.5 leading-tight">{step.emoji} {step.label}</div>
-                    {i > 0 && <div className="text-xs text-gray-400 mt-0.5">{pct}% del total</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Productos más vistos + más vendidos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Productos más vistos */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Productos más vistos</h2>
-          <p className="text-xs text-gray-400 mb-4">Páginas de producto con más tráfico en el período</p>
-          <div className="space-y-3">
-            {(data?.topProducts.length ?? 0) === 0 ? (
-              <p className="text-sm text-gray-400">Sin datos todavía</p>
-            ) : (
-              data!.topProducts.map((p, i) => (
-                <div key={p.slug}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
-                      <a
-                        href={`/producto/${p.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:underline truncate"
-                      >
-                        {p.slug}
-                      </a>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <span className="text-[10px] text-gray-400">{formatDuration(p.avg_duration)}</span>
-                      <span className="text-sm font-bold text-gray-900">{p.views} vistas</span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-violet-500 rounded-full transition-all"
-                      style={{ width: `${(p.views / (data!.topProducts[0]?.views || 1)) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Productos más vendidos */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Productos más vendidos</h2>
-          <p className="text-xs text-gray-400 mb-4">Por unidades en órdenes del período</p>
-          <div className="space-y-3">
-            {(data?.topOrderedProducts.length ?? 0) === 0 ? (
-              <p className="text-sm text-gray-400">Sin órdenes en este período todavía</p>
-            ) : (
-              data!.topOrderedProducts.map((p, i) => (
-                <div key={p.slug || p.title}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
-                      <span className="text-sm font-medium text-gray-800 truncate">{p.title}</span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-2">
-                      <span className="text-[10px] text-gray-400">{p.units} u.</span>
-                      <span className="text-sm font-bold text-emerald-700">${p.revenue.toFixed(0)}</span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full transition-all"
-                      style={{ width: `${(p.units / (data!.topOrderedProducts[0]?.units || 1)) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Páginas más visitadas + Fuentes ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Páginas (no-producto) más vistas */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Secciones más visitadas</h2>
-          <p className="text-xs text-gray-400 mb-4">Páginas del sitio (excluye fichas de producto)</p>
-          <div className="space-y-3">
-            {(data?.visitsByPage.filter(p => !p.page_path.startsWith('/producto/')).length ?? 0) === 0 && (
-              <p className="text-sm text-gray-400">Sin datos todavía</p>
-            )}
-            {data?.visitsByPage.filter(p => !p.page_path.startsWith('/producto/')).map((page, i) => (
-              <div key={page.page_path}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-bold text-gray-400 w-4 shrink-0">{i + 1}</span>
-                    <span className="text-sm font-medium text-gray-800 truncate">{getPageLabel(page.page_path)}</span>
-                    <span className="text-[10px] text-gray-400 shrink-0">{formatDuration(page.avg_duration)}</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 shrink-0 ml-2">{page.count}</span>
-                </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 rounded-full transition-all"
-                    style={{ width: `${(page.count / (data.visitsByPage[0]?.count || 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Origen de visitas */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">¿De dónde vienen?</h2>
-          <p className="text-xs text-gray-400 mb-4">Fuentes que traen tráfico a la tienda</p>
-          <div className="space-y-3">
-            {(data?.visitsByReferrer.length ?? 0) === 0 && (
-              <p className="text-sm text-gray-400">Sin datos todavía</p>
-            )}
-            {data?.visitsByReferrer.map((ref, i) => (
-              <div key={ref.referrer_domain}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base shrink-0">{getReferrerIcon(ref.referrer_domain)}</span>
-                    <span className="text-sm font-medium text-gray-800 truncate">{ref.referrer_domain}</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 shrink-0 ml-2">{ref.count}</span>
-                </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{ width: `${(ref.count / (data.visitsByReferrer[0]?.count || 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Dispositivos + Días de la semana ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Dispositivos */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">¿Con qué dispositivo entran?</h2>
-          <p className="text-xs text-gray-400 mb-5">Importante para saber si el diseño mobile es clave</p>
-          <div className="space-y-4">
-            {data?.visitsByDevice.map((d) => {
-              const pct = ((d.count / (data.totalVisits || 1)) * 100);
-              return (
-                <div key={d.device_type}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500">{getDeviceIcon(d.device_type)}</span>
-                      <span className="text-sm font-medium text-gray-800">{getDeviceLabel(d.device_type)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{d.count} visitas</span>
-                      <span className="text-sm font-bold text-gray-900">{pct.toFixed(0)}%</span>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Días de la semana */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">¿Qué día vienen más?</h2>
-          <p className="text-xs text-gray-400 mb-5">
-            {peakDay ? `El día más activo es el ${peakDay.day_name}` : 'Acumulado del período seleccionado'}
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
+          <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-900 font-semibold leading-relaxed">
+            &quot;Quisieron comprar&quot; incluye a los que te escribieron por WhatsApp, tiraron una oferta o
+            pidieron el link de 3 cuotas. La mayoría de tus ventas se cierra por ahí y no en el checkout
+            web, así que mirar solo &quot;Compraron&quot; te haría creer que la web convierte mucho peor de lo que convierte.
           </p>
-          <div className="flex items-end gap-2 h-28">
-            {data?.visitsByDay.map((d) => {
-              const pct = maxDayCount > 0 ? (d.count / maxDayCount) * 100 : 0;
-              const isPeak = d.count === maxDayCount && d.count > 0;
+        </div>
+      </Section>
+
+      {/* ── Contactos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="¿Cómo te contactaron?" help={`Cantidad de acciones en los últimos ${rangeLabel}.`}>
+          <BarList rows={s.leadBreakdown.map(l => ({ label: l.label, value: l.count }))} />
+        </Section>
+        <Section title="¿De dónde viene la gente y cuál te trae compradores?"
+                 help="Ordenado por visitas. La tasa es qué porcentaje de esa fuente terminó contactándote: te dice dónde conviene invertir.">
+          {s.bySource.length === 0 ? (
+            <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>
+          ) : (
+            <div className="overflow-x-auto -mx-2">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                    <th className="text-left font-black px-2 py-2">Origen</th>
+                    <th className="text-right font-black px-2 py-2">Visitas</th>
+                    <th className="text-right font-black px-2 py-2">Contactos</th>
+                    <th className="text-right font-black px-2 py-2">Tasa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.bySource.map(r => (
+                    <tr key={r.source} className="border-b border-gray-100 last:border-0">
+                      <td className="px-2 py-2 font-bold text-gray-800 truncate max-w-[180px]">{r.source}</td>
+                      <td className="px-2 py-2 text-right font-black text-gray-900">{fmtInt(r.sessions)}</td>
+                      <td className="px-2 py-2 text-right font-bold text-gray-700">{fmtInt(r.leads)}</td>
+                      <td className={`px-2 py-2 text-right font-black ${r.leads ? 'text-green-600' : 'text-gray-300'}`}>
+                        {fmtPct(pct(r.leads, r.sessions))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Section>
+      </div>
+
+      {/* ── Tendencia ── */}
+      <Section title="Cómo vino el tráfico día a día"
+               help="Barra gris: visitas. Punto verde: cuántas de esas visitas terminaron contactándote.">
+        {s.trend.length === 0 ? (
+          <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>
+        ) : (
+          <div className="flex items-end gap-1 h-40 overflow-x-auto pb-1">
+            {s.trend.map(t => (
+              <div key={t.date} className="flex-1 min-w-[10px] flex flex-col items-center justify-end h-full group relative">
+                <div className="w-full rounded-t bg-gray-900 transition-all group-hover:bg-gray-700"
+                     style={{ height: `${(t.sessions / maxTrend) * 100}%` }} />
+                {t.leads > 0 && <div className="absolute -top-1 w-1.5 h-1.5 rounded-full bg-green-500"
+                                     style={{ bottom: `calc(${(t.sessions / maxTrend) * 100}% + 2px)` }} />}
+                <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 whitespace-nowrap rounded bg-gray-900 text-white text-[10px] font-bold px-2 py-1">
+                  {t.date}: {t.sessions} visitas · {t.leads} contactos
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* ── Productos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="Productos más mirados" help="Personas distintas que abrieron la ficha del producto.">
+          <BarList rows={s.topViewed.map(p => ({ label: p.slug, value: p.sessions }))} />
+        </Section>
+        <Section title="Productos más vendidos" help="Solo pedidos confirmados (pagados o entregados).">
+          {s.topSold.length === 0
+            ? <p className="text-sm text-gray-400 font-medium">Sin ventas registradas en la web en este período.</p>
+            : <BarList rows={s.topSold.map(p => ({ label: p.title, value: p.units, extra: fmtUsd(p.revenue) }))} unit=" u." />}
+        </Section>
+      </div>
+
+      {/* ── Secciones y dispositivos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="Secciones más visitadas" help="Personas distintas que entraron a cada sección.">
+          <BarList rows={s.byPage.map(p => ({ label: p.path, value: p.sessions }))} />
+        </Section>
+        <Section title="Con qué entran" help="Porcentaje de visitas por tipo de dispositivo.">
+          <div className="grid grid-cols-3 gap-3">
+            {s.byDevice.slice(0, 3).map(d => {
+              const Icon = d.device === 'mobile' ? Smartphone : d.device === 'tablet' ? Tablet : Monitor;
+              const nombre = d.device === 'mobile' ? 'Celular' : d.device === 'tablet' ? 'Tablet' : d.device === 'desktop' ? 'Compu' : d.device;
               return (
-                <div key={d.day} className="flex-1 flex flex-col items-center group relative">
-                  <div className="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                    {d.count} visitas
-                  </div>
-                  <div
-                    className={`w-full rounded-t-md transition-all ${isPeak ? 'bg-violet-500' : 'bg-violet-200 hover:bg-violet-400'}`}
-                    style={{ height: `${Math.max(pct, d.count > 0 ? 5 : 0)}%` }}
-                  />
-                  <span className={`text-[10px] mt-1.5 font-medium ${isPeak ? 'text-violet-600' : 'text-gray-400'}`}>
-                    {d.day_name.slice(0, 3)}
-                  </span>
+                <div key={d.device} className="rounded-lg border border-gray-200 p-3 text-center">
+                  <Icon className="w-5 h-5 mx-auto text-gray-700 mb-1.5" />
+                  <p className="text-xl font-black text-gray-900 leading-none">{fmtPct(pct(d.sessions, s.sessions))}</p>
+                  <p className="text-[11px] font-bold text-gray-500 mt-1">{nombre}</p>
+                  <p className="text-[10px] font-semibold text-gray-400">{fmtInt(d.sessions)} visitas</p>
                 </div>
               );
             })}
           </div>
+          {s.otherEvents.length > 0 && (
+            <>
+              <p className="mt-5 mb-2 text-xs font-black uppercase tracking-wide text-gray-500">Otras acciones</p>
+              <BarList rows={s.otherEvents.map(e => ({ label: e.label, value: e.count }))} />
+            </>
+          )}
+        </Section>
+      </div>
+
+      {/* ── Comportamiento ── */}
+      <Section
+        title="¿Cuánto se quedan y cuánto miran?"
+        help={`Calculado solo sobre las visitas que llegaron a registrar su salida (${fmtPct(s.coverage)} del total). Las que no la registran quedarían en 0 y ensuciarían el promedio.`}
+      >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Clock className="w-4 h-4 text-gray-500" />
+              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Tiempo típico</p>
+            </div>
+            <p className="text-2xl font-black text-gray-900 leading-none">{formatDuration(s.medianDuration)}</p>
+            <p className="mt-1 text-[11px] font-semibold text-gray-500">
+              La mitad se queda más que esto. Promedio: {formatDuration(s.avgDuration)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <ArrowRight className="w-4 h-4 text-gray-500" />
+              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Se van enseguida</p>
+            </div>
+            <p className="text-2xl font-black text-gray-900 leading-none">{fmtPct(s.bounceRate)}</p>
+            <p className="mt-1 text-[11px] font-semibold text-gray-500">Una sola página y menos de 5 segundos</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye className="w-4 h-4 text-gray-500" />
+              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Cuánto bajan</p>
+            </div>
+            <p className="text-2xl font-black text-gray-900 leading-none">{Math.round(s.avgScroll)}%</p>
+            <p className="mt-1 text-[11px] font-semibold text-gray-500">De la página, en promedio</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Users className="w-4 h-4 text-gray-500" />
+              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Volvieron</p>
+            </div>
+            <p className="text-2xl font-black text-gray-900 leading-none">{fmtInt(s.recurring)}</p>
+            <p className="mt-1 text-[11px] font-semibold text-gray-500">
+              Personas que entraron más de una vez en {rangeLabel}
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* ── Nuevos vs recurrentes + Eventos ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Nuevos vs recurrentes */}
-        {data && (data.newVisitors > 0 || data.returningVisitors > 0) && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-1">¿Son clientes nuevos o fieles?</h2>
-            <p className="text-xs text-gray-400 mb-5">Visitantes únicos del período</p>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <UserPlus className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-medium text-gray-700">Primera vez</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900">
-                    {data.newVisitors} · {data.uniqueVisitors > 0 ? ((data.newVisitors / data.uniqueVisitors) * 100).toFixed(0) : 0}%
-                  </span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${data.uniqueVisitors > 0 ? (data.newVisitors / data.uniqueVisitors) * 100 : 0}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-medium text-gray-700">Volvieron a visitar</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900">
-                    {data.returningVisitors} · {data.uniqueVisitors > 0 ? ((data.returningVisitors / data.uniqueVisitors) * 100).toFixed(0) : 0}%
-                  </span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${data.uniqueVisitors > 0 ? (data.returningVisitors / data.uniqueVisitors) * 100 : 0}%` }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Eventos */}
-        {((dateRange === '1d' ? data?.todayEvents : data?.events) || []).length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-1">Acciones realizadas</h2>
-            <p className="text-xs text-gray-400 mb-5">Qué hicieron los visitantes</p>
-            <div className="grid grid-cols-2 gap-3">
-              {(dateRange === '1d' ? data?.todayEvents : data?.events)?.map((ev) => (
-                <div key={ev.event_name} className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
-                  <div className="text-xl leading-none">{getEventLabel(ev.event_name).split(' ')[0]}</div>
-                  <div>
-                    <div className="text-lg font-bold text-gray-900">{ev.count}</div>
-                    <div className="text-xs text-gray-500 leading-tight">{getEventLabel(ev.event_name).split(' ').slice(1).join(' ') || ev.event_name.replace(/_/g, ' ')}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── RETENCIÓN ── */}
-      {data && (data.retentionSteps[0]?.count ?? 0) > 0 && (
-        <>
-          <div className="pt-2">
-            <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-lg font-bold text-gray-900">Retención: ¿la gente se queda?</h2>
-              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                data.engagementRate >= 50 ? 'bg-emerald-50 text-emerald-700' :
-                data.engagementRate >= 25 ? 'bg-amber-50 text-amber-700' :
-                'bg-rose-50 text-rose-700'
-              }`}>
-                {data.engagementRate >= 50 ? 'Bien' : data.engagementRate >= 25 ? 'Regular' : 'Bajo'} — {data.engagementRate.toFixed(0)}% se quedan +5s
-              </span>
-            </div>
-            <p className="text-sm text-gray-500">
-              {data.engagementRate < 25
-                ? 'La mayoría se va antes de los 5 segundos. El hero y el primer scroll tienen que atrapar al instante.'
-                : data.engagementRate < 50
-                ? 'Casi la mitad se va rápido. Mejorar lo primero que ven puede subir estas cifras.'
-                : 'La mayoría explora la web. El contenido está funcionando.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Embudo de retención */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h2 className="font-semibold text-gray-900 mb-1">¿Cuántos se quedan?</h2>
-              <p className="text-xs text-gray-400 mb-5">De todas las visitas, cuántas superan cada umbral de tiempo</p>
-              <div className="space-y-3">
-                {data.retentionSteps.map((step, i) => {
-                  const colors = ['bg-blue-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500', 'bg-violet-500'];
-                  return (
-                    <div key={step.label}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700">{step.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">{step.count} personas</span>
-                          <span className="text-sm font-bold text-gray-900">{step.pct.toFixed(0)}%</span>
-                        </div>
-                      </div>
-                      <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${step.pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Distribución de tiempo */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h2 className="font-semibold text-gray-900 mb-1">¿Cuánto tiempo se quedan?</h2>
-              <p className="text-xs text-gray-400 mb-5">Distribución de duración de las visitas</p>
-              <div className="space-y-3">
-                {data.durationBuckets.map((b) => {
-                  const maxPct = Math.max(...data.durationBuckets.map(x => x.pct), 1);
-                  const isTop = b.pct === maxPct;
-                  return (
-                    <div key={b.label}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-sm font-medium ${isTop ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>{b.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">{b.count}</span>
-                          <span className="text-sm font-bold text-gray-900">{b.pct.toFixed(0)}%</span>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${isTop ? 'bg-rose-500' : 'bg-blue-400'}`} style={{ width: `${(b.pct / maxPct) * 100}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Scroll depth */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="font-semibold text-gray-900">¿Hasta dónde bajan en la página?</h2>
-              <span className="text-sm font-bold text-gray-600">Promedio: {data.scrollDepthAvg.toFixed(0)}%</span>
-            </div>
-            <p className="text-xs text-gray-400 mb-5">
-              {data.scrollDepthAvg < 25
-                ? 'La mayoría no baja de la primera pantalla — el contenido de arriba debe retener mejor'
-                : data.scrollDepthAvg < 50
-                ? 'Llegan hasta la mitad — algo bueno hay, pero se pierden a la mitad'
-                : 'Buen scroll — la gente explora bastante tu sitio'}
-            </p>
-            <div className="flex items-end gap-3 h-28">
-              {data.scrollDepthBuckets.map((b) => {
-                const maxBucket = Math.max(...data.scrollDepthBuckets.map(x => x.count), 1);
-                const pct = (b.count / maxBucket) * 100;
-                const colors = ['bg-rose-400', 'bg-amber-400', 'bg-yellow-400', 'bg-cyan-400', 'bg-emerald-500'];
-                const idx = data.scrollDepthBuckets.indexOf(b);
-                return (
-                  <div key={b.label} className="flex-1 flex flex-col items-center group relative">
-                    <div className="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                      {b.count} visitas
-                    </div>
-                    <div className={`w-full ${colors[idx]} rounded-t-lg transition-all`} style={{ height: `${Math.max(pct, b.count > 0 ? 5 : 0)}%` }} />
-                    <span className="text-[10px] text-gray-500 font-medium mt-1.5">{b.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-    </div>
-  );
-}
-
-/* ── KPI Card ── */
-function KpiCard({
-  label, value, sub, icon, accent, isText = false,
-}: {
-  label: string;
-  value: number | string;
-  sub?: { pct?: number; text?: string };
-  icon: React.ReactNode;
-  accent: 'blue' | 'violet' | 'amber' | 'rose' | 'emerald' | 'orange';
-  isText?: boolean;
-}) {
-  const bg: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600',
-    violet: 'bg-violet-50 text-violet-600',
-    amber: 'bg-amber-50 text-amber-600',
-    rose: 'bg-rose-50 text-rose-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    orange: 'bg-orange-50 text-orange-600',
-  };
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${bg[accent]}`}>{icon}</div>
-      <div>
-        <p className="text-xs text-gray-500 font-medium">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-0.5">
-          {isText ? value : typeof value === 'number' ? value.toLocaleString() : value}
+        <p className="mt-3 text-xs font-semibold text-gray-500">
+          Páginas por visita: <span className="font-black text-gray-900">{s.pagesPerSession.toFixed(1)}</span>
         </p>
-        {sub && (
-          <div className="flex items-center gap-1 mt-1">
-            {sub.pct !== undefined && (
-              <span className={`flex items-center gap-0.5 text-xs font-semibold ${sub.pct >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {sub.pct >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {Math.abs(sub.pct).toFixed(1)}%
-              </span>
-            )}
-            {sub.text && <span className="text-xs text-gray-400">{sub.text}</span>}
+      </Section>
+
+      {/* ── Cuándo entran ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="Qué días entra más gente" help="Sumando todos los días del período.">
+          <BarList rows={s.byDay.map(d => ({ label: d.day, value: d.sessions }))} />
+        </Section>
+        <Section title="A qué hora entra más gente" help="Útil para elegir cuándo publicar o lanzar una promo.">
+          <div className="flex items-end gap-0.5 h-32">
+            {s.byHour.map(h => {
+              const max = Math.max(1, ...s.byHour.map(x => x.sessions));
+              return (
+                <div key={h.hour} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                  <div className="w-full rounded-t bg-gray-900 group-hover:bg-gray-700 transition-colors"
+                       style={{ height: `${(h.sessions / max) * 100}%` }} />
+                  <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 whitespace-nowrap rounded bg-gray-900 text-white text-[10px] font-bold px-2 py-1">
+                    {h.hour}hs: {h.sessions}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+          <div className="flex justify-between mt-1 text-[10px] font-bold text-gray-400">
+            <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
+          </div>
+        </Section>
       </div>
     </div>
   );
