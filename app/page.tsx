@@ -222,11 +222,14 @@ export default async function HomePage() {
         <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
       </div>
 
+      {/* Opiniones de clientes — antes estaban al 74% de la página, donde según
+          las analíticas casi nadie llegaba (la mitad baja hasta el 27%). Subirlas
+          acá les da aire y corta la fila de carruseles casi idénticos, que era
+          lo que hacía abandonar antes de llegar al fondo. */}
+      <Reviews reviews={content.reviews} />
+
       {/* Carruseles por marca — configurables desde /admin/portada */}
       <HomepageBrands entries={content.brandEntries} productsByEntry={brandProducts} />
-
-      {/* Opiniones de clientes */}
-      <Reviews reviews={content.reviews} />
 
       {/* Feed de Instagram @tkicks.sj — se oculta sola si no hay token cargado */}
       <InstagramFeed />

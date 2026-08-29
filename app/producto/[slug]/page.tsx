@@ -8,6 +8,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { AddToCart } from './parts/AddToCart';
 import { MakeOffer } from './parts/MakeOffer';
 import { BuyBar } from './parts/BuyBar';
+import { RelatedProducts } from './parts/RelatedProducts';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
@@ -332,6 +333,9 @@ export default function ProductDetailPage() {
           
         </div>
       </div>
+
+      {/* Productos relacionados: evita que la ficha sea un callejón sin salida */}
+      <RelatedProducts productId={product.id} category={product.category} brand={product.brand} />
 
       {/* Barra de compra fija — mobile y desktop, se oculta cuando la sección de compra está a la vista */}
       <BuyBar
