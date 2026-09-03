@@ -79,7 +79,7 @@ export function Sidebar() {
     <>
       <div
         className={cn(
-          'fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden',
+          'fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 xl:hidden',
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         onClick={close}
@@ -87,7 +87,7 @@ export function Sidebar() {
 
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-white border-r border-gray-200 shadow-2xl transition-transform duration-300 ease-out md:hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] flex flex-col',
+          'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-white border-r border-gray-200 shadow-2xl transition-transform duration-300 ease-out xl:hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] flex flex-col',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         role="dialog"

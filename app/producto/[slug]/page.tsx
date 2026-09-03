@@ -63,7 +63,7 @@ export default function ProductDetailPage() {
   if (loading) return (
     <div className="max-w-7xl mx-auto bg-white min-h-screen" aria-busy="true" aria-label="Cargando producto">
       <div className="skeleton h-4 w-48 rounded mb-6" />
-      <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">
+      <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
         <div className="skeleton aspect-[4/5] w-full rounded-xl md:rounded-2xl" />
         <div className="space-y-4">
           <div className="skeleton h-6 w-24 rounded-full" />
@@ -119,9 +119,9 @@ export default function ProductDetailPage() {
         <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]" aria-current="page">{product.title}</span>
       </nav>
 
-      <div className="grid gap-3 md:gap-8 lg:gap-16 lg:grid-cols-2">
+      <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
         {/* Image section */}
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="md:sticky md:top-8 md:self-start">
           <ImageCarousel images={product.images || []} />
         </div>
         
@@ -209,8 +209,12 @@ export default function ProductDetailPage() {
                   )}
                 </div>
 
-                {/* Métodos de pago — precios en ARS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Métodos de pago — precios en ARS.
+                    Van una debajo de otra hasta que la columna de info es
+                    ancha de verdad: en tablet, con la ficha ya en dos
+                    columnas, dos tarjetas lado a lado dejaban ~180px cada una
+                    y el importe se cortaba a la mitad. */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {/* Transferencia / Efectivo */}
                   <div className="relative rounded-2xl border-2 border-gray-900 bg-gray-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -221,7 +225,7 @@ export default function ProductDetailPage() {
                         Transferencia<br className="hidden sm:block" /> / Efectivo
                       </p>
                     </div>
-                    <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                    <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight break-words">
                       {formatCurrency(priceInArs)}
                     </p>
                     <p className="mt-0.5 text-[11px] text-gray-900 font-bold uppercase tracking-wide">
@@ -250,7 +254,7 @@ export default function ProductDetailPage() {
                         </span>
                       )}
                     </div>
-                    <p className={cn('text-2xl md:text-3xl font-black tracking-tight', promoOn ? 'text-red-600' : 'text-gray-900')}>
+                    <p className={cn('text-2xl md:text-3xl font-black tracking-tight break-words', promoOn ? 'text-red-600' : 'text-gray-900')}>
                       3 × {formatCurrency(installment)}
                     </p>
                     <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
