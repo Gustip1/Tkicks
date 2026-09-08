@@ -9,6 +9,8 @@ export interface UploadedImage { url: string; alt: string }
 
 export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onChange: (v: UploadedImage[]) => void }) {
   const [loading, setLoading] = useState(false);
+  // Avisos de calidad de las fotos recién subidas (foto chica = se ve borrosa)
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const onDrop = useCallback(async (accepted: File[]) => {
@@ -38,6 +40,11 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
       }
 
       const data = Array.isArray(payload) ? payload : [];
+      setWarnings(
+        data
+          .filter((d: { warning?: string }) => d.warning)
+          .map((d: { warning?: string }) => d.warning as string)
+      );
       onChange([...(value || []), ...data.map((d: { url: string }) => ({ url: d.url, alt: '' }))]);
     } finally {
       setLoading(false);
@@ -49,6 +56,8 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
     accept: { 'image/*': [] },
     disabled: loading
   });
+
+  const dismissWarnings = () => setWarnings([]);
 
   const removeImage = (urlToRemove: string) => {
     onChange((value || []).filter(img => img.url !== urlToRemove));
@@ -76,6 +85,35 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
 
   return (
     <div className="space-y-4">
+      {/* Avisos de calidad: la foto se subió igual, pero conviene reemplazarla */}
+      {warnings.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-amber-900">
+                ⚠️ {warnings.length === 1 ? 'Una foto puede verse mal' : `${warnings.length} fotos pueden verse mal`}
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {warnings.map((w, i) => (
+                  <li key={i} className="text-xs font-semibold text-amber-800 leading-relaxed">• {w}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-amber-700 font-medium">
+                Se subieron igual. Si podés, descargalas de nuevo en grande desde la web de la
+                marca y reemplazalas: en la web se ven al doble de tamaño que en la foto original.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissWarnings}
+              className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-amber-800 hover:bg-amber-100"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Upload zone */}
       <div
         {...getRootProps()}

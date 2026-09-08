@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // Admin client for storage (bypass RLS)
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-  const outputs: { url: string }[] = [];
+  const outputs: { url: string; warning?: string; original?: string }[] = [];
 
   try {
     for (const file of files) {
@@ -86,7 +86,13 @@ export async function POST(req: NextRequest) {
         .getPublicUrl(fileName);
 
       if (publicUrlData?.publicUrl) {
-        outputs.push({ url: publicUrlData.publicUrl });
+        outputs.push({
+          url: publicUrlData.publicUrl,
+          // El aviso viaja al panel para que el admin sepa que esa foto se va
+          // a ver borrosa y pueda buscar una mejor antes de publicar.
+          ...(normalized.warning ? { warning: normalized.warning } : {}),
+          original: `${normalized.originalWidth}×${normalized.originalHeight}`,
+        });
       }
     }
 
