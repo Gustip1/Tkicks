@@ -104,7 +104,10 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
                 <p className="text-sm font-medium text-gray-700">
                   {isDragActive ? "Soltá las imágenes aquí" : "Arrastrá imágenes o hacé click"}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">JPEG, PNG o WEBP · cualquier resolución · bordes blancos se recortan solos</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Cualquier formato y tamaño: se recortan los bordes blancos y todas quedan
+                  cuadradas de 1400×1400 en WebP, así se ven parejas en todo el sitio.
+                </p>
               </div>
             </>
           )}

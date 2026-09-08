@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { normalizeProductImage } from '@/lib/images/normalize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,22 +41,37 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       if (!(file instanceof File)) continue;
 
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-      if (!validTypes.includes(file.type)) {
-        console.warn(`Tipo de archivo no válido: ${file.type}`);
+      // sharp lee prácticamente cualquier formato, así que se acepta todo lo
+      // que sea imagen y se unifica más abajo. Antes solo pasaban jpg/png/webp
+      // y una foto en avif o heic (las que saca el iPhone) se descartaba sin
+      // aviso, con lo cual el producto quedaba sin foto.
+      if (!file.type.startsWith('image/')) {
+        console.warn(`Archivo ignorado, no es una imagen: ${file.type}`);
         continue;
       }
 
-      const ext = file.name.split('.').pop() || 'jpg';
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
-
       const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      const original = Buffer.from(arrayBuffer);
+
+      // Todas las fotos salen del mismo molde: cuadrada, 1400x1400 y WebP.
+      let normalized;
+      try {
+        normalized = await normalizeProductImage(original);
+      } catch (e) {
+        console.error(`No se pudo procesar ${file.name}:`, e);
+        continue;
+      }
+
+      console.log(
+        `[upload] ${file.name}: ${normalized.originalFormat} ${Math.round(normalized.originalBytes / 1024)}KB → webp ${Math.round(normalized.bytes / 1024)}KB`
+      );
+
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
 
       const { error } = await supabaseAdmin.storage
         .from('product-images')
-        .upload(fileName, buffer, {
-          contentType: file.type,
+        .upload(fileName, normalized.buffer, {
+          contentType: 'image/webp',
           cacheControl: '31536000',
           upsert: false,
         });

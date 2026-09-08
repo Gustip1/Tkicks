@@ -37,6 +37,7 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.5",
     "react-hook-form": "^7.53.0",
+    "sharp": "^0.35.4",
     "soap": "^1.9.2",
     "tailwind-merge": "^2.5.2",
     "tailwindcss": "^3.4.10",
