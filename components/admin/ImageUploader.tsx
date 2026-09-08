@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { X, Upload, GripVertical, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { trimWhiteBorders } from '@/lib/image-trim';
 
 export interface UploadedImage { url: string; alt: string }
 
@@ -16,17 +15,12 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
   const onDrop = useCallback(async (accepted: File[]) => {
     setLoading(true);
     try {
-      const prepared = await Promise.all(
-        accepted.map(async (f) => {
-          try {
-            return await trimWhiteBorders(f);
-          } catch {
-            return f;
-          }
-        })
-      );
+      // Las fotos se mandan tal cual: el recorte del margen y el encuadre los
+      // hace el servidor. El recorte que corría acá tomaba como "blanco" todo
+      // píxel >= 240, así que en una prenda blanca sobre fondo blanco se comía
+      // la prenda y dejaba solo el estampado.
       const form = new FormData();
-      prepared.forEach((f) => form.append('files', f));
+      accepted.forEach((f) => form.append('files', f));
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const payload = await res.json();
 

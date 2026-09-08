@@ -27,6 +27,23 @@ export const IMAGE_BACKGROUND = { r: 255, g: 255, b: 255, alpha: 1 };
 export const MIN_LADO_RECOMENDADO = 800;
 export const MIN_LADO_ACEPTABLE = 500;
 
+/**
+ * Recorte del margen sobrante.
+ *
+ * Umbral bajo a propósito: mide la diferencia contra el color del borde, no un
+ * "es casi blanco". Con un umbral alto una remera blanca (250,250,250) sobre
+ * fondo blanco (255,255,255) contaba como fondo y el recorte se comía la prenda
+ * entera: una foto de 900x900 quedaba en 276x32, solo el logo estampado.
+ */
+const TRIM_THRESHOLD = 5;
+
+/**
+ * Red de seguridad: si el recorte se quiere llevar más de esto de alguno de los
+ * lados, es que está comiendo producto y no margen. En ese caso no se recorta
+ * nada, que es el resultado seguro.
+ */
+const MAX_RECORTE_POR_LADO = 0.6;
+
 export interface NormalizedImage {
   buffer: Buffer;
   width: number;
@@ -52,11 +69,45 @@ function revisarCalidad(width: number, height: number): string | null {
   return null;
 }
 
+/**
+ * Saca el margen uniforme de alrededor del producto, pero solo si es
+ * claramente margen. Si no se puede o el recorte resulta sospechoso, devuelve
+ * la imagen intacta.
+ */
+async function recortarMargenSeguro(input: Buffer): Promise<Buffer> {
+  try {
+    const antes = await sharp(input).metadata();
+    if (!antes.width || !antes.height) return input;
+
+    const recortada = await sharp(input)
+      .trim({ threshold: TRIM_THRESHOLD })
+      .toBuffer();
+
+    const despues = await sharp(recortada).metadata();
+    if (!despues.width || !despues.height) return input;
+
+    const quedaAncho = despues.width / antes.width;
+    const quedaAlto = despues.height / antes.height;
+
+    // Se llevó demasiado: casi seguro comió la prenda, no el fondo
+    if (quedaAncho < 1 - MAX_RECORTE_POR_LADO || quedaAlto < 1 - MAX_RECORTE_POR_LADO) {
+      return input;
+    }
+    return recortada;
+  } catch {
+    // .trim() falla si la imagen es de un solo color: se deja como está
+    return input;
+  }
+}
+
 export async function normalizeProductImage(input: Buffer): Promise<NormalizedImage> {
   const meta = await sharp(input).metadata();
 
-  const buffer = await sharp(input)
-    .rotate() // aplica la orientación EXIF antes de redimensionar
+  // Se endereza primero (EXIF) para que el recorte mida sobre la foto ya derecha
+  const derecha = await sharp(input).rotate().toBuffer();
+  const recortada = await recortarMargenSeguro(derecha);
+
+  const buffer = await sharp(recortada)
     .resize(IMAGE_SIZE, IMAGE_SIZE, {
       fit: 'contain',              // entra entera: no recorta ni deforma
       background: IMAGE_BACKGROUND,
