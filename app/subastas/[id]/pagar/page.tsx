@@ -234,7 +234,8 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
           <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
             <div>
               <p className="text-sm uppercase font-bold text-gray-500">Datos para transferir</p>
-              <p className="text-sm text-gray-700 mt-2">Alias: <span className="font-bold text-gray-900">gus.p21</span></p>
+              <p className="text-sm text-gray-700 mt-2">Alias: <span className="font-bold text-gray-900">tkicks.sj</span></p>
+              <p className="text-sm text-gray-700">Titular: <span className="font-bold text-gray-900">Gustavo Facundo Piñones Tello</span></p>
               <p className="text-sm text-gray-700">Total: <span className="font-bold text-gray-900">{formatARS(Number(auction.current_price))}</span></p>
               <p className="text-xs text-gray-400 mt-2">Orden: {orderNumber}</p>
             </div>

@@ -104,7 +104,7 @@ export async function POST(
       shipping_cost: 0,
       payment_method: 'bank_transfer',
       payment_status: 'pending',
-      payment_alias: 'gus.p21',
+      payment_alias: 'tkicks.sj',
     })
     .select('id, order_number')
     .single();

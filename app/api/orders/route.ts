@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
       shipping_cost: 0,
       payment_method: body.paymentMethod,
       payment_status: 'pending',
-      payment_alias: 'gus.p21',
+      payment_alias: 'tkicks.sj',
     };
 
     let { data: order, error: orderErr } = await supabase

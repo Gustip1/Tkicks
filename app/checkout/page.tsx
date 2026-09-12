@@ -30,7 +30,8 @@ import {
 type Step = 1 | 2;
 
 const WHATSAPP_NUMBER = '5492644802994';
-const PAYMENT_ALIAS_ARS = 'gusti.naranjax';
+const PAYMENT_ALIAS_ARS = 'tkicks.sj';
+const PAYMENT_HOLDER = 'Gustavo Facundo Piñones Tello';
 const PAYMENT_ALIAS_USD = 'gusti.dolares';
 const CRYPTO_WALLET = '0x9f5e152b579263fbb2b88f976fa4bb4bbac21e20';
 
@@ -604,6 +605,10 @@ export default function CheckoutPage() {
                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alias (Dólares USD)</p>
                         <p className="text-lg font-black text-gray-900 font-mono">{PAYMENT_ALIAS_USD}</p>
                       </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Titular de la cuenta</p>
+                      <p className="text-sm font-black text-gray-900">{PAYMENT_HOLDER}</p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Crypto (USDT ERC20 - Red Ethereum)</p>
