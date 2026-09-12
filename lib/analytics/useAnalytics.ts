@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { setAnalyticsExcluded } from '@/lib/analytics/track';
 
 function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
@@ -96,6 +97,42 @@ export function useAnalytics() {
   const maxScrollRef = useRef<number>(0);
   const engagementFiredRef = useRef<Set<string>>(new Set());
 
+  // null = todavía no sabemos si es admin; hasta resolverlo no se mide nada,
+  // así una visita del admin nunca llega a la base "por las dudas".
+  const [tracks, setTracks] = useState<boolean | null>(null);
+  const tracksRef = useRef<boolean | null>(null);
+  tracksRef.current = tracks;
+
+  // ── Excluir la sesión de administración ──
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (!cancelled) { setAnalyticsExcluded(false); setTracks(true); }
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        const isAdmin = profile?.role === 'admin';
+        if (!cancelled) { setAnalyticsExcluded(isAdmin); setTracks(!isAdmin); }
+      } catch {
+        // Si falla la consulta medimos normal: preferible contar de más que perder visitas reales.
+        if (!cancelled) setTracks(true);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [supabase]);
+
   // ── Inicializar sesión ──
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -112,6 +149,7 @@ export function useAnalytics() {
   const trackPageView = useCallback(async () => {
     if (typeof window === 'undefined' || !sessionIdRef.current) return;
     if (pathname.startsWith('/admin')) return;
+    if (!tracks) return;
 
     const visitData: VisitData = {
       session_id: sessionIdRef.current,
@@ -134,7 +172,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error tracking visit:', error);
     }
-  }, [pathname, supabase]);
+  }, [pathname, supabase, tracks]);
 
   useEffect(() => {
     const timer = setTimeout(() => { trackPageView(); }, 100);
@@ -145,6 +183,7 @@ export function useAnalytics() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (pathname.startsWith('/admin')) return;
+    if (!tracks) return;
 
     maxScrollRef.current = 0;
 
@@ -158,12 +197,13 @@ export function useAnalytics() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [pathname]);
+  }, [pathname, tracks]);
 
   // ── Engagement time milestones (5s, 15s, 30s, 60s) ──
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (pathname.startsWith('/admin')) return;
+    if (!tracks) return;
 
     engagementFiredRef.current = new Set();
     const milestones = [5, 15, 30, 60];
@@ -188,12 +228,13 @@ export function useAnalytics() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [pathname, supabase]);
+  }, [pathname, supabase, tracks]);
 
   // ── Exit handler (duration + scroll depth + bounce) ──
   useEffect(() => {
     const handleExit = () => {
       if (!sessionIdRef.current) return;
+      if (!tracksRef.current) return;
 
       const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
@@ -227,7 +268,7 @@ export function useAnalytics() {
     eventCategory?: string,
     eventData?: Record<string, any>
   ) => {
-    if (!sessionIdRef.current) return;
+    if (!sessionIdRef.current || !tracks) return;
     try {
       await supabase.from('analytics_events').insert({
         session_id: sessionIdRef.current,
@@ -239,7 +280,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error tracking event:', error);
     }
-  }, [pathname, supabase]);
+  }, [pathname, supabase, tracks]);
 
   return { trackEvent };
 }

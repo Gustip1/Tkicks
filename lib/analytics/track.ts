@@ -9,6 +9,32 @@
 
 const SESSION_KEY = 'tkicks_session_id';
 const VISITOR_KEY = 'tkicks_visitor_id';
+const ADMIN_KEY = 'tkicks_analytics_excluded';
+
+/**
+ * Marca (o desmarca) este navegador como sesión interna de administración.
+ * useAnalytics lo resuelve contra el perfil en cada carga; acá sólo se guarda
+ * para que trackEvent, que no es un hook, pueda consultarlo sin esperar.
+ */
+export function setAnalyticsExcluded(excluded: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (excluded) localStorage.setItem(ADMIN_KEY, '1');
+    else localStorage.removeItem(ADMIN_KEY);
+  } catch {
+    // Si el navegador bloquea localStorage seguimos midiendo normal.
+  }
+}
+
+/** true si las visitas de este navegador no deben contarse (admin). */
+export function isAnalyticsExcluded(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    return localStorage.getItem(ADMIN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function getSessionId(): string {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
@@ -34,6 +60,7 @@ export function trackEvent(
   eventData?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined') return;
+  if (isAnalyticsExcluded()) return;
 
   try {
     const payload = JSON.stringify({
