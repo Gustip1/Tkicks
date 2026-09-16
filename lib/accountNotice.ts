@@ -14,17 +14,20 @@ export const TIKTOK_HANDLE = '@tkicks.sj';
 export const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 
 export const ACCOUNT_NOTICE = {
-  badge: 'Información importante',
+  badge: '👋 Te queremos contar algo',
   title: 'Nuestro Instagram está suspendido temporalmente',
   lead:
     'Nos suspendieron temporalmente la cuenta por un error de detección automática de Instagram con marcas ' +
     'internacionales. Ya presentamos todas las facturas y compras oficiales y el soporte está terminando de ' +
     'procesar la reactivación.',
+  aside: 'Preferimos contártelo nosotros antes de que te enteres por otro lado 🤝',
   body:
     'Estamos haciendo la apelación correspondiente con todas las facturas de compra de los proveedores con los ' +
-    'que trabajamos siempre. Cada par y cada prenda que vendemos es 100% original, con su comprobante de compra.',
+    'que trabajamos siempre. Cada par y cada prenda que vendemos es 100% original, con su comprobante.',
   stamps: ['Louis Vuitton', 'Kith', 'Nike'],
-  stampsCaption: 'Compras oficiales en Miami y Nueva York, con factura',
-  tiktokLead: 'Mientras tanto seguinos en TikTok',
-  accept: 'Entendido',
+  stampsCaption: '✅ Compras oficiales en Miami y Nueva York, con factura',
+  reassurance: 'Seguimos atendiendo y despachando igual que siempre 📦',
+  tiktokLead: '🎬 Seguinos en TikTok',
+  signature: 'Gracias por bancarnos 🙌 — El equipo de Tkicks',
+  accept: 'Entendido 👍',
 } as const;
