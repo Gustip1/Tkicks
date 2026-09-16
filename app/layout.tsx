@@ -15,6 +15,8 @@ import { ComingSoonProvider } from '@/components/ComingSoonProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
+import { AccountNoticeProvider } from '@/components/announcement/AccountNoticeProvider';
+import { AccountNoticeModal } from '@/components/announcement/AccountNoticeModal';
 import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
 import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* End Meta Pixel Code */}
         
         <DolarRateProvider>
+          <AccountNoticeProvider>
           <InstallmentsPromoProvider>
             <ComingSoonProvider>
             <AnalyticsProvider>
@@ -91,6 +94,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <HideOnAdmin>
                 <Footer />
                 <CartDrawer />
+                <AccountNoticeModal />
                 <PromoModal />
                 <RecentSaleToast />
               </HideOnAdmin>
@@ -98,6 +102,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </AnalyticsProvider>
             </ComingSoonProvider>
           </InstallmentsPromoProvider>
+          </AccountNoticeProvider>
         </DolarRateProvider>
       </body>
     </html>

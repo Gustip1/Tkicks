@@ -1,17 +1,21 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { useAccountNotice } from '@/components/announcement/AccountNoticeProvider';
 import { PROMO_TEXT } from '@/lib/promo';
 
 export function PromoModal() {
   const { active } = useInstallmentsPromo();
+  const { open: noticeOpen } = useAccountNotice();
   const [open, setOpen] = useState(false);
 
   // Aparece SIEMPRE que entran al sitio (refresh / pestaña nueva /
   // visita nueva) mientras la promo esté activa desde /admin/ajustes.
+  // Si el aviso de cuenta está en pantalla espera su turno: encimados no se
+  // lee ninguno de los dos.
   useEffect(() => {
-    if (active) setOpen(true);
-  }, [active]);
+    if (active && !noticeOpen) setOpen(true);
+  }, [active, noticeOpen]);
 
   const dismiss = () => setOpen(false);
 

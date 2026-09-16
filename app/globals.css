@@ -331,3 +331,60 @@ img {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Aviso de cuenta (popup bloqueante de la home) ───────────────────────────
+   Es lo primero que ve el visitante, así que la entrada tiene que sentirse
+   deliberada: el fondo funde, la tarjeta sube con un rebote corto y los sellos
+   de proveedor aparecen escalonados. El bloque de prefers-reduced-motion de
+   arriba colapsa todo esto a un frame para quien desactivó las animaciones. */
+@keyframes notice-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes notice-card-in {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.94); }
+  60%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes notice-stamp-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Un único barrido de luz sobre la tarjeta al abrir, para que no se lea plana */
+@keyframes notice-sheen {
+  from { transform: translateX(-120%) rotate(8deg); }
+  to   { transform: translateX(220%) rotate(8deg); }
+}
+
+@keyframes notice-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+
+.animate-notice-overlay { animation: notice-overlay-in 0.35s ease-out both; }
+
+.animate-notice-card {
+  animation: notice-card-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-notice-stamp {
+  animation: notice-stamp-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-notice-sheen {
+  animation: notice-sheen 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.45s both;
+}
+
+.animate-notice-dot { animation: notice-pulse-dot 1.8s ease-in-out infinite; }
+
+/* La tarjeta recibe el foco al abrir para que el lector de pantalla la lea,
+   pero no dibuja el outline global: el anillo tiene que verse en el botón y el
+   link, no alrededor de todo el diálogo. */
+.notice-card:focus-visible { outline: none; }
+
+.notice-stamp-delay-1 { animation-delay: 0.30s; }
+.notice-stamp-delay-2 { animation-delay: 0.38s; }
+.notice-stamp-delay-3 { animation-delay: 0.46s; }

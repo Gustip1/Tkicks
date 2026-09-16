@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
+import { ACCOUNT_NOTICE_SETTING_KEY } from '@/lib/accountNotice';
 
 export default function AdminSettingsPage() {
   const [rate, setRate] = useState<number>(0);
@@ -21,6 +22,10 @@ export default function AdminSettingsPage() {
   const [offersEnabled, setOffersEnabled] = useState(false);
   const [savingOffers, setSavingOffers] = useState(false);
   const [offersMessage, setOffersMessage] = useState<string | null>(null);
+
+  const [accountNoticeActive, setAccountNoticeActive] = useState(false);
+  const [savingAccountNotice, setSavingAccountNotice] = useState(false);
+  const [accountNoticeMessage, setAccountNoticeMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -69,6 +74,16 @@ export default function AdminSettingsPage() {
       setOffersEnabled(Boolean((data?.value as { active?: boolean } | null)?.active));
     };
     void fetchOffersEnabled();
+
+    const fetchAccountNotice = async () => {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', ACCOUNT_NOTICE_SETTING_KEY)
+        .maybeSingle();
+      setAccountNoticeActive(Boolean((data?.value as { active?: boolean } | null)?.active));
+    };
+    void fetchAccountNotice();
   }, []);
 
   const handleToggleInstallmentsPromo = async () => {
@@ -107,6 +122,29 @@ export default function AdminSettingsPage() {
       await revalidateHome();
     }
     setSavingOffers(false);
+  };
+
+  const handleToggleAccountNotice = async () => {
+    const next = !accountNoticeActive;
+    setSavingAccountNotice(true);
+    setAccountNoticeMessage(null);
+    const supabase = createBrowserClient();
+    const { error: upsertError } = await supabase
+      .from('settings')
+      .upsert({ key: ACCOUNT_NOTICE_SETTING_KEY, value: { active: next } }, { onConflict: 'key' });
+
+    if (upsertError) {
+      setAccountNoticeMessage(`Error al guardar: ${upsertError.message}`);
+    } else {
+      setAccountNoticeActive(next);
+      setAccountNoticeMessage(
+        next
+          ? '✓ Activado — el aviso aparece al entrar a la tienda'
+          : '✓ Desactivado — ya no se muestra el aviso'
+      );
+      await revalidateHome();
+    }
+    setSavingAccountNotice(false);
   };
 
   const handleSaveInstagramToken = async (e: React.FormEvent) => {
@@ -247,6 +285,38 @@ export default function AdminSettingsPage() {
           </span>
         </div>
         {offersMessage && <p className="mt-3 text-sm text-gray-600">{offersMessage}</p>}
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Aviso: Instagram suspendido</h2>
+        <p className="text-sm text-gray-500 mb-4 max-w-lg">
+          Muestra un popup al entrar a la tienda explicando que la cuenta de Instagram está suspendida
+          temporalmente, que ya se presentaron las facturas y que por ahora estamos en TikTok (@tkicks.sj).
+          El visitante tiene que tocar &quot;Entendido&quot; para seguir navegando; se le muestra una vez por
+          visita. Acordate de apagarlo cuando reactiven la cuenta.
+        </p>
+        <div className="flex items-center gap-3 max-w-sm">
+          <button
+            type="button"
+            onClick={handleToggleAccountNotice}
+            disabled={savingAccountNotice}
+            role="switch"
+            aria-checked={accountNoticeActive}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+              accountNoticeActive ? 'bg-emerald-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                accountNoticeActive ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700">
+            {accountNoticeActive ? 'Activo — se muestra al entrar' : 'Inactivo'}
+          </span>
+        </div>
+        {accountNoticeMessage && <p className="mt-3 text-sm text-gray-600">{accountNoticeMessage}</p>}
       </div>
 
       <div className="bg-white shadow-sm rounded-lg p-6">
