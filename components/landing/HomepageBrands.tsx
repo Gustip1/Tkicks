@@ -76,7 +76,7 @@ export function HomepageBrands({
           <div className="max-w-[1400px] mx-auto px-4">
             <button
               onClick={() => setExpanded(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-gray-900 text-gray-900 text-sm font-black uppercase tracking-tight hover:bg-gray-900 hover:text-white active:scale-[0.99] transition-all"
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-full border border-primary text-primary text-sm font-normal hover:bg-primary hover:text-white active:scale-[0.99] transition-all"
             >
               Ver {hidden} {hidden === 1 ? 'marca más' : 'marcas más'}
               <ChevronDown className="w-4 h-4" />

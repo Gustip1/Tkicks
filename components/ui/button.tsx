@@ -6,18 +6,26 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'sm' | 'md' | 'lg';
 };
 
+/**
+ * Botón del sistema Apple: la píldora es la señal de "esto es una acción".
+ * - default: píldora Action Blue (el único color interactivo del sitio)
+ * - outline: píldora con hairline, para la acción secundaria
+ * - ghost:   texto azul sin fondo, para acciones terciarias
+ * Al presionar escala a 0.95, sin sombras.
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'md', ...props }, ref) => {
-    const base = 'inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/25 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100';
+    const base =
+      'inline-flex items-center justify-center rounded-full font-normal transition-[transform,background-color,color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-hover focus-visible:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100';
     const variants = {
-      default: 'bg-neutral-900 text-white hover:bg-neutral-800',
-      outline: 'border border-neutral-300 bg-white hover:bg-neutral-50 hover:border-neutral-400',
-      ghost: 'hover:bg-neutral-100'
+      default: 'bg-primary text-white hover:bg-primary-hover',
+      outline: 'border border-gray-200 bg-white text-primary hover:bg-gray-50',
+      ghost: 'text-primary hover:bg-gray-100',
     } as const;
     const sizes = {
-      sm: 'h-8 px-3 text-xs',
-      md: 'h-10 px-4 text-sm',
-      lg: 'h-12 px-6 text-base'
+      sm: 'h-8 px-4 text-sm',
+      md: 'h-11 px-5 text-[17px]',
+      lg: 'h-12 px-7 text-[17px]',
     } as const;
 
     return (
@@ -26,5 +34,3 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 Button.displayName = 'Button';
-
-

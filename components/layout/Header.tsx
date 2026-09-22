@@ -84,7 +84,7 @@ export function Header() {
   if (isInAdmin) return null;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200 shadow-sm pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/70 pt-[env(safe-area-inset-top)]">
       <BannerTicker />
 
       {/* Fila única: nav (izq) · logo (centro real) · utilidades (der) */}
@@ -94,7 +94,7 @@ export function Header() {
         <div className="flex items-center gap-1 min-w-0">
           <button
             onClick={toggleSidebar}
-            className="inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 xl:hidden transition-colors"
+            className="inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 xl:hidden transition-colors"
             aria-label="Abrir menú"
           >
             <Menu className="h-5 w-5" />
@@ -103,7 +103,7 @@ export function Header() {
           <nav className="hidden xl:flex items-center gap-0">
             <Link
               href="/nuevos-ingresos"
-              className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight whitespace-nowrap"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors whitespace-nowrap"
             >
               New Arrivals
             </Link>
@@ -120,7 +120,7 @@ export function Header() {
                   onClick={() => setBrandsOpen((v) => !v)}
                   aria-expanded={brandsOpen}
                   aria-haspopup="true"
-                  className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-1 uppercase tracking-tight"
+                  className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors flex items-center gap-1 "
                 >
                   Marcas
                   <ChevronDown
@@ -139,13 +139,13 @@ export function Header() {
                       : 'opacity-0 invisible -translate-y-1 pointer-events-none'
                   )}
                 >
-                  <div className="w-[420px] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                  <div className="w-[420px] bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <div className="grid grid-cols-2 gap-0.5 p-2">
                       {brands.map((brand) => (
                         <Link
                           key={brand.id}
                           href={`/productos?brand=${brand.slug}`}
-                          className="rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                          className="rounded-md px-3 py-2 text-sm font-normal text-gray-700 hover:text-gray-950 hover:bg-gray-100 transition-colors "
                         >
                           {brand.name}
                         </Link>
@@ -154,7 +154,7 @@ export function Header() {
                     <div className="border-t border-gray-200">
                       <Link
                         href="/productos"
-                        className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                        className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all "
                       >
                         Ver todas las marcas
                       </Link>
@@ -166,7 +166,7 @@ export function Header() {
 
             <Link
               href="/productos?sneakers"
-              className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
             >
               Sneakers
             </Link>
@@ -174,14 +174,14 @@ export function Header() {
             <div className="relative group">
               <Link
                 href="/productos?streetwear"
-                className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-1 uppercase tracking-tight"
+                className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors flex items-center gap-1 "
               >
                 Streetwear
                 <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-gray-900 transition-colors" />
               </Link>
 
               <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                <div className="w-56 bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="p-2 space-y-0.5">
                     {STREETWEAR_SUBCATEGORIES.map((sub) => (
                       <Link
@@ -197,7 +197,7 @@ export function Header() {
                   <div className="border-t border-gray-200">
                     <Link
                       href="/productos?streetwear"
-                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all "
                     >
                       Ver todo en Streetwear
                     </Link>
@@ -208,25 +208,25 @@ export function Header() {
 
             <Link
               href="/ofertas"
-              className="rounded-lg px-2 2xl:px-2.5 py-2 text-[11px] 2xl:text-xs font-black text-white bg-red-600 hover:bg-red-700 transition-all shadow-sm hover:shadow-md uppercase tracking-tight"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors "
             >
               Ofertas
             </Link>
             <Link
               href="/subastas"
-              className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
             >
               Subastas
             </Link>
             <Link
               href="/encargos"
-              className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
             >
               Encargos
             </Link>
             <Link
               href="/nosotros"
-              className="rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
             >
               Nosotros
             </Link>
@@ -265,14 +265,14 @@ export function Header() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre o talle…"
-              className="w-40 xl:w-52 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2 pl-10 text-sm text-gray-900 placeholder-gray-400 font-bold transition-all focus:w-72 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+              className="w-40 xl:w-52 rounded-full border border-transparent bg-gray-100 px-4 py-2 pl-10 text-sm text-gray-900 placeholder-gray-500 font-normal transition-all focus:w-72 focus:border-primary focus:bg-white focus:outline-none"
             />
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           </form>
 
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="lg:hidden inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            className="lg:hidden inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
             aria-label="Buscar"
           >
             {showSearch ? <X className="h-5 w-5" /> : <SearchIcon className="h-5 w-5" />}
@@ -281,7 +281,7 @@ export function Header() {
           {isAdmin && (
             <Link
               href="/admin"
-              className="hidden sm:flex rounded-lg px-1.5 2xl:px-2 py-2 text-[11px] 2xl:text-xs font-black text-gray-900 hover:bg-gray-100 transition-colors uppercase tracking-tight"
+              className="hidden sm:flex px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
             >
               Admin
             </Link>
@@ -290,14 +290,14 @@ export function Header() {
           {!isAdmin && !user && (
             <Link
               href="/login"
-              className="hidden sm:flex rounded-xl px-3 py-2 text-xs text-gray-500 hover:bg-gray-100 transition-colors font-bold"
+              className="hidden sm:flex rounded-full px-3 py-2 text-xs text-gray-700 hover:text-gray-950 transition-colors font-normal"
             >
               Admin
             </Link>
           )}
 
           <button
-            className="relative inline-flex items-center justify-center rounded-xl p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            className="relative inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
             aria-label="Abrir carrito"
             onClick={openCart}
           >
@@ -305,7 +305,7 @@ export function Header() {
             {cartCount > 0 && (
               <span
                 key={cartCount}
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-black text-white text-[10px] font-black border-2 border-white animate-badge-pop"
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-semibold animate-badge-pop"
               >
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
@@ -330,7 +330,7 @@ export function Header() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscá por nombre, marca o talle (ej: 42)"
-                className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-900 placeholder-gray-400 font-bold focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                className="w-full rounded-full border border-transparent bg-gray-100 px-4 py-3 pl-10 text-[17px] text-gray-900 placeholder-gray-500 font-normal focus:border-primary focus:bg-white focus:outline-none"
                 autoFocus
               />
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />

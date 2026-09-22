@@ -36,14 +36,14 @@ function ProductSlide({ product }: { product: Product }) {
           />
         )}
         {hasSale && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-gray-900 text-[9px] font-black uppercase tracking-widest">
+          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-gray-900 text-[9px] font-black ">
             SALE
           </span>
         )}
       </div>
       <div className="pt-3">
-        <p className="text-[9px] text-gray-900/30 uppercase tracking-[0.2em] font-bold mb-1">{product.category}</p>
-        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
+        <p className="text-[9px] text-gray-900/30 font-bold mb-1">{product.category}</p>
+        <h3 className="text-xs font-bold text-gray-900 line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
           {product.title}
         </h3>
         {hasSale && (
@@ -82,7 +82,7 @@ function SaleSection({ products }: { products: Product[] }) {
             <span className="text-2xl">🔥</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
               Ofertas especiales
             </h2>
             <p className="text-sm text-gray-500 font-bold">No te pierdas estos precios únicos</p>
@@ -106,7 +106,7 @@ function SaleSection({ products }: { products: Product[] }) {
           </button>
           <Link
             href="/ofertas"
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-black hover:from-red-600 hover:to-orange-600 transition-all shadow-md uppercase tracking-tight"
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-black hover:from-red-600 hover:to-orange-600 transition-all shadow-md "
           >
             Ver todas
             <ArrowRight className="w-4 h-4" />
@@ -175,7 +175,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
             <span className="text-2xl">{config.icon}</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
               {title}
             </h2>
             <p className="text-sm text-gray-500 font-bold">Productos seleccionados para ti</p>
@@ -199,7 +199,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
           </button>
           <Link
             href={config.linkHref}
-            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black hover:opacity-90 transition-all shadow-md uppercase tracking-tight`}
+            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black hover:opacity-90 transition-all shadow-md `}
           >
             Ver todos
             <ArrowRight className="w-4 h-4" />
@@ -221,7 +221,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
       {/* Mobile CTA */}
       <Link
         href={config.linkHref}
-        className={`md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black uppercase tracking-tight`}
+        className={`md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black `}
       >
         Ver todos los {type === 'sneakers' ? 'sneakers' : 'streetwear'}
         <ArrowRight className="w-4 h-4" />
@@ -251,7 +251,7 @@ function OldStockSection({ products }: { products: Product[] }) {
             <span className="text-2xl">📦</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
               También disponible
             </h2>
             <p className="text-sm text-gray-500 font-bold">Stock completo · piezas que siguen esperándote</p>
@@ -264,7 +264,7 @@ function OldStockSection({ products }: { products: Product[] }) {
           <button onClick={scrollNext} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-all" aria-label="Siguiente">
             <ChevronRight className="w-5 h-5 text-gray-900" />
           </button>
-          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-black hover:bg-black transition-all uppercase tracking-tight">
+          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-all">
             Ver catálogo <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -280,7 +280,7 @@ function OldStockSection({ products }: { products: Product[] }) {
         </div>
       </div>
 
-      <Link href="/productos" className="md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-tight">
+      <Link href="/productos" className="md:hidden flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-black ">
         Ver catálogo completo <ArrowRight className="w-4 h-4" />
       </Link>
     </section>

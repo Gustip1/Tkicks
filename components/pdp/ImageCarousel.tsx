@@ -36,7 +36,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
   return (
     <div className="space-y-2 md:space-y-4">
       {/* Main image carousel */}
-      <div className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 shadow-sm border border-gray-200 mx-2 md:mx-0">
+      <div className="relative group rounded-2xl overflow-hidden bg-gray-100 mx-2 md:mx-0">
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (
@@ -70,14 +70,14 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
           <>
             <button
               onClick={scrollPrev}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/95 shadow-lg border border-gray-200 transition-all hover:scale-110 active:scale-95"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-md transition-[transform,background-color] duration-200 hover:bg-white active:scale-95"
               aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/95 shadow-lg border border-gray-200 transition-all hover:scale-110 active:scale-95"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-md transition-[transform,background-color] duration-200 hover:bg-white active:scale-95"
               aria-label="Siguiente imagen"
             >
               <ChevronRight className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
@@ -118,9 +118,9 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
             <button
               key={idx}
               className={cn(
-                "relative shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200",
+                "relative shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border transition-[opacity,box-shadow] duration-200",
                 selectedIndex === idx 
-                  ? 'ring-2 ring-black ring-offset-2 scale-105 border-black' 
+                  ? 'ring-2 ring-primary-hover ring-offset-2 border-transparent' 
                   : 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-400'
               )}
               aria-label={`Ver imagen ${idx + 1}`}

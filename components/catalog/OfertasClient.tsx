@@ -37,7 +37,7 @@ export function OfertasClient() {
               <span className="text-4xl">🔥</span>
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase">
+              <h1 className="text-4xl md:text-5xl font-black text-white ">
                 ¡Ofertas Especiales!
               </h1>
               <p className="text-gray-300 text-lg font-medium mt-1">

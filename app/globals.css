@@ -7,20 +7,22 @@
   --header-height-mobile: 76px;
   /* --font-sans / --font-display las define next/font/google en app/layout.tsx */
 
-  /* Shopify-inspired colors — única fuente de verdad (tailwind.config.ts las referencia via var()) */
-  --color-primary: #008060;
-  --color-primary-hover: #006e52;
-  --color-primary-light: #e6f4f1;
-  --color-accent: #5c6ac4;
-  --color-text: #202223;
-  --color-text-secondary: #6d7175;
-  --color-border: #e1e3e5;
-  --color-surface: #f6f6f7;
-  --color-surface-dark: #f1f2f4;
+  /* Sistema de diseño Apple — única fuente de verdad (tailwind.config.ts las referencia via var()).
+     Un solo acento: Action Blue. Los colores de estado (rojo de rebaja, verde de éxito)
+     son sólo para estados, nunca para decorar. */
+  --color-primary: #0066cc;        /* Action Blue — links, CTAs, estados activos */
+  --color-primary-hover: #0071e3;  /* primaryFocus */
+  --color-primary-light: #e8f1fb;
+  --color-accent: #0066cc;
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-border: #e0e0e0;         /* hairline */
+  --color-surface: #f5f5f7;        /* canvasParchment */
+  --color-surface-dark: #272729;   /* surfaceTile1 */
 }
 
 html, body {
-  font-family: var(--font-sans);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-sans), Inter, system-ui, sans-serif;
   /* overflow-x: hidden sin overflow-y explícito hace que el spec de CSS Overflow
      fuerce overflow-y a "auto" (no puede quedar "visible" si el otro eje no lo
      está), y sumado a un height fijo eso convierte a body en su propio
@@ -29,6 +31,19 @@ html, body {
      scrollear, achicando la pantalla útil todo el tiempo. */
   overflow-x: hidden;
   overflow-y: visible;
+}
+
+/* Ritmo de Apple: el texto corrido va a 17px y los títulos grandes con tracking
+   apretado (nunca el texto chico). */
+body {
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.022em;
+}
+
+h1, h2 {
+  letter-spacing: -0.028em;
+  text-wrap: balance;
 }
 
 /* Prevent zoom on input focus on iOS */
@@ -40,7 +55,7 @@ html, body {
 
 /* Accessible focus outline */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-primary-hover);
   outline-offset: 2px;
 }
 

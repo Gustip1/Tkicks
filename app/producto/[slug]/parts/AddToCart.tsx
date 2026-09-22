@@ -56,7 +56,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
     <div className="space-y-4 md:space-y-5">
       {/* Selector de talla */}
       <div>
-        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 ">
           Selecciona tu talla
         </label>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 md:gap-3">
@@ -67,12 +67,12 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
               onClick={() => setSize(size === v.size ? '' : v.size)}
               disabled={v.stock <= 0}
               className={`
-                relative min-h-[44px] py-3 md:py-3 px-2 md:px-3 rounded-md md:rounded-lg border-2 text-sm md:text-sm font-black transition-all
+                relative min-h-[44px] py-3 px-2 md:px-3 rounded-md border text-[15px] transition-[box-shadow,border-color,color] duration-150
                 ${size === v.size
-                  ? 'border-gray-900 bg-gray-900 text-white'
+                  ? 'border-transparent bg-white text-gray-900 font-semibold ring-2 ring-primary-hover'
                   : v.stock > 0
-                    ? 'border-gray-300 bg-white text-gray-900 hover:border-gray-900 active:border-gray-900 active:bg-gray-50'
-                    : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                    ? 'border-gray-200 bg-white text-gray-900 font-normal hover:border-gray-400'
+                    : 'border-gray-200 bg-gray-50 text-gray-300 font-normal cursor-not-allowed'
                 }
               `}
             >
@@ -94,7 +94,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
 
       {/* Selector de cantidad */}
       <div>
-        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 ">
           Cantidad
         </label>
         <div className="flex items-center gap-2 md:gap-3">
@@ -103,12 +103,12 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             onClick={() => setQty(Math.max(1, qty - 1))}
             disabled={!size || maxQty <= 0 || qty <= 1}
             aria-label="Disminuir cantidad"
-            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-gray-300 flex items-center justify-center text-gray-900 font-black hover:border-gray-900 active:border-gray-900 active:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">−</span>
           </button>
           <input
-            className="w-16 h-11 text-center rounded-md md:rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-black focus:outline-none focus:border-gray-900"
+            className="w-16 h-11 text-center rounded-md border border-gray-200 bg-white text-gray-900 text-[17px] focus:outline-none focus:border-primary"
             type="number"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -127,7 +127,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
             onClick={() => setQty(Math.min(maxQty, qty + 1))}
             disabled={!size || maxQty <= 0 || qty >= maxQty}
             aria-label="Aumentar cantidad"
-            className="w-11 h-11 rounded-md md:rounded-lg border-2 border-gray-300 flex items-center justify-center text-gray-900 font-black hover:border-gray-900 active:border-gray-900 active:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <span className="text-base md:text-lg">+</span>
           </button>
@@ -138,7 +138,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       <Button
         onClick={handleAdd}
         disabled={!size || maxQty <= 0 || qty < 1 || qty > maxQty}
-        className="w-full py-3 md:py-4 text-sm md:text-base font-black tracking-wide uppercase shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3 md:py-4 text-sm md:text-base font-black shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {!size ? 'Selecciona una talla' : maxQty <= 0 ? 'Sin stock' : 'Agregar al carrito'}
       </Button>
@@ -155,7 +155,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackEvent('whatsapp_click', 'contact', { slug: product.slug, source: 'pdp' })}
-        className="flex items-center justify-center gap-3 w-full py-3 md:py-4 rounded-xl border-2 border-[#25D366] text-[#25D366] font-black text-sm md:text-base uppercase tracking-wide hover:bg-[#25D366] hover:text-black transition-all duration-200"
+        className="flex items-center justify-center gap-3 w-full py-3 rounded-full border border-gray-200 text-gray-900 font-normal text-[17px] hover:bg-gray-100 transition-colors duration-200"
       >
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>

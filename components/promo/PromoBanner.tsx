@@ -25,7 +25,7 @@ export function PromoBanner({ content }: { content: PromoBannerContent }) {
           <div className="relative grid md:grid-cols-[1fr_auto] items-center gap-8 md:gap-14 px-6 py-10 md:px-14 md:py-14">
             <div className="text-center md:text-left">
               {content.eyebrow && (
-                <p className="inline-flex items-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-[0.3em] text-white/50 mb-4">
+                <p className="inline-flex items-center gap-2 text-[11px] md:text-xs font-bold text-white/50 mb-4">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/40" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white/70" />
@@ -46,7 +46,7 @@ export function PromoBanner({ content }: { content: PromoBannerContent }) {
 
               {content.ctaLabel && (
                 <div className="mt-7 flex justify-center md:justify-start">
-                  <span className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-white text-black text-sm font-black uppercase tracking-tight rounded-full transition-all duration-300 group-hover:scale-[1.03] group-active:scale-[0.98]">
+                  <span className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-white text-black text-sm font-black rounded-full transition-all duration-300 group-hover:scale-[1.03] group-active:scale-[0.98]">
                     {content.ctaLabel}
                     <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </span>

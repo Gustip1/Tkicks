@@ -30,7 +30,7 @@ export function Footer() {
             <div className="flex items-center gap-3">
               <Image src={logo} alt="Tkicks" priority className="h-10 w-auto rounded-md" />
               <div>
-                <p className="font-black text-gray-900 text-lg uppercase tracking-tight leading-none">Tkicks</p>
+                <p className="font-black text-gray-900 text-lg leading-none">Tkicks</p>
                 <p className="text-[11px] md:text-xs text-gray-500 font-bold mt-1">Sneakers & Streetwear · San Juan</p>
               </div>
             </div>
@@ -53,7 +53,7 @@ export function Footer() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <p className="mt-3 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400">Instagram</p>
+              <p className="mt-3 text-[10px] md:text-xs font-black text-gray-400">Instagram</p>
               <p className="text-sm md:text-base font-black text-gray-900 leading-tight">@tkicks.sj</p>
             </a>
 
@@ -69,7 +69,7 @@ export function Footer() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <p className="relative mt-3 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400">TikTok</p>
+              <p className="relative mt-3 text-[10px] md:text-xs font-black text-gray-400">TikTok</p>
               <p className="relative text-sm md:text-base font-black text-gray-900 leading-tight">@tkicks.sj</p>
             </a>
           </div>
@@ -97,7 +97,7 @@ export function Footer() {
         {/* Links grid */}
         <div className="mt-10 md:mt-14 grid gap-8 grid-cols-2 md:grid-cols-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Tienda</p>
+            <p className="text-[11px] font-black text-gray-400 mb-4">Tienda</p>
             <ul className="space-y-2.5 text-sm font-bold text-gray-600">
               <li><Link href="/productos?sneakers" className="hover:text-gray-900 transition-colors">Sneakers</Link></li>
               <li><Link href="/productos?streetwear" className="hover:text-gray-900 transition-colors">Streetwear</Link></li>
@@ -106,7 +106,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Servicios</p>
+            <p className="text-[11px] font-black text-gray-400 mb-4">Servicios</p>
             <ul className="space-y-2.5 text-sm font-bold text-gray-600">
               <li><Link href="/encargos" className="hover:text-gray-900 transition-colors">Encargos</Link></li>
               <li><Link href="/nosotros" className="hover:text-gray-900 transition-colors">Nosotros</Link></li>
@@ -118,7 +118,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Seguinos</p>
+            <p className="text-[11px] font-black text-gray-400 mb-4">Seguinos</p>
             <ul className="space-y-2.5 text-sm font-bold text-gray-600">
               <li>
                 <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
@@ -133,7 +133,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Ubicación</p>
+            <p className="text-[11px] font-black text-gray-400 mb-4">Ubicación</p>
             <div className="flex items-start gap-2 text-sm font-bold text-gray-600">
               <MapPin className="w-4 h-4 text-gray-900 shrink-0 mt-0.5" />
               <span>San Juan · Argentina<br /><span className="text-gray-400 font-medium text-xs">Showroom con cita previa</span></span>

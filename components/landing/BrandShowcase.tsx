@@ -102,7 +102,7 @@ export function BrandShowcase({
         <div className="flex items-end justify-between gap-4 mb-6 md:mb-8">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-1.5">
+              <p className="text-[11px] text-gray-400 font-bold mb-1.5">
                 {eyebrow}
               </p>
             )}
@@ -114,20 +114,20 @@ export function BrandShowcase({
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href={href}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white text-xs font-black uppercase tracking-tight hover:bg-black transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors"
             >
               Shop now <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <button
               onClick={scrollPrev}
-              className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-900 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
               aria-label="Anterior"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={scrollNext}
-              className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-900 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
               aria-label="Siguiente"
             >
               <ChevronRight className="w-5 h-5" />
@@ -161,7 +161,7 @@ export function BrandShowcase({
         <div className="mt-6 sm:hidden">
           <Link
             href={href}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black uppercase tracking-tight"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black "
           >
             Shop now <ArrowRight className="w-4 h-4" />
           </Link>

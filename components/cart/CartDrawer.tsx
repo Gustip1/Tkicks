@@ -83,7 +83,7 @@ export function CartDrawer() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-gray-200 p-4">
-            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">
+            <h2 className="text-lg font-black text-gray-900 ">
               Carrito
               {items.length > 0 && (
                 <span className="ml-2 text-sm font-black text-gray-400">
@@ -130,13 +130,13 @@ export function CartDrawer() {
                   <ShoppingBag className="w-7 h-7 text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Tu carrito está vacío</p>
+                  <p className="text-sm font-black text-gray-900 ">Tu carrito está vacío</p>
                   <p className="mt-1 text-xs text-gray-500 font-bold">Sumá tus próximos kicks al carrito.</p>
                 </div>
                 <Link
                   href="/productos"
                   onClick={close}
-                  className="inline-flex items-center gap-2 rounded-full bg-gray-900 text-white px-6 py-3 text-xs font-black uppercase tracking-tight hover:bg-black active:scale-[0.98] transition-all"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary text-white px-6 py-3 text-xs font-normal hover:bg-primary-hover active:scale-[0.98] transition-all"
                 >
                   Ver productos
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export function CartDrawer() {
                       </button>
                     </div>
                     <button
-                      className="ml-auto rounded-lg px-3 min-h-[40px] text-xs text-red-500 hover:bg-red-50 active:bg-red-100 font-black uppercase transition-colors"
+                      className="ml-auto rounded-lg px-3 min-h-[40px] text-xs text-red-500 hover:bg-red-50 active:bg-red-100 font-black transition-colors"
                       onClick={() => removeItem(it.productId, it.size)}
                     >
                       Eliminar
@@ -203,7 +203,7 @@ export function CartDrawer() {
           </div>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-black text-gray-900 uppercase tracking-wide">Subtotal</span>
+              <span className="font-black text-gray-900 ">Subtotal</span>
               <span className="font-black text-gray-900">
                 ${subtotalUSD.toFixed(2)}
                 <span className="text-[10px] text-gray-400 ml-0.5">USD</span>
@@ -223,7 +223,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={close}
-              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-black uppercase tracking-tight shadow-lg transition-all ${
+              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-black shadow-lg transition-all ${
                 items.length === 0
                   ? 'bg-gray-100 text-gray-400 pointer-events-none shadow-none'
                   : 'bg-gray-900 text-white hover:bg-black active:scale-[0.99]'

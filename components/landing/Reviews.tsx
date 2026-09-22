@@ -43,7 +43,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
     <section className="bg-gray-50 py-12 md:py-20 border-t border-gray-100">
       <div className="max-w-[1400px] mx-auto px-4">
         <div className="text-center mb-8 md:mb-12">
-          <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Lo que dicen</p>
+          <p className="text-xs text-gray-400 font-bold mb-2">Lo que dicen</p>
           <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
             Opiniones de clientes
           </h2>
@@ -61,7 +61,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
                   <p className="text-sm text-gray-600 leading-relaxed font-medium flex-1">
                     “{r.text}”
                   </p>
-                  <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                  <p className="text-sm font-black text-gray-900 ">
                     {r.name}
                   </p>
                 </div>

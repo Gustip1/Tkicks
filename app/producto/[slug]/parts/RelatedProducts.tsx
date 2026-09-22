@@ -63,7 +63,7 @@ export function RelatedProducts({
     <section className="mt-10 md:mt-16 border-t border-gray-200 pt-8 md:pt-12" aria-labelledby="related-title">
       <div className="flex items-end justify-between gap-4 mb-5 md:mb-8">
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-1.5">
+          <p className="text-xs text-gray-400 font-bold mb-1.5">
             Seguí mirando
           </p>
           <h2 id="related-title" className="text-2xl md:text-4xl font-black text-gray-900 leading-none tracking-tight">
@@ -72,7 +72,7 @@ export function RelatedProducts({
         </div>
         <Link
           href={`/productos?${category}`}
-          className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white text-xs font-black uppercase tracking-tight hover:bg-black transition-colors shrink-0"
+          className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors shrink-0"
         >
           Ver todo <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -84,7 +84,7 @@ export function RelatedProducts({
 
       <Link
         href={`/productos?${category}`}
-        className="sm:hidden mt-6 flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black uppercase tracking-tight"
+        className="sm:hidden mt-6 flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black "
       >
         Ver todo <ArrowRight className="w-4 h-4" />
       </Link>

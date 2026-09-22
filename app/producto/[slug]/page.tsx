@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
       </p>
       <Link
         href="/productos"
-        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-colors"
+        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors"
       >
         Ver catálogo
       </Link>
@@ -129,16 +129,16 @@ export default function ProductDetailPage() {
         <div className="space-y-3 md:space-y-6">
           {/* Category badge */}
           <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-            <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-gray-200">
+            <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-semibold capitalize">
               {product.category}
             </span>
             {hasSale && (
-              <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide border border-red-200">
-                🔥 Oferta
+              <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-3 py-1 text-xs font-semibold">
+                Oferta
               </span>
             )}
             {isComingSoon && (
-              <span className="inline-flex items-center rounded-full bg-gray-900 text-white px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-black uppercase tracking-wide">
+              <span className="inline-flex items-center rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-semibold">
                 🚚 Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
               </span>
             )}
@@ -189,7 +189,7 @@ export default function ProductDetailPage() {
                       </span>
                     )}
                     {hasSale && discountPct > 0 && (
-                      <span className="inline-flex items-center rounded-full bg-red-500 text-white px-2.5 py-1 text-xs font-black uppercase tracking-wide">
+                      <span className="inline-flex items-center rounded-full bg-red-500 text-white px-2.5 py-1 text-xs font-black ">
                         -{discountPct}%
                       </span>
                     )}
@@ -203,7 +203,7 @@ export default function ProductDetailPage() {
                     )}
                   </div>
                   {hasSale && (
-                    <p className="mt-1.5 text-xs font-black text-red-500 uppercase tracking-wide">
+                    <p className="mt-1.5 text-xs font-black text-red-500 ">
                       ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
                     </p>
                   )}
@@ -216,27 +216,27 @@ export default function ProductDetailPage() {
                     y el importe se cortaba a la mitad. */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {/* Transferencia / Efectivo */}
-                  <div className="relative rounded-2xl border-2 border-gray-900 bg-gray-50 p-4">
+                  <div className="relative rounded-lg bg-gray-100 p-5">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 shrink-0">
                         <Banknote className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
+                      <p className="text-xs font-normal text-gray-600 leading-tight">
                         Transferencia<br className="hidden sm:block" /> / Efectivo
                       </p>
                     </div>
-                    <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight break-words">
+                    <p className="text-2xl md:text-[28px] font-semibold text-gray-900 tracking-tight break-words">
                       {formatCurrency(priceInArs)}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-gray-900 font-bold uppercase tracking-wide">
+                    <p className="mt-1 text-xs text-gray-900 font-semibold">
                       Mejor precio
                     </p>
                   </div>
 
                   {/* Tarjeta — 3 cuotas */}
                   <div className={cn(
-                    'relative rounded-2xl border p-4',
-                    promoOn ? 'border-2 border-red-600 bg-red-50' : 'border-gray-200 bg-white',
+                    'relative rounded-lg border p-5',
+                    promoOn ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white',
                   )}>
                     <div className="flex items-center gap-2 mb-2">
                       <div className={cn(
@@ -245,11 +245,11 @@ export default function ProductDetailPage() {
                       )}>
                         <CreditCard className={cn('w-4 h-4', promoOn ? 'text-white' : 'text-gray-900')} />
                       </div>
-                      <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-gray-500 leading-tight">
+                      <p className="text-[11px] md:text-xs font-black text-gray-500 leading-tight">
                         Tarjeta<br className="hidden sm:block" /> 3 cuotas s/ interés
                       </p>
                       {promoOn && (
-                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black uppercase tracking-wider self-start animate-pulse">
+                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black self-start animate-pulse">
                           🔥 Promo
                         </span>
                       )}
@@ -275,10 +275,10 @@ export default function ProductDetailPage() {
 
           {/* Aviso de compra anticipada — producto en camino al showroom */}
           {isComingSoon && (
-            <div className="flex items-start gap-3 rounded-2xl border-2 border-gray-900 bg-gray-50 p-4">
+            <div className="flex items-start gap-3 rounded-lg bg-gray-100 p-5">
               <span className="text-2xl" aria-hidden="true">🚚</span>
               <div>
-                <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                <p className="text-sm font-black text-gray-900 ">
                   En camino al showroom{comingSoonEta && ` · Llega ${comingSoonEta}`}
                 </p>
                 <p className="text-xs md:text-sm text-gray-600 font-bold mt-0.5">

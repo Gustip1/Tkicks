@@ -19,7 +19,7 @@ export function AuctionPolicyContent() {
       </p>
 
       <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-        <p className="flex items-center gap-2 font-black uppercase tracking-tight text-red-600">
+        <p className="flex items-center gap-2 font-black text-red-600">
           <AlertTriangle className="w-4 h-4" />
           Penalización por incumplimiento (tolerancia cero)
         </p>
@@ -90,7 +90,7 @@ export function AuctionPolicyModal({ open, onClose }: { open: boolean; onClose: 
         <div className="px-5 py-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-xl hover:bg-black transition-colors text-sm tracking-tight"
+            className="w-full bg-gray-900 text-white font-black py-3 rounded-xl hover:bg-black transition-colors text-sm "
           >
             Entendido
           </button>

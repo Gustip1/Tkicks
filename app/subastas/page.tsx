@@ -48,7 +48,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
             <Gavel className="w-12 h-12" />
           </div>
         )}
-        <div className="absolute top-3 left-3 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
+        <div className="absolute top-3 left-3 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md ">
           Subasta
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function SubastasPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 flex items-center gap-3">
             <Gavel className="w-8 h-8 text-gray-900" />
             Subastas
           </h1>

@@ -98,7 +98,7 @@ export function Sidebar() {
           <Link href="/" onClick={close} className="flex items-center gap-3">
             <Image src={logo} alt="Tkicks" className="h-12 w-auto" />
             <div>
-              <p className="font-black text-gray-900 uppercase tracking-tight">Tkicks</p>
+              <p className="font-black text-gray-900 ">Tkicks</p>
               <p className="text-xs text-gray-500 font-bold">Sneakers & Streetwear</p>
             </div>
           </Link>
@@ -116,7 +116,7 @@ export function Sidebar() {
             hasta el último ítem (Admin) sin quedar tapado. overscroll-contain
             evita que al llegar al fondo siga scrolleando la página de atrás. */}
         <nav className="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain">
-          <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 px-2">
+          <p className="text-xs font-black text-gray-400 mb-3 px-2">
             Categorías
           </p>
           <div className="space-y-1">
@@ -129,7 +129,7 @@ export function Sidebar() {
                 <Sparkles className="w-5 h-5 text-gray-700" />
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-gray-900">New Arrivals</p>
+                <p className="font-black text-gray-900">New Arrivals</p>
                 <p className="text-xs font-bold text-gray-500">Lo último que llegó</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -145,7 +145,7 @@ export function Sidebar() {
                     🏷️
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="font-black uppercase tracking-tight text-gray-900">Marcas</p>
+                    <p className="font-black text-gray-900">Marcas</p>
                     <p className="text-xs font-bold text-gray-500">Comprá por marca</p>
                   </div>
                   <ChevronDown className={cn(
@@ -164,7 +164,7 @@ export function Sidebar() {
                         key={brand.id}
                         href={`/productos?brand=${brand.slug}`}
                         onClick={close}
-                        className="rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-tight"
+                        className="rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all "
                       >
                         {brand.name}
                       </Link>
@@ -183,7 +183,7 @@ export function Sidebar() {
                 👟
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-gray-900">Sneakers</p>
+                <p className="font-black text-gray-900">Sneakers</p>
                 <p className="text-xs font-bold text-gray-500">Calzado premium</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -198,7 +198,7 @@ export function Sidebar() {
                   👕
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-black uppercase tracking-tight text-gray-900">Streetwear</p>
+                  <p className="font-black text-gray-900">Streetwear</p>
                   <p className="text-xs font-bold text-gray-500">Ropa urbana</p>
                 </div>
                 <ChevronDown className={cn(
@@ -244,7 +244,7 @@ export function Sidebar() {
                 🔥
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-white">Ofertas</p>
+                <p className="font-black text-white">Ofertas</p>
                 <p className="text-xs font-bold text-white/80">Precios especiales</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60" />
@@ -259,7 +259,7 @@ export function Sidebar() {
                 <Gavel className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-white">Subastas</p>
+                <p className="font-black text-white">Subastas</p>
                 <p className="text-xs font-bold text-white/70">Pujá en pesos</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60" />
@@ -274,7 +274,7 @@ export function Sidebar() {
                 📦
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-gray-900">Encargos</p>
+                <p className="font-black text-gray-900">Encargos</p>
                 <p className="text-xs font-bold text-gray-500">Pedidos especiales</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -289,7 +289,7 @@ export function Sidebar() {
                 ✨
               </div>
               <div className="flex-1">
-                <p className="font-black uppercase tracking-tight text-gray-900">Nosotros</p>
+                <p className="font-black text-gray-900">Nosotros</p>
                 <p className="text-xs font-bold text-gray-500">Quiénes somos + redes</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -305,7 +305,7 @@ export function Sidebar() {
                   <ShieldCheck className="w-5 h-5 text-gray-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-black uppercase tracking-tight text-gray-900">Admin</p>
+                  <p className="font-black text-gray-900">Admin</p>
                   <p className="text-xs font-bold text-gray-500">Panel de administración</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -325,7 +325,7 @@ export function Sidebar() {
                   <ShieldCheck className="w-5 h-5 text-gray-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-black uppercase tracking-tight text-gray-900">Admin</p>
+                  <p className="font-black text-gray-900">Admin</p>
                   <p className="text-xs font-bold text-gray-500">Iniciar sesión</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -335,7 +335,7 @@ export function Sidebar() {
         </nav>
 
         <div className="shrink-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-white space-y-2.5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Seguinos</p>
+          <p className="text-[10px] font-black text-gray-400 px-1">Seguinos</p>
           <div className="grid grid-cols-2 gap-2">
             <a
               href="https://www.instagram.com/tkicks.sj"
@@ -348,7 +348,7 @@ export function Sidebar() {
                 <Instagram className="w-4 h-4 text-gray-700" />
               </div>
               <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none">IG</p>
+                <p className="text-[9px] font-black text-gray-400 leading-none">IG</p>
                 <p className="text-xs font-black text-gray-900 truncate leading-tight mt-0.5">@tkicks.sj</p>
               </div>
             </a>
@@ -365,7 +365,7 @@ export function Sidebar() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none">TikTok</p>
+                <p className="text-[9px] font-black text-gray-400 leading-none">TikTok</p>
                 <p className="text-xs font-black text-gray-900 truncate leading-tight mt-0.5">@tkicks.sj</p>
               </div>
             </a>

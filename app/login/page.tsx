@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-60 transition-colors"
+          className="w-full rounded-full bg-primary px-4 py-2 text-sm font-normal text-white hover:bg-primary-hover disabled:opacity-60 transition-colors"
         >
           {loading ? 'Iniciando...' : 'Iniciar sesión como Admin'}
         </button>

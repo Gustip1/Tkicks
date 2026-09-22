@@ -31,7 +31,7 @@ export function USPCardCarousel() {
       <div className="max-w-[1600px] mx-auto px-4 space-y-5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-emerald-600">
               <span className="h-px w-6 bg-emerald-500" /> Beneficios
             </span>
             <h2 id="beneficios-title" className="mt-2 text-xl md:text-3xl font-black tracking-tight text-gray-900">
@@ -52,7 +52,7 @@ export function USPCardCarousel() {
                 <div className={`w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-4 ${item.iconBg} group-hover:scale-105 transition-transform`}>
                   <Icon className="w-4 h-4 md:w-6 md:h-6" />
                 </div>
-                <h3 className="text-[11px] md:text-base font-black text-gray-900 uppercase tracking-tight leading-tight">
+                <h3 className="text-[11px] md:text-base font-black text-gray-900 leading-tight">
                   {item.title}
                 </h3>
                 <p className="hidden md:block text-xs md:text-sm text-gray-500 font-bold mt-1">

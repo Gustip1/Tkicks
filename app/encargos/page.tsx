@@ -320,7 +320,7 @@ export default function EncargosPage() {
                   <button
                     type="button"
                     onClick={() => fileRefs.current[idx]?.click()}
-                    className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black transition"
+                    className="rounded-full bg-primary px-4 py-2 text-xs font-normal text-white hover:bg-primary-hover transition"
                   >
                     Seleccionar archivos
                   </button>
@@ -446,9 +446,9 @@ export default function EncargosPage() {
               <button
                 key={m.value}
                 onClick={() => setMetodoPago(m.value)}
-                className={`flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition ${
+                className={`flex flex-col items-center gap-1 rounded-lg border p-4 transition ${
                   metodoPago === m.value
-                    ? "border-gray-900 bg-gray-50"
+                    ? "border-transparent bg-white ring-2 ring-primary-hover"
                     : "border-gray-200 bg-white hover:border-gray-400"
                 }`}
               >
@@ -493,7 +493,7 @@ export default function EncargosPage() {
         )}
         <button
           onClick={siguiente}
-          className="flex-1 rounded-xl bg-gray-900 py-3.5 text-sm font-bold text-white hover:bg-black transition"
+          className="flex-1 rounded-full bg-primary py-3.5 text-sm font-normal text-white hover:bg-primary-hover transition"
         >
           {paso === 2 ? "Enviar pedido por WhatsApp" : "Siguiente"}
         </button>

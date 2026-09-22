@@ -210,7 +210,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           <div className="relative">
             <ImageCarousel images={images} />
-            <div className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md uppercase">
+            <div className="absolute top-3 left-3 z-10 bg-gray-900 text-white text-xs font-black px-2 py-1 rounded-md ">
               Subasta
             </div>
           </div>
@@ -227,11 +227,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
               <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-black text-lg shrink-0">★</div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] uppercase tracking-widest text-gray-900 font-black leading-none">Va ganando</p>
+                  <p className="text-[10px] text-gray-900 font-black leading-none">Va ganando</p>
                   <p className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] uppercase text-gray-900 font-bold">Con</p>
+                  <p className="text-[10px] text-gray-900 font-bold">Con</p>
                   <p className="text-sm sm:text-base font-black text-gray-900">{formatARS(Number(bids[0].amount))}</p>
                 </div>
               </div>
@@ -240,11 +240,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-xs uppercase text-gray-400 font-bold">Puja actual</p>
+                  <p className="text-xs text-gray-400 font-bold">Puja actual</p>
                   <p className="text-4xl font-black text-gray-900">{formatARS(displayedPrice)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs uppercase text-gray-400 font-bold flex items-center justify-end gap-1">
+                  <p className="text-xs text-gray-400 font-bold flex items-center justify-end gap-1">
                     <Clock className="w-3 h-3" /> Termina en
                   </p>
                   <p className={`text-xl font-bold ${cd.ended ? 'text-red-500' : 'text-gray-900'}`}>{cd.label}</p>
@@ -264,7 +264,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                 <button
                   type="button"
                   onClick={() => load()}
-                  className="text-gray-900 hover:text-black font-bold uppercase tracking-wider"
+                  className="text-gray-900 hover:text-black font-bold "
                 >
                   Refrescar
                 </button>
@@ -274,7 +274,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             {auction.status === 'active' && !cd.ended && (
               <form onSubmit={submitBid} className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
                 <div>
-                  <p className="text-gray-900 font-black uppercase text-xs tracking-wider">Tus datos</p>
+                  <p className="text-gray-900 font-black text-xs ">Tus datos</p>
                   <p className="text-xs text-gray-500 mt-1">
                     Necesitamos nombre, apellido y teléfono para contactarte si ganás.
                   </p>
@@ -282,7 +282,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
                 <div className="grid grid-cols-2 gap-2">
                   <label className="block">
-                    <span className="text-[10px] uppercase text-gray-500 font-bold">Nombre *</span>
+                    <span className="text-[10px] text-gray-500 font-bold">Nombre *</span>
                     <input
                       type="text"
                       autoComplete="given-name"
@@ -293,7 +293,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     />
                   </label>
                   <label className="block">
-                    <span className="text-[10px] uppercase text-gray-500 font-bold">Apellido *</span>
+                    <span className="text-[10px] text-gray-500 font-bold">Apellido *</span>
                     <input
                       type="text"
                       autoComplete="family-name"
@@ -305,7 +305,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   </label>
                 </div>
                 <label className="block">
-                  <span className="text-[10px] uppercase text-gray-500 font-bold">Teléfono *</span>
+                  <span className="text-[10px] text-gray-500 font-bold">Teléfono *</span>
                   <input
                     type="tel"
                     inputMode="tel"
@@ -319,7 +319,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
                 <div className="border-t border-gray-200 pt-4">
                   <label className="block">
-                    <span className="text-xs uppercase text-gray-500 font-bold">
+                    <span className="text-xs text-gray-500 font-bold">
                       Tu puja (ARS) — mínimo {formatARS(minRequired)}
                     </span>
                     <input
@@ -341,7 +341,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                           key={delta}
                           type="button"
                           onClick={() => applyQuickBid(delta)}
-                          className="rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] text-black font-black text-xs sm:text-sm py-2.5 px-2 uppercase tracking-tight transition-all"
+                          className="rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] text-black font-black text-xs sm:text-sm py-2.5 px-2 transition-all"
                         >
                           +{formatARS(delta)}
                         </button>
@@ -382,7 +382,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                 <button
                   type="submit"
                   disabled={submitting || !bidAmount || !acceptedPolicy}
-                  className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
+                  className="w-full bg-gray-900 text-white font-black py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Enviando…' : 'Pujar'}
                 </button>
@@ -427,21 +427,21 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             <div className="space-y-3">
               <div className="bg-gradient-to-br from-gray-50 via-white to-white border border-gray-200 rounded-2xl p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-widest text-gray-900 font-black">Va ganando</p>
+                  <p className="text-[10px] text-gray-900 font-black">Va ganando</p>
                   <p className="text-2xl sm:text-3xl font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Con</p>
+                  <p className="text-[10px] text-gray-400 font-bold">Con</p>
                   <p className="text-xl sm:text-2xl font-black text-gray-900">{formatARS(Number(bids[0].amount))}</p>
                 </div>
               </div>
 
               <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Historial de pujas</p>
+                  <p className="text-[10px] text-gray-500 font-bold">Historial de pujas</p>
                 </div>
                 <ul className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
                   {bids.map((b, i) => {
@@ -459,7 +459,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                             <p className={`font-bold truncate ${isTop ? 'text-gray-900' : 'text-gray-600'}`}>
                               {b.alias}
                               {isTop && (
-                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider align-middle">
+                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black align-middle">
                                   Top
                                 </span>
                               )}

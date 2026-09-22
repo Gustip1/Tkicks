@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ReactNode } from 'react';
-import { DM_Sans, Playfair_Display } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
@@ -23,15 +23,11 @@ import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
-const dmSans = DM_Sans({
+// Inter es el sustituto canónico de SF Pro fuera de dispositivos Apple; en Mac y
+// iPhone el stack de tailwind.config.ts usa SF Pro, que ya viene con el sistema.
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-display',
   display: 'swap',
 });
 
@@ -39,7 +35,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#008060'
+  themeColor: '#ffffff'
 };
 
 export const metadata: Metadata = {
@@ -56,8 +52,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning className={cn(dmSans.variable, playfairDisplay.variable)}>
-      <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-medium')}>
+    <html lang="es" suppressHydrationWarning className={inter.variable}>
+      <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-normal')}>
         {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">
           {`

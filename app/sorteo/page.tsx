@@ -151,10 +151,10 @@ export default function SorteoPage() {
 
         <img src="/logo.jpg" alt="Tkicks" className="relative mx-auto h-16 w-auto rounded-2xl opacity-70" />
 
-        <p className="relative mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-red-500">
+        <p className="relative mt-8 text-[10px] font-black text-red-500">
           Tkicks · Sorteo
         </p>
-        <h1 className="relative mt-3 text-5xl font-black uppercase leading-none tracking-tight text-gray-900">
+        <h1 className="relative mt-3 text-5xl font-black leading-none text-gray-900">
           Muy<br />pronto.
         </h1>
         <p className="relative mt-5 text-sm font-bold leading-relaxed text-gray-500">
@@ -179,10 +179,10 @@ export default function SorteoPage() {
         <div className="relative overflow-hidden rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
           <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-200 blur-3xl" />
 
-          <p className="relative text-[9px] font-black uppercase tracking-[0.3em] text-red-500">
+          <p className="relative text-[9px] font-black text-red-500">
             ◈ · Sorteo Tkicks · ◈
           </p>
-          <h1 className="relative mt-2 text-6xl font-black uppercase leading-none tracking-tighter text-gray-900">
+          <h1 className="relative mt-2 text-6xl font-black leading-none text-gray-900">
             Hoy.
           </h1>
           <p className="relative mt-3 text-sm font-bold leading-relaxed text-gray-600">
@@ -192,7 +192,7 @@ export default function SorteoPage() {
 
           <div className="relative mt-5">
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Tu progreso</span>
+              <span className="text-[9px] font-black text-gray-400">Tu progreso</span>
               <span className="text-[9px] font-black text-gray-500">
                 <span className={foundCount > 0 ? 'text-red-500' : ''}>{foundCount}</span>/{TOTAL_CLUES} pistas
               </span>
@@ -209,7 +209,7 @@ export default function SorteoPage() {
         {/* ── Pistas descubiertas ──────────────────────────────────────────── */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400">
+            <p className="text-[9px] font-black text-gray-400">
               Pistas descubiertas
             </p>
             <p className="text-[9px] italic text-gray-400">en orden de hallazgo</p>
@@ -266,7 +266,7 @@ export default function SorteoPage() {
 
         {/* ── Ingresar la clave ─────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-gray-400">
+          <p className="mb-3 text-[9px] font-black text-gray-400">
             Ingresar clave
           </p>
 
@@ -283,7 +283,7 @@ export default function SorteoPage() {
             <button
               type="submit"
               disabled={submitting || codeValidated}
-              className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm font-black uppercase tracking-wider text-gray-900 transition hover:border-gray-500 hover:bg-gray-100 disabled:opacity-40"
+              className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm font-black text-gray-900 transition hover:border-gray-500 hover:bg-gray-100 disabled:opacity-40"
             >
               {submitting ? 'Verificando...' : codeValidated ? '✓ Clave verificada' : 'Verificar clave'}
             </button>
@@ -317,7 +317,7 @@ export default function SorteoPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-black uppercase tracking-wider text-white transition hover:bg-red-600 disabled:opacity-50"
+                className="w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-black text-white transition hover:bg-red-600 disabled:opacity-50"
               >
                 {submitting ? 'Registrando...' : 'Confirmar participación'}
               </button>

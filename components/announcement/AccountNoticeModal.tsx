@@ -78,7 +78,7 @@ export function AccountNoticeModal() {
         </div>
 
         <div className="relative min-h-0 overflow-y-auto">
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[10px] font-black text-amber-300">
             <span className="animate-notice-dot h-1.5 w-1.5 rounded-full bg-amber-400" />
             {ACCOUNT_NOTICE.badge}
           </span>
@@ -108,14 +108,14 @@ export function AccountNoticeModal() {
               {ACCOUNT_NOTICE.stamps.map((stamp, i) => (
                 <span
                   key={stamp}
-                  className={`animate-notice-stamp ${STAMP_DELAY[i] ?? ''} rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-200`}
+                  className={`animate-notice-stamp ${STAMP_DELAY[i] ?? ''} rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-zinc-200`}
                 >
                   {stamp}
                 </span>
               ))}
             </div>
 
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="mt-3 text-[11px] font-semibold text-zinc-500">
               {ACCOUNT_NOTICE.stampsCaption}
             </p>
           </div>
@@ -143,7 +143,7 @@ export function AccountNoticeModal() {
             <button
               type="button"
               onClick={accept}
-              className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-black uppercase tracking-wider text-black outline-none transition-transform hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95"
+              className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-black text-black outline-none transition-transform hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95"
             >
               {ACCOUNT_NOTICE.accept}
             </button>

@@ -24,7 +24,7 @@ export function BannerTicker() {
               active && item === PROMO_INSTALLMENT ? (
                 <span
                   key={idx}
-                  className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-black uppercase tracking-tight bg-red-600 text-white px-2.5 py-0.5 rounded-full animate-pulse"
+                  className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-black bg-red-600 text-white px-2.5 py-0.5 rounded-full animate-pulse"
                 >
                   {item}
                 </span>

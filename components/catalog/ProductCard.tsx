@@ -78,7 +78,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       className="group block"
     >
       {/* ── Imagen (swap en hover estilo Shopify) ── */}
-      <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 transition-shadow duration-300 group-hover:shadow-soft">
+      <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-gray-100">
         {/* El esqueleto solo pulsa mientras hay una imagen real cargando; si no
             hay imagen o falló, no queda pulsando para siempre. */}
         {!!primary?.url && !imgError && !loaded && (
@@ -129,7 +129,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Sold-out overlay */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-gray-900 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
+            <span className="rounded-full bg-gray-900 text-white text-xs font-semibold px-3 py-1">
               Agotado
             </span>
           </div>
@@ -138,17 +138,17 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {comingSoon && (
-            <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
+            <span className="rounded-full px-2 py-0.5 bg-gray-900 text-white text-[11px] font-semibold">
               🚚 En camino{comingSoonEta && ` · ${comingSoonEta}`}
             </span>
           )}
           {hasSale && !isSoldOut && (
-            <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest">
+            <span className="rounded-full px-2 py-0.5 bg-red-500 text-white text-[11px] font-semibold">
               SALE
             </span>
           )}
           {product.is_new && !isSoldOut && !comingSoon && (
-            <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest">
+            <span className="rounded-full px-2 py-0.5 bg-gray-900 text-white text-[11px] font-semibold">
               Nuevo
             </span>
           )}
@@ -158,13 +158,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
       {/* ── Info ── */}
       <div className="pt-3">
-        <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-1">
+        <p className="text-xs text-gray-500 font-normal mb-0.5">
           {categoryLabel}
         </p>
 
         <h3 className={cn(
-          'font-bold text-gray-900 uppercase tracking-wide leading-tight line-clamp-2 mb-2 group-hover:text-gray-500 transition-colors',
-          size === 'large' ? 'text-sm' : 'text-xs',
+          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors',
+          size === 'large' ? 'text-[17px]' : 'text-sm',
         )}>
           {product.title}
         </h3>
@@ -172,12 +172,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         {availableSizes.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {availableSizes.slice(0, 4).map(s => (
-              <span key={s} className="text-[9px] font-bold text-gray-500 border border-gray-300 px-1.5 py-0.5">
+              <span key={s} className="text-[11px] text-gray-600 bg-gray-100 rounded-full px-2 py-0.5">
                 {s}
               </span>
             ))}
             {availableSizes.length > 4 && (
-              <span className="text-[9px] text-gray-400 font-bold self-center">+{availableSizes.length - 4}</span>
+              <span className="text-[11px] text-gray-500 self-center">+{availableSizes.length - 4}</span>
             )}
           </div>
         )}
@@ -186,15 +186,15 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {/* USD — precio principal */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              'font-black tracking-tight',
+              'font-semibold tracking-tight',
               size === 'large' ? 'text-2xl' : 'text-lg',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
               ${activePrice.toFixed(2)}
-              <span className="text-[10px] text-gray-400 font-black ml-0.5 align-top">USD</span>
+              <span className="text-xs text-gray-500 font-normal ml-0.5 align-top">USD</span>
             </span>
             {hasSale && (
-              <span className="text-xs text-gray-400 line-through font-bold">
+              <span className="text-xs text-gray-400 line-through font-normal">
                 ${Number(product.price).toFixed(2)}
               </span>
             )}
@@ -203,14 +203,14 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {/* ARS — mismo tamaño que el USD */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              'font-black tracking-tight',
+              'font-semibold tracking-tight',
               size === 'large' ? 'text-2xl' : 'text-lg',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
               {formatCurrency(priceInArs)}
             </span>
             {hasSale && (
-              <span className="text-xs text-gray-400 line-through font-bold">
+              <span className="text-xs text-gray-400 line-through font-normal">
                 {formatCurrency(Number(product.price) * dolarOficial)}
               </span>
             )}
@@ -225,7 +225,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                 e.stopPropagation();
                 setActiveInfo((v) => (v === 'usd' ? null : 'usd'));
               }}
-              className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wide hover:text-gray-600 transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-primary font-normal hover:text-primary-hover transition-colors"
             >
               <Info className="w-3 h-3" />
               Precios en USD
@@ -248,12 +248,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                   setActiveInfo((v) => (v === 'installments' ? null : 'installments'));
                 }}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black',
-                  promoOn ? 'bg-red-600 text-white animate-pulse' : 'bg-gray-100 text-gray-700',
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                  promoOn ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700',
                 )}
               >
-                {promoOn && '🔥'} 3 × {formatCurrency(cardArs / 3)}
-                <span className="font-bold opacity-70">
+                3 × {formatCurrency(cardArs / 3)}
+                <span className="font-normal opacity-70">
                   {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
                 </span>
               </button>

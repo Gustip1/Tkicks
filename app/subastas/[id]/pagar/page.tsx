@@ -144,7 +144,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
           <p className="text-gray-500 text-sm">
             Orden <span className="text-gray-900 font-bold">{orderNumber}</span>. Te contactaremos cuando lo validemos.
           </p>
-          <button onClick={() => router.push('/')} className="bg-gray-900 text-white font-black uppercase px-5 py-3 rounded-lg hover:bg-black transition-colors">
+          <button onClick={() => router.push('/')} className="bg-gray-900 text-white font-black px-5 py-3 rounded-lg hover:bg-black transition-colors">
             Ir al inicio
           </button>
         </div>
@@ -155,7 +155,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
   return (
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-2xl mx-auto px-4 space-y-6">
-        <h1 className="text-2xl font-black uppercase text-gray-900">Pago de subasta</h1>
+        <h1 className="text-2xl font-black text-gray-900">Pago de subasta</h1>
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-2 shadow-sm">
           <p className="text-sm text-gray-500 font-bold">Producto</p>
@@ -167,7 +167,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
         {!orderId && (
           <>
             <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 shadow-sm">
-              <p className="text-sm uppercase font-bold text-gray-500">Entrega</p>
+              <p className="text-sm font-bold text-gray-500">Entrega</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -189,7 +189,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 shadow-sm">
-              <p className="text-sm uppercase font-bold text-gray-500">Tus datos</p>
+              <p className="text-sm font-bold text-gray-500">Tus datos</p>
               <div className="grid grid-cols-2 gap-3">
                 <input className={inputCls} placeholder="Nombre *" value={contact.firstName} onChange={(e) => setContact({ ...contact, firstName: e.target.value })} />
                 <input className={inputCls} placeholder="Apellido" value={contact.lastName} onChange={(e) => setContact({ ...contact, lastName: e.target.value })} />
@@ -201,7 +201,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
 
             {fulfillment === 'shipping' && (
               <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 shadow-sm">
-                <p className="text-sm uppercase font-bold text-gray-500">Dirección</p>
+                <p className="text-sm font-bold text-gray-500">Dirección</p>
                 <div className="grid grid-cols-3 gap-3">
                   <input className={`${inputCls} col-span-2`} placeholder="Calle *" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
                   <input className={inputCls} placeholder="Nº" value={address.number} onChange={(e) => setAddress({ ...address, number: e.target.value })} />
@@ -223,7 +223,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
             <button
               onClick={submit}
               disabled={submitting}
-              className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white font-black py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Procesando…' : 'Continuar'}
             </button>
@@ -233,7 +233,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
         {orderId && !proofDone && (
           <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
             <div>
-              <p className="text-sm uppercase font-bold text-gray-500">Datos para transferir</p>
+              <p className="text-sm font-bold text-gray-500">Datos para transferir</p>
               <p className="text-sm text-gray-700 mt-2">Alias: <span className="font-bold text-gray-900">tkicks.sj</span></p>
               <p className="text-sm text-gray-700">Titular: <span className="font-bold text-gray-900">Gustavo Facundo Piñones Tello</span></p>
               <p className="text-sm text-gray-700">Total: <span className="font-bold text-gray-900">{formatARS(Number(auction.current_price))}</span></p>
@@ -241,7 +241,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
             </div>
 
             <div className="border-t border-gray-200 pt-4 space-y-3">
-              <p className="text-sm uppercase font-bold text-gray-500">Subí el comprobante</p>
+              <p className="text-sm font-bold text-gray-500">Subí el comprobante</p>
               <input
                 type="file"
                 accept="image/*,application/pdf"
@@ -252,7 +252,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
               <button
                 onClick={uploadProof}
                 disabled={!proofFile || proofUploading}
-                className="w-full bg-gray-900 text-white font-black uppercase py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
+                className="w-full bg-gray-900 text-white font-black py-3 rounded-lg hover:bg-black disabled:opacity-50 transition-colors"
               >
                 {proofUploading ? 'Subiendo…' : 'Confirmar pago'}
               </button>

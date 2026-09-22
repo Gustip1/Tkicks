@@ -58,7 +58,7 @@ function CategoryTile({
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 sm:p-4">
-        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-none drop-shadow-sm">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-none drop-shadow-sm">
           {c.label}
         </h3>
         <span
@@ -80,7 +80,7 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
       <div className="max-w-[1400px] mx-auto px-4">
         {/* ── Header — mismo lenguaje visual que el resto de las secciones ── */}
         <div className="mb-5 md:mb-8">
-          <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">
+          <p className="text-xs text-gray-400 font-bold mb-2">
             Categorías
           </p>
           <h2 id="categories-title" className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">

@@ -38,26 +38,26 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
   };
 
   return (
-    <div className="rounded-2xl border-2 border-red-600 bg-red-50 p-4 md:p-5">
+    <div className="rounded-lg bg-gray-100 p-5">
       {!open ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 md:py-3.5 rounded-xl bg-red-600 text-white font-black text-sm md:text-base uppercase tracking-tight hover:bg-red-700 active:scale-[0.99] transition-all"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-full border border-primary bg-white text-primary font-normal text-[17px] hover:bg-primary hover:text-white active:scale-95 transition-[transform,background-color,color] duration-200"
         >
-          🔥 Hacer una oferta
+          Hacer una oferta
         </button>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm font-black text-gray-900 uppercase tracking-tight">¿Cuánto ofrecés?</p>
+          <p className="text-[17px] font-semibold text-gray-900">¿Cuánto ofrecés?</p>
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setCurrency('ARS')}
               className={cn(
-                'flex-1 py-2.5 rounded-lg border-2 font-black text-sm transition-colors',
-                currency === 'ARS' ? 'border-red-600 bg-red-600 text-white' : 'border-gray-300 bg-white text-gray-700',
+                'flex-1 py-2.5 rounded-full text-sm transition-colors',
+                currency === 'ARS' ? 'bg-white text-gray-900 font-semibold ring-2 ring-primary-hover' : 'bg-white/60 text-gray-600 font-normal ring-1 ring-gray-200',
               )}
             >
               Pesos (ARS)
@@ -66,8 +66,8 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
               type="button"
               onClick={() => setCurrency('USD')}
               className={cn(
-                'flex-1 py-2.5 rounded-lg border-2 font-black text-sm transition-colors',
-                currency === 'USD' ? 'border-red-600 bg-red-600 text-white' : 'border-gray-300 bg-white text-gray-700',
+                'flex-1 py-2.5 rounded-full text-sm transition-colors',
+                currency === 'USD' ? 'bg-white text-gray-900 font-semibold ring-2 ring-primary-hover' : 'bg-white/60 text-gray-600 font-normal ring-1 ring-gray-200',
               )}
             >
               Dólares (USD)
@@ -82,14 +82,14 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
             onChange={(e) => setAmount(e.target.value)}
             placeholder={currency === 'ARS' ? 'Ej: 800000' : 'Ej: 500'}
             autoFocus
-            className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base font-black text-gray-900 focus:outline-none focus:border-red-600 transition-colors"
+            className="w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-[17px] font-normal text-gray-900 focus:outline-none focus:border-primary transition-colors"
           />
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-black text-sm uppercase tracking-tight hover:bg-gray-50 transition-colors"
+              className="flex-1 py-3 rounded-full text-primary font-normal text-[17px] hover:bg-white transition-colors"
             >
               Cancelar
             </button>
@@ -97,7 +97,7 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
               type="button"
               onClick={handleSubmit}
               disabled={!amount.trim()}
-              className="flex-1 py-3 rounded-xl bg-red-600 text-white font-black text-sm uppercase tracking-tight hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 py-3 rounded-full bg-primary text-white font-normal text-[17px] hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Enviar oferta
             </button>

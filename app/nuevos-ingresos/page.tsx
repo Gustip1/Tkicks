@@ -23,10 +23,10 @@ export default async function NuevosIngresosPage() {
     <div className="min-h-screen bg-white">
       <main className="max-w-[1600px] mx-auto px-4 py-8 space-y-8">
         <header className="space-y-3">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+          <p className="text-xs font-black text-gray-400">
             Catálogo exclusivo
           </p>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 ">
             Nuevos ingresos
           </h1>
           <p className="text-sm md:text-base text-gray-500 font-bold max-w-2xl">
@@ -41,7 +41,7 @@ export default async function NuevosIngresosPage() {
             </p>
             <Link
               href="/productos"
-              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-black hover:bg-black transition-colors uppercase tracking-tight"
+              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-colors"
             >
               Ver catálogo general
             </Link>

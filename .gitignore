@@ -54,3 +54,7 @@ next-env.d.ts
 # Vitest
 coverage/
 
+
+# Skill de diseño (clon de github.com/rukkiecodes/claude-apple-design-system,
+# se actualiza con git pull dentro de la carpeta)
+.claude/skills/apple-design-system/

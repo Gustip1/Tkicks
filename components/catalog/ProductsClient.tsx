@@ -235,7 +235,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
     <div className="space-y-6 animate-fadeIn bg-white">
       {/* Simple category title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 ">
           {config ? config.title : title}
         </h1>
       </div>
@@ -407,7 +407,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           {(selectedSizes.length > 0 || selectedBrand) && (
             <button
               onClick={() => { setSelectedSizes([]); setSelectedBrand(''); }}
-              className="mt-4 px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-bold hover:bg-black active:scale-[0.98] transition-all"
+              className="mt-4 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover active:scale-[0.98] transition-all"
             >
               Limpiar filtros
             </button>
@@ -437,7 +437,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
       {hasMore && (
         <div className="flex justify-center pt-8">
           <button
-            className="flex items-center gap-2 rounded-full bg-gray-900 text-white px-8 py-3.5 text-sm font-medium hover:bg-gray-800 transition-all hover:scale-105 shadow-medium disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="flex items-center gap-2 rounded-full bg-primary text-white px-8 py-3.5 text-sm font-normal hover:bg-primary-hover transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:"
             disabled={loading}
             onClick={() => load(false)}
           >

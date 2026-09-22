@@ -30,7 +30,7 @@ export function PromoModal() {
     >
       <div className="relative max-w-md w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-red-600 rounded-2xl shadow-2xl shadow-red-600/30 p-6 sm:p-8 text-center animate-promo-glow">
         <div className="flex justify-center mb-3">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-widest">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black ">
             🔥🔥 Promo por tiempo limitado 🔥🔥
           </span>
         </div>
@@ -49,7 +49,7 @@ export function PromoModal() {
         <button
           type="button"
           onClick={dismiss}
-          className="w-full sm:w-auto sm:min-w-[180px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider text-sm transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="w-full sm:w-auto sm:min-w-[180px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-sm transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           autoFocus
         >
           Entendido

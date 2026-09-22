@@ -40,7 +40,7 @@ export function InstagramFeed() {
       <div className="max-w-[1400px] mx-auto px-4">
         <div className="flex items-center justify-between mb-8 md:mb-10">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Seguinos</p>
+            <p className="text-xs text-gray-400 font-bold mb-2">Seguinos</p>
             <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
               @tkicks.sj
             </h2>
@@ -49,7 +49,7 @@ export function InstagramFeed() {
             href="https://www.instagram.com/tkicks.sj"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white text-xs font-black uppercase tracking-tight hover:bg-black transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors shrink-0"
           >
             <Instagram className="w-4 h-4" />
             <span className="hidden sm:inline">Seguir</span>

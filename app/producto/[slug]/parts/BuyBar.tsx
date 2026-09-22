@@ -116,7 +116,7 @@ export function BuyBar({
               !askSize && !size && 'hidden'
             )}
           >
-            <span className="shrink-0 text-[11px] font-black uppercase tracking-wide text-gray-500">
+            <span className="shrink-0 text-[11px] font-black text-gray-500">
               Talle
             </span>
             {availableVariants.map((v) => (
@@ -124,10 +124,10 @@ export function BuyBar({
                 key={v.id}
                 onClick={() => selectSize(v.size)}
                 className={cn(
-                  'shrink-0 min-w-[44px] px-3 py-1.5 rounded-lg border-2 text-sm font-black transition-colors',
+                  'shrink-0 min-w-[44px] px-3 py-1.5 rounded-full border text-sm transition-[box-shadow,border-color] duration-150',
                   size === v.size
-                    ? 'border-gray-900 bg-gray-900 text-white'
-                    : 'border-gray-300 bg-white text-gray-900'
+                    ? 'border-transparent bg-white text-gray-900 font-semibold ring-2 ring-primary-hover'
+                    : 'border-gray-200 bg-white text-gray-900 font-normal'
                 )}
               >
                 {v.size}
@@ -138,15 +138,15 @@ export function BuyBar({
 
         <div className="flex items-center justify-between gap-3 lg:gap-6">
           {/* Título — solo desktop, en mobile el espacio es del precio */}
-          <p className="hidden lg:block flex-1 min-w-0 truncate text-base font-black text-gray-900 uppercase tracking-tight">
+          <p className="hidden lg:block flex-1 min-w-0 truncate text-base font-black text-gray-900 ">
             {product.title}
           </p>
 
           <div className="min-w-0">
-            <p className="text-lg font-black text-gray-900 leading-tight truncate">
+            <p className="text-lg font-semibold text-gray-900 leading-tight truncate">
               {formatCurrency(priceArs)}
             </p>
-            <p className="text-[11px] font-bold text-gray-500 leading-tight">
+            <p className="text-xs font-normal text-gray-500 leading-tight">
               ${priceUsd.toFixed(2)} USD · transf. / efectivo
             </p>
           </div>
@@ -159,10 +159,10 @@ export function BuyBar({
                   key={v.id}
                   onClick={() => selectSize(v.size)}
                   className={cn(
-                    'shrink-0 min-w-[42px] px-3 py-2 rounded-lg border-2 text-sm font-black transition-colors',
+                    'shrink-0 min-w-[42px] px-3 py-2 rounded-full border text-sm transition-[box-shadow,border-color] duration-150',
                     size === v.size
-                      ? 'border-gray-900 bg-gray-900 text-white'
-                      : 'border-gray-300 bg-white text-gray-900 hover:border-gray-900'
+                      ? 'border-transparent bg-white text-gray-900 font-semibold ring-2 ring-primary-hover'
+                      : 'border-gray-200 bg-white text-gray-900 font-normal hover:border-gray-400'
                   )}
                 >
                   {v.size}
@@ -175,10 +175,10 @@ export function BuyBar({
             onClick={handleAdd}
             disabled={soldOut}
             className={cn(
-              'shrink-0 px-5 lg:px-10 py-3 rounded-xl text-sm font-black uppercase tracking-tight transition-all',
+              'shrink-0 px-5 lg:px-10 py-3 rounded-full text-[17px] font-normal transition-[transform,background-color]',
               soldOut
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-900 text-white hover:bg-black active:scale-95'
+                : 'bg-primary text-white hover:bg-primary-hover active:scale-95'
             )}
           >
             {soldOut ? 'Sin stock' : size ? 'Agregar' : 'Elegir talle'}

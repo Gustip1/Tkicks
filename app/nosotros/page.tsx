@@ -52,7 +52,7 @@ export default async function NosotrosPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-40" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-900" />
             </span>
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.18em] text-gray-700">
+            <span className="text-[10px] md:text-xs font-black text-gray-700">
               Nosotros · Tkicks
             </span>
             <GiveawayInlinePriceClue clueId="/nosotros" label="Nosotros" position={4} digit="0" />
@@ -73,7 +73,7 @@ export default async function NosotrosPage() {
           <div className="animate-hero-enter hero-delay-3 mt-8 md:mt-10 flex flex-col sm:flex-row gap-3">
             <Link
               href="/productos"
-              className="group inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-all active:scale-[0.98]"
+              className="group inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-all active:scale-[0.98]"
             >
               Ver catálogo
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -82,14 +82,14 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white text-gray-900 font-black text-sm uppercase tracking-tight border border-gray-300 hover:bg-gray-50 hover:border-gray-500 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white text-gray-900 font-black text-sm border border-gray-300 hover:bg-gray-50 hover:border-gray-500 transition-all active:scale-[0.98]"
             >
               <Instagram className="w-4 h-4" />
               @tkicks.sj
             </a>
           </div>
 
-          <div className="animate-hero-enter hero-delay-4 mt-10 md:mt-14 flex flex-wrap gap-x-6 gap-y-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-500">
+          <div className="animate-hero-enter hero-delay-4 mt-10 md:mt-14 flex flex-wrap gap-x-6 gap-y-3 text-[11px] md:text-xs font-bold text-gray-500">
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> 100% originales</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Showroom físico</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Envíos a todo el país</span>
@@ -108,7 +108,7 @@ export default async function NosotrosPage() {
           ].map((s, i) => (
             <div key={s.v} className="animate-fade-up text-center md:text-left" style={{ animationDelay: `${i * 80}ms` }}>
               <p className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tighter">{s.k}</p>
-              <p className="mt-2 text-[11px] md:text-xs font-black uppercase tracking-widest text-gray-900">{s.v}</p>
+              <p className="mt-2 text-[11px] md:text-xs font-black text-gray-900">{s.v}</p>
               <p className="mt-1 text-[11px] md:text-xs font-bold text-gray-400">{s.sub}</p>
             </div>
           ))}
@@ -119,7 +119,7 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 grid gap-10 md:gap-16 md:grid-cols-[1fr_1.1fr] md:items-center">
           <div>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Nuestra historia
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
@@ -169,7 +169,7 @@ export default async function NosotrosPage() {
       <section className="relative bg-gray-50 border-y border-gray-200">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Lo que nos define
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
@@ -206,7 +206,7 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
             </span>
             <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
@@ -222,14 +222,14 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="group relative overflow-hidden rounded-3xl border-2 border-gray-900 p-6 md:p-8 bg-white hover:shadow-md transition-all active:scale-[0.99]"
+              className="group relative overflow-hidden rounded-2xl bg-gray-100 p-6 md:p-8 transition-colors hover:bg-gray-200/70"
             >
               <div className="relative flex flex-col gap-5 md:gap-7 h-full">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-900 flex items-center justify-center">
                     <Instagram className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500">Instagram</p>
+                  <p className="text-[10px] md:text-xs font-black text-gray-500">Instagram</p>
                 </div>
                 <div>
                   <p className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-none">@tkicks.sj</p>
@@ -237,7 +237,7 @@ export default async function NosotrosPage() {
                     Feed de producto, lanzamientos, stories con stock del día.
                   </p>
                 </div>
-                <div className="mt-auto inline-flex items-center gap-2 text-sm font-black uppercase tracking-tight text-gray-900">
+                <div className="mt-auto inline-flex items-center gap-2 text-sm font-black text-gray-900">
                   Seguir en Instagram
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -257,14 +257,14 @@ export default async function NosotrosPage() {
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
                     <TikTokIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/70">TikTok</p>
-                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">Nuevo</span>
+                  <p className="text-[10px] md:text-xs font-black text-white/70">TikTok</p>
+                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-[9px] md:text-[10px] font-black text-white">Nuevo</span>
                 </div>
                 <div>
                   <p className="text-2xl md:text-4xl font-black text-white tracking-tight leading-none">@tkicks.sj</p>
                   <p className="mt-2 text-sm md:text-base text-white/70 font-medium">Videos cortos, unboxings y behind the scenes del showroom.</p>
                 </div>
-                <div className="mt-auto inline-flex items-center gap-2 text-sm font-black uppercase tracking-tight text-white">
+                <div className="mt-auto inline-flex items-center gap-2 text-sm font-black text-white">
                   Seguir en TikTok
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -279,7 +279,7 @@ export default async function NosotrosPage() {
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="flex flex-wrap items-end justify-between gap-3 mb-8 md:mb-10">
             <div>
-              <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-900">
+              <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
                 <span className="h-px w-8 bg-gray-900" /> En vivo
               </span>
               <h2 className="mt-3 text-2xl md:text-4xl font-black tracking-tight text-gray-900">Último contenido del feed</h2>
@@ -289,7 +289,7 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-900 bg-white text-xs font-black uppercase tracking-widest text-gray-900 hover:bg-gray-900 hover:text-white transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-primary bg-white text-xs font-normal text-primary hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
             >
               Ver perfil completo
               <ArrowRight className="w-3.5 h-3.5" />
@@ -305,7 +305,7 @@ export default async function NosotrosPage() {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-tight hover:bg-black transition-all active:scale-[0.98]"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-all active:scale-[0.98]"
               >
                 <Instagram className="w-4 h-4" />
                 Abrir @tkicks.sj
@@ -336,7 +336,7 @@ export default async function NosotrosPage() {
                         <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-gray-400">Sin vista previa</div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="absolute left-2 top-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 border border-gray-200">
+                      <span className="absolute left-2 top-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[9px] md:text-[10px] font-black text-gray-700 border border-gray-200">
                         {item.mediaType === 'VIDEO' ? 'Video' : item.mediaType === 'CAROUSEL_ALBUM' ? 'Carrusel' : 'Post'}
                       </span>
                       {item.mediaType === 'VIDEO' && (
@@ -366,7 +366,7 @@ export default async function NosotrosPage() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 h-72 w-[700px] rounded-full bg-gray-100 blur-[120px]" />
         </div>
         <div className="relative max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 text-center">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-600">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[10px] md:text-xs font-black text-gray-600">
             <MapPin className="w-3.5 h-3.5 text-gray-900" /> Showroom · San Juan
           </span>
           <h2 className="mt-5 text-3xl md:text-6xl font-black tracking-tighter leading-[0.95] max-w-3xl mx-auto text-gray-900">
@@ -380,7 +380,7 @@ export default async function NosotrosPage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/productos"
-              className="group inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-gray-900 text-white font-black text-sm uppercase tracking-tight hover:bg-black transition-all active:scale-[0.98]"
+              className="group inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-all active:scale-[0.98]"
             >
               Ver catálogo
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -389,7 +389,7 @@ export default async function NosotrosPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl border-2 border-gray-900 bg-white text-gray-900 font-black text-sm uppercase tracking-tight hover:bg-gray-900 hover:text-white transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-primary bg-white text-primary font-normal text-sm hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
             >
               Escribinos por WhatsApp
             </a>
