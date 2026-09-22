@@ -14,9 +14,10 @@ export function PromoBanner({ content }: { content: PromoBannerContent }) {
     // Franja negra a todo el ancho, como los anuncios de campaña de apple.com
     <section className="bleed tile tile-black text-center" aria-label={content.title}>
       <div className="tile-inner" data-reveal="">
-        {content.eyebrow && <p className="t-tagline text-[#86868b]">{content.eyebrow}</p>}
-        <h2 className="t-display mt-2 max-w-[20ch] mx-auto">{content.title}</h2>
-        {content.subtitle && <p className="t-lead text-[#86868b] mt-3 max-w-[32ch] mx-auto">{content.subtitle}</p>}
+        <h2 className="t-display max-w-[22ch] mx-auto">
+          {content.title}
+          {content.subtitle && <> <span className="t-muted">{content.subtitle}</span></>}
+        </h2>
         {content.ctaLabel && (
           <div className="mt-7">
             <a

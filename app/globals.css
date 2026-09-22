@@ -452,7 +452,8 @@ img {
   /* Titular en dos tonos: la primera frase en tinta, el resto en gris.
      Es la firma de la Apple Store ("La novedad. Mirá lo último que llegó."). */
   .t-muted { color: #6e6e73; }
-  .tile-dark .t-muted { color: #86868b; }
+  .tile-dark .t-muted,
+  .tile-black .t-muted { color: #86868b; }
 
   /* ── Links con chevron ("Ver más ›") ─────────────────────────────────────── */
   .link-apple {

@@ -206,14 +206,8 @@ export default async function HomePage() {
   return (
     // Las franjas se apilan pegadas hasta el footer, como en apple.com
     <div className="-mb-3 md:-mb-8">
-      {/* Hero — tile de apple.com: titular, píldoras y los últimos ingresos en grande */}
-      <HeroSection
-        content={content.hero}
-        products={products
-          .filter((p) => p.images?.[0]?.url)
-          .slice(0, 3)
-          .map((p) => ({ slug: p.slug, title: p.title, imageUrl: p.images[0].url }))}
-      />
+      {/* Hero — sólo la marca: titular en dos tonos y las píldoras */}
+      <HeroSection content={content.hero} />
 
       {/* Banner promocional — solo se muestra si está habilitado desde /admin/portada */}
       <PromoBanner content={content.banner} />

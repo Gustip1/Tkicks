@@ -38,8 +38,9 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
     <section className="bleed tile tile-dark" aria-labelledby="reviews-title">
       <div className="tile-inner">
         <div className="text-center mb-10 md:mb-14" data-reveal="">
-          <h2 id="reviews-title" className="t-display">Lo que dicen.</h2>
-          <p className="t-lead text-[#86868b] mt-3">Opiniones reales de quienes ya compraron.</p>
+          <h2 id="reviews-title" className="t-display max-w-[22ch] mx-auto">
+            Lo que dicen. <span className="t-muted">Opiniones reales de quienes ya compraron.</span>
+          </h2>
         </div>
 
         <div className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10" ref={emblaRef}>
