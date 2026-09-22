@@ -75,10 +75,10 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       ref={cardRef}
       href={`/producto/${product.slug}`}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
-      className="group block"
+      className="group store-card flex flex-col h-full p-4 md:p-5"
     >
-      {/* ── Imagen (swap en hover estilo Shopify) ── */}
-      <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-gray-100">
+      {/* ── Imagen (swap en hover) — dentro de la tarjeta, esquinas de 8px ── */}
+      <div className="relative w-full aspect-square overflow-hidden rounded-sm bg-parchment">
         {/* El esqueleto solo pulsa mientras hay una imagen real cargando; si no
             hay imagen o falló, no queda pulsando para siempre. */}
         {!!primary?.url && !imgError && !loaded && (
@@ -103,7 +103,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
             className={cn(
-              'object-contain transition-all duration-700 ease-out',
+              'object-contain mix-blend-multiply transition-all duration-700 ease-out',
               loaded ? 'opacity-100' : 'opacity-0',
               // al pasar el mouse la primaria se desvanece si hay una segunda imagen
               secondary?.url && 'group-hover:opacity-0',
@@ -122,7 +122,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
-            className="object-contain opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
+            className="object-contain mix-blend-multiply opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
           />
         )}
 
@@ -135,36 +135,27 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           </div>
         )}
 
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {comingSoon && (
-            <span className="rounded-full px-2 py-0.5 bg-gray-900 text-white text-[11px] font-semibold">
-              🚚 En camino{comingSoonEta && ` · ${comingSoonEta}`}
-            </span>
-          )}
-          {hasSale && !isSoldOut && (
-            <span className="rounded-full px-2 py-0.5 bg-red-500 text-white text-[11px] font-semibold">
-              SALE
-            </span>
-          )}
-          {product.is_new && !isSoldOut && !comingSoon && (
-            <span className="rounded-full px-2 py-0.5 bg-gray-900 text-white text-[11px] font-semibold">
-              Nuevo
-            </span>
-          )}
-        </div>
 
       </div>
 
       {/* ── Info ── */}
-      <div className="pt-3">
-        <p className="text-xs text-gray-500 font-normal mb-0.5">
-          {categoryLabel}
-        </p>
+      <div className="pt-4 flex-1 flex flex-col">
+        {/* Eyebrow de apple.com: "Nuevo" en naranja; si no, la categoría en gris */}
+        {comingSoon ? (
+          <p className="t-fine font-semibold text-[#bf4800] mb-1">
+            Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
+          </p>
+        ) : hasSale && !isSoldOut ? (
+          <p className="t-fine font-semibold text-red-600 mb-1">Oferta</p>
+        ) : product.is_new && !isSoldOut ? (
+          <p className="t-fine font-semibold text-[#bf4800] mb-1">Nuevo</p>
+        ) : (
+          <p className="t-fine text-gray-500 mb-1 capitalize">{categoryLabel}</p>
+        )}
 
         <h3 className={cn(
-          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors',
-          size === 'large' ? 'text-[17px]' : 'text-sm',
+          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-2 tracking-[-0.022em]',
+          size === 'large' ? 'text-[19px]' : 'text-[17px]',
         )}>
           {product.title}
         </h3>
@@ -182,12 +173,11 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           </div>
         )}
 
-        <div className="space-y-1">
+        <div className="space-y-0.5 mt-auto">
           {/* USD — precio principal */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              'font-semibold tracking-tight',
-              size === 'large' ? 'text-2xl' : 'text-lg',
+              't-strong',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
               ${activePrice.toFixed(2)}
@@ -203,9 +193,8 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {/* ARS — mismo tamaño que el USD */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              'font-semibold tracking-tight',
-              size === 'large' ? 'text-2xl' : 'text-lg',
-              hasSale ? 'text-red-600' : 'text-gray-900',
+              't-body',
+              hasSale ? 'text-red-600' : 'text-gray-700',
             )}>
               {formatCurrency(priceInArs)}
             </span>
@@ -231,7 +220,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
               Precios en USD
             </button>
             {activeInfo === 'usd' && (
-              <div className="mt-1 w-full rounded-lg bg-gray-900 text-white text-[11px] font-medium leading-snug p-2.5">
+              <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
                 Todos los precios están expresados en USD. Las conversiones a pesos son al cambio oficial.
               </div>
             )}
@@ -258,7 +247,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                 </span>
               </button>
               {activeInfo === 'installments' && (
-                <div className="mt-1 w-full rounded-lg bg-gray-900 text-white text-[11px] font-medium leading-snug p-2.5">
+                <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
                   {promoOn
                     ? 'Promo activa: 3 cuotas sin interés, al mismo precio que efectivo/transferencia.'
                     : 'Pagando en 3 cuotas con tarjeta se aplica un 10% de recargo sobre el precio base.'}

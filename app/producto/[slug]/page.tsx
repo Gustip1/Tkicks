@@ -121,47 +121,41 @@ export default function ProductDetailPage() {
 
       <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
         {/* Image section */}
-        <div className="md:sticky md:top-8 md:self-start">
+        <div className="md:sticky md:top-20 md:self-start">
           <ImageCarousel images={product.images || []} />
         </div>
         
         {/* Product info section */}
         <div className="space-y-3 md:space-y-6">
-          {/* Category badge */}
-          <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-            <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-semibold capitalize">
-              {product.category}
-            </span>
-            {hasSale && (
-              <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 px-3 py-1 text-xs font-semibold">
-                Oferta
-              </span>
+          {/* Eyebrow + título, como la página "Comprar" de apple.com */}
+          <div className="hero-rise">
+            {isComingSoon ? (
+              <p className="t-caption font-semibold text-[#bf4800]">
+                Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
+              </p>
+            ) : hasSale ? (
+              <p className="t-caption font-semibold text-red-600">Oferta</p>
+            ) : product.is_new ? (
+              <p className="t-caption font-semibold text-[#bf4800]">Nuevo</p>
+            ) : (
+              <p className="t-caption text-gray-500 capitalize">{product.category}</p>
             )}
-            {isComingSoon && (
-              <span className="inline-flex items-center rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-semibold">
-                🚚 Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
-              </span>
-            )}
+            <h1 className="t-display mt-1.5">{product.title}</h1>
           </div>
-
-          {/* Title */}
-          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
-            {product.title}
-          </h1>
 
           {/* Rating placeholder */}
           <div className="flex items-center gap-1.5 md:gap-2">
             <div className="flex items-center gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-3 h-3 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />
+                <Star key={i} className="w-3.5 h-3.5 fill-gray-900 text-gray-900" />
               ))}
             </div>
-            <span className="text-[10px] md:text-sm text-gray-500 font-bold">(Verificado)</span>
+            <span className="t-caption text-gray-500">Verificado</span>
           </div>
 
           {/* Description */}
           {product.description && (
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap font-semibold text-sm md:text-base">
+            <p className="t-body text-gray-600 whitespace-pre-wrap">
               {product.description}
             </p>
           )}
@@ -179,17 +173,17 @@ export default function ProductDetailPage() {
                 {/* Precio principal (USD) */}
                 <div>
                   <div className="flex items-baseline gap-2.5 flex-wrap">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                    <span className="t-lead text-gray-900">
                       ${activePrice.toFixed(2)}
-                      <span className="text-base md:text-xl text-gray-400 font-black ml-1">USD</span>
+                      <span className="t-body text-gray-500 ml-1">USD</span>
                     </span>
                     {hasSale && (
-                      <span className="text-lg md:text-2xl font-black text-gray-400 line-through">
+                      <span className="t-body text-gray-400 line-through">
                         ${Number(product.price).toFixed(2)}
                       </span>
                     )}
                     {hasSale && discountPct > 0 && (
-                      <span className="inline-flex items-center rounded-full bg-red-500 text-white px-2.5 py-1 text-xs font-black ">
+                      <span className="t-caption font-semibold text-red-600">
                         -{discountPct}%
                       </span>
                     )}
@@ -203,7 +197,7 @@ export default function ProductDetailPage() {
                     )}
                   </div>
                   {hasSale && (
-                    <p className="mt-1.5 text-xs font-black text-red-500 ">
+                    <p className="mt-1.5 t-caption text-red-600">
                       ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
                     </p>
                   )}

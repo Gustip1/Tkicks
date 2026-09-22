@@ -1,73 +1,98 @@
-"use client";
 import Link from 'next/link';
-import { ArrowRight, Shield, Truck, Zap } from 'lucide-react';
+import Image from 'next/image';
 import { HeroContent, DEFAULT_HERO_CONTENT } from '@/lib/homeContent';
 
-export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: HeroContent }) {
+export interface HeroProduct {
+  slug: string;
+  title: string;
+  imageUrl: string;
+}
+
+/**
+ * Hero de la home como un "product tile" de apple.com: franja blanca a todo
+ * el ancho, titular enorme centrado, bajada, dos píldoras y el producto en
+ * grande debajo. Los textos se editan desde /admin/portada; las fotos son
+ * los últimos ingresos.
+ *
+ * Entra con la secuencia de carga de Apple (el texto sube, las fotos se
+ * asientan) y las fotos hacen zoom suave al scrollear.
+ */
+export function HeroSection({
+  content = DEFAULT_HERO_CONTENT,
+  products = [],
+}: {
+  content?: HeroContent;
+  products?: HeroProduct[];
+}) {
+  const shown = products.slice(0, 3);
+
   return (
-    <section className="relative bg-white overflow-hidden border-b border-gray-100">
-      <div className="max-w-[1100px] mx-auto px-4 md:px-8">
-        <div className="flex flex-col items-center text-center py-10 md:py-14">
+    <section className="bleed tile-light -mt-3 md:-mt-8 overflow-hidden">
+      <div className="tile-inner pt-14 md:pt-20 pb-12 md:pb-16 text-center">
+        <p className="hero-rise t-tagline text-gray-600">{content.badge}</p>
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 animate-hero-enter hero-delay-1">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-40" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-900" />
-            </span>
-            <span className="text-xs text-gray-700 font-bold ">
-              {content.badge}
-            </span>
-          </div>
+        <h1 className="hero-rise hero-d1 t-hero mt-2 max-w-[18ch] mx-auto">
+          {content.headlinePre}
+          {content.headlineHighlight}
+          {content.headlinePost}
+        </h1>
 
-          {/* Headline */}
-          <h1 className="text-[2rem] md:text-[3rem] lg:text-[3.5rem] font-black text-gray-900 leading-[0.95] tracking-[-0.02em] mb-5 animate-hero-enter hero-delay-2">
-            {content.headlinePre}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-600 to-gray-400">
-              {content.headlineHighlight}
-            </span>
-            {content.headlinePost}
-          </h1>
+        <p className="hero-rise hero-d2 t-lead text-gray-600 mt-4 max-w-[34ch] mx-auto">
+          {content.subtitlePre}
+          <span className="text-gray-900">{content.subtitleBold}</span>
+          {content.subtitlePost}
+        </p>
 
-          {/* Subtítulo */}
-          <p className="text-sm md:text-base text-gray-500 leading-relaxed max-w-lg mb-7 font-medium animate-hero-enter hero-delay-3">
-            {content.subtitlePre}
-            <span className="text-gray-900 font-bold">{content.subtitleBold}</span>
-            {content.subtitlePost}
-          </p>
+        <div className="hero-rise hero-d3 mt-7 flex flex-wrap items-center justify-center gap-3.5">
+          <Link href={content.ctaPrimaryHref} className="btn-apple">
+            {content.ctaPrimaryLabel}
+          </Link>
+          <Link href={content.ctaSecondaryHref} className="btn-apple-ghost">
+            {content.ctaSecondaryLabel}
+          </Link>
+        </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-10 animate-hero-enter hero-delay-4">
-            <Link
-              href={content.ctaPrimaryHref}
-              className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-primary text-white text-sm font-normal rounded-full hover:bg-primary-hover transition-all active:scale-[0.98]"
-            >
-              {content.ctaPrimaryLabel}
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href={content.ctaSecondaryHref}
-              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-transparent text-primary text-[17px] font-normal rounded-full border border-primary hover:bg-primary hover:text-white transition-colors"
-            >
-              <Zap className="w-4 h-4" />
-              {content.ctaSecondaryLabel}
-            </Link>
-          </div>
+        <p className="hero-rise hero-d4 t-caption text-gray-500 mt-5">
+          {[content.trustPill1, content.trustPill2].filter(Boolean).join(' · ')}
+        </p>
+      </div>
 
-          {/* Trust pills */}
-          <div className="flex flex-wrap justify-center gap-3 animate-hero-enter hero-delay-5">
-            {[
-              { icon: Shield, text: content.trustPill1 },
-              { icon: Truck, text: content.trustPill2 },
-            ].map(({ icon: Icon, text }, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200">
-                <Icon className="w-3.5 h-3.5 text-gray-500" />
-                <span className="text-xs text-gray-500 font-bold ">{text}</span>
-              </div>
+      {shown.length > 0 && (
+        <div className="tile-inner pb-16 md:pb-24">
+          <div
+            className={`hero-settle hero-d2 grid gap-3 md:gap-5 mx-auto max-w-[1100px] ${
+              shown.length === 1 ? 'grid-cols-1 max-w-[560px]' : shown.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
+            }`}
+          >
+            {shown.map((p, i) => (
+              <Link
+                key={p.slug}
+                href={`/producto/${p.slug}`}
+                aria-label={p.title}
+                // En desktop la foto del medio sube un poco: arma una composición, no una fila de miniaturas
+                className={`group relative block overflow-hidden rounded-lg bg-parchment aspect-[4/5] ${
+                  shown.length === 3 && i === 1 ? 'md:-translate-y-6' : ''
+                }`}
+              >
+                {/* El zoom de scroll va en un contenedor y el de hover en la imagen:
+                    los dos usan transform y en el mismo elemento se pisarían. El
+                    contenedor lleva el gris porque su transform crea una capa propia,
+                    y el mix-blend de la foto sólo se funde con lo que hay en esa capa. */}
+                <div className="scroll-zoom absolute inset-0 bg-parchment">
+                  <Image
+                    src={p.imageUrl}
+                    alt={p.title}
+                    fill
+                    priority={i < 2}
+                    sizes="(max-width: 768px) 33vw, 360px"
+                    className="object-contain mix-blend-multiply p-1.5 md:p-6 transition-transform duration-700 ease-apple group-hover:scale-[1.04]"
+                  />
+                </div>
+              </Link>
             ))}
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

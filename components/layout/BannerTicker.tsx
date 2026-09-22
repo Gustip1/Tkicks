@@ -1,43 +1,47 @@
 "use client";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { DolarWidget } from '@/components/DolarWidget';
 
+/**
+ * La "ribbon" de apple.com: una franja clara debajo de la navegación con un
+ * mensaje corto y un link. En lugar de una marquesina, los mensajes se turnan
+ * con un fundido suave cada pocos segundos.
+ */
 const BASE_ITEMS = [
-  '✓ Productos 100% originales',
-  '📦 Envíos a todo el país',
-  '✨ Productos únicos y exclusivos',
+  { text: 'Productos 100% originales, con su comprobante de compra.', cta: 'Ver catálogo', href: '/productos' },
+  { text: 'Envíos a todo el país con seguimiento.', cta: 'Cómo comprar', href: '/#como-comprar' },
 ];
 
-const NORMAL_INSTALLMENT = '💳 3 cuotas sin interés (10% de recargo)';
-const PROMO_INSTALLMENT = '🔥 PROMO: 3 cuotas sin interés SIN recargo';
+const NORMAL_INSTALLMENT = { text: 'Pagá en 3 cuotas con tarjeta (10% de recargo).', cta: 'Comprar', href: '/productos' };
+const PROMO_INSTALLMENT = { text: 'Por tiempo limitado: 3 cuotas sin interés y sin recargo.', cta: 'Comprar', href: '/productos' };
+
+const ROTATE_MS = 5000;
 
 export function BannerTicker() {
   const { active } = useInstallmentsPromo();
   const items = [active ? PROMO_INSTALLMENT : NORMAL_INSTALLMENT, ...BASE_ITEMS];
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t = setInterval(() => setI((n) => (n + 1) % items.length), ROTATE_MS);
+    return () => clearInterval(t);
+  }, [items.length]);
+
+  const item = items[i % items.length];
 
   return (
-    <div className="w-full bg-gray-900 text-white border-b border-gray-700 overflow-hidden">
-      <div className="flex items-center justify-between px-2 md:px-4 max-w-[1600px] mx-auto">
-        <div className="relative overflow-hidden flex-1 min-w-0" aria-label="Ofertas y mensajes importantes" role="region">
-          <div className="animate-marquee motion-reduce:animate-none whitespace-nowrap py-1.5 md:py-2 will-change-transform">
-            {[...items, ...items].map((item, idx) =>
-              active && item === PROMO_INSTALLMENT ? (
-                <span
-                  key={idx}
-                  className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-black bg-red-600 text-white px-2.5 py-0.5 rounded-full animate-pulse"
-                >
-                  {item}
-                </span>
-              ) : (
-                <span key={idx} className="mx-3 md:mx-6 inline-block text-[10px] md:text-sm font-bold">
-                  {item}
-                </span>
-              )
-            )}
-          </div>
-        </div>
-        {/* Widget del dólar - OCULTO en móvil, VISIBLE en desktop */}
-        <div className="hidden md:flex shrink-0 border-l border-white/30 pl-4 ml-4">
+    <div className="bg-parchment text-gray-900" role="region" aria-label="Novedades">
+      <div className="relative max-w-[1440px] mx-auto px-4 md:px-6 py-3 flex items-center justify-center min-h-[44px]">
+        <p key={i} className="t-caption text-center animate-fadeIn">
+          {item.text}{' '}
+          <Link href={item.href} className="link-apple">
+            {item.cta}
+          </Link>
+        </p>
+        <div className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2">
           <DolarWidget />
         </div>
       </div>

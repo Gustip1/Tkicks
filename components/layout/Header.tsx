@@ -5,7 +5,7 @@ import Image from 'next/image';
 // nunca queda tapado por el viejo en la caché del navegador.
 import logo from '@/public/logo.jpg';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, Menu, Search as SearchIcon, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, Search as SearchIcon, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
@@ -23,7 +23,8 @@ export function Header() {
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [brandsOpen, setBrandsOpen] = useState(false);
+  // Panel desplegable a todo el ancho, como el de apple.com
+  const [menu, setMenu] = useState<null | 'marcas' | 'streetwear'>(null);
   const router = useRouter();
   const pathname = usePathname();
   const isInAdmin = pathname.startsWith('/admin');
@@ -76,268 +77,256 @@ export function Header() {
     };
   }, []);
 
-  // Cerramos el dropdown al navegar
+  // Cerramos el panel al navegar
   useEffect(() => {
-    setBrandsOpen(false);
+    setMenu(null);
   }, [pathname]);
 
   if (isInAdmin) return null;
 
+  const navLink =
+    'px-2.5 2xl:px-3 py-2 text-xs font-normal text-white/80 hover:text-white transition-colors duration-200 whitespace-nowrap';
+
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/70 pt-[env(safe-area-inset-top)]">
-      <BannerTicker />
-
-      {/* Fila única: nav (izq) · logo (centro real) · utilidades (der) */}
-      <div className="relative h-14 md:h-16 px-2 md:px-6 flex items-center justify-between max-w-[1600px] mx-auto">
-
-        {/* Izquierda - menú móvil + navegación */}
-        <div className="flex items-center gap-1 min-w-0">
-          <button
-            onClick={toggleSidebar}
-            className="inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 xl:hidden transition-colors"
-            aria-label="Abrir menú"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-
-          <nav className="hidden xl:flex items-center gap-0">
-            <Link
-              href="/nuevos-ingresos"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors whitespace-nowrap"
+    <>
+      <header
+        className="sticky top-0 z-40 bg-black text-white pt-[env(safe-area-inset-top)]"
+        onMouseLeave={() => setMenu(null)}
+      >
+        {/* Barra global: 48px, negra translúcida, links de 12px — la nav de apple.com */}
+        <div className="relative h-12 px-2 md:px-6 flex items-center justify-between max-w-[1440px] mx-auto">
+          {/* Izquierda - menú móvil + navegación */}
+          <div className="flex items-center gap-1 min-w-0">
+            <button
+              onClick={toggleSidebar}
+              className="inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-white/80 hover:text-white xl:hidden transition-colors"
+              aria-label="Abrir menú"
             >
-              New Arrivals
-            </Link>
+              <Menu className="h-5 w-5" />
+            </button>
 
-            {/* ── Marcas (megamenú: hover o click) ── */}
-            {brands.length > 0 && (
-              <div
-                className="relative"
-                onMouseEnter={() => setBrandsOpen(true)}
-                onMouseLeave={() => setBrandsOpen(false)}
-              >
-                <button
-                  type="button"
-                  onClick={() => setBrandsOpen((v) => !v)}
-                  aria-expanded={brandsOpen}
-                  aria-haspopup="true"
-                  className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors flex items-center gap-1 "
-                >
-                  Marcas
-                  <ChevronDown
-                    className={cn(
-                      'w-3 h-3 text-gray-400 transition-transform duration-200',
-                      brandsOpen && 'rotate-180 text-gray-900'
-                    )}
-                  />
-                </button>
-
-                <div
-                  className={cn(
-                    'absolute left-0 top-full pt-2 z-50 transition-all duration-200',
-                    brandsOpen
-                      ? 'opacity-100 visible translate-y-0'
-                      : 'opacity-0 invisible -translate-y-1 pointer-events-none'
-                  )}
-                >
-                  <div className="w-[420px] bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="grid grid-cols-2 gap-0.5 p-2">
-                      {brands.map((brand) => (
-                        <Link
-                          key={brand.id}
-                          href={`/productos?brand=${brand.slug}`}
-                          className="rounded-md px-3 py-2 text-sm font-normal text-gray-700 hover:text-gray-950 hover:bg-gray-100 transition-colors "
-                        >
-                          {brand.name}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="border-t border-gray-200">
-                      <Link
-                        href="/productos"
-                        className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all "
-                      >
-                        Ver todas las marcas
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <Link
-              href="/productos?sneakers"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
-            >
-              Sneakers
-            </Link>
-
-            <div className="relative group">
-              <Link
-                href="/productos?streetwear"
-                className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors flex items-center gap-1 "
-              >
-                Streetwear
-                <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-gray-900 transition-colors" />
+            <nav className="hidden xl:flex items-center">
+              <Link href="/nuevos-ingresos" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Nuevos ingresos
               </Link>
 
-              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="w-56 bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="p-2 space-y-0.5">
-                    {STREETWEAR_SUBCATEGORIES.map((sub) => (
-                      <Link
-                        key={sub.value}
-                        href={`/productos?streetwear&sub=${sub.value}`}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all"
-                      >
-                        <span className="text-lg">{sub.icon}</span>
-                        <span>{sub.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-200">
-                    <Link
-                      href="/productos?streetwear"
-                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black text-gray-900 hover:bg-gray-50 transition-all "
-                    >
-                      Ver todo en Streetwear
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+              {brands.length > 0 && (
+                <button
+                  type="button"
+                  className={cn(navLink, menu === 'marcas' && 'text-white')}
+                  onMouseEnter={() => setMenu('marcas')}
+                  onClick={() => setMenu((m) => (m === 'marcas' ? null : 'marcas'))}
+                  aria-expanded={menu === 'marcas'}
+                  aria-haspopup="true"
+                >
+                  Marcas
+                </button>
+              )}
 
-            <Link
-              href="/ofertas"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors "
-            >
-              Ofertas
-            </Link>
-            <Link
-              href="/subastas"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
-            >
-              Subastas
-            </Link>
-            <Link
-              href="/encargos"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
-            >
-              Encargos
-            </Link>
-            <Link
-              href="/nosotros"
-              className="px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
-            >
-              Nosotros
-            </Link>
-          </nav>
-        </div>
+              <Link href="/productos?sneakers" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Sneakers
+              </Link>
 
-        {/* Centro - Logo. Desde 1536px va absoluto, así queda en el centro
-            exacto del header y no corrido a la derecha (con mx-auto se centra
-            en el sobrante, y el menú de la izquierda es más ancho que los
-            íconos de la derecha). Debajo de ese ancho el menú ocupa más de la
-            mitad de la barra: ahí el logo sigue en el flujo con mx-auto, que
-            lo deja lo más al centro posible sin pisar las categorías.
-            pointer-events-none deja clickeable lo que queda debajo. */}
-        <div className="mx-auto min-[1400px]:mx-0 min-[1400px]:pointer-events-none min-[1400px]:absolute min-[1400px]:inset-0 min-[1400px]:flex min-[1400px]:items-center min-[1400px]:justify-center">
-          <Link
-            href="/"
-            className="pointer-events-auto flex items-center shrink-0 px-2"
-            aria-label="Inicio"
-          >
-            <Image src={logo} alt="Tkicks" priority className="h-12 md:h-14 w-auto" />
-          </Link>
-        </div>
-
-        {/* Derecha - Buscar y acciones */}
-        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-          <form
-            className="relative hidden lg:block"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const q = search.trim();
-              if (!q) return router.push('/productos');
-              router.push(`/productos?q=${encodeURIComponent(q)}`);
-            }}
-          >
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre o talle…"
-              className="w-40 xl:w-52 rounded-full border border-transparent bg-gray-100 px-4 py-2 pl-10 text-sm text-gray-900 placeholder-gray-500 font-normal transition-all focus:w-72 focus:border-primary focus:bg-white focus:outline-none"
-            />
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          </form>
-
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="lg:hidden inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-            aria-label="Buscar"
-          >
-            {showSearch ? <X className="h-5 w-5" /> : <SearchIcon className="h-5 w-5" />}
-          </button>
-
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="hidden sm:flex px-2 2xl:px-2.5 py-2 text-xs 2xl:text-[13px] font-normal text-gray-800 hover:text-gray-950 transition-colors "
-            >
-              Admin
-            </Link>
-          )}
-
-          {!isAdmin && !user && (
-            <Link
-              href="/login"
-              className="hidden sm:flex rounded-full px-3 py-2 text-xs text-gray-700 hover:text-gray-950 transition-colors font-normal"
-            >
-              Admin
-            </Link>
-          )}
-
-          <button
-            className="relative inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-            aria-label="Abrir carrito"
-            onClick={openCart}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartCount > 0 && (
-              <span
-                key={cartCount}
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-semibold animate-badge-pop"
+              <Link
+                href="/productos?streetwear"
+                className={cn(navLink, menu === 'streetwear' && 'text-white')}
+                onMouseEnter={() => setMenu('streetwear')}
+                onFocus={() => setMenu('streetwear')}
+                aria-haspopup="true"
               >
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+                Streetwear
+              </Link>
 
-      {showSearch && (
-        <div className="lg:hidden px-4 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fadeIn bg-white border-t border-gray-100">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const q = search.trim();
-              setShowSearch(false);
-              if (!q) return router.push('/productos');
-              router.push(`/productos?q=${encodeURIComponent(q)}`);
-            }}
-          >
-            <div className="relative">
+              <Link href="/ofertas" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Ofertas
+              </Link>
+              <Link href="/subastas" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Subastas
+              </Link>
+              <Link href="/encargos" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Encargos
+              </Link>
+              <Link href="/nosotros" className={navLink} onMouseEnter={() => setMenu(null)}>
+                Nosotros
+              </Link>
+            </nav>
+          </div>
+
+          {/* Centro - Logo. El JPG es negro sobre blanco: invertido queda blanco sobre
+              negro, el mismo negro de la barra, así que el fondo no se ve. */}
+          <div className="mx-auto min-[1280px]:mx-0 min-[1280px]:pointer-events-none min-[1280px]:absolute min-[1280px]:inset-0 min-[1280px]:flex min-[1280px]:items-center min-[1280px]:justify-center">
+            <Link
+              href="/"
+              className="pointer-events-auto flex items-center shrink-0 px-2"
+              aria-label="Inicio"
+              onMouseEnter={() => setMenu(null)}
+            >
+              <Image src={logo} alt="Tkicks" priority className="h-8 w-auto invert" />
+            </Link>
+          </div>
+
+          {/* Derecha - Buscar y acciones */}
+          <div className="flex items-center gap-1 md:gap-1.5 shrink-0" onMouseEnter={() => setMenu(null)}>
+            <form
+              className="relative hidden lg:block"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = search.trim();
+                if (!q) return router.push('/productos');
+                router.push(`/productos?q=${encodeURIComponent(q)}`);
+              }}
+            >
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscá por nombre, marca o talle (ej: 42)"
-                className="w-full rounded-full border border-transparent bg-gray-100 px-4 py-3 pl-10 text-[17px] text-gray-900 placeholder-gray-500 font-normal focus:border-primary focus:bg-white focus:outline-none"
-                autoFocus
+                placeholder="Buscar en Tkicks"
+                aria-label="Buscar productos"
+                className="h-8 w-36 xl:w-44 rounded-full bg-white/10 pl-8 pr-3 text-xs text-white placeholder-white/50 transition-[width,background-color] duration-300 ease-apple focus:w-64 focus:bg-white/15 focus:outline-none"
               />
-              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            </div>
-          </form>
+              <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/60" />
+            </form>
+
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className="lg:hidden inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-white/80 hover:text-white transition-colors"
+              aria-label="Buscar"
+            >
+              {showSearch ? <X className="h-5 w-5" /> : <SearchIcon className="h-5 w-5" />}
+            </button>
+
+            {isAdmin && (
+              <Link href="/admin" className={cn(navLink, 'hidden sm:flex')}>
+                Admin
+              </Link>
+            )}
+
+            {!isAdmin && !user && (
+              <Link href="/login" className={cn(navLink, 'hidden sm:flex')}>
+                Ingresar
+              </Link>
+            )}
+
+            <button
+              className="relative inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-white/80 hover:text-white transition-colors"
+              aria-label="Abrir carrito"
+              onClick={openCart}
+            >
+              <ShoppingCart className="h-[18px] w-[18px]" />
+              {cartCount > 0 && (
+                <span
+                  key={cartCount}
+                  className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-white text-black text-[10px] font-semibold animate-badge-pop"
+                >
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-      )}
-    </header>
+
+        {/* Panel desplegable a todo el ancho, del mismo negro que la barra */}
+        <div
+          className={cn(
+            'absolute inset-x-0 top-full bg-black transition-[opacity,transform,visibility] duration-300 ease-apple',
+            menu ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-3 pointer-events-none'
+          )}
+        >
+          <div className="max-w-[1024px] mx-auto px-6 md:px-10 pt-10 pb-14">
+            {menu === 'marcas' && (
+              <div className="grid gap-10 md:grid-cols-[2fr_1fr]">
+                <div>
+                  <p className="t-fine text-[#86868b] mb-4">Explorar marcas</p>
+                  <ul className="grid grid-cols-2 gap-x-10 gap-y-2">
+                    {brands.map((brand, i) => (
+                      <li key={brand.id} className="hero-rise" style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}>
+                        <Link
+                          href={`/productos?brand=${brand.slug}`}
+                          className="text-2xl font-semibold tracking-tight text-[#e8e8ed] hover:text-white transition-colors"
+                        >
+                          {brand.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="t-fine text-[#86868b] mb-4">Más</p>
+                  <ul className="space-y-2.5 t-caption">
+                    <li><Link href="/productos" className="text-[#e8e8ed] hover:text-white">Ver todo el catálogo</Link></li>
+                    <li><Link href="/nuevos-ingresos" className="text-[#e8e8ed] hover:text-white">Nuevos ingresos</Link></li>
+                    <li><Link href="/ofertas" className="text-[#e8e8ed] hover:text-white">Ofertas</Link></li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {menu === 'streetwear' && (
+              <div className="grid gap-10 md:grid-cols-[2fr_1fr]">
+                <div>
+                  <p className="t-fine text-[#86868b] mb-4">Explorar streetwear</p>
+                  <ul className="space-y-2">
+                    {STREETWEAR_SUBCATEGORIES.map((sub, i) => (
+                      <li key={sub.value} className="hero-rise" style={{ animationDelay: `${i * 30}ms` }}>
+                        <Link
+                          href={`/productos?streetwear&sub=${sub.value}`}
+                          className="text-2xl font-semibold tracking-tight text-[#e8e8ed] hover:text-white transition-colors"
+                        >
+                          {sub.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="t-fine text-[#86868b] mb-4">Más</p>
+                  <ul className="space-y-2.5 t-caption">
+                    <li><Link href="/productos?streetwear" className="text-[#e8e8ed] hover:text-white">Todo streetwear</Link></li>
+                    <li><Link href="/encargos" className="text-[#e8e8ed] hover:text-white">Encargos personalizados</Link></li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {showSearch && (
+          <div className="lg:hidden px-4 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fadeIn">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = search.trim();
+                setShowSearch(false);
+                if (!q) return router.push('/productos');
+                router.push(`/productos?q=${encodeURIComponent(q)}`);
+              }}
+            >
+              <div className="relative">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscá por nombre, marca o talle"
+                  aria-label="Buscar productos"
+                  className="w-full rounded-full bg-white/10 px-4 py-3 pl-10 text-[17px] text-white placeholder-white/50 focus:bg-white/15 focus:outline-none"
+                  autoFocus
+                />
+                <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+              </div>
+            </form>
+          </div>
+        )}
+      </header>
+
+      {/* Mientras el panel está abierto, la página de fondo se desenfoca (como en apple.com) */}
+      <div
+        aria-hidden
+        onMouseEnter={() => setMenu(null)}
+        className={cn(
+          'fixed inset-0 z-30 bg-black/10 backdrop-blur-md transition-opacity duration-300 ease-apple',
+          menu ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      />
+
+      <BannerTicker />
+    </>
   );
 }

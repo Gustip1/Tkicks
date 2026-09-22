@@ -1,13 +1,12 @@
 "use client";
 
 import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Product } from '@/types/db';
 import { ProductCard } from '@/components/catalog/ProductCard';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface BrandShowcaseProps {
   /** Texto grande que titula la sección (ej. "Eme Studios") */
@@ -22,6 +21,8 @@ interface BrandShowcaseProps {
   href: string;
   /** Cantidad máxima de productos a traer */
   limit?: number;
+  /** Fondo de la franja: se intercalan para mantener el ritmo de apple.com. */
+  tone?: 'light' | 'parchment';
   /**
    * Productos ya resueltos server-side (app/page.tsx). Si vienen, este
    * componente no dispara ningún fetch propio — evita que cada carrusel de
@@ -38,22 +39,17 @@ export function BrandShowcase({
   href,
   limit = 10,
   initialProducts,
+  tone = 'parchment',
 }: BrandShowcaseProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
   const [loading, setLoading] = useState(initialProducts === undefined);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    {
-      // loop con pocos productos (relativo a los ~4 slides visibles en desktop)
-      // genera saltos/huecos raros en el autoplay — mismo criterio que NewArrivalsCarousel.
-      loop: products.length > 4,
-      align: 'start',
-      slidesToScroll: 1,
-      containScroll: 'trimSnaps',
-      dragFree: true,
-    },
-    [Autoplay({ delay: 3000, stopOnMouseEnter: true, stopOnInteraction: false })]
-  );
+  // Sin autoplay: en apple.com el contenido nunca se mueve solo.
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    containScroll: 'trimSnaps',
+    dragFree: true,
+  });
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
@@ -96,59 +92,31 @@ export function BrandShowcase({
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="bg-white py-10 md:py-14 border-t border-gray-100">
-      <div className="max-w-[1400px] mx-auto px-4">
-        {/* ── Header ── */}
-        <div className="flex items-end justify-between gap-4 mb-6 md:mb-8">
-          <div className="min-w-0">
-            {eyebrow && (
-              <p className="text-[11px] text-gray-400 font-bold mb-1.5">
-                {eyebrow}
-              </p>
-            )}
-            <h2 className="text-2xl md:text-4xl font-black text-gray-900 leading-none tracking-tight truncate">
-              {title}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={href}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors"
-            >
-              Shop now <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <button
-              onClick={scrollPrev}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={scrollNext}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
-              aria-label="Siguiente"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+    <section className={`bleed tile ${tone === 'light' ? 'tile-light' : 'tile-parchment'}`} aria-label={title}>
+      <div className="tile-inner">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10" data-reveal="">
+          <h2 className="t-section max-w-[26ch]">
+            {title}.{eyebrow && <> <span className="t-muted">{eyebrow}.</span></>}
+          </h2>
+          <Link href={href} className="link-apple t-body">
+            Comprar {title}
+          </Link>
         </div>
 
         {/* ── Carrusel ── */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 animate-pulse aspect-square" />
+              <div key={i} className="bg-white rounded-lg animate-pulse aspect-[3/4]" />
             ))}
           </div>
         ) : (
-          <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
-            <div className="-ml-3 md:-ml-5 flex">
+          <div className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10 py-2" ref={emblaRef}>
+            <div className="-ml-4 md:-ml-5 flex">
               {products.map((p) => (
                 <div
                   key={p.id}
-                  className="min-w-0 shrink-0 grow-0 basis-[44%] sm:basis-[40%] md:basis-1/3 xl:basis-1/4 pl-3 md:pl-5"
+                  className="min-w-0 shrink-0 grow-0 basis-[72%] sm:basis-[44%] md:basis-1/3 xl:basis-1/4 pl-4 md:pl-5"
                 >
                   <ProductCard product={p} />
                 </div>
@@ -157,14 +125,13 @@ export function BrandShowcase({
           </div>
         )}
 
-        {/* CTA mobile */}
-        <div className="mt-6 sm:hidden">
-          <Link
-            href={href}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black "
-          >
-            Shop now <ArrowRight className="w-4 h-4" />
-          </Link>
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={scrollPrev} className="paddle-apple" aria-label="Anterior">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={scrollNext} className="paddle-apple" aria-label="Siguiente">
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </section>

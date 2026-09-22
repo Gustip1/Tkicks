@@ -102,7 +102,7 @@ export function BuyBar({
   return createPortal(
     <div
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:py-3 transition-transform duration-300',
+        'fixed inset-x-0 bottom-0 z-40 bg-parchment/80 backdrop-blur-xl backdrop-saturate-150 border-t border-black/[0.06] px-4 md:px-8 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:py-3 transition-transform duration-500 ease-apple',
         hidden && 'translate-y-full'
       )}
     >
@@ -138,7 +138,7 @@ export function BuyBar({
 
         <div className="flex items-center justify-between gap-3 lg:gap-6">
           {/* Título — solo desktop, en mobile el espacio es del precio */}
-          <p className="hidden lg:block flex-1 min-w-0 truncate text-base font-black text-gray-900 ">
+          <p className="hidden lg:block flex-1 min-w-0 truncate t-tagline">
             {product.title}
           </p>
 

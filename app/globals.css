@@ -41,8 +41,7 @@ body {
   letter-spacing: -0.022em;
 }
 
-h1, h2 {
-  letter-spacing: -0.028em;
+h1, h2, h3 {
   text-wrap: balance;
 }
 
@@ -403,3 +402,202 @@ img {
 .notice-stamp-delay-1 { animation-delay: 0.30s; }
 .notice-stamp-delay-2 { animation-delay: 0.38s; }
 .notice-stamp-delay-3 { animation-delay: 0.46s; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SISTEMA APPLE — tipografía, franjas, botones y movimiento
+   Valores tomados de la especificación de apple.com (skill apple-design-system,
+   references/apple-design-source.md). Si algo no está acá, se decide por ese doc.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Escala tipográfica ─────────────────────────────────────────────────────
+     Titulares en 600 con tracking negativo leve ("Apple tight"); con Inter se
+     aprieta 0.01em extra porque su tracking de fábrica es más abierto que SF Pro. */
+  .t-hero {
+    font-size: 56px; line-height: 1.07; font-weight: 600; letter-spacing: -0.015em;
+  }
+  .t-display {
+    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .t-section {
+    font-size: 34px; line-height: 1.18; font-weight: 600; letter-spacing: -0.012em;
+  }
+  .t-lead {
+    font-size: 28px; line-height: 1.14; font-weight: 400; letter-spacing: 0.007em;
+  }
+  .t-tagline {
+    font-size: 21px; line-height: 1.19; font-weight: 600; letter-spacing: 0.011em;
+  }
+  .t-body   { font-size: 17px; line-height: 1.47; font-weight: 400; letter-spacing: -0.022em; }
+  .t-strong { font-size: 17px; line-height: 1.24; font-weight: 600; letter-spacing: -0.022em; }
+  .t-caption { font-size: 14px; line-height: 1.43; font-weight: 400; letter-spacing: -0.016em; }
+  .t-fine   { font-size: 12px; line-height: 1.33; font-weight: 400; letter-spacing: -0.01em; }
+
+  /* Breakpoints de apple.com: el hero baja 56 → 40 → 34 → 28 */
+  @media (max-width: 1068px) {
+    .t-hero { font-size: 48px; line-height: 1.08; }
+  }
+  @media (max-width: 734px) {
+    .t-hero { font-size: 40px; line-height: 1.1; }
+    .t-display { font-size: 32px; line-height: 1.125; }
+    .t-section { font-size: 28px; }
+    .t-lead { font-size: 21px; line-height: 1.19; }
+    .t-tagline { font-size: 19px; }
+  }
+  @media (max-width: 419px) {
+    .t-hero { font-size: 34px; }
+  }
+
+  /* Titular en dos tonos: la primera frase en tinta, el resto en gris.
+     Es la firma de la Apple Store ("La novedad. Mirá lo último que llegó."). */
+  .t-muted { color: #6e6e73; }
+  .tile-dark .t-muted { color: #86868b; }
+
+  /* ── Links con chevron ("Ver más ›") ─────────────────────────────────────── */
+  .link-apple {
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.15em;
+  }
+  .link-apple::after { content: "›"; font-size: 1.15em; line-height: 0; transform: translateY(0.02em); }
+  .link-apple:hover { text-decoration: underline; text-underline-offset: 0.15em; }
+  .tile-dark .link-apple { color: #2997ff; }
+
+  /* ── Botones ────────────────────────────────────────────────────────────── */
+  .btn-apple,
+  .btn-apple-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    min-height: 44px;
+    padding: 11px 22px;
+    border-radius: 980px;
+    font-size: 17px;
+    line-height: 1.18;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    white-space: nowrap;
+    transition: background-color 0.2s cubic-bezier(0.28, 0.11, 0.32, 1),
+      color 0.2s cubic-bezier(0.28, 0.11, 0.32, 1),
+      transform 0.2s cubic-bezier(0.28, 0.11, 0.32, 1);
+  }
+  .btn-apple { background: var(--color-primary); color: #fff; }
+  .btn-apple:hover { background: #0077ed; }
+  .btn-apple-ghost { background: transparent; color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); }
+  .btn-apple-ghost:hover { background: var(--color-primary); color: #fff; }
+  .btn-apple:active, .btn-apple-ghost:active { transform: scale(0.95); }
+  .btn-apple:focus-visible, .btn-apple-ghost:focus-visible { outline: 2px solid #0071e3; outline-offset: 3px; }
+  .tile-dark .btn-apple-ghost { color: #2997ff; box-shadow: inset 0 0 0 1px #2997ff; }
+  .tile-dark .btn-apple-ghost:hover { background: #2997ff; color: #fff; }
+
+  /* Botón circular sobre fotos y carruseles (la "paddle" de Apple) */
+  .paddle-apple {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 9999px;
+    background: rgba(210, 210, 215, 0.64);
+    color: rgba(0, 0, 0, 0.56);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
+  }
+  .paddle-apple:hover { background: rgba(223, 223, 227, 0.8); color: rgba(0, 0, 0, 0.72); }
+  .paddle-apple:active { transform: scale(0.95); }
+  .paddle-apple:disabled { opacity: 0.36; pointer-events: none; }
+
+  /* ── Franjas a todo el ancho ─────────────────────────────────────────────
+     Se apilan sin separación: el cambio de color ES el divisor. Sin bordes,
+     sin sombras, sin esquinas redondeadas. */
+  .bleed {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+  }
+  .tile { padding-block: 80px; }
+  @media (max-width: 734px) { .tile { padding-block: 56px; } }
+  .tile-light { background: #ffffff; color: #1d1d1f; }
+  .tile-parchment { background: #f5f5f7; color: #1d1d1f; }
+  .tile-dark { background: #272729; color: #ffffff; }
+  .tile-black { background: #000000; color: #f5f5f7; }
+  .tile-inner { max-width: 1440px; margin-inline: auto; padding-inline: 22px; }
+  @media (min-width: 735px) { .tile-inner { padding-inline: 40px; } }
+
+  /* ── Tarjeta de tienda (store-utility-card) ─────────────────────────────── */
+  .store-card {
+    background: #ffffff;
+    border-radius: 18px;
+    transition: transform 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
+  }
+  .store-card:hover { transform: scale(1.012); }
+  /* Sobre blanco la tarjeta se delimita con un hilo; sobre parchment el propio
+     cambio de superficie alcanza (así lo resuelve apple.com). */
+  .store-card { box-shadow: inset 0 0 0 1px #e8e8ed; }
+  .tile-parchment .store-card { box-shadow: none; }
+}
+
+/* ── Aparición al hacer scroll ─────────────────────────────────────────────
+   Mejora progresiva: sin JS (o con "reducir movimiento") todo se ve normal.
+   RevealObserver agrega .reveal-ready al <html> recién cuando ya marcó como
+   visible lo que está en pantalla, así nada parpadea en la primera carga. */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 40px, 0);
+  transition:
+    opacity 1s cubic-bezier(0.28, 0.11, 0.32, 1),
+    transform 1.2s cubic-bezier(0.28, 0.11, 0.32, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal-ready [data-reveal="scale"] { transform: scale(0.94); }
+.reveal-ready [data-reveal="fade"] { transform: none; }
+.reveal-ready [data-reveal].is-revealed { opacity: 1; transform: none; }
+
+/* ── Entrada del hero, al cargar la página ────────────────────────────────── */
+@keyframes apple-rise {
+  from { opacity: 0; transform: translate3d(0, 28px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes apple-settle {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.hero-rise { animation: apple-rise 1.1s cubic-bezier(0.28, 0.11, 0.32, 1) both; }
+.hero-settle { animation: apple-settle 1.6s cubic-bezier(0.28, 0.11, 0.32, 1) both; }
+.hero-d1 { animation-delay: 0.08s; }
+.hero-d2 { animation-delay: 0.2s; }
+.hero-d3 { animation-delay: 0.32s; }
+.hero-d4 { animation-delay: 0.45s; }
+
+/* ── Animaciones vinculadas al scroll (la técnica de las páginas de producto
+   de Apple). Sólo en navegadores con scroll-driven animations; el resto ve
+   la imagen quieta, que también está bien. ─────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @keyframes scroll-zoom {
+    from { transform: scale(1.14); }
+    to   { transform: scale(1); }
+  }
+  @keyframes scroll-lift {
+    from { transform: translate3d(0, 60px, 0); opacity: 0.35; }
+    to   { transform: none; opacity: 1; }
+  }
+  .scroll-zoom {
+    animation: scroll-zoom linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+  .scroll-lift {
+    animation: scroll-lift linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .scroll-zoom, .scroll-lift { animation: none !important; }
+}

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Instagram } from 'lucide-react';
 
 interface InstagramPost {
   id: string;
@@ -36,30 +35,26 @@ export function InstagramFeed() {
   if (loaded && posts.length === 0) return null;
 
   return (
-    <section className="bg-white py-12 md:py-20 border-t border-gray-100">
-      <div className="max-w-[1400px] mx-auto px-4">
-        <div className="flex items-center justify-between mb-8 md:mb-10">
-          <div>
-            <p className="text-xs text-gray-400 font-bold mb-2">Seguinos</p>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
-              @tkicks.sj
-            </h2>
-          </div>
+    <section className="bleed tile tile-light" aria-labelledby="instagram-title">
+      <div className="tile-inner">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10" data-reveal="">
+          <h2 id="instagram-title" className="t-section">
+            @tkicks.sj. <span className="t-muted">Lo que pasa en el showroom.</span>
+          </h2>
           <a
             href="https://www.instagram.com/tkicks.sj"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors shrink-0"
+            className="link-apple t-body"
           >
-            <Instagram className="w-4 h-4" />
-            <span className="hidden sm:inline">Seguir</span>
+            Seguir en Instagram
           </a>
         </div>
 
         {!loaded ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-xl" />
+              <div key={i} className="aspect-square bg-parchment animate-pulse rounded-sm" />
             ))}
           </div>
         ) : (
@@ -70,18 +65,16 @@ export function InstagramFeed() {
                 href={post.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative block aspect-square overflow-hidden rounded-xl bg-gray-100"
+                data-reveal=""
+                className="group relative block aspect-square overflow-hidden rounded-sm bg-parchment"
               >
                 <Image
                   src={post.imageUrl}
                   alt={post.caption || 'Post de @tkicks.sj'}
                   fill
                   sizes="(max-width: 640px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                  <Instagram className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
               </a>
             ))}
           </div>

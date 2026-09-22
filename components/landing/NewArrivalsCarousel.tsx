@@ -1,12 +1,11 @@
 "use client";
 
 import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Product } from '@/types/db';
 import { ProductCard } from '@/components/catalog/ProductCard';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface NewArrivalsCarouselProps {
   /** Productos ya resueltos en el servidor: aparecen en el primer paint */
@@ -18,71 +17,61 @@ interface NewArrivalsCarouselProps {
   curated: boolean;
 }
 
+/**
+ * Góndola de nuevos ingresos, como las de la Apple Store: titular en dos
+ * tonos, tarjetas que se deslizan y flechas circulares abajo a la derecha.
+ * Sin rotación automática: en Apple el contenido nunca se mueve solo.
+ */
 export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    {
-      loop: products.length > 4,
-      align: 'start',
-      slidesToScroll: 1,
-      containScroll: 'trimSnaps',
-      dragFree: true,
-    },
-    [Autoplay({ delay: 3500, stopOnMouseEnter: true, stopOnInteraction: false })]
-  );
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    containScroll: 'trimSnaps',
+    dragFree: true,
+  });
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const update = () => {
+      setCanPrev(emblaApi.canScrollPrev());
+      setCanNext(emblaApi.canScrollNext());
+    };
+    update();
+    emblaApi.on('select', update).on('reInit', update).on('scroll', update);
+    return () => {
+      emblaApi.off('select', update).off('reInit', update).off('scroll', update);
+    };
+  }, [emblaApi]);
 
   if (products.length === 0) return null;
 
   const allHref = curated ? '/nuevos-ingresos' : '/productos';
 
   return (
-    <section className="bg-white py-10 md:py-16" aria-labelledby="new-arrivals-title">
-      <div className="max-w-[1400px] mx-auto px-4">
-
-        {/* ── Header ── */}
-        <div className="flex items-end justify-between gap-4 mb-6 md:mb-10">
-          <div className="min-w-0">
-            <p className="text-xs text-gray-400 font-bold mb-2">
-              {curated ? 'Últimos ingresos' : 'Lo último del catálogo'}
-            </p>
-            <h2 id="new-arrivals-title" className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
-              Recién llegados
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={allHref}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors"
-            >
-              Ver todos <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <button
-              onClick={scrollPrev}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={scrollNext}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all"
-              aria-label="Siguiente"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+    <section className="bleed tile tile-light" aria-labelledby="new-arrivals-title">
+      <div className="tile-inner">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10" data-reveal="">
+          <h2 id="new-arrivals-title" className="t-section max-w-[26ch]">
+            Recién llegados.{' '}
+            <span className="t-muted">
+              {curated ? 'Lo último que entró al showroom.' : 'Lo último del catálogo.'}
+            </span>
+          </h2>
+          <Link href={allHref} className="link-apple t-body">
+            Ver todos
+          </Link>
         </div>
 
-        {/* ── Carrusel ── */}
-        <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
-          <div className="-ml-3 md:-ml-5 flex">
+        <div className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10 py-2" ref={emblaRef}>
+          <div className="-ml-4 md:-ml-5 flex">
             {products.map((p) => (
               <div
                 key={p.id}
-                className="min-w-0 shrink-0 grow-0 basis-[44%] sm:basis-[40%] md:basis-1/3 xl:basis-1/4 pl-3 md:pl-5"
+                className="min-w-0 shrink-0 grow-0 basis-[72%] sm:basis-[44%] md:basis-1/3 xl:basis-1/4 pl-4 md:pl-5"
               >
                 <ProductCard product={p} />
               </div>
@@ -90,14 +79,13 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
           </div>
         </div>
 
-        {/* CTA mobile */}
-        <div className="mt-6 sm:hidden">
-          <Link
-            href={allHref}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-gray-900 text-white text-sm font-black "
-          >
-            Ver todos <ArrowRight className="w-4 h-4" />
-          </Link>
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={scrollPrev} disabled={!canPrev} className="paddle-apple" aria-label="Anterior">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={scrollNext} disabled={!canNext} className="paddle-apple" aria-label="Siguiente">
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </section>

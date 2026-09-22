@@ -20,6 +20,7 @@ import { AccountNoticeModal } from '@/components/announcement/AccountNoticeModal
 import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
 import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
+import { RevealObserver } from '@/components/RevealObserver';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
@@ -83,7 +84,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <AnalyticsProvider>
               <Header />
               <Sidebar />
-              <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white overflow-x-hidden">
+              <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white">
                 <RouteTransitions>{children}</RouteTransitions>
                 <GiveawayClue />
               </main>
@@ -95,6 +96,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <RecentSaleToast />
               </HideOnAdmin>
               <WhatsAppFab />
+              <RevealObserver />
             </AnalyticsProvider>
             </ComingSoonProvider>
           </InstallmentsPromoProvider>

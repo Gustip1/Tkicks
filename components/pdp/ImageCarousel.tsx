@@ -41,8 +41,9 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
           <ul className="flex">
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
-                {/* Aspect ratio cuadrado en móvil para mejor visualización del producto */}
-                <div className="relative aspect-[4/5] w-full overflow-hidden">
+                {/* El gris va en el slide: el carrusel mueve la lista con transform (capa propia),
+                    y el mix-blend de la foto sólo se funde con el fondo de esa capa. */}
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-parchment">
                   <Image 
                     src={img.url} 
                     alt={img.alt || `Imagen ${idx + 1}`} 
@@ -51,13 +52,13 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
                     quality={85}
                     priority={idx === 0}
                     className={cn(
-                      "object-contain transition-all duration-500",
+                      "object-contain mix-blend-multiply transition-[opacity,transform] duration-700 ease-apple",
                       imageLoaded[idx] ? "opacity-100 scale-100" : "opacity-0 scale-105"
                     )}
                     onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}
                   />
                   {!imageLoaded[idx] && (
-                    <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                    <div className="absolute inset-0 bg-gray-200/60 animate-pulse" />
                   )}
                 </div>
               </li>
@@ -70,14 +71,14 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
           <>
             <button
               onClick={scrollPrev}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-md transition-[transform,background-color] duration-200 hover:bg-white active:scale-95"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-[rgba(210,210,215,0.64)] text-black/60 backdrop-blur-xl transition-[transform,background-color] duration-200 hover:bg-[rgba(223,223,227,0.8)] active:scale-95"
               aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-md transition-[transform,background-color] duration-200 hover:bg-white active:scale-95"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-full bg-[rgba(210,210,215,0.64)] text-black/60 backdrop-blur-xl transition-[transform,background-color] duration-200 hover:bg-[rgba(223,223,227,0.8)] active:scale-95"
               aria-label="Siguiente imagen"
             >
               <ChevronRight className="h-4 w-4 md:h-6 md:w-6 text-gray-900" strokeWidth={2.5} />

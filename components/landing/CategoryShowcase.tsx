@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const CATEGORY_TILES = [
@@ -36,37 +35,29 @@ function CategoryTile({
   return (
     <Link
       href={c.href}
+      data-reveal=""
       className={cn(
-        'group relative block overflow-hidden rounded-2xl bg-gray-100 active:scale-[0.98] transition-transform duration-200',
+        'group relative block overflow-hidden rounded-lg bg-gray-200 active:scale-[0.98] transition-transform duration-200 ease-apple',
         className
       )}
     >
-      {images[c.sub] ? (
+      {images[c.sub] && (
         <Image
           src={images[c.sub]}
           alt={c.label}
           fill
           sizes={imgSizes}
           quality={90}
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+          className="object-cover transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
         />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
       )}
 
-      {/* Velo para que la etiqueta lea siempre, sin depender de la foto */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+      {/* Velo sólo abajo, para que la etiqueta lea sobre cualquier foto */}
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
 
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 sm:p-4">
-        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-none drop-shadow-sm">
-          {c.label}
-        </h3>
-        <span
-          className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 text-gray-900 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-0.5"
-          aria-hidden="true"
-        >
-          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </span>
+      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
+        <h3 className="t-tagline">{c.label}</h3>
+        <p className="t-caption text-white/80 mt-0.5 group-hover:text-white transition-colors">Comprar ›</p>
       </div>
     </Link>
   );
@@ -76,34 +67,27 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
   const bySub = Object.fromEntries(CATEGORY_TILES.map((c) => [c.sub, c])) as Record<Tile['sub'], Tile>;
 
   return (
-    <section className="bg-white pt-8 pb-12 md:pt-10 md:pb-16" aria-labelledby="categories-title">
-      <div className="max-w-[1400px] mx-auto px-4">
-        {/* ── Header — mismo lenguaje visual que el resto de las secciones ── */}
-        <div className="mb-5 md:mb-8">
-          <p className="text-xs text-gray-400 font-bold mb-2">
-            Categorías
-          </p>
-          <h2 id="categories-title" className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
-            Elegí tu estilo
-          </h2>
-        </div>
+    <section className="bleed tile tile-parchment" aria-labelledby="categories-title">
+      <div className="tile-inner">
+        {/* Titular en dos tonos, como las góndolas de la Apple Store */}
+        <h2 id="categories-title" data-reveal="" className="t-section max-w-[24ch] mb-8 md:mb-10">
+          Elegí tu estilo. <span className="t-muted">Remeras, hoodies, pantalones y sneakers.</span>
+        </h2>
 
-        {/* ── Mobile: bento asimétrico — Sneakers y Pantalones llevan el tile
-              grande de cada fila; alturas fijas por fila para que nada se
-              desalinee, todo a la vista sin deslizar ── */}
+        {/* Mobile: bento — el tile grande alterna de lado en cada fila */}
         <div className="sm:hidden space-y-3">
-          <div className="flex gap-3 h-44">
+          <div className="flex gap-3 h-52">
             <CategoryTile c={bySub.sneakers} images={images} className="flex-[3]" imgSizes="60vw" />
             <CategoryTile c={bySub.remeras} images={images} className="flex-[2]" imgSizes="40vw" />
           </div>
-          <div className="flex gap-3 h-44">
+          <div className="flex gap-3 h-52">
             <CategoryTile c={bySub.hoodies} images={images} className="flex-[2]" imgSizes="40vw" />
             <CategoryTile c={bySub.pantalones} images={images} className="flex-[3]" imgSizes="60vw" />
           </div>
         </div>
 
-        {/* ── Desktop / tablet: las 4 en fila ── */}
-        <div className="hidden sm:grid grid-cols-4 gap-4 md:gap-6">
+        {/* Desktop / tablet: las 4 en fila */}
+        <div className="hidden sm:grid grid-cols-4 gap-4 md:gap-5">
           {CATEGORY_TILES.map((c) => (
             <CategoryTile key={c.sub} c={c} images={images} className="aspect-[3/4]" imgSizes="25vw" />
           ))}

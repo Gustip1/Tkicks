@@ -37,6 +37,13 @@ const config: Config = {
           900: '#1d1d1f', // ink — el casi-negro de Apple
           950: '#000000',
         },
+        parchment: '#f5f5f7',
+        tile: {
+          DEFAULT: '#272729', // franja oscura principal
+          2: '#2a2a2c',
+          3: '#252527',
+        },
+        sky: '#2997ff', // links sobre fondo oscuro (el azul normal ahí se pierde)
         // Definidos una sola vez, como CSS vars, en app/globals.css
         primary: {
           DEFAULT: 'var(--color-primary)',
@@ -76,10 +83,13 @@ const config: Config = {
       },
       // Escalera de pesos de Apple: 400 / 600 / 700. Las clases viejas (font-black,
       // font-extrabold, font-medium) se remapean acá para que todo el sitio la respete.
+      // Escalera de pesos de apple.com: 300 / 400 / 600 / 700. Los titulares van en 600
+      // (SF Pro Display Semibold), así que bold/extrabold/black caen ahí; el 500 no existe.
       fontWeight: {
         medium: '400',
-        extrabold: '700',
-        black: '700',
+        bold: '600',
+        extrabold: '600',
+        black: '600',
       },
       // Sin sombras de "chrome": Apple eleva con cambios de superficie y hairlines.
       // Se neutralizan las sombras de Tailwind; la única que queda es shadow-product,
@@ -91,19 +101,28 @@ const config: Config = {
         lg: '0 0 #0000',
         xl: '0 0 #0000',
         '2xl': '0 0 #0000',
-        product: '0 24px 40px -24px rgba(0, 0, 0, 0.22)',
+        product: '3px 5px 30px rgba(0, 0, 0, 0.22)',
         soft: '0 0 #0000',
         medium: '0 0 #0000',
         strong: '0 0 #0000'
       },
-      // Gramática de radios de Apple: sm 6 · md 10 · lg 14 (tarjetas) · xl 20 (superficies grandes)
+      // Radios de apple.com: sm 8 (utilitarios, imagen dentro de tarjeta) · md 11 ·
+      // lg 18 (tarjetas de tienda). Nada en el medio; lo demás es píldora.
       borderRadius: {
-        sm: '6px',
-        md: '10px',
-        lg: '14px',
-        xl: '14px',
-        '2xl': '20px',
-        '3xl': '20px'
+        sm: '8px',
+        md: '11px',
+        lg: '18px',
+        xl: '18px',
+        '2xl': '18px',
+        '3xl': '18px'
+      },
+      // La curva de apple.com: arranque rápido, frenado largo y suave.
+      transitionTimingFunction: {
+        apple: 'cubic-bezier(0.28, 0.11, 0.32, 1)',
+      },
+      // La única sombra del sistema: la de un producto apoyado sobre una superficie.
+      dropShadow: {
+        product: '3px 5px 15px rgba(0, 0, 0, 0.22)',
       }
     }
   },

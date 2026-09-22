@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Product } from '@/types/db';
 import { BrandShowcase } from './BrandShowcase';
-import { ChevronDown } from 'lucide-react';
 
 export type HomeBrandEntry = {
   id: string;
@@ -46,10 +45,11 @@ export function HomepageBrands({
   const visible = expanded ? withProducts : withProducts.slice(0, VISIBLE_BY_DEFAULT);
   const hidden = withProducts.length - visible.length;
 
-  const render = (e: HomeBrandEntry) =>
+  const render = (e: HomeBrandEntry, i: number) =>
     e.kind === 'sneakers' ? (
       <BrandShowcase
         key={e.id}
+        tone={i % 2 === 0 ? 'parchment' : 'light'}
         title={e.title || 'Sneakers'}
         eyebrow={e.eyebrow}
         category="sneakers"
@@ -59,6 +59,7 @@ export function HomepageBrands({
     ) : (
       <BrandShowcase
         key={e.id}
+        tone={i % 2 === 0 ? 'parchment' : 'light'}
         title={e.title}
         eyebrow={e.eyebrow}
         brandSlug={e.slug}
@@ -72,16 +73,10 @@ export function HomepageBrands({
       {visible.map(render)}
 
       {hidden > 0 && (
-        <div className="bg-white pb-10 md:pb-14">
-          <div className="max-w-[1400px] mx-auto px-4">
-            <button
-              onClick={() => setExpanded(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-full border border-primary text-primary text-sm font-normal hover:bg-primary hover:text-white active:scale-[0.99] transition-all"
-            >
-              Ver {hidden} {hidden === 1 ? 'marca más' : 'marcas más'}
-              <ChevronDown className="w-4 h-4" />
-            </button>
-          </div>
+        <div className={`bleed pb-16 md:pb-20 -mt-6 text-center ${(visible.length - 1) % 2 === 0 ? 'tile-parchment' : 'tile-light'}`}>
+          <button onClick={() => setExpanded(true)} className="btn-apple-ghost">
+            Ver {hidden} {hidden === 1 ? 'marca más' : 'marcas más'}
+          </button>
         </div>
       )}
     </>
