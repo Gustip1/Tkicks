@@ -17,9 +17,11 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // Sistema Apple: SF Pro gratis en Mac/iPhone, Inter (su sustituto canónico) en el resto
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', 'var(--font-sans)', 'Inter', 'system-ui', 'sans-serif']
+        // Única fuente del sitio: SF Pro, la de Apple. Viene con el sistema en Mac,
+        // iPhone y iPad, así que no se descarga nada. En equipos que no son Apple no
+        // se puede servir (su licencia no lo permite) y cae en la fuente del sistema.
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', 'system-ui', 'sans-serif'],
+        display: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', 'system-ui', 'sans-serif']
       },
       colors: {
         // Grises de Apple (apple.com). Reemplazan la escala de Tailwind para que

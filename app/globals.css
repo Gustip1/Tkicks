@@ -5,7 +5,6 @@
 :root {
   --header-height: 90px;
   --header-height-mobile: 76px;
-  /* --font-sans la define next/font/google en app/layout.tsx (Inter) */
 
   /* Sistema de diseño Apple — única fuente de verdad (tailwind.config.ts las referencia via var()).
      Un solo acento: Action Blue. Los colores de estado (rojo de rebaja, verde de éxito)
@@ -22,7 +21,7 @@
 }
 
 html, body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-sans), Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
   /* overflow-x: hidden sin overflow-y explícito hace que el spec de CSS Overflow
      fuerce overflow-y a "auto" (no puede quedar "visible" si el otro eje no lo
      está), y sumado a un height fijo eso convierte a body en su propio
@@ -407,16 +406,15 @@ img {
 
 @layer components {
   /* ── Escala tipográfica ─────────────────────────────────────────────────────
-     Titulares en 600 con tracking negativo leve ("Apple tight"); con Inter se
-     aprieta 0.01em extra porque su tracking de fábrica es más abierto que SF Pro. */
+     Titulares en 600 con el tracking negativo leve de SF Pro ("Apple tight"). */
   .t-hero {
-    font-size: 56px; line-height: 1.07; font-weight: 600; letter-spacing: -0.015em;
+    font-size: 56px; line-height: 1.07; font-weight: 600; letter-spacing: -0.005em;
   }
   .t-display {
-    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.01em;
+    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.003em;
   }
   .t-section {
-    font-size: 34px; line-height: 1.18; font-weight: 600; letter-spacing: -0.012em;
+    font-size: 34px; line-height: 1.18; font-weight: 600; letter-spacing: -0.011em;
   }
   .t-lead {
     font-size: 28px; line-height: 1.14; font-weight: 400; letter-spacing: 0.007em;

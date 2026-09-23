@@ -1,7 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ReactNode } from 'react';
-import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
@@ -24,14 +23,6 @@ import { RevealObserver } from '@/components/RevealObserver';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
-// Inter es el sustituto canónico de SF Pro fuera de dispositivos Apple; en Mac y
-// iPhone el stack de tailwind.config.ts usa SF Pro, que ya viene con el sistema.
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -53,7 +44,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning className={inter.variable}>
+    <html lang="es" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-normal')}>
         {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">
