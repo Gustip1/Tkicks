@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { BACKUP_URL } from '@/lib/accountNotice';
 
-const INSTAGRAM_URL = 'https://www.instagram.com/tkicks.sj';
+// @tkicks.sj está deshabilitada: la cuenta activa es la de respaldo
+const INSTAGRAM_URL = BACKUP_URL;
 const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5492644802994';
 

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import { getInstagramPosts } from '@/lib/instagram';
+import { BACKUP_HANDLE, BACKUP_URL } from '@/lib/accountNotice';
 
 export const metadata: Metadata = {
   title: 'Nosotros | Tkicks',
@@ -20,7 +21,10 @@ export const metadata: Metadata = {
     'Conocé Tkicks: el reseller de sneakers y streetwear originales en San Juan. Nuestra historia, nuestros valores y el feed en vivo de nuestras redes.',
 };
 
-const INSTAGRAM_URL = 'https://www.instagram.com/tkicks.sj';
+// Instagram principal (@tkicks.sj) está deshabilitada: mientras tanto publicamos
+// en la cuenta de respaldo. Cuando se recupere, basta con volver a apuntar acá.
+const INSTAGRAM_URL = BACKUP_URL;
+const INSTAGRAM_HANDLE = BACKUP_HANDLE;
 const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5492644802994';
 
@@ -85,7 +89,7 @@ export default async function NosotrosPage() {
               className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white text-gray-900 font-black text-sm border border-gray-300 hover:bg-gray-50 hover:border-gray-500 transition-all active:scale-[0.98]"
             >
               <Instagram className="w-4 h-4" />
-              @tkicks.sj
+              {INSTAGRAM_HANDLE}
             </a>
           </div>
 
@@ -210,10 +214,11 @@ export default async function NosotrosPage() {
               <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
             </span>
             <h2 className="t-section mt-4 text-gray-900">
-              Todo pasa en <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">@tkicks.sj</span>
+              Por ahora somos <span className="text-gray-900">{INSTAGRAM_HANDLE}</span>
             </h2>
-            <p className="mt-4 text-sm md:text-base text-gray-500 font-medium">
-              Drops, rifas, unboxings y outfits. Si no estás en las redes, te estás perdiendo la mitad de la tienda.
+            <p className="mt-4 t-body text-gray-600">
+              Nuestra cuenta de siempre, @tkicks.sj, está deshabilitada. Hasta tener novedades publicamos todo
+              acá: drops, stock del día y unboxings.
             </p>
           </div>
 
@@ -232,9 +237,9 @@ export default async function NosotrosPage() {
                   <p className="text-[10px] md:text-xs font-black text-gray-500">Instagram</p>
                 </div>
                 <div>
-                  <p className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-none">@tkicks.sj</p>
-                  <p className="mt-2 text-sm md:text-base text-gray-600 font-medium">
-                    Feed de producto, lanzamientos, stories con stock del día.
+                  <p className="t-display text-gray-900">{INSTAGRAM_HANDLE}</p>
+                  <p className="mt-2 t-body text-gray-600">
+                    Nuestra cuenta activa: feed de producto, lanzamientos y stories con el stock del día.
                   </p>
                 </div>
                 <div className="mt-auto inline-flex items-center gap-2 text-sm font-black text-gray-900">
@@ -261,7 +266,7 @@ export default async function NosotrosPage() {
                   <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-[9px] md:text-[10px] font-black text-white">Nuevo</span>
                 </div>
                 <div>
-                  <p className="text-2xl md:text-4xl font-black text-white tracking-tight leading-none">@tkicks.sj</p>
+                  <p className="t-display text-white">@tkicks.sj</p>
                   <p className="mt-2 text-sm md:text-base text-white/70 font-medium">Videos cortos, unboxings y behind the scenes del showroom.</p>
                 </div>
                 <div className="mt-auto inline-flex items-center gap-2 text-sm font-black text-white">
@@ -283,7 +288,7 @@ export default async function NosotrosPage() {
                 <span className="h-px w-8 bg-gray-900" /> En vivo
               </span>
               <h2 className="t-section mt-3 text-gray-900">Último contenido del feed</h2>
-              <p className="mt-2 text-xs md:text-sm font-bold text-gray-500">Los posteos más recientes de @tkicks.sj.</p>
+              <p className="mt-2 t-caption text-gray-500">Los posteos más recientes de {INSTAGRAM_HANDLE}.</p>
             </div>
             <a
               href={INSTAGRAM_URL}
@@ -299,8 +304,8 @@ export default async function NosotrosPage() {
           {feed.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 md:p-14 text-center">
               <Instagram className="w-10 h-10 md:w-12 md:h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-sm md:text-base font-bold text-gray-600">El feed se conecta automáticamente con Instagram.</p>
-              <p className="text-xs md:text-sm text-gray-400 mt-2 max-w-md mx-auto">Mientras tanto, podés ver todo el contenido directamente en el perfil.</p>
+              <p className="t-body font-semibold text-gray-700">Estamos reconectando el feed con la cuenta nueva.</p>
+              <p className="t-caption text-gray-500 mt-2 max-w-md mx-auto">Mientras tanto, mirá todo el contenido directamente en el perfil.</p>
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
@@ -308,7 +313,7 @@ export default async function NosotrosPage() {
                 className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-all active:scale-[0.98]"
               >
                 <Instagram className="w-4 h-4" />
-                Abrir @tkicks.sj
+                Abrir {INSTAGRAM_HANDLE}
               </a>
             </div>
           ) : (
