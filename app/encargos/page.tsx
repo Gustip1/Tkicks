@@ -176,7 +176,7 @@ export default function EncargosPage() {
       {/* header */}
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Encargos Personalizados</h1>
+          <h1 className="t-display text-gray-900">Encargos Personalizados</h1>
           <GiveawayInlinePriceClue clueId="/encargos" label="Encargos" position={3} digit="7" />
         </div>
         <p className="mt-1 text-sm text-gray-500">
@@ -238,7 +238,7 @@ export default function EncargosPage() {
           {productos.map((prod, idx) => (
             <div key={idx} className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-gray-900">Producto a encargar</h3>
+                <h3 className="t-tagline text-gray-900">Producto a encargar</h3>
                 {productos.length > 1 && (
                   <button
                     onClick={() => removeProducto(idx)}
@@ -354,7 +354,7 @@ export default function EncargosPage() {
       {/* ─── PASO 1: Datos personales ─── */}
       {paso === 1 && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-900">Datos personales</h3>
+          <h3 className="t-tagline text-gray-900">Datos personales</h3>
 
           <div>
             <label className={labelCls}>Nombre completo *</label>
@@ -429,7 +429,7 @@ export default function EncargosPage() {
       {/* ─── PASO 2: Pago ─── */}
       {paso === 2 && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-5 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-900">Método de pago</h3>
+          <h3 className="t-tagline text-gray-900">Método de pago</h3>
           <p className="text-xs text-gray-500">
             Seleccioná cómo preferís abonar el 75% del encargo (seña).
           </p>

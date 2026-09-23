@@ -79,7 +79,7 @@ export function AccountNoticeModal() {
             {ACCOUNT_NOTICE.badge}
           </span>
 
-          <h2 id="account-notice-title" className="mt-4 text-2xl font-semibold tracking-[-0.015em] text-white sm:text-3xl">
+          <h2 id="account-notice-title" className="t-section mt-4 text-white">
             {ACCOUNT_NOTICE.title}
           </h2>
 

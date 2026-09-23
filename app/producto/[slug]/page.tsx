@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
       <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
         <span className="text-4xl">🔍</span>
       </div>
-      <h2 className="text-xl font-black text-gray-900 mb-2">Producto no encontrado</h2>
+      <h2 className="t-tagline mb-2">Producto no encontrado</h2>
       <p className="text-gray-500 font-bold mb-6 max-w-sm">
         Este link puede estar desactualizado. Puede que el producto haya cambiado o ya no esté disponible —
         pero seguro encontrás algo parecido en el catálogo.

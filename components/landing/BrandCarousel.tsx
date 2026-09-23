@@ -30,7 +30,7 @@ export function BrandCarousel() {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-gray-400 font-bold mb-2">Nuestras marcas</p>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tight">
+            <h2 className="t-section text-gray-900">
               Marcas
             </h2>
           </div>

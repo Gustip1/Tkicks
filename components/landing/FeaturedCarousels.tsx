@@ -43,7 +43,7 @@ function ProductSlide({ product }: { product: Product }) {
       </div>
       <div className="pt-3">
         <p className="text-[9px] text-gray-900/30 font-bold mb-1">{product.category}</p>
-        <h3 className="text-xs font-bold text-gray-900 line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
+        <h3 className="t-tagline text-gray-900 line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
           {product.title}
         </h3>
         {hasSale && (
@@ -82,7 +82,7 @@ function SaleSection({ products }: { products: Product[] }) {
             <span className="text-2xl">🔥</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
+            <h2 className="t-section text-gray-900">
               Ofertas especiales
             </h2>
             <p className="text-sm text-gray-500 font-bold">No te pierdas estos precios únicos</p>
@@ -175,7 +175,7 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
             <span className="text-2xl">{config.icon}</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
+            <h2 className="t-section text-gray-900">
               {title}
             </h2>
             <p className="text-sm text-gray-500 font-bold">Productos seleccionados para ti</p>
@@ -251,7 +251,7 @@ function OldStockSection({ products }: { products: Product[] }) {
             <span className="text-2xl">📦</span>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 ">
+            <h2 className="t-section text-gray-900">
               También disponible
             </h2>
             <p className="text-sm text-gray-500 font-bold">Stock completo · piezas que siguen esperándote</p>

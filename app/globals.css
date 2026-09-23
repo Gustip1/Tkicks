@@ -5,7 +5,7 @@
 :root {
   --header-height: 90px;
   --header-height-mobile: 76px;
-  /* --font-sans / --font-display las define next/font/google en app/layout.tsx */
+  /* --font-sans la define next/font/google en app/layout.tsx (Inter) */
 
   /* Sistema de diseño Apple — única fuente de verdad (tailwind.config.ts las referencia via var()).
      Un solo acento: Action Blue. Los colores de estado (rojo de rebaja, verde de éxito)
@@ -77,11 +77,6 @@ body {
 }
 
 /* Display font — apply explicitly, not to all headings */
-.font-display {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
 
 /* Image loading optimization */
 img {

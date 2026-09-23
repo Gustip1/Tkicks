@@ -85,7 +85,7 @@ export function Header() {
   if (isInAdmin) return null;
 
   const navLink =
-    'px-2.5 2xl:px-3 py-2 text-xs font-normal text-white/80 hover:text-white transition-colors duration-200 whitespace-nowrap';
+    'px-2.5 2xl:px-3 py-2 text-[13px] font-semibold tracking-[-0.016em] text-white/80 hover:text-white transition-colors duration-200 whitespace-nowrap';
 
   return (
     <>
@@ -241,7 +241,7 @@ export function Header() {
                       <li key={brand.id} className="hero-rise" style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}>
                         <Link
                           href={`/productos?brand=${brand.slug}`}
-                          className="text-2xl font-semibold tracking-tight text-[#e8e8ed] hover:text-white transition-colors"
+                          className="t-tagline text-[#e8e8ed] hover:text-white transition-colors"
                         >
                           {brand.name}
                         </Link>
@@ -269,7 +269,7 @@ export function Header() {
                       <li key={sub.value} className="hero-rise" style={{ animationDelay: `${i * 30}ms` }}>
                         <Link
                           href={`/productos?streetwear&sub=${sub.value}`}
-                          className="text-2xl font-semibold tracking-tight text-[#e8e8ed] hover:text-white transition-colors"
+                          className="t-tagline text-[#e8e8ed] hover:text-white transition-colors"
                         >
                           {sub.label}
                         </Link>

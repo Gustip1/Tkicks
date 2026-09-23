@@ -37,7 +37,7 @@ export function OfertasClient() {
               <span className="text-4xl">🔥</span>
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-black text-white ">
+              <h1 className="t-display text-white">
                 ¡Ofertas Especiales!
               </h1>
               <p className="text-gray-300 text-lg font-medium mt-1">
@@ -77,7 +77,7 @@ export function OfertasClient() {
             <div className="flex items-start gap-3">
               <span className="text-2xl">💡</span>
               <div>
-                <h3 className="text-gray-900 font-bold mb-1">¡Aprovecha estas ofertas!</h3>
+                <h3 className="t-tagline text-gray-900 mb-1">¡Aprovecha estas ofertas!</h3>
                 <p className="text-gray-600 text-sm">
                   Todos nuestros productos son 100% originales y están disponibles para retiro en San Juan o envío a todo el país.
                 </p>

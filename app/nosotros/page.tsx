@@ -58,7 +58,7 @@ export default async function NosotrosPage() {
             <GiveawayInlinePriceClue clueId="/nosotros" label="Nosotros" position={4} digit="0" />
           </div>
 
-          <h1 className="animate-hero-enter hero-delay-1 text-[2.5rem] leading-[0.95] md:text-7xl lg:text-8xl font-black tracking-tighter max-w-5xl text-gray-900">
+          <h1 className="t-display animate-hero-enter hero-delay-1 max-w-5xl text-gray-900">
             Cultura urbana,
             <br />
             <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">hecha en San&nbsp;Juan.</span>
@@ -122,7 +122,7 @@ export default async function NosotrosPage() {
             <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Nuestra historia
             </span>
-            <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
+            <h2 className="t-section mt-4 text-gray-900">
               Empezó con una idea simple:<br className="hidden md:block" />
               <span className="text-gray-400">que el hype</span> <span className="text-gray-900">también viva acá.</span>
             </h2>
@@ -172,7 +172,7 @@ export default async function NosotrosPage() {
             <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Lo que nos define
             </span>
-            <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
+            <h2 className="t-section mt-4 text-gray-900">
               No somos otro reseller. <span className="text-gray-400">Somos el tuyo.</span>
             </h2>
           </div>
@@ -194,7 +194,7 @@ export default async function NosotrosPage() {
                 <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:border-gray-900 transition-colors">
                   <Icon className="w-5 h-5 md:w-6 md:h-6 text-gray-900 group-hover:text-white transition-colors" />
                 </div>
-                <h3 className="text-base md:text-lg font-black text-gray-900 tracking-tight">{title}</h3>
+                <h3 className="t-tagline text-gray-900">{title}</h3>
                 <p className="mt-2 text-sm text-gray-500 font-medium leading-relaxed">{desc}</p>
               </div>
             ))}
@@ -209,7 +209,7 @@ export default async function NosotrosPage() {
             <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
               <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
             </span>
-            <h2 className="mt-4 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
+            <h2 className="t-section mt-4 text-gray-900">
               Todo pasa en <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">@tkicks.sj</span>
             </h2>
             <p className="mt-4 text-sm md:text-base text-gray-500 font-medium">
@@ -282,7 +282,7 @@ export default async function NosotrosPage() {
               <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
                 <span className="h-px w-8 bg-gray-900" /> En vivo
               </span>
-              <h2 className="mt-3 text-2xl md:text-4xl font-black tracking-tight text-gray-900">Último contenido del feed</h2>
+              <h2 className="t-section mt-3 text-gray-900">Último contenido del feed</h2>
               <p className="mt-2 text-xs md:text-sm font-bold text-gray-500">Los posteos más recientes de @tkicks.sj.</p>
             </div>
             <a
@@ -369,7 +369,7 @@ export default async function NosotrosPage() {
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[10px] md:text-xs font-black text-gray-600">
             <MapPin className="w-3.5 h-3.5 text-gray-900" /> Showroom · San Juan
           </span>
-          <h2 className="mt-5 text-3xl md:text-6xl font-black tracking-tighter leading-[0.95] max-w-3xl mx-auto text-gray-900">
+          <h2 className="t-section mt-5 max-w-3xl mx-auto text-gray-900">
             Vení, probate un par
             <br />
             <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">y llevate lo que buscabas.</span>

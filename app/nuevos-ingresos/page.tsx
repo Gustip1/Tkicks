@@ -26,7 +26,7 @@ export default async function NuevosIngresosPage() {
           <p className="text-xs font-black text-gray-400">
             Catálogo exclusivo
           </p>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 ">
+          <h1 className="t-display text-gray-900">
             Nuevos ingresos
           </h1>
           <p className="text-sm md:text-base text-gray-500 font-bold max-w-2xl">

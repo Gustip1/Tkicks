@@ -56,7 +56,7 @@ export function Footer() {
         <nav aria-label="Pie de página" className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-7 py-7">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="font-semibold text-gray-900 mb-2.5">{col.title}</h3>
+              <h3 className="t-tagline text-gray-900 mb-2.5">{col.title}</h3>
               <ul className="space-y-2">
                 {col.links.map((l) => (
                   <li key={l.label}>
@@ -75,7 +75,7 @@ export function Footer() {
             </div>
           ))}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2.5">Showroom</h3>
+            <h3 className="t-tagline text-gray-900 mb-2.5">Showroom</h3>
             <p className="leading-[1.6]">
               San Juan, Argentina
               <br />

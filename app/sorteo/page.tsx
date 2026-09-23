@@ -154,7 +154,7 @@ export default function SorteoPage() {
         <p className="relative mt-8 text-[10px] font-black text-red-500">
           Tkicks · Sorteo
         </p>
-        <h1 className="relative mt-3 text-5xl font-black leading-none text-gray-900">
+        <h1 className="t-display relative mt-3 text-gray-900">
           Muy<br />pronto.
         </h1>
         <p className="relative mt-5 text-sm font-bold leading-relaxed text-gray-500">
@@ -182,7 +182,7 @@ export default function SorteoPage() {
           <p className="relative text-[9px] font-black text-red-500">
             ◈ · Sorteo Tkicks · ◈
           </p>
-          <h1 className="relative mt-2 text-6xl font-black leading-none text-gray-900">
+          <h1 className="t-display relative mt-2 text-gray-900">
             Hoy.
           </h1>
           <p className="relative mt-3 text-sm font-bold leading-relaxed text-gray-600">

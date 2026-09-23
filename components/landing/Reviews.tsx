@@ -18,8 +18,8 @@ function Stars({ rating }: { rating: number }) {
           key={i}
           className={
             i <= rating
-              ? 'w-4 h-4 fill-amber-400 text-amber-400'
-              : 'w-4 h-4 fill-white/15 text-white/15'
+              ? 'w-3.5 h-3.5 fill-amber-400 text-amber-400'
+              : 'w-3.5 h-3.5 fill-white/15 text-white/15'
           }
         />
       ))}
@@ -35,10 +35,10 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
   return (
     // Franja oscura: en apple.com las franjas claras y oscuras se alternan
     // y el cambio de color es el divisor entre secciones.
-    <section className="bleed tile tile-dark" aria-labelledby="reviews-title">
+    <section className="bleed tile-dark py-14 md:py-16" aria-labelledby="reviews-title">
       <div className="tile-inner">
-        <div className="text-center mb-10 md:mb-14" data-reveal="">
-          <h2 id="reviews-title" className="t-display max-w-[22ch] mx-auto">
+        <div className="text-center mb-7 md:mb-9" data-reveal="">
+          <h2 id="reviews-title" className="t-section max-w-[26ch] mx-auto">
             Lo que dicen. <span className="t-muted">Opiniones reales de quienes ya compraron.</span>
           </h2>
         </div>
@@ -50,9 +50,9 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
                 key={r.id}
                 className="min-w-0 shrink-0 grow-0 basis-[85%] sm:basis-1/2 lg:basis-1/3 pl-4 md:pl-5"
               >
-                <figure data-reveal="" className="h-full rounded-lg bg-tile-2 p-7 md:p-8 flex flex-col gap-5">
+                <figure data-reveal="" className="h-full rounded-lg bg-tile-2 p-5 md:p-6 flex flex-col gap-3.5">
                   <Stars rating={r.rating} />
-                  <blockquote className="t-tagline font-normal leading-snug text-[#f5f5f7] flex-1">
+                  <blockquote className="t-body text-[#f5f5f7] flex-1">
                     “{r.text.trim().replace(/^["“”«»\s]+|["“”«»\s]+$/g, '')}”
                   </blockquote>
                   <figcaption className="t-caption text-[#86868b]">{r.name}</figcaption>

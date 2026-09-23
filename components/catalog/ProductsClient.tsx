@@ -235,7 +235,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
     <div className="space-y-6 animate-fadeIn bg-white">
       {/* Simple category title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 ">
+        <h1 className="t-display text-gray-900">
           {config ? config.title : title}
         </h1>
       </div>
@@ -400,7 +400,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
             <span className="text-4xl">🔍</span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No encontramos productos</h3>
+          <h3 className="t-tagline text-gray-900 mb-2">No encontramos productos</h3>
           <p className="text-gray-500 max-w-md">
             Intenta ajustar los filtros o buscar con otros términos
           </p>

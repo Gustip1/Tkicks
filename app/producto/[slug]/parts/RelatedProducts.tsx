@@ -66,7 +66,7 @@ export function RelatedProducts({
           <p className="text-xs text-gray-400 font-bold mb-1.5">
             Seguí mirando
           </p>
-          <h2 id="related-title" className="text-2xl md:text-4xl font-black text-gray-900 leading-none tracking-tight">
+          <h2 id="related-title" className="t-section text-gray-900">
             También te puede gustar
           </h2>
         </div>

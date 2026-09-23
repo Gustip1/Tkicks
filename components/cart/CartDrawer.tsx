@@ -83,7 +83,7 @@ export function CartDrawer() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-gray-200 p-4">
-            <h2 className="text-lg font-black text-gray-900 ">
+            <h2 className="t-section text-gray-900">
               Carrito
               {items.length > 0 && (
                 <span className="ml-2 text-sm font-black text-gray-400">

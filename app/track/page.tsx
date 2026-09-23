@@ -51,7 +51,7 @@ export default function TrackPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6 p-4">
-      <h1 className="text-xl font-bold text-gray-900">Seguimiento de pedido</h1>
+      <h1 className="t-section">Seguimiento de pedido</h1>
 
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="space-y-1.5">

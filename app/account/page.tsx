@@ -53,7 +53,7 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Mi cuenta</h1>
+        <h1 className="t-display text-gray-900">Mi cuenta</h1>
         <button
           onClick={handleLogout}
           className="rounded-lg bg-gray-100 border border-gray-200 px-3 py-1.5 text-sm text-gray-900 font-bold hover:bg-gray-200 transition-colors"
@@ -64,7 +64,7 @@ export default function AccountPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900">Información personal</h2>
+          <h2 className="t-section text-gray-900">Información personal</h2>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Nombre:</span>
@@ -84,7 +84,7 @@ export default function AccountPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900">Acciones rápidas</h2>
+          <h2 className="t-section text-gray-900">Acciones rápidas</h2>
           <div className="mt-3 space-y-2">
             <Link
               href="/orders"

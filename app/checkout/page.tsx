@@ -303,7 +303,7 @@ export default function CheckoutPage() {
           <div className="w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
             <Check className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900">
+          <h1 className="t-display text-gray-900">
             {completedPaymentMethod === 'installments_3' ? '¡Listo!' : '¡Orden confirmada!'}
           </h1>
           <p className="text-gray-500 font-bold text-sm">
@@ -367,7 +367,7 @@ export default function CheckoutPage() {
       <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 ">Checkout</h1>
+          <h1 className="t-display text-gray-900">Checkout</h1>
           {/* Step indicator */}
           <div className="mt-4 flex items-center gap-2">
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-colors ${
@@ -396,7 +396,7 @@ export default function CheckoutPage() {
               <>
                 {/* Delivery method selector */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                  <h2 className="t-tagline flex items-center gap-2">
                     <Package className="w-5 h-5" />
                     Método de entrega
                   </h2>
@@ -454,7 +454,7 @@ export default function CheckoutPage() {
 
                 {/* Contact info & shipping address */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                  <h2 className="t-tagline flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
                     {checkout.fulfillment === 'shipping' ? 'Datos de envío' : 'Datos de contacto'}
                   </h2>
@@ -527,7 +527,7 @@ export default function CheckoutPage() {
                 </button>
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
-                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                  <h2 className="t-tagline flex items-center gap-2">
                     <CreditCard className="w-5 h-5" />
                     Método de pago
                   </h2>
@@ -594,7 +594,7 @@ export default function CheckoutPage() {
 
                 {checkout.paymentMethod === 'crypto_transfer' && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
-                    <h3 className="text-sm font-black text-gray-900 ">Datos para transferencia</h3>
+                    <h3 className="t-tagline text-gray-900">Datos para transferencia</h3>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
@@ -777,7 +777,7 @@ export default function CheckoutPage() {
           {/* ═══════════════ ORDER SUMMARY SIDEBAR ═══════════════ */}
           <div className="lg:sticky lg:top-6 lg:self-start space-y-4">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h3 className="text-sm font-black text-gray-900 ">Resumen del pedido</h3>
+              <h3 className="t-tagline text-gray-900">Resumen del pedido</h3>
 
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                 {cart.items.map((it) => (

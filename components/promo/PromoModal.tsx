@@ -37,7 +37,7 @@ export function PromoModal() {
 
         <h2
           id="promo-title"
-          className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3"
+          className="t-section text-white mb-3"
         >
           3 cuotas <span className="text-red-500">sin interés</span>
         </h2>

@@ -66,7 +66,7 @@ export default function OrdersPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Mis pedidos</h1>
+        <h1 className="t-display text-gray-900">Mis pedidos</h1>
         <Link
           href="/account"
           className="rounded-lg bg-gray-100 border border-gray-200 px-3 py-1.5 text-sm text-gray-900 font-bold hover:bg-gray-200 transition-colors"
@@ -92,7 +92,7 @@ export default function OrdersPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h3 className="font-bold text-gray-900">
+                    <h3 className="t-tagline text-gray-900">
                       {order.order_number || `Pedido #${order.id.slice(0, 8)}`}
                     </h3>
                     <span

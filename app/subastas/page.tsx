@@ -53,7 +53,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
         </div>
       </div>
       <div className="p-4 flex flex-col gap-2">
-        <h3 className="text-gray-900 font-bold text-sm line-clamp-2">{a.product_title}</h3>
+        <h3 className="t-tagline text-gray-900 line-clamp-2">{a.product_title}</h3>
         <p className="text-gray-400 text-xs">Talle: {a.size}</p>
         <div className="flex items-end justify-between mt-1">
           <div>
@@ -108,7 +108,7 @@ export default function SubastasPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 flex items-center gap-3">
+          <h1 className="t-display text-gray-900 flex items-center gap-3">
             <Gavel className="w-8 h-8 text-gray-900" />
             Subastas
           </h1>

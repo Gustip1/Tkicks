@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
   return (
     <div className="mx-auto max-w-md space-y-6 p-4">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Admin - Iniciar sesión</h1>
+        <h1 className="t-display text-gray-900">Admin - Iniciar sesión</h1>
         <p className="mt-2 text-sm text-gray-500">Acceso exclusivo para administradores</p>
       </div>
 

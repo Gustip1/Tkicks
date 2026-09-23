@@ -217,7 +217,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
           <div className="space-y-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900">{auction.product.title}</h1>
+              <h1 className="t-display text-gray-900">{auction.product.title}</h1>
               <p className="text-gray-500 text-sm mt-1">
                 Talle: <span className="text-gray-900 font-bold">{auction.variant.size}</span>
               </p>

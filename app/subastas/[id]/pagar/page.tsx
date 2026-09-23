@@ -140,7 +140,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
           <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
             <Check className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900">¡Comprobante recibido!</h1>
+          <h1 className="t-display text-gray-900">¡Comprobante recibido!</h1>
           <p className="text-gray-500 text-sm">
             Orden <span className="text-gray-900 font-bold">{orderNumber}</span>. Te contactaremos cuando lo validemos.
           </p>
@@ -155,7 +155,7 @@ export default function PagarSubastaPage({ params }: { params: { id: string } })
   return (
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-2xl mx-auto px-4 space-y-6">
-        <h1 className="text-2xl font-black text-gray-900">Pago de subasta</h1>
+        <h1 className="t-display text-gray-900">Pago de subasta</h1>
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-2 shadow-sm">
           <p className="text-sm text-gray-500 font-bold">Producto</p>
