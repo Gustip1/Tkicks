@@ -1,48 +1,39 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
+import { motion, MotionConfig } from 'framer-motion';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { RefreshCw, Smartphone, Monitor, Tablet, Info, PackageX, PackageMinus } from 'lucide-react';
+import { isBotUserAgent } from '@/lib/analytics/bots';
 import {
-  Users, Clock, TrendingUp, TrendingDown, Minus, Eye, RefreshCw, ShoppingCart,
-  MessageCircle, DollarSign, Smartphone, Monitor, Tablet, Info, ArrowRight,
-} from 'lucide-react';
+  RANGES, RangeKey, periodFor, sourceName, sectionName, LEGACY_EVENTS, StockStatus,
+} from '@/lib/analytics/dashboard';
+import {
+  AnimatedNumber, BarList, Card, Delta, Funnel, HourChart, RangeTabs, Skeleton,
+  StatTile, TrendChart, TrendPoint, SERIES,
+} from '@/components/admin/analytics/charts';
 
 /* ────────────────────────────────────────────────────────────────────────────
    Panel de analíticas.
 
    Criterios de precisión (por qué los números son los que son):
 
-   1. Una "visita" es una SESIÓN, no una fila. Cada cambio de página inserta
-      una fila nueva en analytics_visits para la misma sesión, así que contar
-      filas multiplicaba las visitas.
-
-   2. Duración, rebote y scroll SOLO se calculan sobre las sesiones que
-      alcanzaron a mandar el beacon de salida (exited_at). Las que no lo
-      mandaron (~14%) tienen duración 0 y is_bounce en su valor por defecto:
-      mezclarlas hundía la duración promedio e inflaba el rebote a más del
-      doble del real. Se muestra la cobertura para ser transparentes.
-
-   3. Se muestra MEDIANA además del promedio: unas pocas pestañas olvidadas
-      abiertas horas inflan el promedio y dan una idea equivocada.
-
-   4. El embudo se mide en SESIONES ÚNICAS en todos sus pasos, así cada paso
-      es un subconjunto del anterior y los porcentajes cierran. Antes mezclaba
-      sesiones con cantidad de eventos.
-
-   5. La conversión real del negocio incluye los CONTACTOS por WhatsApp,
-      ofertas y pedidos de link de cuotas: la mayoría de las ventas se cierra
-      por ahí, no en el checkout web. Medir solo el checkout hacía parecer que
-      la tienda no convertía.
+   1. Una "visita" es una SESIÓN, no una fila: cada cambio de página inserta
+      una fila nueva para la misma sesión.
+   2. Duración, rebote y scroll sólo sobre las sesiones que mandaron el beacon
+      de salida (exited_at); se muestra la cobertura. Mediana además del promedio.
+   3. El embudo se mide en sesiones únicas en todos los pasos.
+   4. La conversión real incluye los contactos (WhatsApp, ofertas, cuotas).
+   5. Sin robots: los rastreadores ejecutaban la página y eran el 11% de las
+      "visitas", recorriendo todas las fichas (también las de productos
+      borrados). Se descartan por user agent, y el tracker ya no los registra.
+   6. Los rangos tienen inicio y FIN en hora local, así "Ayer" es un día cerrado.
+   7. Los productos se cruzan con el catálogo: los que siguen a la venta van por
+      un lado y los que la gente busca pero ya no tenés (borrados o sin stock)
+      por otro, porque eso es demanda para reponer, no ruido.
    ──────────────────────────────────────────────────────────────────────── */
 
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const RANGES = [
-  { key: '1d', label: 'Hoy', days: 1 },
-  { key: '7d', label: '7 días', days: 7 },
-  { key: '30d', label: '30 días', days: 30 },
-  { key: '90d', label: '90 días', days: 90 },
-  { key: '365d', label: '1 año', days: 365 },
-] as const;
-type RangeKey = (typeof RANGES)[number]['key'];
 
 /** Eventos que significan "esta persona quiso comprar / negociar" */
 const LEAD_EVENTS = ['whatsapp_click', 'offer_requested', 'installments_link_requested'];
@@ -55,41 +46,41 @@ const EVENT_LABELS: Record<string, string> = {
   checkout_started: 'Checkouts iniciados',
   purchase: 'Órdenes creadas',
   product_card_click: 'Clicks en productos',
-  cuartito_ticket_click: 'Clicks entradas El Cuartito',
+  homepage_banner_click: 'Clicks en el banner de la home',
 };
 
-function toLocalDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-
 function median(values: number[]): number {
   if (!values.length) return 0;
   const s = [...values].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
-
 function formatDuration(seconds: number): string {
-  if (!seconds) return '0s';
-  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (!seconds) return '0 s';
+  if (seconds < 60) return `${Math.round(seconds)} s`;
   const mins = Math.floor(seconds / 60);
   const secs = Math.round(seconds % 60);
-  if (mins < 60) return `${mins}m ${secs}s`;
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  if (mins < 60) return `${mins} min ${secs} s`;
+  return `${Math.floor(mins / 60)} h ${mins % 60} min`;
+}
+/** "kith-lax-black-tee" → "Kith lax black tee", para productos que ya no están en el catálogo */
+function prettySlug(slug: string) {
+  const t = decodeURIComponent(slug).replace(/[-_]+/g, ' ').trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-const fmtInt = (n: number) => new Intl.NumberFormat('es-AR').format(Math.round(n));
-const fmtUsd = (n: number) => `USD $${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n)}`;
+const nf = new Intl.NumberFormat('es-AR');
+const fmtInt = (n: number) => nf.format(Math.round(n));
+const fmtUsd = (n: number) => `USD ${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n)}`;
 const pct = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
 const fmtPct = (n: number) => `${n.toFixed(n < 10 ? 1 : 0)}%`;
 
 /**
  * Trae TODAS las filas: Supabase corta en 1000 por request, así que hay que
- * paginar. Las páginas se piden EN PARALELO (en tandas) porque en serie, con
- * 30-90 días de tráfico, el panel tardaba casi un minuto en cargar.
+ * paginar. Las páginas se piden en paralelo, en tandas.
  */
 async function fetchAll<T>(
   count: number,
@@ -99,22 +90,16 @@ async function fetchAll<T>(
   const page = 1000;
   const total = Math.min(count, hardLimit);
   if (total <= 0) return [];
-
   const ranges: [number, number][] = [];
   for (let from = 0; from < total; from += page) ranges.push([from, from + page - 1]);
-
   const out: T[] = [];
   const CONCURRENCY = 8;
   for (let i = 0; i < ranges.length; i += CONCURRENCY) {
-    const batch = await Promise.all(
-      ranges.slice(i, i + CONCURRENCY).map(([f, t]) => build(f, t))
-    );
-    batch.forEach(r => { if (r.data) out.push(...r.data); });
+    const batch = await Promise.all(ranges.slice(i, i + CONCURRENCY).map(([f, t]) => build(f, t)));
+    batch.forEach((r) => { if (r.data) out.push(...r.data); });
   }
   return out;
 }
-
-/** Cuenta filas sin traerlas, para saber cuántas páginas pedir. */
 async function countRows(q: PromiseLike<{ count: number | null }>): Promise<number> {
   const { count } = await q;
   return count ?? 0;
@@ -126,6 +111,7 @@ interface VisitRow {
   page_path: string | null;
   device_type: string | null;
   referrer_domain: string | null;
+  user_agent: string | null;
   duration_seconds: number | null;
   is_bounce: boolean | null;
   scroll_depth: number | null;
@@ -135,20 +121,26 @@ interface VisitRow {
 interface EventRow {
   session_id: string;
   event_name: string;
-  event_data: Record<string, unknown> | null;
   created_at: string;
+}
+interface ViewedProduct {
+  slug: string;
+  title: string;
+  image: string | null;
+  sessions: number;
+  status: StockStatus;
 }
 
 interface Stats {
-  coverage: number;            // % de sesiones con datos de salida
+  coverage: number;
   sessions: number;
   visitors: number;
-  recurring: number;           // visitantes con más de una sesión en el período
+  recurring: number;
   prevSessions: number;
-  prevVisitors: number;
   live: number;
+  botsExcluded: number;
 
-  leadSessions: number;        // sesiones que contactaron (WhatsApp/oferta/cuotas)
+  leadSessions: number;
   prevLeadSessions: number;
 
   funnel: { label: string; hint: string; count: number }[];
@@ -168,168 +160,163 @@ interface Stats {
 
   bySource: { source: string; sessions: number; leads: number }[];
   byDevice: { device: string; sessions: number }[];
-  byPage: { path: string; sessions: number }[];
-  topViewed: { slug: string; sessions: number }[];
+  byPage: { section: string; sessions: number }[];
+  viewedAvailable: ViewedProduct[];
+  viewedUnavailable: ViewedProduct[];
   topSold: { title: string; units: number; revenue: number }[];
   byDay: { day: string; sessions: number }[];
   byHour: { hour: number; sessions: number }[];
-  trend: { date: string; sessions: number; leads: number }[];
+  trend: TrendPoint[];
   otherEvents: { label: string; count: number }[];
 }
 
 export default function AnalyticsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [range, setRange] = useState<RangeKey>('30d');
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     const supabase = createBrowserClient();
-    const days = RANGES.find(r => r.key === range)!.days;
-
-    const now = new Date();
-    const start = new Date();
-    if (days === 1) start.setHours(0, 0, 0, 0);
-    else start.setDate(start.getDate() - days);
-    // Período anterior del mismo largo, para comparar
-    const prevStart = new Date(start);
-    prevStart.setDate(prevStart.getDate() - days);
-    const liveFrom = new Date(now.getTime() - 5 * 60 * 1000);
-
-    const startIso = start.toISOString();
-    const prevStartIso = prevStart.toISOString();
+    const period = periodFor(range);
+    const { start, end, prevStart, prevEnd, singleDay } = period;
+    const [s0, s1, p0, p1] = [start, end, prevStart, prevEnd].map((d) => d.toISOString());
+    const liveFrom = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
     try {
-      // Primero contamos (requests baratos, sin traer filas) para poder pedir
-      // todas las páginas en paralelo en vez de una atrás de otra.
       const [nVisits, nPrevVisits, nEvents, nPrevEvents] = await Promise.all([
-        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true })
-          .gte('created_at', startIso)),
-        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true })
-          .gte('created_at', prevStartIso).lt('created_at', startIso)),
-        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true })
-          .gte('created_at', startIso)),
-        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true })
-          .gte('created_at', prevStartIso).lt('created_at', startIso)
-          .in('event_name', LEAD_EVENTS)),
+        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true }).gte('created_at', s0).lt('created_at', s1)),
+        countRows(supabase.from('analytics_visits').select('*', { count: 'exact', head: true }).gte('created_at', p0).lt('created_at', p1)),
+        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true }).gte('created_at', s0).lt('created_at', s1)),
+        countRows(supabase.from('analytics_events').select('*', { count: 'exact', head: true }).gte('created_at', p0).lt('created_at', p1).in('event_name', LEAD_EVENTS)),
       ]);
 
-      const [visits, prevVisits, events, prevEvents, liveRows, orders, items] = await Promise.all([
+      const [visitsRaw, prevVisitsRaw, eventsRaw, prevEventsRaw, liveRows, orders, items] = await Promise.all([
         fetchAll<VisitRow>(nVisits, (f, t) => supabase.from('analytics_visits')
-          .select('session_id,visitor_id,page_path,device_type,referrer_domain,duration_seconds,is_bounce,scroll_depth,exited_at,created_at')
-          .gte('created_at', startIso).range(f, t)),
-        fetchAll<{ session_id: string; visitor_id: string | null }>(nPrevVisits, (f, t) => supabase.from('analytics_visits')
-          .select('session_id,visitor_id')
-          .gte('created_at', prevStartIso).lt('created_at', startIso).range(f, t)),
+          .select('session_id,visitor_id,page_path,device_type,referrer_domain,user_agent,duration_seconds,is_bounce,scroll_depth,exited_at,created_at')
+          .gte('created_at', s0).lt('created_at', s1).range(f, t)),
+        fetchAll<{ session_id: string; user_agent: string | null }>(nPrevVisits, (f, t) => supabase.from('analytics_visits')
+          .select('session_id,user_agent')
+          .gte('created_at', p0).lt('created_at', p1).range(f, t)),
         fetchAll<EventRow>(nEvents, (f, t) => supabase.from('analytics_events')
-          .select('session_id,event_name,event_data,created_at')
-          .gte('created_at', startIso).range(f, t)),
-        fetchAll<{ session_id: string; event_name: string }>(nPrevEvents, (f, t) => supabase.from('analytics_events')
-          .select('session_id,event_name')
-          .gte('created_at', prevStartIso).lt('created_at', startIso)
-          .in('event_name', LEAD_EVENTS).range(f, t)),
-        supabase.from('analytics_visits').select('session_id').gte('created_at', liveFrom.toISOString()).limit(2000),
+          .select('session_id,event_name,created_at')
+          .gte('created_at', s0).lt('created_at', s1).range(f, t)),
+        fetchAll<{ session_id: string }>(nPrevEvents, (f, t) => supabase.from('analytics_events')
+          .select('session_id')
+          .gte('created_at', p0).lt('created_at', p1).in('event_name', LEAD_EVENTS).range(f, t)),
+        supabase.from('analytics_visits').select('session_id,user_agent').gte('created_at', liveFrom).limit(2000),
         supabase.from('orders').select('total,status,created_at').limit(5000),
         supabase.from('order_items')
           .select('title,price,quantity,orders!inner(created_at,status)')
-          .gte('orders.created_at', startIso)
+          .gte('orders.created_at', s0).lt('orders.created_at', s1)
           .in('orders.status', ['paid', 'fulfilled']).limit(5000),
       ]);
 
+      // ── Sin robots: se descartan sus sesiones y todos sus eventos ──
+      const botSessions = new Set(visitsRaw.filter((v) => isBotUserAgent(v.user_agent)).map((v) => v.session_id));
+      const prevBotSessions = new Set(prevVisitsRaw.filter((v) => isBotUserAgent(v.user_agent)).map((v) => v.session_id));
+      const visits = visitsRaw.filter((v) => !botSessions.has(v.session_id));
+      const events = eventsRaw.filter((e) => !botSessions.has(e.session_id) && !LEGACY_EVENTS.has(e.event_name));
+      const prevEvents = prevEventsRaw.filter((e) => !prevBotSessions.has(e.session_id));
+
       // ── Sesiones: una fila por sesión, priorizando la que tiene exited_at ──
       const bySession = new Map<string, VisitRow>();
-      visits.forEach(v => {
+      visits.forEach((v) => {
         const prev = bySession.get(v.session_id);
         if (!prev || (!prev.exited_at && v.exited_at)) bySession.set(v.session_id, v);
       });
       const S = [...bySession.values()];
       const sessions = S.length;
-      const closed = S.filter(v => v.exited_at);          // solo estas tienen datos reales
-      const coverage = pct(closed.length, sessions);
+      const closed = S.filter((v) => v.exited_at);
 
-      const visitorIds = new Set(S.map(v => v.visitor_id).filter(Boolean) as string[]);
-      const sessionsPerVisitor: Record<string, number> = {};
-      S.forEach(v => { if (v.visitor_id) sessionsPerVisitor[v.visitor_id] = (sessionsPerVisitor[v.visitor_id] || 0) + 1; });
-      const recurring = Object.values(sessionsPerVisitor).filter(c => c > 1).length;
+      const visitorIds = new Set(S.map((v) => v.visitor_id).filter(Boolean) as string[]);
+      const perVisitor: Record<string, number> = {};
+      S.forEach((v) => { if (v.visitor_id) perVisitor[v.visitor_id] = (perVisitor[v.visitor_id] || 0) + 1; });
+      const recurring = Object.values(perVisitor).filter((c) => c > 1).length;
 
-      // ── Embudo, todo en sesiones únicas para que los pasos cierren ──
-      const sessionsWith = (pred: (e: EventRow) => boolean) =>
-        new Set(events.filter(pred).map(e => e.session_id));
-      const productSessions = new Set(
-        visits.filter(v => v.page_path?.startsWith('/producto/')).map(v => v.session_id)
-      );
-      const cartSessions = sessionsWith(e => e.event_name === 'add_to_cart');
-      const checkoutSessions = sessionsWith(e => e.event_name === 'checkout_started');
-      const leadSet = sessionsWith(e => LEAD_EVENTS.includes(e.event_name));
+      // ── Embudo (sesiones únicas; cada paso incluye a los siguientes) ──
+      const sessionsWith = (pred: (e: EventRow) => boolean) => new Set(events.filter(pred).map((e) => e.session_id));
+      const productSessions = new Set(visits.filter((v) => v.page_path?.startsWith('/producto/')).map((v) => v.session_id));
+      const cartSessions = sessionsWith((e) => e.event_name === 'add_to_cart');
+      const checkoutSessions = sessionsWith((e) => e.event_name === 'checkout_started');
+      const leadSet = sessionsWith((e) => LEAD_EVENTS.includes(e.event_name));
 
       const paidOrders = orders.data?.filter((o: any) => o.status === 'paid' || o.status === 'fulfilled') ?? [];
-      const ordersInRange = paidOrders.filter((o: any) => new Date(o.created_at) >= start);
-      const revenue = ordersInRange.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+      const ordersInRange = paidOrders.filter((o: any) => {
+        const d = new Date(o.created_at);
+        return d >= start && d < end;
+      });
+      const revenue = ordersInRange.reduce((sum: number, o: any) => sum + Number(o.total || 0), 0);
 
-      // Cada paso se arma como "llegó AL MENOS hasta acá": el de intención
-      // incluye el checkout y el de producto incluye a los dos siguientes. Sin
-      // esto el embudo podía crecer de un paso al otro (el botón de WhatsApp
-      // está en toda la web, así que alguien puede escribir sin abrir una
-      // ficha) y los porcentajes daban más de 100%.
       const intentSessions = new Set([...cartSessions, ...leadSet, ...checkoutSessions]);
       const interestSessions = new Set([...productSessions, ...intentSessions]);
-
       const funnel = [
-        { label: 'Entraron a la web', hint: 'Personas distintas', count: sessions },
-        { label: 'Se engancharon con un producto', hint: 'Abrieron una ficha o preguntaron por uno', count: interestSessions.size },
+        { label: 'Entraron a la web', hint: 'Visitas', count: sessions },
+        { label: 'Se interesaron', hint: 'Abrieron un producto o preguntaron', count: interestSessions.size },
         { label: 'Quisieron comprar', hint: 'Carrito, WhatsApp, oferta o cuotas', count: intentSessions.size },
-        { label: 'Iniciaron el checkout', hint: 'Llegaron al formulario de compra', count: checkoutSessions.size },
+        { label: 'Iniciaron el checkout', hint: 'Llegaron al formulario', count: checkoutSessions.size },
         { label: 'Compraron', hint: 'Pedidos confirmados en la web', count: ordersInRange.length },
       ];
 
-      const prevLeadSessions = new Set(prevEvents.map(e => e.session_id)).size;
-
       const eventCounts: Record<string, number> = {};
-      events.forEach(e => { eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1; });
-      const leadBreakdown = LEAD_EVENTS.map(name => ({
-        name, label: EVENT_LABELS[name] ?? name, count: eventCounts[name] || 0,
-      })).sort((a, b) => b.count - a.count);
+      events.forEach((e) => { eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1; });
+      const leadBreakdown = LEAD_EVENTS.map((name) => ({ name, label: EVENT_LABELS[name] ?? name, count: eventCounts[name] || 0 }))
+        .sort((a, b) => b.count - a.count);
 
-      // ── Comportamiento (solo sesiones con datos de salida) ──
-      const durations = closed.map(v => v.duration_seconds || 0);
+      // ── Comportamiento (sólo sesiones con datos de salida) ──
+      const durations = closed.map((v) => v.duration_seconds || 0);
       const avgDuration = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
-      const bounceRate = pct(closed.filter(v => v.is_bounce).length, closed.length);
-      const scrolls = closed.map(v => v.scroll_depth ?? 0);
+      const bounceRate = pct(closed.filter((v) => v.is_bounce).length, closed.length);
+      const scrolls = closed.map((v) => v.scroll_depth ?? 0);
       const avgScroll = scrolls.length ? scrolls.reduce((a, b) => a + b, 0) / scrolls.length : 0;
-      const pagesPerSession = sessions ? visits.length / sessions : 0;
 
-      // ── Cortes ──
-      const tally = <T,>(arr: T[], key: (x: T) => string) => {
-        const m: Record<string, number> = {};
-        arr.forEach(x => { const k = key(x); m[k] = (m[k] || 0) + 1; });
-        return m;
-      };
-      const sourceCounts = tally(S, v => v.referrer_domain || 'Directo / guardado');
-      const bySource = Object.entries(sourceCounts)
-        .map(([source, n]) => ({
-          source,
-          sessions: n,
-          leads: S.filter(v => (v.referrer_domain || 'Directo / guardado') === source && leadSet.has(v.session_id)).length,
-        }))
-        .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
-
-      const byDevice = Object.entries(tally(S, v => v.device_type || 'desconocido'))
-        .map(([device, sessions]) => ({ device, sessions })).sort((a, b) => b.sessions - a.sessions);
-
-      // páginas y productos: sesiones distintas por ruta (no filas)
-      const pathSessions: Record<string, Set<string>> = {};
-      visits.forEach(v => {
-        const p = v.page_path || '/';
-        (pathSessions[p] ||= new Set()).add(v.session_id);
+      // ── Fuentes agrupadas (Instagram en un solo renglón, sin el propio dominio) ──
+      const srcMap: Record<string, { sessions: number; leads: number }> = {};
+      S.forEach((v) => {
+        const k = sourceName(v.referrer_domain);
+        srcMap[k] ||= { sessions: 0, leads: 0 };
+        srcMap[k].sessions += 1;
+        if (leadSet.has(v.session_id)) srcMap[k].leads += 1;
       });
-      const byPage = Object.entries(pathSessions)
-        .filter(([p]) => !p.startsWith('/producto/'))
-        .map(([path, s]) => ({ path, sessions: s.size }))
+      const bySource = Object.entries(srcMap).map(([source, v]) => ({ source, ...v }))
         .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
-      const topViewed = Object.entries(pathSessions)
-        .filter(([p]) => p.startsWith('/producto/'))
-        .map(([p, s]) => ({ slug: p.replace('/producto/', ''), sessions: s.size }))
+
+      const devMap: Record<string, number> = {};
+      S.forEach((v) => { const k = v.device_type || 'desconocido'; devMap[k] = (devMap[k] || 0) + 1; });
+      const byDevice = Object.entries(devMap).map(([device, n]) => ({ device, sessions: n })).sort((a, b) => b.sessions - a.sessions);
+
+      // ── Secciones con nombre (no rutas) y productos ──
+      const sectionSessions: Record<string, Set<string>> = {};
+      const productPathSessions: Record<string, Set<string>> = {};
+      visits.forEach((v) => {
+        const p = (v.page_path || '/').split('?')[0];
+        if (p.startsWith('/producto/')) {
+          (productPathSessions[p.replace('/producto/', '')] ||= new Set()).add(v.session_id);
+        } else {
+          (sectionSessions[sectionName(p)] ||= new Set()).add(v.session_id);
+        }
+      });
+      const byPage = Object.entries(sectionSessions).map(([section, set]) => ({ section, sessions: set.size }))
         .sort((a, b) => b.sessions - a.sessions).slice(0, 8);
+
+      // Cruce con el catálogo: título real, foto y si todavía se puede vender
+      const topSlugs = Object.entries(productPathSessions)
+        .map(([slug, set]) => ({ slug, sessions: set.size }))
+        .sort((a, b) => b.sessions - a.sessions).slice(0, 40);
+      const { data: catalog } = topSlugs.length
+        ? await supabase.from('products').select('slug,title,active,images,product_variants(stock)').in('slug', topSlugs.map((t) => t.slug))
+        : { data: [] as any[] };
+      const catalogBySlug = Object.fromEntries((catalog ?? []).map((p: any) => [p.slug, p]));
+      const viewed: ViewedProduct[] = topSlugs.map(({ slug, sessions: n }) => {
+        const p = catalogBySlug[slug];
+        if (!p || !p.active) return { slug, title: p?.title ?? prettySlug(slug), image: p?.images?.[0]?.url ?? null, sessions: n, status: 'removed' };
+        const stock = (p.product_variants ?? []).reduce((a: number, v: any) => a + (Number(v.stock) || 0), 0);
+        return { slug, title: p.title, image: p.images?.[0]?.url ?? null, sessions: n, status: stock > 0 ? 'in_stock' : 'sold_out' };
+      });
+      const viewedAvailable = viewed.filter((v) => v.status === 'in_stock').slice(0, 8);
+      const viewedUnavailable = viewed.filter((v) => v.status !== 'in_stock').slice(0, 8);
 
       const soldMap: Record<string, { title: string; units: number; revenue: number }> = {};
       (items.data ?? []).forEach((it: any) => {
@@ -340,42 +327,63 @@ export default function AnalyticsPage() {
       });
       const topSold = Object.values(soldMap).sort((a, b) => b.units - a.units).slice(0, 8);
 
-      const dayCounts = tally(S, v => DAYS_ES[new Date(v.created_at).getDay()]);
-      const byDay = DAYS_ES.map(d => ({ day: d, sessions: dayCounts[d] || 0 }));
-      const hourCounts = tally(S, v => String(new Date(v.created_at).getHours()));
-      const byHour = Array.from({ length: 24 }, (_, h) => ({ hour: h, sessions: hourCounts[String(h)] || 0 }));
-
-      const trendMap: Record<string, { s: Set<string>; l: Set<string> }> = {};
-      S.forEach(v => {
-        const k = toLocalDateKey(new Date(v.created_at));
-        (trendMap[k] ||= { s: new Set(), l: new Set() }).s.add(v.session_id);
-        if (leadSet.has(v.session_id)) trendMap[k].l.add(v.session_id);
+      const dayCounts: Record<string, number> = {};
+      const hourCounts: Record<number, number> = {};
+      S.forEach((v) => {
+        const d = new Date(v.created_at);
+        dayCounts[DAYS_ES[d.getDay()]] = (dayCounts[DAYS_ES[d.getDay()]] || 0) + 1;
+        hourCounts[d.getHours()] = (hourCounts[d.getHours()] || 0) + 1;
       });
-      const trend = Object.entries(trendMap)
-        .map(([date, v]) => ({ date, sessions: v.s.size, leads: v.l.size }))
-        .sort((a, b) => a.date.localeCompare(b.date));
+      const byDay = DAYS_ES.map((d) => ({ day: d, sessions: dayCounts[d] || 0 }));
+      const byHour = Array.from({ length: 24 }, (_, h) => ({ hour: h, sessions: hourCounts[h] || 0 }));
+
+      // ── Tendencia: por hora en Hoy/Ayer, por día en el resto, sin huecos ──
+      const buckets = new Map<string, { label: string; visits: Set<string>; leads: Set<string> }>();
+      if (singleDay) {
+        const lastHour = range === 'today' ? new Date().getHours() : 23;
+        for (let h = 0; h <= lastHour; h++) buckets.set(String(h), { label: `${h} hs`, visits: new Set(), leads: new Set() });
+      } else {
+        const fmt = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' });
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          buckets.set(dateKey(d), { label: fmt.format(d), visits: new Set(), leads: new Set() });
+        }
+      }
+      S.forEach((v) => {
+        const d = new Date(v.created_at);
+        const b = buckets.get(singleDay ? String(d.getHours()) : dateKey(d));
+        if (!b) return;
+        b.visits.add(v.session_id);
+        if (leadSet.has(v.session_id)) b.leads.add(v.session_id);
+      });
+      const trend: TrendPoint[] = [...buckets.entries()].map(([key, b]) => ({
+        key, label: b.label, visits: b.visits.size, leads: b.leads.size,
+      }));
 
       const otherEvents = Object.entries(eventCounts)
         .filter(([n]) => !n.startsWith('engaged_') && !LEAD_EVENTS.includes(n))
         .map(([n, count]) => ({ label: EVENT_LABELS[n] ?? n, count }))
-        .sort((a, b) => b.count - a.count).slice(0, 8);
+        .sort((a, b) => b.count - a.count).slice(0, 6);
+
+      const liveHumans = (liveRows.data ?? []).filter((v: any) => !isBotUserAgent(v.user_agent));
 
       setStats({
-        coverage, sessions, visitors: visitorIds.size, recurring,
-        prevSessions: new Set(prevVisits.map(v => v.session_id)).size,
-        prevVisitors: new Set(prevVisits.map(v => v.visitor_id).filter(Boolean)).size,
-        live: new Set((liveRows.data ?? []).map((v: any) => v.session_id)).size,
-        leadSessions: leadSet.size, prevLeadSessions,
+        coverage: pct(closed.length, sessions), sessions, visitors: visitorIds.size, recurring,
+        prevSessions: new Set(prevVisitsRaw.filter((v) => !prevBotSessions.has(v.session_id)).map((v) => v.session_id)).size,
+        live: new Set(liveHumans.map((v: any) => v.session_id)).size,
+        botsExcluded: botSessions.size,
+        leadSessions: leadSet.size, prevLeadSessions: new Set(prevEvents.map((e) => e.session_id)).size,
         funnel, leadBreakdown,
         orders: ordersInRange.length, revenue,
         avgTicket: ordersInRange.length ? revenue / ordersInRange.length : 0,
-        revenueAllTime: paidOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0),
+        revenueAllTime: paidOrders.reduce((sum: number, o: any) => sum + Number(o.total || 0), 0),
         ordersAllTime: paidOrders.length,
-        avgDuration, medianDuration: median(durations), bounceRate, avgScroll, pagesPerSession,
-        bySource, byDevice, byPage, topViewed, topSold, byDay, byHour, trend, otherEvents,
+        avgDuration, medianDuration: median(durations), bounceRate, avgScroll,
+        pagesPerSession: sessions ? visits.length / sessions : 0,
+        bySource, byDevice, byPage, viewedAvailable, viewedUnavailable, topSold, byDay, byHour, trend, otherEvents,
       });
     } catch (err) {
       console.error('Error cargando analíticas:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -383,357 +391,383 @@ export default function AnalyticsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  /* ── UI helpers ── */
-  const Delta = ({ now, before }: { now: number; before: number }) => {
-    if (!before) return <span className="text-xs font-medium text-gray-400">sin datos previos</span>;
-    const diff = pct(now - before, before);
-    const Icon = diff > 1 ? TrendingUp : diff < -1 ? TrendingDown : Minus;
-    const color = diff > 1 ? 'text-green-600' : diff < -1 ? 'text-red-600' : 'text-gray-500';
-    return (
-      <span className={`inline-flex items-center gap-1 text-xs font-bold ${color}`}>
-        <Icon className="w-3.5 h-3.5" />
-        {diff > 0 ? '+' : ''}{diff.toFixed(0)}% vs período anterior
-      </span>
-    );
-  };
-
-  const Kpi = ({ icon: Icon, label, value, sub, delta, accent }: {
-    icon: any; label: string; value: string; sub?: string;
-    delta?: { now: number; before: number }; accent?: string;
-  }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent ?? 'bg-gray-100 text-gray-700'}`}>
-          <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
-        </div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>
-      </div>
-      <p className="text-3xl font-black text-gray-900 leading-none">{value}</p>
-      {sub && <p className="mt-1.5 text-xs font-semibold text-gray-500">{sub}</p>}
-      {delta && <div className="mt-2">{<Delta now={delta.now} before={delta.before} />}</div>}
-    </div>
-  );
-
-  const Section = ({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) => (
-    <section className="bg-white rounded-xl border border-gray-200 p-5">
-      <h2 className="text-base font-black text-gray-900">{title}</h2>
-      {help && <p className="mt-1 mb-4 text-xs font-medium text-gray-500 leading-relaxed">{help}</p>}
-      {!help && <div className="mb-4" />}
-      {children}
-    </section>
-  );
-
-  const BarList = ({ rows, unit = '' }: { rows: { label: string; value: number; extra?: string }[]; unit?: string }) => {
-    const max = Math.max(1, ...rows.map(r => r.value));
-    if (!rows.length) return <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>;
-    return (
-      <div className="space-y-2.5">
-        {rows.map(r => (
-          <div key={r.label}>
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              <span className="text-sm font-bold text-gray-800 truncate">{r.label}</span>
-              <span className="text-sm font-black text-gray-900 shrink-0">
-                {fmtInt(r.value)}{unit}
-                {r.extra && <span className="ml-2 text-xs font-bold text-gray-400">{r.extra}</span>}
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-              <div className="h-full rounded-full bg-gray-900" style={{ width: `${(r.value / max) * 100}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  if (loading && !stats) {
-    return (
-      <div className="text-center py-24">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-current border-r-transparent text-gray-400" />
-        <p className="mt-3 text-gray-500 font-bold">Calculando analíticas…</p>
-      </div>
-    );
-  }
-  if (!stats) return <p className="text-gray-500">No se pudieron cargar las analíticas.</p>;
-
-  const s = stats;
-  const rangeLabel = RANGES.find(r => r.key === range)!.label.toLowerCase();
-  const maxTrend = Math.max(1, ...s.trend.map(t => t.sessions));
+  const period = periodFor(range);
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* ── Encabezado ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">📊 Analíticas</h1>
-          <p className="text-sm text-gray-500 font-semibold mt-0.5">
-            {s.live > 0
-              ? <><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-pulse" />{s.live} {s.live === 1 ? 'persona' : 'personas'} navegando ahora</>
-              : 'Nadie navegando en los últimos 5 minutos'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {RANGES.map(r => (
-            <button
-              key={r.key}
-              onClick={() => setRange(r.key)}
-              className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wide transition-colors ${
-                range === r.key ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-          <button
-            onClick={load}
-            disabled={loading}
-            className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-gray-400 disabled:opacity-50"
-            aria-label="Actualizar"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Resumen ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Kpi icon={Users} label="Visitas" value={fmtInt(s.sessions)}
-             sub={`${fmtInt(s.visitors)} personas distintas`}
-             delta={{ now: s.sessions, before: s.prevSessions }} />
-        <Kpi icon={MessageCircle} label="Te contactaron" value={fmtInt(s.leadSessions)}
-             sub={`${fmtPct(pct(s.leadSessions, s.sessions))} de las visitas · WhatsApp, ofertas y cuotas`}
-             delta={{ now: s.leadSessions, before: s.prevLeadSessions }}
-             accent="bg-green-100 text-green-700" />
-        <Kpi icon={ShoppingCart} label="Ventas confirmadas" value={fmtInt(s.orders)}
-             sub={s.orders ? `Ticket promedio ${fmtUsd(s.avgTicket)}` : 'Sin ventas web en el período'}
-             accent="bg-blue-100 text-blue-700" />
-        <Kpi icon={DollarSign} label="Facturación" value={fmtUsd(s.revenue)}
-             sub={`Histórico: ${fmtUsd(s.revenueAllTime)} en ${s.ordersAllTime} ventas`}
-             accent="bg-amber-100 text-amber-700" />
-      </div>
-
-      {/* ── Embudo ── */}
-      <Section
-        title="¿En qué parte se cae la gente?"
-        help="Cada escalón cuenta personas distintas, así que siempre es un subconjunto del anterior. Debajo de cada uno ves qué porcentaje del escalón anterior siguió adelante."
-      >
-        <div className="space-y-3">
-          {s.funnel.map((step, i) => {
-            const prev = i === 0 ? step.count : s.funnel[i - 1].count;
-            const share = pct(step.count, s.funnel[0].count);
-            const conv = i === 0 ? 100 : pct(step.count, prev);
-            const lost = prev - step.count;
-            return (
-              <div key={step.label}>
-                <div className="flex items-baseline justify-between gap-3 mb-1">
-                  <div className="min-w-0">
-                    <span className="text-sm font-black text-gray-900">{step.label}</span>
-                    <span className="ml-2 text-xs font-semibold text-gray-400">{step.hint}</span>
-                  </div>
-                  <span className="text-sm font-black text-gray-900 shrink-0">{fmtInt(step.count)}</span>
-                </div>
-                <div className="h-7 rounded-lg bg-gray-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-lg flex items-center px-2 ${i === s.funnel.length - 1 ? 'bg-green-600' : 'bg-gray-900'}`}
-                    style={{ width: `${Math.max(share, 2)}%` }}
-                  >
-                    <span className="text-[10px] font-black text-white whitespace-nowrap">{fmtPct(share)}</span>
-                  </div>
-                </div>
-                {i > 0 && (
-                  <p className="mt-1 text-xs font-semibold text-gray-500">
-                    Siguió el {fmtPct(conv)} del paso anterior
-                    {lost > 0 && <span className="text-red-600"> · se fueron {fmtInt(lost)}</span>}
-                  </p>
+    <MotionConfig reducedMotion="user">
+      <div className="-m-4 md:-m-6 min-h-full bg-[#f5f5f7] px-4 py-6 md:px-8 md:py-10 text-[#1d1d1f]">
+        <div className="mx-auto max-w-[1280px] space-y-5 md:space-y-6">
+          {/* ── Encabezado ── */}
+          <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-[34px] leading-tight font-semibold tracking-[-0.02em]">Analíticas</h1>
+              <p className="mt-1 flex items-center gap-2 text-[14px] text-[#6e6e73]">
+                {stats && stats.live > 0 ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34c759] opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#34c759]" />
+                    </span>
+                    <span>
+                      <span className="font-semibold text-[#1d1d1f]">{stats.live}</span>{' '}
+                      {stats.live === 1 ? 'persona navegando ahora' : 'personas navegando ahora'}
+                    </span>
+                  </>
+                ) : (
+                  'Nadie navegando en los últimos 5 minutos'
                 )}
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-4 flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
-          <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-blue-900 font-semibold leading-relaxed">
-            &quot;Quisieron comprar&quot; incluye a los que te escribieron por WhatsApp, tiraron una oferta o
-            pidieron el link de 3 cuotas. La mayoría de tus ventas se cierra por ahí y no en el checkout
-            web, así que mirar solo &quot;Compraron&quot; te haría creer que la web convierte mucho peor de lo que convierte.
-          </p>
-        </div>
-      </Section>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <RangeTabs options={RANGES} value={range} onChange={setRange} />
+              <button
+                onClick={load}
+                disabled={loading}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3]"
+                aria-label="Actualizar"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </header>
 
-      {/* ── Contactos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Section title="¿Cómo te contactaron?" help={`Cantidad de acciones en los últimos ${rangeLabel}.`}>
-          <BarList rows={s.leadBreakdown.map(l => ({ label: l.label, value: l.count }))} />
-        </Section>
-        <Section title="¿De dónde viene la gente y cuál te trae compradores?"
-                 help="Ordenado por visitas. La tasa es qué porcentaje de esa fuente terminó contactándote: te dice dónde conviene invertir.">
-          {s.bySource.length === 0 ? (
-            <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>
-          ) : (
-            <div className="overflow-x-auto -mx-2">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                    <th className="text-left font-black px-2 py-2">Origen</th>
-                    <th className="text-right font-black px-2 py-2">Visitas</th>
-                    <th className="text-right font-black px-2 py-2">Contactos</th>
-                    <th className="text-right font-black px-2 py-2">Tasa</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {s.bySource.map(r => (
-                    <tr key={r.source} className="border-b border-gray-100 last:border-0">
-                      <td className="px-2 py-2 font-bold text-gray-800 truncate max-w-[180px]">{r.source}</td>
-                      <td className="px-2 py-2 text-right font-black text-gray-900">{fmtInt(r.sessions)}</td>
-                      <td className="px-2 py-2 text-right font-bold text-gray-700">{fmtInt(r.leads)}</td>
-                      <td className={`px-2 py-2 text-right font-black ${r.leads ? 'text-green-600' : 'text-gray-300'}`}>
-                        {fmtPct(pct(r.leads, r.sessions))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {error && !stats && (
+            <p className="rounded-[18px] bg-white p-6 text-[14px] text-[#6e6e73]">
+              No se pudieron cargar las analíticas. Revisá la conexión y tocá actualizar.
+            </p>
+          )}
+
+          {!stats && !error && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[168px]" />)}
+              </div>
+              <Skeleton className="h-[340px]" />
             </div>
           )}
-        </Section>
+
+          {stats && (
+            // Al cambiar de rango se mantiene el marco y baja la opacidad: sin saltos
+            <motion.div
+              animate={{ opacity: loading ? 0.5 : 1 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-5 md:space-y-6"
+            >
+              <Dashboard s={stats} prevLabel={period.prevLabel} singleDay={period.singleDay} />
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </MotionConfig>
+  );
+}
+
+function Dashboard({ s, prevLabel, singleDay }: { s: Stats; prevLabel: string; singleDay: boolean }) {
+  const trendVisits = s.trend.map((t) => t.visits);
+  const trendLeads = s.trend.map((t) => t.leads);
+  const spark = (arr: number[]) => arr.slice(-14);
+
+  return (
+    <>
+      {/* ── Indicadores ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          index={0}
+          label="Visitas"
+          value={s.sessions}
+          sub={`${fmtInt(s.visitors)} personas distintas`}
+          delta={<Delta now={s.sessions} before={s.prevSessions} label={prevLabel} />}
+          trend={spark(trendVisits)}
+          trendColor={SERIES.visits}
+        />
+        <StatTile
+          index={1}
+          label="Te contactaron"
+          value={s.leadSessions}
+          sub={`${fmtPct(pct(s.leadSessions, s.sessions))} de las visitas`}
+          delta={<Delta now={s.leadSessions} before={s.prevLeadSessions} label={prevLabel} />}
+          trend={spark(trendLeads)}
+          trendColor={SERIES.leads}
+        />
+        <StatTile
+          index={2}
+          label="Ventas en la web"
+          value={s.orders}
+          sub={s.orders ? `Ticket promedio ${fmtUsd(s.avgTicket)}` : 'Sin ventas web en el período'}
+        />
+        <StatTile
+          index={3}
+          label="Facturación"
+          value={s.revenue}
+          format={(n) => fmtUsd(n)}
+          sub={`Histórico: ${fmtUsd(s.revenueAllTime)} en ${fmtInt(s.ordersAllTime)} ventas`}
+        />
       </div>
 
       {/* ── Tendencia ── */}
-      <Section title="Cómo vino el tráfico día a día"
-               help="Barra gris: visitas. Punto verde: cuántas de esas visitas terminaron contactándote.">
-        {s.trend.length === 0 ? (
-          <p className="text-sm text-gray-400 font-medium">Sin datos en este período.</p>
-        ) : (
-          <div className="flex items-end gap-1 h-40 overflow-x-auto pb-1">
-            {s.trend.map(t => (
-              <div key={t.date} className="flex-1 min-w-[10px] flex flex-col items-center justify-end h-full group relative">
-                <div className="w-full rounded-t bg-gray-900 transition-all group-hover:bg-gray-700"
-                     style={{ height: `${(t.sessions / maxTrend) * 100}%` }} />
-                {t.leads > 0 && <div className="absolute -top-1 w-1.5 h-1.5 rounded-full bg-green-500"
-                                     style={{ bottom: `calc(${(t.sessions / maxTrend) * 100}% + 2px)` }} />}
-                <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 whitespace-nowrap rounded bg-gray-900 text-white text-[10px] font-bold px-2 py-1">
-                  {t.date}: {t.sessions} visitas · {t.leads} contactos
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
+      <Card
+        title={singleDay ? 'Hora por hora' : 'Día a día'}
+        help="Pasá el mouse por el gráfico para ver cada momento."
+      >
+        <TrendChart data={s.trend} />
+      </Card>
 
-      {/* ── Productos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Section title="Productos más mirados" help="Personas distintas que abrieron la ficha del producto.">
-          <BarList rows={s.topViewed.map(p => ({ label: p.slug, value: p.sessions }))} />
-        </Section>
-        <Section title="Productos más vendidos" help="Solo pedidos confirmados (pagados o entregados).">
-          {s.topSold.length === 0
-            ? <p className="text-sm text-gray-400 font-medium">Sin ventas registradas en la web en este período.</p>
-            : <BarList rows={s.topSold.map(p => ({ label: p.title, value: p.units, extra: fmtUsd(p.revenue) }))} unit=" u." />}
-        </Section>
-      </div>
-
-      {/* ── Secciones y dispositivos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Section title="Secciones más visitadas" help="Personas distintas que entraron a cada sección.">
-          <BarList rows={s.byPage.map(p => ({ label: p.path, value: p.sessions }))} />
-        </Section>
-        <Section title="Con qué entran" help="Porcentaje de visitas por tipo de dispositivo.">
-          <div className="grid grid-cols-3 gap-3">
-            {s.byDevice.slice(0, 3).map(d => {
-              const Icon = d.device === 'mobile' ? Smartphone : d.device === 'tablet' ? Tablet : Monitor;
-              const nombre = d.device === 'mobile' ? 'Celular' : d.device === 'tablet' ? 'Tablet' : d.device === 'desktop' ? 'Compu' : d.device;
-              return (
-                <div key={d.device} className="rounded-lg border border-gray-200 p-3 text-center">
-                  <Icon className="w-5 h-5 mx-auto text-gray-700 mb-1.5" />
-                  <p className="text-xl font-black text-gray-900 leading-none">{fmtPct(pct(d.sessions, s.sessions))}</p>
-                  <p className="text-[11px] font-bold text-gray-500 mt-1">{nombre}</p>
-                  <p className="text-[10px] font-semibold text-gray-400">{fmtInt(d.sessions)} visitas</p>
-                </div>
-              );
-            })}
+      {/* ── Embudo + contactos ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
+        <Card
+          title="¿En qué parte se cae la gente?"
+          help="Cada paso cuenta visitas distintas y es parte del anterior, así los porcentajes cierran."
+        >
+          <Funnel steps={s.funnel} />
+          <div className="mt-5 flex items-start gap-2.5 rounded-[12px] bg-[#f5f5f7] p-3.5">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#0066cc]" aria-hidden />
+            <p className="text-[13px] leading-relaxed text-[#424245]">
+              &quot;Quisieron comprar&quot; incluye WhatsApp, ofertas y pedidos de link de cuotas. La mayoría de tus
+              ventas se cierra por ahí y no en el checkout web.
+            </p>
           </div>
+        </Card>
+        <Card title="¿Cómo te contactaron?" help="Acciones de compra en el período.">
+          <BarList color={SERIES.leads} rows={s.leadBreakdown.map((l) => ({ key: l.name, label: l.label, value: l.count }))} />
           {s.otherEvents.length > 0 && (
             <>
-              <p className="mt-5 mb-2 text-xs font-black uppercase tracking-wide text-gray-500">Otras acciones</p>
-              <BarList rows={s.otherEvents.map(e => ({ label: e.label, value: e.count }))} />
+              <p className="mt-7 mb-3 text-[13px] font-semibold text-[#6e6e73]">Otras acciones</p>
+              <BarList rows={s.otherEvents.map((e) => ({ key: e.label, label: e.label, value: e.count }))} />
             </>
           )}
-        </Section>
+        </Card>
+      </div>
+
+      {/* ── Fuentes + dispositivos ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
+        <Card
+          title="¿De dónde viene la gente?"
+          help="Y qué porcentaje de cada fuente terminó contactándote: te dice dónde conviene invertir."
+        >
+          {s.bySource.length === 0 ? (
+            <p className="text-[13px] text-[#86868b]">Sin datos en este período.</p>
+          ) : (
+            <SourceTable rows={s.bySource} total={s.sessions} />
+          )}
+        </Card>
+        <Card title="¿Con qué entran?">
+          <Devices rows={s.byDevice} total={s.sessions} />
+        </Card>
+      </div>
+
+      {/* ── Productos ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Card title="Productos más mirados" help="Sólo los que hoy están a la venta y con stock.">
+          <ProductList items={s.viewedAvailable} empty="Ningún producto con stock recibió visitas en este período." />
+        </Card>
+        <Card
+          title="Los buscan y no los tenés"
+          help="Productos que la gente abrió pero ya borraste o están sin stock: es demanda para reponer."
+        >
+          <ProductList items={s.viewedUnavailable} empty="Todo lo que miraron está disponible." />
+        </Card>
+      </div>
+
+      {/* ── Ventas por producto ── */}
+      {s.topSold.length > 0 && (
+        <Card title="Productos más vendidos" help="Sólo pedidos confirmados (pagados o entregados).">
+          <BarList
+            rows={s.topSold.map((p) => ({ key: p.title, label: p.title, value: p.units, extra: fmtUsd(p.revenue) }))}
+            unit=" u."
+          />
+        </Card>
+      )}
+
+      {/* ── Secciones + horas ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Card title="Secciones más visitadas">
+          <BarList rows={s.byPage.map((p) => ({ key: p.section, label: p.section, value: p.sessions }))} />
+        </Card>
+        <Card title="¿A qué hora entran?" help="Para elegir cuándo publicar o lanzar una promo.">
+          <HourChart hours={s.byHour} />
+        </Card>
       </div>
 
       {/* ── Comportamiento ── */}
-      <Section
+      <Card
         title="¿Cuánto se quedan y cuánto miran?"
-        help={`Calculado solo sobre las visitas que llegaron a registrar su salida (${fmtPct(s.coverage)} del total). Las que no la registran quedarían en 0 y ensuciarían el promedio.`}
+        help={`Sobre las visitas que registraron su salida (${fmtPct(s.coverage)} del total), para que las que no la registran no ensucien los promedios.`}
       >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Tiempo típico</p>
-            </div>
-            <p className="text-2xl font-black text-gray-900 leading-none">{formatDuration(s.medianDuration)}</p>
-            <p className="mt-1 text-[11px] font-semibold text-gray-500">
-              La mitad se queda más que esto. Promedio: {formatDuration(s.avgDuration)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <ArrowRight className="w-4 h-4 text-gray-500" />
-              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Se van enseguida</p>
-            </div>
-            <p className="text-2xl font-black text-gray-900 leading-none">{fmtPct(s.bounceRate)}</p>
-            <p className="mt-1 text-[11px] font-semibold text-gray-500">Una sola página y menos de 5 segundos</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="w-4 h-4 text-gray-500" />
-              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Cuánto bajan</p>
-            </div>
-            <p className="text-2xl font-black text-gray-900 leading-none">{Math.round(s.avgScroll)}%</p>
-            <p className="mt-1 text-[11px] font-semibold text-gray-500">De la página, en promedio</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Users className="w-4 h-4 text-gray-500" />
-              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Volvieron</p>
-            </div>
-            <p className="text-2xl font-black text-gray-900 leading-none">{fmtInt(s.recurring)}</p>
-            <p className="mt-1 text-[11px] font-semibold text-gray-500">
-              Personas que entraron más de una vez en {rangeLabel}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <MiniStat label="Tiempo típico" value={s.medianDuration} format={formatDuration} note={`Promedio ${formatDuration(s.avgDuration)}`} />
+          <MiniStat label="Se van enseguida" value={s.bounceRate} format={fmtPct} note="Una página y menos de 5 s" />
+          <MiniStat label="Cuánto bajan" value={s.avgScroll} format={(n) => `${Math.round(n)}%`} note="De la página, en promedio" />
+          <MiniStat label="Volvieron" value={s.recurring} note="Entraron más de una vez" />
         </div>
-        <p className="mt-3 text-xs font-semibold text-gray-500">
-          Páginas por visita: <span className="font-black text-gray-900">{s.pagesPerSession.toFixed(1)}</span>
-        </p>
-      </Section>
+        {!singleDay && (
+          <div className="mt-6">
+            <p className="mb-3 text-[13px] font-semibold text-[#6e6e73]">Qué días entra más gente</p>
+            <BarList rows={s.byDay.map((d) => ({ key: d.day, label: d.day, value: d.sessions }))} />
+          </div>
+        )}
+      </Card>
 
-      {/* ── Cuándo entran ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Section title="Qué días entra más gente" help="Sumando todos los días del período.">
-          <BarList rows={s.byDay.map(d => ({ label: d.day, value: d.sessions }))} />
-        </Section>
-        <Section title="A qué hora entra más gente" help="Útil para elegir cuándo publicar o lanzar una promo.">
-          <div className="flex items-end gap-0.5 h-32">
-            {s.byHour.map(h => {
-              const max = Math.max(1, ...s.byHour.map(x => x.sessions));
-              return (
-                <div key={h.hour} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                  <div className="w-full rounded-t bg-gray-900 group-hover:bg-gray-700 transition-colors"
-                       style={{ height: `${(h.sessions / max) * 100}%` }} />
-                  <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 whitespace-nowrap rounded bg-gray-900 text-white text-[10px] font-bold px-2 py-1">
-                    {h.hour}hs: {h.sessions}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex justify-between mt-1 text-[10px] font-bold text-gray-400">
-            <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
-          </div>
-        </Section>
-      </div>
+      <p className="px-1 text-[12px] leading-relaxed text-[#86868b]">
+        Páginas por visita: {s.pagesPerSession.toFixed(1)}. No se cuentan tu sesión de administrador ni los robots
+        {s.botsExcluded > 0 && <> ({fmtInt(s.botsExcluded)} visitas de robots descartadas en este período)</>}.
+      </p>
+    </>
+  );
+}
+
+/* ── Piezas propias del panel ─────────────────────────────────────────────── */
+
+function MiniStat({ label, value, format, note }: { label: string; value: number; format?: (n: number) => string; note: string }) {
+  return (
+    <div className="rounded-[14px] bg-[#f5f5f7] p-4">
+      <p className="text-[12px] font-semibold text-[#6e6e73]">{label}</p>
+      <p className="mt-2 text-[26px] leading-none font-semibold tracking-[-0.02em]">
+        <AnimatedNumber value={value} format={format} />
+      </p>
+      <p className="mt-1.5 text-[12px] text-[#6e6e73]">{note}</p>
     </div>
+  );
+}
+
+function SourceTable({ rows, total }: { rows: { source: string; sessions: number; leads: number }[]; total: number }) {
+  const max = Math.max(1, ...rows.map((r) => r.sessions));
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] text-[14px]">
+        <thead>
+          <tr className="text-left text-[12px] text-[#6e6e73]">
+            <th className="pb-3 font-semibold">Fuente</th>
+            <th className="pb-3 font-semibold">Visitas</th>
+            <th className="pb-3 text-right font-semibold">Contactos</th>
+            <th className="pb-3 text-right font-semibold">Tasa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.source} className="border-t border-[#f0f0f2]">
+              <td className="py-3 pr-3 font-semibold">{r.source}</td>
+              <td className="py-3 pr-3 w-[42%]">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#f0f0f2]">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: SERIES.visits }}
+                      initial={{ width: 0 }}
+                      animate={{ width: r.sessions ? `${Math.max((r.sessions / max) * 100, 1.5)}%` : '0%' }}
+                      transition={{ duration: 0.9, ease: [0.28, 0.11, 0.32, 1], delay: 0.1 + i * 0.06 }}
+                    />
+                  </div>
+                  <span className="w-14 shrink-0 text-right tabular-nums">{fmtInt(r.sessions)}</span>
+                </div>
+                <span className="text-[11px] text-[#86868b]">{fmtPct(pct(r.sessions, total))} del total</span>
+              </td>
+              <td className="py-3 text-right tabular-nums">{fmtInt(r.leads)}</td>
+              <td className={`py-3 text-right font-semibold tabular-nums ${r.leads ? 'text-[#1d1d1f]' : 'text-[#c7c7cc]'}`}>
+                {fmtPct(pct(r.leads, r.sessions))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Devices({ rows, total }: { rows: { device: string; sessions: number }[]; total: number }) {
+  const known = rows.filter((d) => ['mobile', 'desktop', 'tablet'].includes(d.device));
+  if (!known.length) return <p className="text-[13px] text-[#86868b]">Sin datos en este período.</p>;
+  const meta: Record<string, { name: string; Icon: typeof Smartphone }> = {
+    mobile: { name: 'Celular', Icon: Smartphone },
+    desktop: { name: 'Computadora', Icon: Monitor },
+    tablet: { name: 'Tablet', Icon: Tablet },
+  };
+  return (
+    <div>
+      {/* Proporción en una sola barra, con 2px de separación entre tramos */}
+      <div className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full">
+        {known.map((d, i) => (
+          <motion.div
+            key={d.device}
+            className="h-full first:rounded-l-full last:rounded-r-full"
+            style={{ background: SERIES.visits, opacity: 1 - i * 0.3 }}
+            initial={{ width: 0 }}
+            animate={{ width: `${pct(d.sessions, total)}%` }}
+            transition={{ duration: 1, ease: [0.28, 0.11, 0.32, 1], delay: 0.15 + i * 0.1 }}
+          />
+        ))}
+      </div>
+      <ul className="mt-5 space-y-3">
+        {known.map((d, i) => {
+          const { name, Icon } = meta[d.device];
+          return (
+            <li key={d.device} className="flex items-center gap-3">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: SERIES.visits, opacity: 1 - i * 0.3 }} />
+              <Icon className="h-4 w-4 text-[#6e6e73]" aria-hidden />
+              <span className="flex-1 text-[14px]">{name}</span>
+              <span className="text-[15px] font-semibold tabular-nums">
+                <AnimatedNumber value={pct(d.sessions, total)} format={(n) => fmtPct(n)} />
+              </span>
+              <span className="w-20 text-right text-[12px] text-[#86868b] tabular-nums">{fmtInt(d.sessions)} visitas</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function ProductList({ items, empty }: { items: ViewedProduct[]; empty: string }) {
+  if (!items.length) return <p className="text-[13px] text-[#86868b]">{empty}</p>;
+  const max = Math.max(1, ...items.map((p) => p.sessions));
+  return (
+    <ul className="space-y-3">
+      {items.map((p, i) => (
+        <motion.li
+          key={p.slug}
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: [0.28, 0.11, 0.32, 1], delay: 0.05 + i * 0.05 }}
+          className="flex items-center gap-3"
+        >
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[8px] bg-[#f5f5f7]">
+            {p.image && <Image src={p.image} alt="" fill sizes="44px" className="object-contain mix-blend-multiply" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="truncate text-[14px]">{p.title}</p>
+              <p className="shrink-0 text-[14px] font-semibold tabular-nums">{fmtInt(p.sessions)}</p>
+            </div>
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#f0f0f2]">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: SERIES.visits }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.max((p.sessions / max) * 100, 2)}%` }}
+                  transition={{ duration: 0.9, ease: [0.28, 0.11, 0.32, 1], delay: 0.15 + i * 0.05 }}
+                />
+              </div>
+              {p.status !== 'in_stock' && <StockChip status={p.status} />}
+            </div>
+          </div>
+        </motion.li>
+      ))}
+    </ul>
+  );
+}
+
+function StockChip({ status }: { status: StockStatus }) {
+  // Estado: ícono + texto, nunca sólo color
+  if (status === 'sold_out') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fff4e5] px-2 py-0.5 text-[11px] font-semibold text-[#b25000]">
+        <PackageMinus className="h-3 w-3" aria-hidden /> Sin stock
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0f0f2] px-2 py-0.5 text-[11px] font-semibold text-[#6e6e73]">
+      <PackageX className="h-3 w-3" aria-hidden /> Ya no está
+    </span>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { setAnalyticsExcluded } from '@/lib/analytics/track';
+import { isAutomatedBrowser } from '@/lib/analytics/bots';
 
 function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
@@ -106,6 +107,12 @@ export function useAnalytics() {
   // ── Excluir la sesión de administración ──
   useEffect(() => {
     let cancelled = false;
+
+    // Robots y navegadores automatizados no cuentan como visitas
+    if (isAutomatedBrowser()) {
+      setTracks(false);
+      return;
+    }
 
     (async () => {
       try {

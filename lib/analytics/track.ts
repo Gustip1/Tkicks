@@ -7,6 +7,8 @@
  * Comparte session_id / visitor_id con useAnalytics.
  */
 
+import { isAutomatedBrowser } from '@/lib/analytics/bots';
+
 const SESSION_KEY = 'tkicks_session_id';
 const VISITOR_KEY = 'tkicks_visitor_id';
 const ADMIN_KEY = 'tkicks_analytics_excluded';
@@ -26,9 +28,10 @@ export function setAnalyticsExcluded(excluded: boolean): void {
   }
 }
 
-/** true si las visitas de este navegador no deben contarse (admin). */
+/** true si las visitas de este navegador no deben contarse (admin o robot). */
 export function isAnalyticsExcluded(): boolean {
   if (typeof window === 'undefined') return true;
+  if (isAutomatedBrowser()) return true;
   try {
     return localStorage.getItem(ADMIN_KEY) === '1';
   } catch {
