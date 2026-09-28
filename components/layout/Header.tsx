@@ -85,7 +85,7 @@ export function Header() {
   if (isInAdmin) return null;
 
   const navLink =
-    'px-2.5 2xl:px-3 py-2 text-[13px] font-semibold tracking-[-0.016em] text-white/80 hover:text-white transition-colors duration-200 whitespace-nowrap';
+    'px-2 2xl:px-2.5 py-2 text-xs font-semibold tracking-[-0.01em] text-white/80 hover:text-white transition-colors duration-200 whitespace-nowrap';
 
   return (
     <>
@@ -154,7 +154,7 @@ export function Header() {
 
           {/* Centro - Logo. El JPG es negro sobre blanco: invertido queda blanco sobre
               negro, el mismo negro de la barra, así que el fondo no se ve. */}
-          <div className="mx-auto min-[1280px]:mx-0 min-[1280px]:pointer-events-none min-[1280px]:absolute min-[1280px]:inset-0 min-[1280px]:flex min-[1280px]:items-center min-[1280px]:justify-center">
+          <div className="mx-auto min-[1440px]:mx-0 min-[1440px]:pointer-events-none min-[1440px]:absolute min-[1440px]:inset-0 min-[1440px]:flex min-[1440px]:items-center min-[1440px]:justify-center">
             <Link
               href="/"
               className="pointer-events-auto flex items-center shrink-0 px-2"
