@@ -92,7 +92,7 @@ export default function OrdersPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h3 className="t-tagline text-gray-900">
+                    <h3 className="t-strong text-gray-900">
                       {order.order_number || `Pedido #${order.id.slice(0, 8)}`}
                     </h3>
                     <span

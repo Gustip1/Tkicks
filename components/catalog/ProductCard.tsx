@@ -75,7 +75,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       ref={cardRef}
       href={`/producto/${product.slug}`}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
-      className="group store-card flex flex-col h-full p-4 md:p-5"
+      className="group store-card flex flex-col h-full p-2.5 sm:p-4 md:p-5"
     >
       {/* ── Imagen (swap en hover) — dentro de la tarjeta, esquinas de 8px ── */}
       <div className="relative w-full aspect-square overflow-hidden rounded-sm bg-parchment">
@@ -139,7 +139,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       </div>
 
       {/* ── Info ── */}
-      <div className="pt-4 flex-1 flex flex-col">
+      <div className="pt-2.5 sm:pt-4 flex-1 flex flex-col">
         {/* Eyebrow de apple.com: "Nuevo" en naranja; si no, la categoría en gris */}
         {comingSoon ? (
           <p className="t-fine font-semibold text-[#bf4800] mb-1">
@@ -154,14 +154,14 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
         )}
 
         <h3 className={cn(
-          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-2 tracking-[-0.022em]',
-          size === 'large' ? 'text-[19px]' : 'text-[17px]',
+          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-1.5 sm:mb-2 tracking-[-0.022em]',
+          size === 'large' ? 'text-[15px] sm:text-[19px]' : 'text-[14px] sm:text-[17px]',
         )}>
           {product.title}
         </h3>
 
         {availableSizes.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="hidden sm:flex flex-wrap gap-1 mb-2">
             {availableSizes.slice(0, 4).map(s => (
               <span key={s} className="text-[11px] text-gray-600 bg-gray-100 rounded-full px-2 py-0.5">
                 {s}
@@ -177,7 +177,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {/* USD — precio principal */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              't-strong',
+              't-strong text-[15px] sm:text-[17px]',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
               ${activePrice.toFixed(2)}
@@ -193,13 +193,13 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {/* ARS — mismo tamaño que el USD */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              't-body',
+              't-body text-[13px] sm:text-[17px]',
               hasSale ? 'text-red-600' : 'text-gray-700',
             )}>
               {formatCurrency(priceInArs)}
             </span>
             {hasSale && (
-              <span className="text-xs text-gray-400 line-through font-normal">
+              <span className="hidden sm:inline text-xs text-gray-400 line-through font-normal">
                 {formatCurrency(Number(product.price) * dolarOficial)}
               </span>
             )}
@@ -214,7 +214,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                 e.stopPropagation();
                 setActiveInfo((v) => (v === 'usd' ? null : 'usd'));
               }}
-              className="inline-flex items-center gap-1 text-xs text-primary font-normal hover:text-primary-hover transition-colors"
+              className="hidden sm:inline-flex items-center gap-1 text-xs text-primary font-normal hover:text-primary-hover transition-colors"
             >
               <Info className="w-3 h-3" />
               Precios en USD
@@ -242,7 +242,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                 )}
               >
                 3 × {formatCurrency(cardArs / 3)}
-                <span className="font-normal opacity-70">
+                <span className="hidden sm:inline font-normal opacity-70">
                   {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
                 </span>
               </button>

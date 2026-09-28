@@ -54,7 +54,7 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
   return (
     <section className="bleed tile tile-light" aria-labelledby="new-arrivals-title">
       <div className="tile-inner">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10" data-reveal="">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10" data-reveal="">
           <h2 id="new-arrivals-title" className="t-section max-w-[26ch]">
             Recién llegados.{' '}
             <span className="t-muted">
@@ -67,11 +67,11 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
         </div>
 
         <div className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10 py-2" ref={emblaRef}>
-          <div className="-ml-4 md:-ml-5 flex">
+          <div className="-ml-3 md:-ml-5 flex">
             {products.map((p) => (
               <div
                 key={p.id}
-                className="min-w-0 shrink-0 grow-0 basis-[72%] sm:basis-[44%] md:basis-1/3 xl:basis-1/4 pl-4 md:pl-5"
+                className="min-w-0 shrink-0 grow-0 basis-[46%] sm:basis-[40%] md:basis-1/3 xl:basis-1/4 pl-3 md:pl-5"
               >
                 <ProductCard product={p} />
               </div>
@@ -79,7 +79,7 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 hidden md:flex justify-end gap-3">
           <button onClick={scrollPrev} disabled={!canPrev} className="paddle-apple" aria-label="Anterior">
             <ChevronLeft className="w-5 h-5" />
           </button>

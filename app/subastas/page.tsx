@@ -53,7 +53,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
         </div>
       </div>
       <div className="p-4 flex flex-col gap-2">
-        <h3 className="t-tagline text-gray-900 line-clamp-2">{a.product_title}</h3>
+        <h3 className="t-strong text-gray-900 line-clamp-2">{a.product_title}</h3>
         <p className="text-gray-400 text-xs">Talle: {a.size}</p>
         <div className="flex items-end justify-between mt-1">
           <div>

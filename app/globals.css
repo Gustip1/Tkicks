@@ -434,7 +434,7 @@ img {
   @media (max-width: 734px) {
     .t-hero { font-size: 34px; line-height: 1.12; }
     .t-display { font-size: 32px; line-height: 1.125; }
-    .t-section { font-size: 28px; }
+    .t-section { font-size: 24px; line-height: 1.2; }
     .t-lead { font-size: 21px; line-height: 1.19; }
     .t-tagline { font-size: 19px; }
   }
@@ -513,7 +513,7 @@ img {
     margin-right: -50vw;
   }
   .tile { padding-block: 80px; }
-  @media (max-width: 734px) { .tile { padding-block: 56px; } }
+  @media (max-width: 734px) { .tile { padding-block: 44px; } }
   .tile-light { background: #ffffff; color: #1d1d1f; }
   .tile-parchment { background: #f5f5f7; color: #1d1d1f; }
   .tile-dark { background: #272729; color: #ffffff; }
