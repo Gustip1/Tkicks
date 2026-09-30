@@ -3,7 +3,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 // Import estático: la URL lleva un hash del contenido, así el logo nuevo
 // nunca queda tapado por el viejo en la caché del navegador.
-import logo from '@/public/logo.jpg';
+// Es el mismo logo en blanco con fondo transparente (sale de logo.jpg): sobre
+// la barra de vidrio el JPG invertido dejaba ver su recuadro negro.
+import logo from '@/public/logo-white.png';
 import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, Menu, Search as SearchIcon, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -90,10 +92,10 @@ export function Header() {
   return (
     <>
       <header
-        className="sticky top-0 z-40 bg-black text-white pt-[env(safe-area-inset-top)]"
+        className="material-nav sticky top-0 z-40 text-white pt-[env(safe-area-inset-top)]"
         onMouseLeave={() => setMenu(null)}
       >
-        {/* Barra global: 48px, negra translúcida, links de 12px — la nav de apple.com */}
+        {/* Barra global: 48px, vidrio negro (material-nav), links de 12px — la nav de apple.com */}
         <div className="relative h-12 px-2 md:px-6 flex items-center justify-between max-w-[1440px] mx-auto">
           {/* Izquierda - menú móvil + navegación */}
           <div className="flex items-center gap-1 min-w-0">
@@ -152,8 +154,7 @@ export function Header() {
             </nav>
           </div>
 
-          {/* Centro - Logo. El JPG es negro sobre blanco: invertido queda blanco sobre
-              negro, el mismo negro de la barra, así que el fondo no se ve. */}
+          {/* Centro - Logo */}
           <div className="mx-auto min-[1440px]:mx-0 min-[1440px]:pointer-events-none min-[1440px]:absolute min-[1440px]:inset-0 min-[1440px]:flex min-[1440px]:items-center min-[1440px]:justify-center">
             <Link
               href="/"
@@ -161,7 +162,7 @@ export function Header() {
               aria-label="Inicio"
               onMouseEnter={() => setMenu(null)}
             >
-              <Image src={logo} alt="Tkicks" priority className="h-8 w-auto invert" />
+              <Image src={logo} alt="Tkicks" priority className="h-8 w-auto" />
             </Link>
           </div>
 

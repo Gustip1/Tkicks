@@ -6,6 +6,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { trackEvent } from '@/lib/analytics/track';
+import { haptic } from '@/lib/haptics';
 
 /**
  * Barra de compra rápida fija al pie (mobile y desktop). Permite elegir talle
@@ -87,6 +88,7 @@ export function BuyBar({
       source: 'buybar',
     });
     setAskSize(false);
+    haptic();
     openCart();
   };
 

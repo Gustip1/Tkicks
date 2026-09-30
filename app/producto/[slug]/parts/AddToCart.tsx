@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { trackEvent } from '@/lib/analytics/track';
+import { haptic } from '@/lib/haptics';
 
 const WA_NUMBER = '5492644802994';
 
@@ -56,6 +57,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       quantity: finalQty,
       price: activePrice,
     });
+    haptic();
     openCart();
   };
 

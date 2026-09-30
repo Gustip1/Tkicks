@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
+import { useSwipeToDismiss } from '@/lib/useSwipeToDismiss';
 import { Clock, AlertTriangle, X, ShoppingBag, Minus, Plus, ArrowRight } from 'lucide-react';
 
 export function CartDrawer() {
@@ -16,6 +17,8 @@ export function CartDrawer() {
   const isOpen = useUIStore((s) => s.isCartOpen);
   const close = useUIStore((s) => s.closeCart);
   const pathname = usePathname();
+  // Deslizarlo hacia la derecha con el dedo lo cierra, como una hoja de iOS
+  const { panelRef, backdropRef } = useSwipeToDismiss<HTMLDivElement, HTMLDivElement>(close, isOpen);
 
   // Al cambiar de página el carrito se cierra: si no, quedaba abierto encima
   // del checkout y tapaba el botón para continuar.
@@ -73,6 +76,7 @@ export function CartDrawer() {
   return (
     <>
       <div
+        ref={backdropRef}
         aria-hidden="true"
         onClick={close}
         className={cn(
@@ -81,8 +85,9 @@ export function CartDrawer() {
         )}
       />
       <div
+        ref={panelRef}
         className={cn(
-          'fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-gray-200 bg-white shadow-2xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)]',
+          'touch-pan-y fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-gray-200 bg-white shadow-2xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)]',
           // Curva de los paneles de iOS (Emil): entra con cuerpo, sale rápido
           isOpen
             ? 'translate-x-0 duration-500 ease-[var(--ease-drawer)]'
@@ -134,7 +139,7 @@ export function CartDrawer() {
             </div>
           )}
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="touch-pan-y flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
             {items.length === 0 && !expired && (
               <div className="flex flex-col items-center justify-center text-center py-16 gap-4">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
@@ -228,7 +233,7 @@ export function CartDrawer() {
             )}
             {items.length > 0 && remainingSeconds !== null && (
               <p className="mt-1 text-xs text-gray-600 font-bold">
-                ⏱ Tenés {formatTime(remainingSeconds)} para completar tu compra
+                Tenés {formatTime(remainingSeconds)} para completar tu compra
               </p>
             )}
             <Link

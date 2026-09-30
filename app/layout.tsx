@@ -20,6 +20,7 @@ import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
 import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
 import { RevealObserver } from '@/components/RevealObserver';
+import { TouchFeedback } from '@/components/TouchFeedback';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
@@ -97,6 +98,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </HideOnAdmin>
               <WhatsAppFab />
               <RevealObserver />
+              <TouchFeedback />
             </AnalyticsProvider>
             </ComingSoonProvider>
           </InstallmentsPromoProvider>

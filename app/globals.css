@@ -23,6 +23,8 @@
 /* ── Base táctil (skill mobile-native) ──────────────────────────────────────
    Que la web se sienta instalada y no "una página en el navegador". */
 html {
+  /* Lo que se enfoca o se salta por ancla no queda tapado por la barra fija */
+  scroll-padding-top: calc(48px + env(safe-area-inset-top));
   -webkit-tap-highlight-color: transparent;  /* sin destello gris al tocar */
   -webkit-text-size-adjust: 100%;             /* sin agrandar letras al girar el celular */
   /* Curvas de movimiento (Emil Kowalski): la salida fuerte da respuesta inmediata */
@@ -54,8 +56,12 @@ html, body {
      está), y sumado a un height fijo eso convierte a body en su propio
      contenedor de scroll interno en vez de dejar que la página scrollee con la
      ventana. En iOS eso impide que la barra de direcciones se colapse al
-     scrollear, achicando la pantalla útil todo el tiempo. */
+     scrollear, achicando la pantalla útil todo el tiempo.
+     "clip" recorta igual que "hidden" pero no crea contenedor de scroll: con
+     "hidden" el body pasaba a ser uno y la barra de arriba (sticky) dejaba de
+     quedarse fija al bajar. Navegadores viejos sin "clip" usan el "hidden". */
   overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
 }
 
@@ -405,10 +411,11 @@ img {
   to   { opacity: 1; }
 }
 
+/* La tarjeta se materializa: llega desenfocada y un poco chica, y se asienta sin
+   rebote (el rebote es para cosas que el usuario lanzó con el dedo, no para esto) */
 @keyframes notice-card-in {
-  0%   { opacity: 0; transform: translateY(24px) scale(0.94); }
-  60%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(8px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
 }
 
 @keyframes notice-stamp-in {
@@ -534,7 +541,8 @@ img {
   }
   .btn-apple { background: var(--color-primary); color: #fff; }
   .btn-apple-ghost { background: transparent; color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); }
-  .btn-apple:active, .btn-apple-ghost:active { transform: scale(0.95); }
+  /* La respuesta vive en el toque: se hunde al apoyar el dedo, en 100ms */
+  .btn-apple:active, .btn-apple-ghost:active { transform: scale(0.97); transition-duration: 100ms; }
   .btn-apple:focus-visible, .btn-apple-ghost:focus-visible { outline: 2px solid #0071e3; outline-offset: 3px; }
   .tile-dark .btn-apple-ghost { color: #2997ff; box-shadow: inset 0 0 0 1px #2997ff; }
 
@@ -548,7 +556,7 @@ img {
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     transition: background-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
   }
-  .paddle-apple:active { transform: scale(0.95); }
+  .paddle-apple:active { transform: scale(0.95); transition-duration: 100ms; }
   .paddle-apple:disabled { opacity: 0.36; pointer-events: none; }
 
   /* ── Franjas a todo el ancho ─────────────────────────────────────────────
@@ -687,4 +695,30 @@ img {
 @media (prefers-reduced-motion: reduce) {
   .reveal-ready [data-reveal] { opacity: 1 !important; transform: none !important; clip-path: none !important; }
   .scroll-zoom, .scroll-lift { animation: none !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MATERIALES — la barra de arriba es vidrio oscuro: el contenido pasa por
+   debajo desenfocado en vez de cortarse contra una franja negra (apple.com usa
+   rgba(22,22,23,.8) con saturate(180%) blur(20px); acá un poco más oscuro
+   para que arriba de todo se siga leyendo negra, como siempre fue).
+   ════════════════════════════════════════════════════════════════════════════ */
+.material-nav {
+  background: rgba(0, 0, 0, 0.85);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Arrastrando el carrito con el dedo no hay transición: sigue al dedo 1:1 */
+[data-dragging="true"] { transition: none !important; }
+
+/* Quien pidió menos transparencia recibe superficies sólidas */
+@media (prefers-reduced-transparency: reduce) {
+  .material-nav { background: #000; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .paddle-apple { background: #d2d2d7; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+/* Y quien pidió más contraste, bordes definidos */
+@media (prefers-contrast: more) {
+  .paddle-apple { background: #fff; color: #000; box-shadow: inset 0 0 0 1px #000; }
+  .btn-apple-ghost { box-shadow: inset 0 0 0 2px var(--color-primary); }
 }
