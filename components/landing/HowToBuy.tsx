@@ -9,7 +9,7 @@ export function HowToBuy({ content = DEFAULT_HOW_TO_BUY_CONTENT }: { content?: H
   return (
     <section id="como-comprar" className="bleed tile tile-light scroll-mt-16" aria-labelledby="how-to-buy-title">
       <div className="tile-inner">
-        <div className="text-center mb-10 md:mb-14" data-reveal="">
+        <div className="text-center mb-10 md:mb-14">
           <h2 id="how-to-buy-title" className="t-display max-w-[22ch] mx-auto">
             Comprar es simple. <span className="t-muted">Tres pasos y tu pedido sale.</span>
           </h2>
@@ -25,7 +25,7 @@ export function HowToBuy({ content = DEFAULT_HOW_TO_BUY_CONTENT }: { content?: H
           ))}
         </ol>
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5" data-reveal="">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5">
           <Link href="/productos" className="btn-apple">
             Ver catálogo
           </Link>

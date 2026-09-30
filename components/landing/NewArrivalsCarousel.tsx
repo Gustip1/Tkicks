@@ -54,7 +54,7 @@ export function NewArrivalsCarousel({ products, curated }: NewArrivalsCarouselPr
   return (
     <section className="bleed tile tile-light" aria-labelledby="new-arrivals-title">
       <div className="tile-inner">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10" data-reveal="">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10">
           <h2 id="new-arrivals-title" className="t-section max-w-[26ch]">
             Recién llegados.{' '}
             <span className="t-muted">

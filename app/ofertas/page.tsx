@@ -4,17 +4,18 @@ import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '🔥 Ofertas Especiales | Tkicks',
+  title: 'Ofertas | Tkicks',
   description: 'Descubre nuestras ofertas especiales en sneakers y streetwear 100% originales.',
 };
 
 export default async function OfertasPage() {
   return (
     <>
+      {/* La franja negra va pegada al menú; la pista del sorteo queda debajo */}
+      <OfertasClient />
       <div className="flex justify-center py-2">
         <GiveawayInlinePriceClue clueId="/ofertas" label="Ofertas" position={2} digit="0" />
       </div>
-      <OfertasClient />
     </>
   );
 }

@@ -37,7 +37,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
     // y el cambio de color es el divisor entre secciones.
     <section className="bleed tile-dark py-14 md:py-16" aria-labelledby="reviews-title">
       <div className="tile-inner">
-        <div className="text-center mb-7 md:mb-9" data-reveal="">
+        <div className="text-center mb-7 md:mb-9">
           <h2 id="reviews-title" className="t-section max-w-[26ch] mx-auto">
             Lo que dicen. <span className="t-muted">Opiniones reales de quienes ya compraron.</span>
           </h2>

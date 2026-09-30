@@ -27,7 +27,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#ffffff'
+  // Negro, como la navegación: en iPhone la barra de estado se funde con el menú
+  themeColor: '#000000',
+  interactiveWidget: 'resizes-content'
 };
 
 export const metadata: Metadata = {
@@ -73,9 +75,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <InstallmentsPromoProvider>
             <ComingSoonProvider>
             <AnalyticsProvider>
+              {/* Para quien navega con teclado: saltea el menú y va directo al contenido */}
+              <a
+                href="#contenido"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-full focus:bg-white focus:px-5 focus:py-3 focus:text-[15px] focus:text-gray-900 focus:shadow-lg"
+              >
+                Saltar al contenido
+              </a>
               <Header />
               <Sidebar />
-              <main className="px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white">
+              <main id="contenido" tabIndex={-1} className="outline-none px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white">
                 <RouteTransitions>{children}</RouteTransitions>
                 <GiveawayClue />
               </main>

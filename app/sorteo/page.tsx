@@ -199,7 +199,7 @@ export default function SorteoPage() {
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
               <div
-                className="h-full rounded-full bg-red-500 transition-all duration-700"
+                className="h-full rounded-full bg-red-500 transition duration-700"
                 style={{ width: `${(foundCount / TOTAL_CLUES) * 100}%` }}
               />
             </div>
@@ -221,7 +221,7 @@ export default function SorteoPage() {
               return (
                 <div
                   key={i}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition-all duration-300 ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg font-black transition duration-300 ${
                     clue
                       ? 'border-red-300 bg-red-50 text-red-500'
                       : 'border-gray-200 bg-gray-50 text-gray-300'

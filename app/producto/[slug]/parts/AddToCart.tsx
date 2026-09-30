@@ -64,7 +64,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
       {/* Selector de talla */}
       <div>
         <label className="block text-xs md:text-sm font-black text-gray-900 mb-2 md:mb-3 ">
-          Selecciona tu talla
+          Seleccioná tu talla
         </label>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 md:gap-3">
           {variants.map((v) => (
@@ -94,7 +94,7 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         </div>
         {size && selectedVariant && (
           <p className="mt-2 text-xs text-gray-400 font-bold">
-            {maxQty > 0 ? `${maxQty} unidades disponibles` : 'Sin stock'}
+            {maxQty > 0 ? maxQty === 1 ? 'Última unidad' : `${maxQty} unidades disponibles` : 'Sin stock'}
           </p>
         )}
       </div>

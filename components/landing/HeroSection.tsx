@@ -4,8 +4,8 @@ import { HeroContent, DEFAULT_HERO_CONTENT } from '@/lib/homeContent';
 /**
  * Hero de la home: sólo la marca, en tres niveles claros —como los heroes de
  * apple.com—:
- *   1. arriba, chico y en gris, dónde estamos ("Stock exclusivo · San Juan")
- *   2. el titular, cortado a propósito en dos renglones
+ *   1. el titular, cortado a propósito en dos renglones
+ *   2. debajo, chico y en gris, dónde estamos ("Stock exclusivo · San Juan")
  *   3. las dos píldoras
  * Todo en el mismo peso (600) para que sea una sola voz; lo que cambia es el
  * tamaño y el color. Los textos se editan desde /admin/portada.
@@ -19,16 +19,18 @@ export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: Hero
   return (
     <section className="bleed tile-light -mt-3 md:-mt-8">
       <div className="tile-inner pt-14 md:pt-20 pb-12 md:pb-16 text-center">
-        {content.badge && (
-          <p className="hero-rise t-tagline text-[#6e6e73]">{content.badge}</p>
-        )}
-
-        <h1 className="hero-rise hero-d1 t-hero mt-3 md:mt-4">
-          <span className="block">{line1}</span>
-          {line2 && <span className="block">{line2}</span>}
+        {/* El momento de la página: cada renglón sube desde atrás de una máscara */}
+        <h1 className="t-hero">
+          <span className="hero-line"><span>{line1}</span></span>
+          {line2 && <span className="hero-line"><span>{line2}</span></span>}
         </h1>
 
-        <div className="hero-rise hero-d2 mt-7 md:mt-9 flex flex-wrap items-center justify-center gap-3">
+        {/* Dónde estamos, debajo del título y no como etiqueta encima */}
+        {content.badge && (
+          <p className="hero-rise hero-d3 t-tagline mt-3 md:mt-4 text-[#6e6e73]">{content.badge}</p>
+        )}
+
+        <div className="hero-rise hero-d4 mt-7 md:mt-9 flex flex-wrap items-center justify-center gap-3">
           <Link href={content.ctaPrimaryHref} className="btn-apple">
             {content.ctaPrimaryLabel}
           </Link>

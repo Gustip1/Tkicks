@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { Banknote, AlertCircle, Landmark, CreditCard, Bitcoin } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 
 /* ─── tipos ─── */
@@ -176,7 +177,7 @@ export default function EncargosPage() {
       {/* header */}
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="t-display text-gray-900">Encargos Personalizados</h1>
+          <h1 className="t-display text-gray-900">Encargos personalizados</h1>
           <GiveawayInlinePriceClue clueId="/encargos" label="Encargos" position={3} digit="7" />
         </div>
         <p className="mt-1 text-sm text-gray-500">
@@ -186,7 +187,7 @@ export default function EncargosPage() {
 
       {/* aviso 100 % */}
       <div className="flex items-start gap-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
-        <span className="text-2xl">💰</span>
+        <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-gray-900" aria-hidden />
         <div>
           <p className="text-sm font-semibold text-gray-900">Importante: Pago del encargo</p>
           <p className="text-sm text-gray-600">
@@ -225,8 +226,8 @@ export default function EncargosPage() {
       {errores.length > 0 && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-1">
           {errores.map((e, i) => (
-            <p key={i} className="text-xs text-red-400">
-              ⚠ {e}
+            <p key={i} className="flex items-center gap-1.5 text-xs text-red-600">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden /> {e}
             </p>
           ))}
         </div>
@@ -437,10 +438,10 @@ export default function EncargosPage() {
           <div className="grid grid-cols-2 gap-3">
             {(
               [
-                { value: "transferencia", label: "Transferencia", icon: "🏦", desc: "CBU / Alias" },
-                { value: "efectivo", label: "Efectivo", icon: "💵", desc: "Pago en mano" },
-                { value: "tarjeta", label: "Tarjeta", icon: "💳", desc: "Crédito / Débito" },
-                { value: "cripto", label: "Cripto", icon: "₿", desc: "USDT, BTC, etc." },
+                { value: "transferencia", label: "Transferencia", Icon: Landmark, desc: "CBU / Alias" },
+                { value: "efectivo", label: "Efectivo", Icon: Banknote, desc: "Pago en mano" },
+                { value: "tarjeta", label: "Tarjeta", Icon: CreditCard, desc: "Crédito / Débito" },
+                { value: "cripto", label: "Cripto", Icon: Bitcoin, desc: "USDT, BTC, etc." },
               ] as const
             ).map((m) => (
               <button
@@ -452,7 +453,7 @@ export default function EncargosPage() {
                     : "border-gray-200 bg-white hover:border-gray-400"
                 }`}
               >
-                <span className="text-2xl">{m.icon}</span>
+                <m.Icon className="h-6 w-6 text-gray-900" aria-hidden />
                 <span className="text-sm font-semibold text-gray-900">{m.label}</span>
                 <span className="text-[11px] text-gray-500">{m.desc}</span>
               </button>

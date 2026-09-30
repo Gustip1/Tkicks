@@ -104,7 +104,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
               aria-label={`Ir a la imagen ${idx + 1}`}
               onClick={() => api?.scrollTo(idx)}
               className={cn(
-                'h-1.5 rounded-full transition-all duration-300',
+                'h-1.5 rounded-full transition-[width,background-color] duration-300 ease-[var(--ease-out)]',
                 selectedIndex === idx ? 'w-5 bg-gray-900' : 'w-1.5 bg-gray-300 hover:bg-gray-400'
               )}
             />

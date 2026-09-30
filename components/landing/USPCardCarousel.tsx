@@ -47,7 +47,7 @@ export function USPCardCarousel() {
             return (
               <div
                 key={item.title}
-                className={`group relative overflow-hidden rounded-2xl border ${item.cardBg} p-3 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-md`}
+                className={`group relative overflow-hidden rounded-2xl border ${item.cardBg} p-3 md:p-6 transition hover:-translate-y-0.5 hover:shadow-md`}
               >
                 <div className={`w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-4 ${item.iconBg} group-hover:scale-105 transition-transform`}>
                   <Icon className="w-4 h-4 md:w-6 md:h-6" />

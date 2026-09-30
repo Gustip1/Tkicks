@@ -32,7 +32,7 @@ export function WhatsAppFab() {
       rel="noopener noreferrer"
       onClick={() => trackEvent('whatsapp_click', 'contact', { source: 'fab', path: pathname })}
       aria-label="Consultar por WhatsApp"
-      className={`fixed right-4 z-40 flex items-center gap-2.5 rounded-full bg-[#25D366] pl-3.5 pr-4 py-3 shadow-lg shadow-black/20 text-white active:scale-95 hover:brightness-105 transition-all ${
+      className={`fixed right-4 z-40 flex items-center gap-2.5 rounded-full bg-[#25D366] pl-3.5 pr-4 py-3 shadow-lg shadow-black/20 text-white active:scale-95 hover:brightness-105 transition ${
         // En producto, el botón sube en mobile para no chocar con la barra de compra
         isProductPage
           ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-6'

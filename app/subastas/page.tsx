@@ -32,7 +32,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
   return (
     <Link
       href={`/subastas/${a.id}`}
-      className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-400 hover:shadow-md transition-all"
+      className="group flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-400 hover:shadow-md transition"
     >
       <div className="aspect-[3/4] bg-gray-50 relative overflow-hidden">
         {a.product_image ? (

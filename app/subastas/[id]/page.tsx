@@ -341,7 +341,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                           key={delta}
                           type="button"
                           onClick={() => applyQuickBid(delta)}
-                          className="rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] text-black font-black text-xs sm:text-sm py-2.5 px-2 transition-all"
+                          className="rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] text-black font-black text-xs sm:text-sm py-2.5 px-2 transition"
                         >
                           +{formatARS(delta)}
                         </button>

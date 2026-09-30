@@ -94,7 +94,7 @@ export function BrandShowcase({
   return (
     <section className={`bleed tile ${tone === 'light' ? 'tile-light' : 'tile-parchment'}`} aria-label={title}>
       <div className="tile-inner">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10" data-reveal="">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10">
           <h2 className="t-section max-w-[26ch]">
             {title}.{eyebrow && <> <span className="t-muted">{eyebrow}.</span></>}
           </h2>

@@ -82,8 +82,11 @@ export function CartDrawer() {
       />
       <div
         className={cn(
-          'fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-gray-200 bg-white shadow-2xl transition-transform duration-300 ease-in-out md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)]',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          'fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-gray-200 bg-white shadow-2xl transition-transform md:w-[420px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)]',
+          // Curva de los paneles de iOS (Emil): entra con cuerpo, sale rápido
+          isOpen
+            ? 'translate-x-0 duration-500 ease-[var(--ease-drawer)]'
+            : 'translate-x-full duration-300 ease-[var(--ease-out)]'
         )}
         role="dialog"
         aria-modal="true"
@@ -91,7 +94,7 @@ export function CartDrawer() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-gray-200 p-4">
-            <h2 className="t-section text-gray-900">
+            <h2 className="t-tagline text-gray-900">
               Carrito
               {items.length > 0 && (
                 <span className="ml-2 text-sm font-black text-gray-400">
@@ -144,7 +147,7 @@ export function CartDrawer() {
                 <Link
                   href="/productos"
                   onClick={close}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary text-white px-6 py-3 text-xs font-normal hover:bg-primary-hover active:scale-[0.98] transition-all"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary text-white px-6 py-3 text-xs font-normal hover:bg-primary-hover active:scale-[0.98] transition"
                 >
                   Ver productos
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -231,7 +234,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={close}
-              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-black shadow-lg transition-all ${
+              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-black shadow-lg transition ${
                 items.length === 0
                   ? 'bg-gray-100 text-gray-400 pointer-events-none shadow-none'
                   : 'bg-gray-900 text-white hover:bg-black active:scale-[0.99]'

@@ -246,7 +246,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           <Link
             href="/productos?streetwear"
             className={cn(
-              "px-4 py-2 rounded-xl text-sm font-bold transition-all",
+              "px-4 py-2 rounded-xl text-sm font-bold transition",
               !subcategory
                 ? "bg-gray-900 text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
@@ -259,7 +259,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
               key={sub.value}
               href={`/productos?streetwear&sub=${sub.value}`}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5",
+                "px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5",
                 subcategory === sub.value
                   ? "bg-gray-900 text-white shadow-sm"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
@@ -280,7 +280,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition",
                 showFilters || selectedSizes.length > 0 || selectedBrand
                   ? "bg-gray-900 text-white"
                   : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -346,7 +346,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
                     <button
                       key={size}
                       className={cn(
-                        "min-w-[3rem] px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                        "min-w-[3rem] px-4 py-2.5 rounded-xl text-sm font-medium transition",
                         isActive
                           ? "bg-gray-900 text-white shadow-md scale-105"
                           : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
@@ -373,7 +373,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
                   <button
                     key={b.id}
                     className={cn(
-                      "px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      "px-4 py-2.5 rounded-xl text-sm font-medium transition",
                       selectedBrand === b.slug
                         ? "bg-gray-900 text-white shadow-md scale-105"
                         : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
@@ -407,7 +407,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           {(selectedSizes.length > 0 || selectedBrand) && (
             <button
               onClick={() => { setSelectedSizes([]); setSelectedBrand(''); }}
-              className="mt-4 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover active:scale-[0.98] transition-all"
+              className="mt-4 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover active:scale-[0.98] transition"
             >
               Limpiar filtros
             </button>
@@ -437,7 +437,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
       {hasMore && (
         <div className="flex justify-center pt-8">
           <button
-            className="flex items-center gap-2 rounded-full bg-primary text-white px-8 py-3.5 text-sm font-normal hover:bg-primary-hover transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:"
+            className="flex items-center gap-2 rounded-full bg-primary text-white px-8 py-3.5 text-sm font-normal hover:bg-primary-hover transition disabled:opacity-60 disabled:cursor-not-allowed disabled:"
             disabled={loading}
             onClick={() => load(false)}
           >

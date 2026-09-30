@@ -103,7 +103,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
             className={cn(
-              'object-contain mix-blend-multiply transition-all duration-700 ease-out',
+              'object-contain mix-blend-multiply transition duration-700 ease-out',
               loaded ? 'opacity-100' : 'opacity-0',
               // al pasar el mouse la primaria se desvanece si hay una segunda imagen
               secondary?.url && 'group-hover:opacity-0',
@@ -122,7 +122,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             quality={85}
-            className="object-contain mix-blend-multiply opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
+            className="object-contain mix-blend-multiply opacity-0 scale-[1.03] transition duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
           />
         )}
 

@@ -35,7 +35,7 @@ function CategoryTile({
   return (
     <Link
       href={c.href}
-      data-reveal=""
+      data-reveal="clip"
       className={cn(
         'group relative block overflow-hidden rounded-lg bg-gray-200 active:scale-[0.98] transition-transform duration-200 ease-apple',
         className
@@ -70,7 +70,7 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
     <section className="bleed tile tile-parchment" aria-labelledby="categories-title">
       <div className="tile-inner">
         {/* Titular en dos tonos, como las góndolas de la Apple Store */}
-        <h2 id="categories-title" data-reveal="" className="t-section max-w-[24ch] mb-8 md:mb-10">
+        <h2 id="categories-title" className="t-section max-w-[24ch] mb-8 md:mb-10">
           Elegí tu estilo. <span className="t-muted">Remeras, hoodies, pantalones y sneakers.</span>
         </h2>
 

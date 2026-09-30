@@ -1,6 +1,11 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  // Los hover: sólo aplican con mouse o trackpad. En el celular (93% del tráfico)
+  // un toque activaba el hover y lo dejaba "pegado" hasta tocar otra cosa.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   darkMode: ['class'],
   content: [
     './app/**/*.{ts,tsx}',

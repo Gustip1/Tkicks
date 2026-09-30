@@ -77,7 +77,7 @@ export default async function NosotrosPage() {
           <div className="animate-hero-enter hero-delay-3 mt-8 md:mt-10 flex flex-col sm:flex-row gap-3">
             <Link
               href="/productos"
-              className="group inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-all active:scale-[0.98]"
+              className="group inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition active:scale-[0.98]"
             >
               Ver catálogo
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -86,7 +86,7 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white text-gray-900 font-black text-sm border border-gray-300 hover:bg-gray-50 hover:border-gray-500 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white text-gray-900 font-black text-sm border border-gray-300 hover:bg-gray-50 hover:border-gray-500 transition active:scale-[0.98]"
             >
               <Instagram className="w-4 h-4" />
               {INSTAGRAM_HANDLE}
@@ -155,7 +155,7 @@ export default async function NosotrosPage() {
                   { icon: MapPin, title: 'Local', desc: 'Showroom en San Juan.' },
                   { icon: Users, title: 'Comunidad', desc: 'Tkicks Fam, real.' },
                 ].map(({ icon: Icon, title, desc }) => (
-                  <div key={title} className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 hover:border-gray-400 hover:shadow-sm transition-all">
+                  <div key={title} className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 hover:border-gray-400 hover:shadow-sm transition">
                     <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center mb-3">
                       <Icon className="w-5 h-5 text-white" />
                     </div>
@@ -192,7 +192,7 @@ export default async function NosotrosPage() {
             ].map(({ icon: Icon, title, desc }, i) => (
               <div
                 key={title}
-                className="group animate-fade-up rounded-2xl border border-gray-200 bg-white p-5 md:p-6 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5 transition-all"
+                className="group animate-fade-up rounded-2xl border border-gray-200 bg-white p-5 md:p-6 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5 transition"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:border-gray-900 transition-colors">
@@ -253,7 +253,7 @@ export default async function NosotrosPage() {
               href={TIKTOK_URL}
               target="_blank"
               rel="noreferrer"
-              className="group relative overflow-hidden rounded-3xl border border-gray-200 p-6 md:p-8 bg-gray-900 hover:border-gray-600 hover:shadow-md transition-all active:scale-[0.99]"
+              className="group relative overflow-hidden rounded-3xl border border-gray-200 p-6 md:p-8 bg-gray-900 hover:border-gray-600 hover:shadow-md transition active:scale-[0.99]"
             >
               <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
@@ -294,7 +294,7 @@ export default async function NosotrosPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-primary bg-white text-xs font-normal text-primary hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-primary bg-white text-xs font-normal text-primary hover:bg-primary hover:text-white transition active:scale-[0.98]"
             >
               Ver perfil completo
               <ArrowRight className="w-3.5 h-3.5" />
@@ -310,7 +310,7 @@ export default async function NosotrosPage() {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-all active:scale-[0.98]"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition active:scale-[0.98]"
               >
                 <Instagram className="w-4 h-4" />
                 Abrir {INSTAGRAM_HANDLE}
@@ -326,7 +326,7 @@ export default async function NosotrosPage() {
                     href={item.permalink}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white hover:border-gray-400 hover:shadow-md transition-all"
+                    className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white hover:border-gray-400 hover:shadow-md transition"
                   >
                     <div className="relative aspect-[4/5] bg-gray-100">
                       {preview ? (
@@ -385,7 +385,7 @@ export default async function NosotrosPage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/productos"
-              className="group inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-all active:scale-[0.98]"
+              className="group inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition active:scale-[0.98]"
             >
               Ver catálogo
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -394,7 +394,7 @@ export default async function NosotrosPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-primary bg-white text-primary font-normal text-sm hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-primary bg-white text-primary font-normal text-sm hover:bg-primary hover:text-white transition active:scale-[0.98]"
             >
               Escribinos por WhatsApp
             </a>

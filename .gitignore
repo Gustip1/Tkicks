@@ -58,3 +58,6 @@ coverage/
 # Skill de diseño (clon de github.com/rukkiecodes/claude-apple-design-system,
 # se actualiza con git pull dentro de la carpeta)
 .claude/skills/apple-design-system/
+
+# Skills de diseño de terceros (instaladas localmente, ver .claude/skills/ORIGEN.md)
+.claude/skills/

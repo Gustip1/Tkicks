@@ -128,7 +128,7 @@ export function ProductView({
                   </div>
                   {hasSale && (
                     <p className="mt-1.5 t-caption text-red-600">
-                      ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
+                      Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD.
                     </p>
                   )}
                 </div>
@@ -173,8 +173,8 @@ export function ProductView({
                         Tarjeta<br className="hidden sm:block" /> {promoOn ? '3 cuotas sin interés' : '3 cuotas (10% de recargo)'}
                       </p>
                       {promoOn && (
-                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black self-start animate-pulse">
-                          🔥 Promo
+                        <span className="ml-auto inline-flex self-start rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                          Promo
                         </span>
                       )}
                     </div>
@@ -197,7 +197,7 @@ export function ProductView({
           {/* Aviso de compra anticipada — producto en camino al showroom */}
           {isComingSoon && (
             <div className="flex items-start gap-3 rounded-lg bg-gray-100 p-5">
-              <span className="text-2xl" aria-hidden="true">🚚</span>
+              <Truck className="mt-0.5 h-5 w-5 shrink-0 text-gray-900" aria-hidden />
               <div>
                 <p className="text-sm font-black text-gray-900 ">
                   En camino al showroom{comingSoonEta && ` · Llega ${comingSoonEta}`}

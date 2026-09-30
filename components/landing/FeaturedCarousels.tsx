@@ -92,21 +92,21 @@ function SaleSection({ products }: { products: Product[] }) {
         <div className="flex items-center gap-2">
           <button
             onClick={scrollPrev}
-            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition"
             aria-label="Anterior"
           >
             <ChevronLeft className="w-5 h-5 text-gray-900" />
           </button>
           <button
             onClick={scrollNext}
-            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition"
             aria-label="Siguiente"
           >
             <ChevronRight className="w-5 h-5 text-gray-900" />
           </button>
           <Link
             href="/ofertas"
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-black hover:from-red-600 hover:to-orange-600 transition-all shadow-md "
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-gray-900 text-sm font-black hover:from-red-600 hover:to-orange-600 transition shadow-md "
           >
             Ver todas
             <ArrowRight className="w-4 h-4" />
@@ -185,21 +185,21 @@ function FeaturedSection({ title, products, type }: { title: string; products: P
         <div className="flex items-center gap-2">
           <button
             onClick={scrollPrev}
-            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition"
             aria-label="Anterior"
           >
             <ChevronLeft className="w-5 h-5 text-gray-900" />
           </button>
           <button
             onClick={scrollNext}
-            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all"
+            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition"
             aria-label="Siguiente"
           >
             <ChevronRight className="w-5 h-5 text-gray-700" />
           </button>
           <Link
             href={config.linkHref}
-            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black hover:opacity-90 transition-all shadow-md `}
+            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} text-gray-900 text-sm font-black hover:opacity-90 transition shadow-md `}
           >
             Ver todos
             <ArrowRight className="w-4 h-4" />
@@ -258,13 +258,13 @@ function OldStockSection({ products }: { products: Product[] }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={scrollPrev} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-all" aria-label="Anterior">
+          <button onClick={scrollPrev} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition" aria-label="Anterior">
             <ChevronLeft className="w-5 h-5 text-gray-900" />
           </button>
-          <button onClick={scrollNext} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-all" aria-label="Siguiente">
+          <button onClick={scrollNext} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition" aria-label="Siguiente">
             <ChevronRight className="w-5 h-5 text-gray-900" />
           </button>
-          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-all">
+          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition">
             Ver catálogo <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

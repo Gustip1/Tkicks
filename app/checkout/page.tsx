@@ -340,7 +340,7 @@ export default function CheckoutPage() {
             <Check className="w-10 h-10 text-white" />
           </div>
           <h1 className="t-display text-gray-900">
-            {completedPaymentMethod === 'installments_3' ? '¡Listo!' : '¡Orden confirmada!'}
+            {completedPaymentMethod === 'installments_3' ? 'Listo.' : 'Pedido confirmado.'}
           </h1>
           <p className="text-gray-500 font-bold text-sm">
             {completedPaymentMethod === 'installments_3' ? (
@@ -363,24 +363,24 @@ export default function CheckoutPage() {
               )}
               {completedPaymentMethod === 'crypto_transfer' && completedProofUploaded && (
                 <li className="flex items-start gap-2">
-                  <span className="text-gray-900 mt-0.5">✓</span>
-                  Comprobante recibido — lo validaremos a la brevedad
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-900" aria-hidden />
+                  Comprobante recibido. Lo validamos a la brevedad.
                 </li>
               )}
               {completedPaymentMethod === 'installments_3' && (
                 <li className="flex items-start gap-2">
-                  <span className="text-gray-900 mt-0.5">✓</span>
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-900" aria-hidden />
                   El equipo de Tkicks te enviará el link de pago con tarjeta por WhatsApp
                 </li>
               )}
               {completedPaymentMethod === 'cash' && (
                 <li className="flex items-start gap-2">
-                  <span className="text-gray-900 mt-0.5">✓</span>
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-900" aria-hidden />
                   Te contactaremos para coordinar el retiro en showroom
                 </li>
               )}
               <li className="flex items-start gap-2">
-                <span className="text-gray-900 mt-0.5">✓</span>
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-900" aria-hidden />
                 Recibirás actualizaciones por WhatsApp o email
               </li>
             </ul>
@@ -596,12 +596,12 @@ export default function CheckoutPage() {
                       icon={<CreditCard className="w-5 h-5" />}
                       title={
                         promoOn
-                          ? '3 Cuotas sin interés (Tarjeta) — PROMO sin recargo'
-                          : '3 Cuotas sin interés (Tarjeta)'
+                          ? '3 cuotas sin interés con tarjeta'
+                          : '3 cuotas con tarjeta (10% de recargo)'
                       }
                       description={
                         promoOn
-                          ? '🔥 PROMO 11-17/05: mismo precio que efectivo · Link de pago por WhatsApp'
+                          ? 'Promo activa: mismo precio que efectivo. Te mandamos el link de pago por WhatsApp.'
                           : '10% de recargo sobre el precio base · Link de pago por WhatsApp'
                       }
                     />
@@ -622,7 +622,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                       <p className="text-xs text-gray-500 font-bold">
-                        📍 Recordá que tu pedido estará reservado. Te enviaremos la dirección exacta por email.
+                        Tu pedido queda reservado. Te mandamos la dirección exacta por email.
                       </p>
                     </div>
                   </div>
@@ -664,7 +664,7 @@ export default function CheckoutPage() {
                         <p className="text-sm font-black text-gray-900">Subí tu comprobante <span className="text-gray-400 font-medium">(opcional)</span></p>
                       </div>
                       <p className="text-xs text-gray-500 font-medium -mt-1">Podés adjuntarlo ahora o enviárnoslo después por WhatsApp</p>
-                      <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
+                      <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition ${
                         proofUploaded
                           ? 'border-gray-900 bg-gray-50'
                           : 'border-gray-300 bg-gray-50 hover:border-gray-500'
@@ -842,7 +842,7 @@ export default function CheckoutPage() {
                 {checkout.appliedDiscount ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-3 py-2">
                     <span className="text-xs font-black text-white">
-                      🎟 {checkout.appliedDiscount.code} aplicado
+                      Cupón {checkout.appliedDiscount.code} aplicado
                     </span>
                     <button
                       onClick={handleRemoveCoupon}
@@ -892,7 +892,7 @@ export default function CheckoutPage() {
                 )}
                 {isCardPayment && promoOn && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-900 font-bold">🔥 Promo · sin recargo</span>
+                    <span className="text-gray-900 font-semibold">Promo activa · sin recargo</span>
                     <span className="text-gray-900 font-black">$0.00 USD</span>
                   </div>
                 )}
@@ -1007,7 +1007,7 @@ function PaymentOption({
     <button
       type="button"
       onClick={onClick}
-      className={`relative w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+      className={`relative w-full flex items-center gap-4 p-4 rounded-xl border-2 transition text-left ${
         selected
           ? 'border-transparent bg-white ring-2 ring-primary-hover'
           : 'border-gray-200 bg-white hover:border-gray-400'
