@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useId, useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart';
@@ -36,6 +36,18 @@ const PAYMENT_ALIAS_USD = 'gusti.dolares';
 const CRYPTO_WALLET = '0x9f5e152b579263fbb2b88f976fa4bb4bbac21e20';
 
 export default function CheckoutPage() {
+  // Recupera los datos que el cliente ya había escrito (ver store/checkout.ts)
+  useEffect(() => {
+    useCheckoutStore.persist.rehydrate();
+  }, []);
+
+  // El carrito vive en el navegador y el servidor lo ve vacío: si el checkout
+  // se dibujara igual en los dos, no coinciden y React tira la página entera y
+  // la vuelve a pintar (un parpadeo justo donde se cierra la venta). Hasta
+  // montar se muestra un esqueleto neutro, idéntico en servidor y navegador.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const router = useRouter();
   const supabase = createBrowserClient();
   const cart = useCartStore();
@@ -63,11 +75,13 @@ export default function CheckoutPage() {
   }, [cart, router]);
 
   // Redirect if cart is empty
+  // Espera a estar montado: en el primer dibujo React usa el carrito como lo ve
+  // el servidor (vacío) y, sin esta guarda, mandaba afuera a quien sí tenía productos.
   useEffect(() => {
-    if (cart.items.length === 0 && !orderComplete) {
+    if (mounted && cart.items.length === 0 && !orderComplete) {
       router.push('/productos');
     }
-  }, [cart.items.length, orderComplete, router]);
+  }, [mounted, cart.items.length, orderComplete, router]);
 
   // Track: llegó al checkout con productos (una vez por visita a la página)
   const checkoutTrackedRef = useRef(false);
@@ -166,7 +180,17 @@ export default function CheckoutPage() {
   }, [checkout]);
 
   const handleContinueToPayment = () => {
-    if (validateStep1()) setStep(2);
+    if (validateStep1()) {
+      setStep(2);
+      return;
+    }
+    // En el celular el error suele quedar fuera de pantalla y parecía que el
+    // botón no hacía nada: se lleva al primer campo que falta y se enfoca.
+    requestAnimationFrame(() => {
+      const first = document.querySelector<HTMLInputElement>('[aria-invalid="true"]');
+      first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first?.focus({ preventScroll: true });
+    });
   };
 
   // ─── Submit Order ───
@@ -294,6 +318,18 @@ export default function CheckoutPage() {
       return rest;
     });
   };
+
+  if (!mounted) {
+    return (
+      <div className="max-w-5xl mx-auto py-6 md:py-10 space-y-4" aria-busy="true" aria-label="Cargando checkout">
+        <div className="skeleton h-8 w-40 rounded" />
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          <div className="skeleton h-[420px] rounded-lg" />
+          <div className="skeleton h-[260px] rounded-lg" />
+        </div>
+      </div>
+    );
+  }
 
   // ─── Order Complete Screen ───
   if (orderComplete) {
@@ -931,23 +967,25 @@ function InputField({
   autoComplete?: string;
   inputMode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search' | 'url' | 'none';
 }) {
+  const id = useId();
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-400 mb-1.5 ">{label}</label>
+      <label htmlFor={id} className="block text-[13px] font-semibold text-gray-600 mb-1.5">{label}</label>
       <input
+        id={id}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
-        className={`w-full rounded-xl border bg-white px-4 py-3 text-base text-gray-900 font-bold placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-          error
-            ? 'border-red-400 focus:ring-red-200'
-            : 'border-gray-300 focus:border-gray-900 focus:ring-gray-100'
+        className={`w-full rounded-md border bg-white px-4 py-3 text-[17px] text-gray-900 placeholder:text-gray-400 focus:outline-none transition-colors ${
+          error ? 'border-red-500' : 'border-gray-200 focus:border-primary'
         }`}
       />
-      <p className={`mt-1 text-xs text-red-400 font-bold min-h-[1rem] ${error ? '' : 'invisible'}`}>{error || ' '}</p>
+      <p id={`${id}-error`} className={`mt-1 text-xs text-red-600 min-h-[1rem] ${error ? '' : 'invisible'}`}>{error || ' '}</p>
     </div>
   );
 }

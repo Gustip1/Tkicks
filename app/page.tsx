@@ -7,6 +7,7 @@ import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/co
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { InstagramFeed } from '@/components/landing/InstagramFeed';
+import { RecentlyViewed } from '@/components/landing/RecentlyViewed';
 import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import {
@@ -208,6 +209,9 @@ export default async function HomePage() {
     <div className="-mb-3 md:-mb-8">
       {/* Hero — sólo la marca: titular en dos tonos y las píldoras */}
       <HeroSection content={content.hero} />
+
+      {/* Sólo para quien vuelve: lo que ya miró, a un toque */}
+      <RecentlyViewed />
 
       {/* Banner promocional — solo se muestra si está habilitado desde /admin/portada */}
       <PromoBanner content={content.banner} />

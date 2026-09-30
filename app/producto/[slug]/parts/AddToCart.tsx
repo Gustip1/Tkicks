@@ -14,6 +14,13 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useUIStore((s) => s.openCart);
 
+  // Si hay un solo talle con stock, viene elegido: un toque menos para comprar
+  useEffect(() => {
+    const available = variants.filter((v) => Number(v.stock) > 0);
+    if (!size && available.length === 1) setSize(available[0].size);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variants]);
+
   const selectedVariant = useMemo(() => variants.find((v) => v.size === size) || null, [variants, size]);
   const maxQty = selectedVariant?.stock ?? 0;
 
@@ -163,21 +170,6 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         Consultar por WhatsApp
       </a>
 
-      {/* Información adicional - SIN MENCIONAR CAMBIOS/DEVOLUCIONES */}
-      <div className="pt-3 md:pt-4 space-y-1.5 md:space-y-2 text-xs md:text-sm text-gray-500 border-t border-gray-200">
-        <p className="flex items-center gap-2 font-bold">
-          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          Envío gratis en compras mayores a $50
-        </p>
-        <p className="flex items-center gap-2 font-bold">
-          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          Producto 100% original garantizado
-        </p>
-      </div>
     </div>
   );
 }

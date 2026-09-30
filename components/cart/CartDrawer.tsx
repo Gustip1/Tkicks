@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -14,6 +15,13 @@ export function CartDrawer() {
   const subtotalARS = subtotalUSD * dolarOficial;
   const isOpen = useUIStore((s) => s.isCartOpen);
   const close = useUIStore((s) => s.closeCart);
+  const pathname = usePathname();
+
+  // Al cambiar de página el carrito se cierra: si no, quedaba abierto encima
+  // del checkout y tapaba el botón para continuar.
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
 

@@ -1,348 +1,128 @@
-"use client";
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { createBrowserClient } from '@/lib/supabase/client';
+import type { Metadata } from 'next';
+import { cache } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { Product, ProductVariant } from '@/types/db';
-import { formatCurrency, cn } from '@/lib/utils';
-import { AddToCart } from './parts/AddToCart';
-import { MakeOffer } from './parts/MakeOffer';
-import { BuyBar } from './parts/BuyBar';
-import { RelatedProducts } from './parts/RelatedProducts';
-import { ImageCarousel } from '@/components/pdp/ImageCarousel';
-import { useDolarRate } from '@/components/DolarRateProvider';
-import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
-import { useComingSoon } from '@/components/ComingSoonProvider';
-import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
-import { Shield, Truck, Star, Banknote, CreditCard } from 'lucide-react';
-import { getCardPriceMultiplier } from '@/lib/promo';
+import { ProductView } from './parts/ProductView';
+import { ProductGone } from './parts/ProductGone';
 
-export default function ProductDetailPage() {
-  const params = useParams<{ slug: string }>();
-  const supabase = createBrowserClient();
-  const { rate: dolarOficial } = useDolarRate();
-  const { active: promoOn } = useInstallmentsPromo();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [offersEnabled, setOffersEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { isComingSoon: comingSoonFlag, eta: comingSoonEta } = useComingSoon(product?.id);
+/**
+ * Ficha de producto, resuelta en el servidor.
+ *
+ * Antes era una página de cliente: llegaba un esqueleto vacío y el celular
+ * pedía el producto a la base recién después de cargar el JS. Eso la hacía
+ * lenta con datos móviles (93% del tráfico), Google indexaba el esqueleto y
+ * los links compartidos por WhatsApp/Instagram salían sin foto ni nombre.
+ *
+ * Se genera en cada visita (no se cachea) porque el stock cambia con cada
+ * venta y la ficha tiene que mostrar los talles reales.
+ */
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    const loadProduct = async () => {
-      // ilike + trim: tolera links viejos con mayúsculas/espacios distintos al slug real
-      const cleanSlug = String(params.slug || '').trim();
-      const [{ data: productData }, { data: offersRow }] = await Promise.all([
-        supabase.from('products').select('*').ilike('slug', cleanSlug).maybeSingle(),
-        supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
-      ]);
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tkicks.com.ar').replace(/\/$/, '');
 
-      setOffersEnabled(Boolean((offersRow?.value as { active?: boolean } | null)?.active));
+function db() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: { persistSession: false },
+  });
+}
 
-      if (!productData) {
-        setLoading(false);
-        return;
-      }
+/** Una sola consulta por visita aunque la usen la metadata y la página. */
+const getProduct = cache(async (rawSlug: string) => {
+  // ilike + trim: tolera links viejos con mayúsculas o espacios distintos al slug real
+  const slug = decodeURIComponent(rawSlug).trim();
+  const supabase = db();
+  const { data: product } = await supabase.from('products').select('*').ilike('slug', slug).maybeSingle();
+  if (!product) return null;
 
-      setProduct(productData as unknown as Product);
+  const [{ data: variants }, { data: brand }, { data: offersRow }] = await Promise.all([
+    supabase.from('product_variants').select('*').eq('product_id', product.id).order('size', { ascending: true }),
+    product.brand
+      ? supabase.from('brands').select('name').eq('slug', product.brand).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
+  ]);
 
-      const { data: variantsData } = await supabase
-        .from('product_variants')
-        .select('*')
-        .eq('product_id', productData.id)
-        .order('size', { ascending: true });
+  return {
+    product: product as unknown as Product,
+    variants: (variants ?? []) as unknown as ProductVariant[],
+    brandName: (brand as { name?: string } | null)?.name ?? null,
+    offersEnabled: Boolean((offersRow?.value as { active?: boolean } | null)?.active),
+  };
+});
 
-      setVariants((variantsData || []) as unknown as ProductVariant[]);
-      setLoading(false);
-    };
+function activePrice(p: Product) {
+  const sale = p.sale_price != null && Number(p.sale_price) > 0;
+  return sale ? Number(p.sale_price) : Number(p.price);
+}
 
-    loadProduct();
-  }, [params.slug, supabase]);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const data = await getProduct(params.slug);
 
+  if (!data) {
+    // El producto ya no existe: la página muestra alternativas, pero Google no
+    // la tiene que indexar (así las fichas viejas salen del buscador solas).
+    return { title: 'Producto no disponible | Tkicks', robots: { index: false, follow: true } };
+  }
 
-  if (loading) return (
-    <div className="max-w-7xl mx-auto bg-white min-h-screen" aria-busy="true" aria-label="Cargando producto">
-      <div className="skeleton h-4 w-48 rounded mb-6" />
-      <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
-        <div className="skeleton aspect-[4/5] w-full rounded-xl md:rounded-2xl" />
-        <div className="space-y-4">
-          <div className="skeleton h-6 w-24 rounded-full" />
-          <div className="skeleton h-10 w-3/4 rounded" />
-          <div className="skeleton h-4 w-1/2 rounded" />
-          <div className="skeleton h-12 w-2/3 rounded" />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="skeleton h-28 rounded-2xl" />
-            <div className="skeleton h-28 rounded-2xl" />
-          </div>
-          <div className="skeleton h-12 w-full rounded-xl" />
-          <div className="skeleton h-12 w-full rounded-xl" />
-        </div>
-      </div>
-    </div>
-  );
+  const { product, brandName } = data;
+  const image = product.images?.[0]?.url;
+  const desc =
+    (product.description?.trim() && product.description.trim().slice(0, 155)) ||
+    `${product.title}${brandName ? ` de ${brandName}` : ''}, 100% original. USD ${activePrice(product).toFixed(0)}. Envíos a todo el país desde San Juan.`;
 
-  if (!product) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-white px-4">
-      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-        <span className="text-4xl">🔍</span>
-      </div>
-      <h2 className="t-tagline mb-2">Producto no encontrado</h2>
-      <p className="text-gray-500 font-bold mb-6 max-w-sm">
-        Este link puede estar desactualizado. Puede que el producto haya cambiado o ya no esté disponible —
-        pero seguro encontrás algo parecido en el catálogo.
-      </p>
-      <Link
-        href="/productos"
-        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors"
-      >
-        Ver catálogo
-      </Link>
-    </div>
-  );
+  return {
+    title: `${product.title} | Tkicks`,
+    description: desc,
+    alternates: { canonical: `${SITE}/producto/${product.slug}` },
+    // La vista previa que se ve al compartir el link por WhatsApp o Instagram
+    openGraph: {
+      title: product.title,
+      description: desc,
+      url: `${SITE}/producto/${product.slug}`,
+      siteName: 'Tkicks',
+      locale: 'es_AR',
+      type: 'website',
+      images: image ? [{ url: image, width: 1400, height: 1400, alt: product.title }] : undefined,
+    },
+    twitter: { card: 'summary_large_image', title: product.title, description: desc, images: image ? [image] : undefined },
+  };
+}
 
-  const hasSale    = product.sale_price != null && Number(product.sale_price) > 0;
-  const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
-  const priceInArs = activePrice * dolarOficial;
-  const productClueInfo = getProductClueInfo(product.slug, product.category);
-  const isComingSoon = comingSoonFlag;
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const data = await getProduct(params.slug);
+  if (!data) return <ProductGone slug={params.slug} />;
+
+  const { product, variants, brandName, offersEnabled } = data;
+  const inStock = variants.some((v) => Number(v.stock) > 0);
+
+  // Datos estructurados: le dicen a Google qué es, cuánto sale y si hay stock
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    image: (product.images ?? []).map((i) => i.url),
+    description: product.description || undefined,
+    sku: String(product.id),
+    brand: brandName ? { '@type': 'Brand', name: brandName } : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: `${SITE}/producto/${product.slug}`,
+      priceCurrency: 'USD',
+      price: activePrice(product).toFixed(2),
+      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: 'Tkicks' },
+    },
+  };
 
   return (
-    <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden pb-24">
-      {/* Breadcrumb */}
-      <nav className="mb-4 md:mb-6 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-400 font-bold" aria-label="Ruta de navegación">
-        <Link href="/" className="hover:text-gray-900 transition-colors">Inicio</Link>
-        <span aria-hidden="true">/</span>
-        <Link href={`/productos?${product.category}`} className="hover:text-gray-900 transition-colors capitalize">
-          {product.category}
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]" aria-current="page">{product.title}</span>
-      </nav>
-
-      <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
-        {/* Image section */}
-        <div className="md:sticky md:top-20 md:self-start">
-          <ImageCarousel images={product.images || []} />
-        </div>
-        
-        {/* Product info section */}
-        <div className="space-y-3 md:space-y-6">
-          {/* Eyebrow + título, como la página "Comprar" de apple.com */}
-          <div className="hero-rise">
-            {isComingSoon ? (
-              <p className="t-caption font-semibold text-[#bf4800]">
-                Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
-              </p>
-            ) : hasSale ? (
-              <p className="t-caption font-semibold text-red-600">Oferta</p>
-            ) : product.is_new ? (
-              <p className="t-caption font-semibold text-[#bf4800]">Nuevo</p>
-            ) : (
-              <p className="t-caption text-gray-500 capitalize">{product.category}</p>
-            )}
-            <h1 className="t-display mt-1.5">{product.title}</h1>
-          </div>
-
-          {/* Rating placeholder */}
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-gray-900 text-gray-900" />
-              ))}
-            </div>
-            <span className="t-caption text-gray-500">Verificado</span>
-          </div>
-
-          {/* Description */}
-          {product.description && (
-            <p className="t-body text-gray-600 whitespace-pre-wrap">
-              {product.description}
-            </p>
-          )}
-
-          {/* Price */}
-          {(() => {
-            const cardPriceArs = activePrice * getCardPriceMultiplier(promoOn) * dolarOficial;
-            const installment = cardPriceArs / 3;
-            const discountPct = hasSale
-              ? Math.round((1 - activePrice / Number(product.price)) * 100)
-              : 0;
-
-            return (
-              <div className="space-y-4 pb-4 md:pb-6 border-b border-gray-200">
-                {/* Precio principal (USD) */}
-                <div>
-                  <div className="flex items-baseline gap-2.5 flex-wrap">
-                    <span className="t-lead text-gray-900">
-                      ${activePrice.toFixed(2)}
-                      <span className="t-body text-gray-500 ml-1">USD</span>
-                    </span>
-                    {hasSale && (
-                      <span className="t-body text-gray-400 line-through">
-                        ${Number(product.price).toFixed(2)}
-                      </span>
-                    )}
-                    {hasSale && discountPct > 0 && (
-                      <span className="t-caption font-semibold text-red-600">
-                        -{discountPct}%
-                      </span>
-                    )}
-                    {productClueInfo && (
-                      <GiveawayInlinePriceClue
-                        clueId={`producto:${product.slug}`}
-                        label={`Producto: ${product.title}`}
-                        position={productClueInfo.position}
-                        digit={productClueInfo.digit}
-                      />
-                    )}
-                  </div>
-                  {hasSale && (
-                    <p className="mt-1.5 t-caption text-red-600">
-                      ¡Rebaja! Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD
-                    </p>
-                  )}
-                </div>
-
-                {/* Métodos de pago — precios en ARS.
-                    Van una debajo de otra hasta que la columna de info es
-                    ancha de verdad: en tablet, con la ficha ya en dos
-                    columnas, dos tarjetas lado a lado dejaban ~180px cada una
-                    y el importe se cortaba a la mitad. */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                  {/* Transferencia / Efectivo */}
-                  <div className="relative rounded-lg bg-gray-100 p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 shrink-0">
-                        <Banknote className="w-4 h-4 text-white" />
-                      </div>
-                      <p className="text-xs font-normal text-gray-600 leading-tight">
-                        Transferencia<br className="hidden sm:block" /> / Efectivo
-                      </p>
-                    </div>
-                    <p className="text-2xl md:text-[28px] font-semibold text-gray-900 tracking-tight break-words">
-                      {formatCurrency(priceInArs)}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-900 font-semibold">
-                      Mejor precio
-                    </p>
-                  </div>
-
-                  {/* Tarjeta — 3 cuotas */}
-                  <div className={cn(
-                    'relative rounded-lg border p-5',
-                    promoOn ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white',
-                  )}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={cn(
-                        'flex items-center justify-center w-8 h-8 rounded-full shrink-0',
-                        promoOn ? 'bg-red-600' : 'bg-gray-100',
-                      )}>
-                        <CreditCard className={cn('w-4 h-4', promoOn ? 'text-white' : 'text-gray-900')} />
-                      </div>
-                      <p className="text-[11px] md:text-xs font-black text-gray-500 leading-tight">
-                        Tarjeta<br className="hidden sm:block" /> 3 cuotas s/ interés
-                      </p>
-                      {promoOn && (
-                        <span className="ml-auto inline-flex px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black self-start animate-pulse">
-                          🔥 Promo
-                        </span>
-                      )}
-                    </div>
-                    <p className={cn('text-2xl md:text-3xl font-black tracking-tight break-words', promoOn ? 'text-red-600' : 'text-gray-900')}>
-                      3 × {formatCurrency(installment)}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
-                      {promoOn ? 'Sin recargo' : `Total ${formatCurrency(cardPriceArs)}`}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-gray-400 font-medium">
-                  Precios en pesos calculados al tipo de cambio actual. El valor en USD es de referencia.
-                </p>
-              </div>
-            );
-          })()}
-
-          {/* Hacer una oferta — negociación por WhatsApp, no crea ninguna orden. Se puede activar/desactivar desde /admin/ajustes */}
-          {offersEnabled && <MakeOffer productTitle={product.title} productSlug={product.slug} />}
-
-          {/* Aviso de compra anticipada — producto en camino al showroom */}
-          {isComingSoon && (
-            <div className="flex items-start gap-3 rounded-lg bg-gray-100 p-5">
-              <span className="text-2xl" aria-hidden="true">🚚</span>
-              <div>
-                <p className="text-sm font-black text-gray-900 ">
-                  En camino al showroom{comingSoonEta && ` · Llega ${comingSoonEta}`}
-                </p>
-                <p className="text-xs md:text-sm text-gray-600 font-bold mt-0.5">
-                  Este producto todavía no llegó{comingSoonEta ? `, lo esperamos ${comingSoonEta}` : ''}.
-                  Podés comprarlo ahora de forma anticipada y te avisamos apenas esté disponible
-                  para retiro o envío.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Add to cart section */}
-          <div id="comprar-section" className="py-2 md:py-4 scroll-mt-24">
-            <AddToCart product={product} variants={variants} />
-          </div>
-
-          {/* Trust badges */}
-          <div className="grid grid-cols-2 gap-2 md:gap-4 py-4 md:py-6 border-t border-gray-200">
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
-                <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-gray-900 truncate">100% Original</p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Garantía</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
-                <Truck className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-gray-900 truncate">Envío seguro</p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Todo el país</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
-                <span className="text-sm md:text-lg">💳</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-gray-900 truncate">3 cuotas</p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Sin interés</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl bg-gray-50 border border-gray-200">
-              <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-900 shrink-0">
-                <Star className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs md:text-sm font-black text-gray-900 truncate">Verificado</p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-bold truncate">Auténtico</p>
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-
-      {/* Productos relacionados: evita que la ficha sea un callejón sin salida */}
-      <RelatedProducts productId={product.id} category={product.category} brand={product.brand} />
-
-      {/* Barra de compra fija — mobile y desktop, se oculta cuando la sección de compra está a la vista */}
-      <BuyBar
-        product={product}
-        variants={variants}
-        priceUsd={activePrice}
-        priceArs={priceInArs}
-        targetId="comprar-section"
+    <>
+      <script
+        type="application/ld+json"
+        // JSON.stringify ya escapa comillas; se escapa "<" para que ningún texto cierre la etiqueta
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
-    </div>
+      <ProductView product={product} variants={variants} offersEnabled={offersEnabled} />
+    </>
   );
 }

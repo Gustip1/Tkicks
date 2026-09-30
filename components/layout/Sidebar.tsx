@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import logo from '@/public/logo.jpg';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/store/ui';
 import { cn } from '@/lib/utils';
 import { X, ChevronDown } from 'lucide-react';
@@ -13,6 +14,12 @@ import { BACKUP_URL } from '@/lib/accountNotice';
 export function Sidebar() {
   const isOpen = useUIStore((s) => s.isSidebarOpen);
   const close = useUIStore((s) => s.closeSidebar);
+  const pathname = usePathname();
+
+  // Si se navega por otro lado (atrás, un link del contenido), el menú se cierra
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
   const [streetwearOpen, setStreetwearOpen] = useState(false);
   const [marcasOpen, setMarcasOpen] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
