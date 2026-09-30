@@ -21,13 +21,16 @@ export interface RecentItem {
 
 const KEY = 'tkicks_recent_v1';
 const MAX = 12;
+/** Pasada una semana, lo visto deja de mostrarse (y se borra al guardar el próximo) */
+const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function read(): RecentItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(KEY);
     const list = raw ? (JSON.parse(raw) as RecentItem[]) : [];
-    return Array.isArray(list) ? list : [];
+    const since = Date.now() - TTL_MS;
+    return Array.isArray(list) ? list.filter((x) => Number(x?.at) > since) : [];
   } catch {
     return [];
   }

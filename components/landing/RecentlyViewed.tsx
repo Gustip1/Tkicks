@@ -19,11 +19,14 @@ export function RecentlyViewed({
   tone = 'light',
   title = 'Seguí donde lo dejaste.',
   subtitle = 'Lo último que miraste.',
+  compact = false,
 }: {
   excludeSlug?: string;
   tone?: 'light' | 'parchment';
   title?: string;
   subtitle?: string;
+  /** Fila chica de solo fotos (home): acceso rápido sin robarle pantalla al resto */
+  compact?: boolean;
 }) {
   const [items, setItems] = useState<RecentItem[]>([]);
   const { rate } = useDolarRate();
@@ -33,6 +36,35 @@ export function RecentlyViewed({
   }, [excludeSlug]);
 
   if (items.length === 0) return null;
+
+  if (compact) {
+    return (
+      <section className={`bleed ${tone === 'parchment' ? 'tile-parchment' : 'tile-light'} pt-0 pb-8 md:pb-10`} aria-labelledby="recent-title">
+        {/* Sin padding arriba: se apoya en el final de "Recién llegados" (misma franja blanca) */}
+        <div className="tile-inner">
+          <h2 id="recent-title" className="t-strong mb-3">
+            Lo que miraste <span className="t-muted">esta semana</span>
+          </h2>
+          <ul className="-mx-[22px] md:-mx-10 flex snap-x gap-2 overflow-x-auto px-[22px] md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {items.slice(0, 8).map((p) => (
+              <li key={p.slug} className="shrink-0 snap-start">
+                <Link
+                  href={`/producto/${p.slug}`}
+                  aria-label={p.title}
+                  title={p.title}
+                  className="relative block h-16 w-16 md:h-20 md:w-20 overflow-hidden rounded-xl bg-parchment transition-transform duration-150 active:scale-[0.97]"
+                >
+                  {p.image && (
+                    <Image src={p.image} alt="" fill sizes="80px" className="object-contain p-1 mix-blend-multiply" />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

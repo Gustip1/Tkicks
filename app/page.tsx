@@ -210,9 +210,6 @@ export default async function HomePage() {
       {/* Hero — sólo la marca: titular en dos tonos y las píldoras */}
       <HeroSection content={content.hero} />
 
-      {/* Sólo para quien vuelve: lo que ya miró, a un toque */}
-      <RecentlyViewed />
-
       {/* Banner promocional — solo se muestra si está habilitado desde /admin/portada */}
       <PromoBanner content={content.banner} />
 
@@ -221,6 +218,10 @@ export default async function HomePage() {
 
       {/* Nuevos ingresos en carrusel — server-rendered */}
       <NewArrivalsCarousel products={products} curated={curated} />
+
+      {/* Sólo para quien vuelve: una fila chica con lo que miró esta semana.
+          Va después de lo principal para no quitarle lugar al hero ni a las categorías. */}
+      <RecentlyViewed compact />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">
