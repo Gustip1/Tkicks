@@ -219,7 +219,7 @@ export default async function HomePage() {
       {/* Nuevos ingresos en carrusel — server-rendered */}
       <NewArrivalsCarousel products={products} curated={curated} />
 
-      {/* Sólo para quien vuelve: una fila chica con lo que miró esta semana.
+      {/* Sólo para quien vuelve: una fila chica con lo que miró en los últimos 2 días.
           Va después de lo principal para no quitarle lugar al hero ni a las categorías. */}
       <RecentlyViewed compact />
 

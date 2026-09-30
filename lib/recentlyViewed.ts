@@ -21,8 +21,9 @@ export interface RecentItem {
 
 const KEY = 'tkicks_recent_v1';
 const MAX = 12;
-/** Pasada una semana, lo visto deja de mostrarse (y se borra al guardar el próximo) */
-const TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/** Pasados 2 días, lo visto deja de mostrarse (y se borra al guardar el próximo).
+ *  Más tiempo se volvía repetitivo para quien entra seguido. */
+const TTL_MS = 2 * 24 * 60 * 60 * 1000;
 
 function read(): RecentItem[] {
   if (typeof window === 'undefined') return [];

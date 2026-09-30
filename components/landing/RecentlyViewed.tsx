@@ -43,7 +43,7 @@ export function RecentlyViewed({
         {/* Sin padding arriba: se apoya en el final de "Recién llegados" (misma franja blanca) */}
         <div className="tile-inner">
           <h2 id="recent-title" className="t-strong mb-3">
-            Lo que miraste <span className="t-muted">esta semana</span>
+            Lo que miraste <span className="t-muted">hace poco</span>
           </h2>
           <ul className="-mx-[22px] md:-mx-10 flex snap-x gap-2 overflow-x-auto px-[22px] md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {items.slice(0, 8).map((p) => (
