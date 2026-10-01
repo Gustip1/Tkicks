@@ -7,7 +7,6 @@ import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/co
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
 import { InstagramFeed } from '@/components/landing/InstagramFeed';
-import { RecentlyViewed } from '@/components/landing/RecentlyViewed';
 import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import {
@@ -218,10 +217,6 @@ export default async function HomePage() {
 
       {/* Nuevos ingresos en carrusel — server-rendered */}
       <NewArrivalsCarousel products={products} curated={curated} />
-
-      {/* Sólo para quien vuelve: una fila chica con lo que miró en los últimos 2 días.
-          Va después de lo principal para no quitarle lugar al hero ni a las categorías. */}
-      <RecentlyViewed compact />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">

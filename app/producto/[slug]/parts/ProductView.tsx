@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from 'react';
 import Link from 'next/link';
 import { Product, ProductVariant } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -7,8 +6,6 @@ import { AddToCart } from './AddToCart';
 import { MakeOffer } from './MakeOffer';
 import { BuyBar } from './BuyBar';
 import { RelatedProducts } from './RelatedProducts';
-import { rememberProduct } from '@/lib/recentlyViewed';
-import { RecentlyViewed } from '@/components/landing/RecentlyViewed';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
@@ -34,11 +31,6 @@ export function ProductView({
   const { rate: dolarOficial } = useDolarRate();
   const { active: promoOn } = useInstallmentsPromo();
   const { isComingSoon: comingSoonFlag, eta: comingSoonEta } = useComingSoon(product.id);
-
-  // "Seguí donde lo dejaste": se guarda en este navegador lo que la persona miró
-  useEffect(() => {
-    rememberProduct(product);
-  }, [product]);
 
   const hasSale    = product.sale_price != null && Number(product.sale_price) > 0;
   const activePrice = hasSale ? Number(product.sale_price) : Number(product.price);
@@ -242,9 +234,6 @@ export function ProductView({
 
       {/* Productos relacionados: evita que la ficha sea un callejón sin salida */}
       <RelatedProducts productId={product.id} category={product.category} brand={product.brand} />
-
-      {/* Lo que la persona ya miró antes, sin este producto */}
-      <RecentlyViewed excludeSlug={product.slug} title="Vistos recientemente." subtitle="Para comparar." />
 
       {/* Barra de compra fija — mobile y desktop, se oculta cuando la sección de compra está a la vista */}
       <BuyBar
