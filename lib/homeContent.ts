@@ -97,3 +97,14 @@ export interface InstallmentsPromoContent {
 export const DEFAULT_INSTALLMENTS_PROMO_CONTENT: InstallmentsPromoContent = {
   active: false,
 };
+
+/**
+ * Cuántas marcas de la home se ven antes del botón "Ver X marcas más".
+ * Se guarda en settings como { count: n } y se edita en /admin/portada.
+ */
+export const DEFAULT_BRANDS_VISIBLE = 3;
+
+export function parseBrandsVisible(value: unknown): number {
+  const n = Math.round(Number((value as { count?: unknown } | null)?.count));
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, 20) : DEFAULT_BRANDS_VISIBLE;
+}

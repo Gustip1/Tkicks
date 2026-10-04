@@ -12,6 +12,8 @@ import {
   DEFAULT_HOW_TO_BUY_CONTENT,
   PromoBannerContent,
   DEFAULT_PROMO_BANNER_CONTENT,
+  DEFAULT_BRANDS_VISIBLE,
+  parseBrandsVisible,
 } from '@/lib/homeContent';
 
 const CATS = [
@@ -37,6 +39,8 @@ export default function AdminPortadaPage() {
   const [hero, setHero] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
   const [howToBuy, setHowToBuy] = useState<HowToBuyContent>(DEFAULT_HOW_TO_BUY_CONTENT);
   const [banner, setBanner] = useState<PromoBannerContent>(DEFAULT_PROMO_BANNER_CONTENT);
+  // Cuántas marcas se ven antes del botón "Ver X marcas más"
+  const [brandsVisible, setBrandsVisible] = useState(DEFAULT_BRANDS_VISIBLE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,13 +48,14 @@ export default function AdminPortadaPage() {
   useEffect(() => {
     const supabase = createBrowserClient();
     (async () => {
-      const [catRes, brandRes, brandsTable, heroRes, howToBuyRes, bannerRes] = await Promise.all([
+      const [catRes, brandRes, brandsTable, heroRes, howToBuyRes, bannerRes, visibleRes] = await Promise.all([
         supabase.from('settings').select('value').eq('key', 'homepage_categories').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_brands').maybeSingle(),
         supabase.from('brands').select('*').eq('active', true).order('name'),
         supabase.from('settings').select('value').eq('key', 'homepage_hero').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_how_to_buy').maybeSingle(),
         supabase.from('settings').select('value').eq('key', 'homepage_banner').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'homepage_brands_visible').maybeSingle(),
       ]);
 
       // Imágenes de categorías
@@ -68,6 +73,7 @@ export default function AdminPortadaPage() {
       // Marcas configuradas en la home
       const brandCfg = brandRes.data?.value as HomeBrandEntry[] | null;
       setEntries(Array.isArray(brandCfg) ? brandCfg : []);
+      setBrandsVisible(parseBrandsVisible(visibleRes.data?.value));
 
       // Contenido editable: hero, cómo comprar, banner
       setHero({ ...DEFAULT_HERO_CONTENT, ...(heroRes.data?.value as Partial<HeroContent> | undefined) });
@@ -133,6 +139,9 @@ export default function AdminPortadaPage() {
       supabase.from('settings').upsert({ key: 'homepage_hero', value: hero }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_how_to_buy', value: howToBuy }, { onConflict: 'key' }),
       supabase.from('settings').upsert({ key: 'homepage_banner', value: banner }, { onConflict: 'key' }),
+      supabase
+        .from('settings')
+        .upsert({ key: 'homepage_brands_visible', value: { count: brandsVisible } }, { onConflict: 'key' }),
     ]);
 
     const firstError = results.find((r) => r.error)?.error;
@@ -194,6 +203,47 @@ export default function AdminPortadaPage() {
               <p className="text-sm text-gray-500">
                 Elegí qué secciones de marca aparecen y ordenálas. Cada una muestra un carrusel con sus productos.
               </p>
+            </div>
+
+            <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <label htmlFor="brands-visible" className="block text-sm font-semibold text-gray-900">
+                  Marcas visibles antes del botón
+                </label>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Las demás quedan detrás de &quot;Ver X marcas más&quot;. Si ponés la cantidad total, se ven todas y no aparece el botón.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBrandsVisible((n) => Math.max(1, n - 1))}
+                  disabled={brandsVisible <= 1}
+                  className="h-10 w-10 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+                  aria-label="Mostrar una marca menos"
+                >
+                  −
+                </button>
+                <input
+                  id="brands-visible"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={20}
+                  value={brandsVisible}
+                  onChange={(e) => setBrandsVisible(parseBrandsVisible({ count: e.target.value }))}
+                  className="h-10 w-16 rounded-lg border border-gray-300 text-center text-sm font-semibold text-gray-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setBrandsVisible((n) => Math.min(20, n + 1))}
+                  disabled={brandsVisible >= 20}
+                  className="h-10 w-10 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+                  aria-label="Mostrar una marca más"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {entries.length === 0 && (

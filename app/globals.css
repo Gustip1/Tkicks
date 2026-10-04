@@ -489,6 +489,15 @@ img {
   .t-caption { font-size: 14px; line-height: 1.43; font-weight: 400; letter-spacing: -0.016em; }
   .t-fine   { font-size: 12px; line-height: 1.33; font-weight: 400; letter-spacing: -0.01em; }
 
+  /* Hero compacto de la home: presenta la marca sin empujar los productos
+     fuera de la pantalla. 40px en escritorio, 26px en celular. */
+  .t-hero-compact {
+    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.012em;
+  }
+  @media (max-width: 734px) {
+    .t-hero-compact { font-size: 26px; line-height: 1.15; letter-spacing: -0.008em; }
+  }
+
   /* El hero baja 48 → 42 → 34 → 30 según el ancho (escalones de apple.com) */
   @media (max-width: 1068px) {
     .t-hero { font-size: 42px; line-height: 1.1; }
@@ -540,6 +549,8 @@ img {
       transform 0.2s cubic-bezier(0.28, 0.11, 0.32, 1);
   }
   .btn-apple { background: var(--color-primary); color: #fff; }
+  /* Píldora chica: misma altura táctil (40px), menos presencia */
+  .btn-apple-sm { min-height: 40px; padding: 8px 18px; font-size: 15px; }
   .btn-apple-ghost { background: transparent; color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); }
   /* La respuesta vive en el toque: se hunde al apoyar el dedo, en 100ms */
   .btn-apple:active, .btn-apple-ghost:active { transform: scale(0.97); transition-duration: 100ms; }

@@ -16,6 +16,7 @@ import {
   DEFAULT_HOW_TO_BUY_CONTENT,
   PromoBannerContent,
   DEFAULT_PROMO_BANNER_CONTENT,
+  parseBrandsVisible,
 } from '@/lib/homeContent';
 
 // ISR: la home se sirve estática y se refresca cada 5 minutos,
@@ -29,6 +30,7 @@ const SETTINGS_KEYS = [
   'homepage_categories',
   'homepage_brands',
   'homepage_reviews',
+  'homepage_brands_visible',
 ] as const;
 
 interface HomeContent {
@@ -37,6 +39,7 @@ interface HomeContent {
   banner: PromoBannerContent;
   categoryImages: Record<string, string>;
   brandEntries: HomeBrandEntry[];
+  brandsVisible: number;
   reviews: Review[];
 }
 
@@ -163,6 +166,7 @@ async function getHomeContent(): Promise<HomeContent> {
     banner: { ...DEFAULT_PROMO_BANNER_CONTENT, ...(byKey.get('homepage_banner') as Partial<PromoBannerContent> | undefined) },
     categoryImages,
     brandEntries,
+    brandsVisible: parseBrandsVisible(byKey.get('homepage_brands_visible')),
     reviews: Array.isArray(rawReviews) ? rawReviews : [],
   };
 }
@@ -224,7 +228,7 @@ export default async function HomePage() {
       </div>
 
       {/* Carruseles por marca — configurables desde /admin/portada */}
-      <HomepageBrands entries={content.brandEntries} productsByEntry={brandProducts} />
+      <HomepageBrands entries={content.brandEntries} productsByEntry={brandProducts} visibleCount={content.brandsVisible} />
 
       {/* Opiniones — al final: en el medio cortaban el recorrido de productos y
           ocupaban una pantalla entera en el celular. Acá refuerzan la confianza

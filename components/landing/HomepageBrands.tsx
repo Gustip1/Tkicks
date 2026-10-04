@@ -29,20 +29,21 @@ export const DEFAULT_HOME_BRAND_ENTRIES: HomeBrandEntry[] = [
  * la fila de bloques casi idénticos aburría y hacía abandonar antes. Nada se
  * pierde: se despliega en el lugar con un toque.
  */
-const VISIBLE_BY_DEFAULT = 3;
-
 export function HomepageBrands({
   entries,
   productsByEntry,
+  visibleCount = 3,
 }: {
   entries: HomeBrandEntry[];
   productsByEntry: Record<string, Product[]>;
+  /** Cuántas se ven antes del botón; se configura en /admin/portada */
+  visibleCount?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
 
   // Solo cuentan las que realmente tienen productos para mostrar
   const withProducts = entries.filter((e) => (productsByEntry[e.id] ?? []).length > 0);
-  const visible = expanded ? withProducts : withProducts.slice(0, VISIBLE_BY_DEFAULT);
+  const visible = expanded ? withProducts : withProducts.slice(0, visibleCount);
   const hidden = withProducts.length - visible.length;
 
   const render = (e: HomeBrandEntry, i: number) =>

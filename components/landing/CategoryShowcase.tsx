@@ -66,11 +66,13 @@ function CategoryTile({
 export function CategoryShowcase({ images }: { images: Record<string, string> }) {
   const bySub = Object.fromEntries(CATEGORY_TILES.map((c) => [c.sub, c])) as Record<Tile['sub'], Tile>;
 
+  // Arriba con menos aire que el resto de las franjas: va pegada al hero y
+  // tiene que asomar en la primera pantalla del celular
   return (
-    <section className="bleed tile tile-parchment" aria-labelledby="categories-title">
+    <section className="bleed tile tile-parchment !pt-8 md:!pt-14" aria-labelledby="categories-title">
       <div className="tile-inner">
         {/* Titular en dos tonos, como las góndolas de la Apple Store */}
-        <h2 id="categories-title" className="t-section max-w-[24ch] mb-8 md:mb-10">
+        <h2 id="categories-title" className="t-section max-w-[24ch] mb-5 md:mb-8">
           Elegí tu estilo. <span className="t-muted">Remeras, hoodies, pantalones y sneakers.</span>
         </h2>
 

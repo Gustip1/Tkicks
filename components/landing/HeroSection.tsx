@@ -2,39 +2,54 @@ import Link from 'next/link';
 import { HeroContent, DEFAULT_HERO_CONTENT } from '@/lib/homeContent';
 
 /**
- * Hero de la home: sólo la marca, en tres niveles claros —como los heroes de
- * apple.com—:
- *   1. el titular, cortado a propósito en dos renglones
- *   2. debajo, chico y en gris, dónde estamos ("Stock exclusivo · San Juan")
- *   3. las dos píldoras
- * Todo en el mismo peso (600) para que sea una sola voz; lo que cambia es el
- * tamaño y el color. Los textos se editan desde /admin/portada.
+ * Hero de la home, compacto: presenta la marca y deja ver los productos.
+ *
+ * Antes ocupaba media pantalla de celular (titular de 34px, aire arriba y
+ * abajo, botones grandes) y la gente tenía que bajar para encontrar algo que
+ * comprar. Ahora mide unos 190px: titular chico, dónde estamos en una línea
+ * gris y las dos píldoras; las categorías con fotos ya asoman debajo.
+ *
+ * El titular se muestra con mayúscula solo al principio (como apple.com),
+ * aunque en /admin/portada esté escrito "Sneakers & Streetwear".
  */
+
+/** "Sneakers & Streetwear originales." → "Sneakers & streetwear originales."
+ *  Respeta siglas (USA, NBA) y palabras con números (AJ1). */
+function sentenceCase(text: string) {
+  let first = true;
+  return text.replace(/\S+/g, (word) => {
+    if (first) {
+      first = false;
+      return word;
+    }
+    const isAcronym = word.length > 1 && word === word.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(word);
+    return isAcronym || /\d/.test(word) ? word : word.toLowerCase();
+  });
+}
+
 export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: HeroContent }) {
-  // "Sneakers & Streetwear" en un renglón y "originales." en el otro: el corte
-  // cae entre el destacado y el cierre, así nunca queda una palabra suelta.
-  const line1 = `${content.headlinePre}${content.headlineHighlight}`.trim();
-  const line2 = content.headlinePost.trim();
+  // "&" va pegado a la palabra siguiente: nunca queda "Sneakers &" solo en un renglón
+  const headline = sentenceCase(
+    `${content.headlinePre}${content.headlineHighlight}${content.headlinePost}`.replace(/\s+/g, ' ').trim()
+  ).replace(/ & /g, '\u00a0&\u00a0');
 
   return (
     <section className="bleed tile-light -mt-3 md:-mt-8">
-      <div className="tile-inner pt-14 md:pt-20 pb-12 md:pb-16 text-center">
-        {/* El momento de la página: cada renglón sube desde atrás de una máscara */}
-        <h1 className="t-hero">
-          <span className="hero-line"><span>{line1}</span></span>
-          {line2 && <span className="hero-line"><span>{line2}</span></span>}
+      <div className="tile-inner pt-7 pb-6 md:pt-12 md:pb-10 text-center">
+        {/* El momento de la página: el titular sube desde atrás de una máscara */}
+        <h1 className="t-hero-compact">
+          <span className="hero-line"><span>{headline}</span></span>
         </h1>
 
-        {/* Dónde estamos, debajo del título y no como etiqueta encima */}
         {content.badge && (
-          <p className="hero-rise hero-d3 t-tagline mt-3 md:mt-4 text-[#6e6e73]">{content.badge}</p>
+          <p className="hero-rise hero-d3 t-caption mt-1.5 md:mt-2 text-[#6e6e73]">{content.badge}</p>
         )}
 
-        <div className="hero-rise hero-d4 mt-7 md:mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link href={content.ctaPrimaryHref} className="btn-apple">
+        <div className="hero-rise hero-d4 mt-4 md:mt-6 flex items-center justify-center gap-2.5">
+          <Link href={content.ctaPrimaryHref} className="btn-apple btn-apple-sm">
             {content.ctaPrimaryLabel}
           </Link>
-          <Link href={content.ctaSecondaryHref} className="btn-apple-ghost">
+          <Link href={content.ctaSecondaryHref} className="btn-apple-ghost btn-apple-sm">
             {content.ctaSecondaryLabel}
           </Link>
         </div>
