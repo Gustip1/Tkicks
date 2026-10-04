@@ -733,3 +733,13 @@ img {
   .paddle-apple { background: #fff; color: #000; box-shadow: inset 0 0 0 1px #000; }
   .btn-apple-ghost { box-shadow: inset 0 0 0 2px var(--color-primary); }
 }
+
+/* Entrada al navegar entre páginas (RouteTransitions). Nunca en la primera
+   carga: ahí el contenido tiene que verse apenas llega el HTML. */
+.page-enter { animation: tk-page-in 220ms var(--ease-out) both; }
+@keyframes tk-page-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-enter { animation: tk-fade 150ms ease-out both; }
+}

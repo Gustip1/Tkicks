@@ -34,6 +34,7 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Transiciones CSS (interrumpibles) antes que `@keyframes` para UI que se puede disparar varias veces.
 - Hover solo con mouse (Tailwind `hoverOnlyWhenSupported` ya lo hace; en CSS propio usar `@media (hover: hover) and (pointer: fine)`).
 - Movimiento reducido = menos, no cero: fundidos cortos en vez de desplazamientos.
+- **Nunca mandar contenido invisible desde el servidor** (`initial={{opacity:0}}` de framer-motion, `opacity-0` hasta que cargue JS). Con datos móviles dejaba la página en blanco ~7 s y parecía colgada. Entradas: CSS que corre sin JS (`page-enter`, `hero-rise`) o `data-reveal` (mejora progresiva).
 
 ## Materiales y accesibilidad
 - Barras y hojas flotantes: fondo translúcido + `backdrop-filter: saturate(180%) blur(20px)`; el contenido pasa por debajo. No apilar vidrio claro sobre vidrio claro.
