@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Star, Trash2, Plus } from 'lucide-react';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
+import { TrustStat, MAX_TRUST_STATS, parseTrustStats } from '@/lib/homeContent';
 
 type Review = { id: string; name: string; rating: number; text: string };
 
@@ -14,17 +15,21 @@ export default function AdminOpinionesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Datos destacados que se muestran arriba de las opiniones
+  const [stats, setStats] = useState<TrustStat[]>([]);
+  const [statsMsg, setStatsMsg] = useState<string | null>(null);
+  const [savingStats, setSavingStats] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
     (async () => {
-      const { data } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'homepage_reviews')
-        .maybeSingle();
+      const [{ data }, { data: statsRow }] = await Promise.all([
+        supabase.from('settings').select('value').eq('key', 'homepage_reviews').maybeSingle(),
+        supabase.from('settings').select('value').eq('key', 'homepage_stats').maybeSingle(),
+      ]);
       const list = (data?.value as Review[] | null) || [];
       setReviews(Array.isArray(list) ? list : []);
+      setStats(parseTrustStats(statsRow?.value));
       setLoading(false);
     })();
   }, []);
@@ -61,6 +66,27 @@ export default function AdminOpinionesPage() {
     await persist(next);
   };
 
+  const saveStats = async () => {
+    setSavingStats(true);
+    setStatsMsg(null);
+    const clean = parseTrustStats(stats);
+    const supabase = createBrowserClient();
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: 'homepage_stats', value: clean }, { onConflict: 'key' });
+    if (error) {
+      setStatsMsg(`Error al guardar: ${error.message}`);
+    } else {
+      setStats(clean);
+      setStatsMsg('Datos guardados. Ya se ven en la home.');
+      await revalidateHome();
+    }
+    setSavingStats(false);
+  };
+
+  const updateStat = (i: number, patch: Partial<TrustStat>) =>
+    setStats((prev) => prev.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+
   const removeReview = async (id: string) => {
     const next = reviews.filter((r) => r.id !== id);
     setReviews(next);
@@ -81,6 +107,65 @@ export default function AdminOpinionesPage() {
           {message}
         </div>
       )}
+
+      {/* Datos destacados */}
+      <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Datos destacados</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Números grandes arriba de las opiniones, por ejemplo &quot;+400&quot; · &quot;ventas en San Juan&quot;. Cargá solo datos reales.
+            Si dejás lugar, se completan solos con el promedio de las opiniones y la cantidad de marcas (hasta {MAX_TRUST_STATS} en total).
+          </p>
+        </div>
+
+        {stats.map((s, i) => (
+          <div key={i} className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <input
+              value={s.value}
+              onChange={(e) => updateStat(i, { value: e.target.value })}
+              placeholder="+400"
+              aria-label={`Número del dato ${i + 1}`}
+              className="sm:w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            />
+            <input
+              value={s.label}
+              onChange={(e) => updateStat(i, { label: e.target.value })}
+              placeholder="ventas en San Juan"
+              aria-label={`Texto del dato ${i + 1}`}
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            />
+            <button
+              type="button"
+              onClick={() => setStats((prev) => prev.filter((_, j) => j !== i))}
+              className="self-start sm:self-auto p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
+              aria-label="Quitar dato"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+
+        <div className="flex flex-wrap items-center gap-3">
+          {stats.length < MAX_TRUST_STATS && (
+            <button
+              type="button"
+              onClick={() => setStats((prev) => [...prev, { value: '', label: '' }])}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            >
+              <Plus className="w-4 h-4" /> Agregar dato
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={saveStats}
+            disabled={savingStats}
+            className="rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+          >
+            {savingStats ? 'Guardando…' : 'Guardar datos'}
+          </button>
+          {statsMsg && <span className="text-sm text-gray-600">{statsMsg}</span>}
+        </div>
+      </div>
 
       {/* Form nueva opinión */}
       <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-5 space-y-4">

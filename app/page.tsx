@@ -17,6 +17,8 @@ import {
   PromoBannerContent,
   DEFAULT_PROMO_BANNER_CONTENT,
   parseBrandsVisible,
+  parseTrustStats,
+  TrustStat,
 } from '@/lib/homeContent';
 
 // ISR: la home se sirve estática y se refresca cada 5 minutos,
@@ -31,6 +33,7 @@ const SETTINGS_KEYS = [
   'homepage_brands',
   'homepage_reviews',
   'homepage_brands_visible',
+  'homepage_stats',
 ] as const;
 
 interface HomeContent {
@@ -41,6 +44,8 @@ interface HomeContent {
   brandEntries: HomeBrandEntry[];
   brandsVisible: number;
   reviews: Review[];
+  stats: TrustStat[];
+  brandCount: number;
 }
 
 function supabaseAnon() {
@@ -148,6 +153,12 @@ async function getHomeContent(): Promise<HomeContent> {
 
   const byKey = new Map((data ?? []).map((row) => [row.key, row.value]));
 
+  // Cuántas marcas hay activas: es un dato real que se muestra en las opiniones
+  const { count: brandCount } = await supabase
+    .from('brands')
+    .select('id', { count: 'exact', head: true })
+    .eq('active', true);
+
   const rawBrandEntries = byKey.get('homepage_brands') as HomeBrandEntry[] | undefined;
   const brandEntries = Array.isArray(rawBrandEntries) && rawBrandEntries.length > 0
     ? rawBrandEntries
@@ -168,6 +179,8 @@ async function getHomeContent(): Promise<HomeContent> {
     brandEntries,
     brandsVisible: parseBrandsVisible(byKey.get('homepage_brands_visible')),
     reviews: Array.isArray(rawReviews) ? rawReviews : [],
+    stats: parseTrustStats(byKey.get('homepage_stats')),
+    brandCount: brandCount ?? 0,
   };
 }
 
@@ -233,7 +246,7 @@ export default async function HomePage() {
       {/* Opiniones — al final: en el medio cortaban el recorrido de productos y
           ocupaban una pantalla entera en el celular. Acá refuerzan la confianza
           justo antes de "Cómo comprar". */}
-      <Reviews reviews={content.reviews} />
+      <Reviews reviews={content.reviews} stats={content.stats} brandCount={content.brandCount} />
 
       {/* Feed de Instagram @tkicks.sj — se oculta sola si no hay token cargado */}
       <InstagramFeed />

@@ -108,3 +108,24 @@ export function parseBrandsVisible(value: unknown): number {
   const n = Math.round(Number((value as { count?: unknown } | null)?.count));
   return Number.isFinite(n) && n >= 1 ? Math.min(n, 20) : DEFAULT_BRANDS_VISIBLE;
 }
+
+/**
+ * Datos destacados de la franja de opiniones ("+400 ventas", "3 años en San
+ * Juan"). Los carga el dueño en /admin/opiniones: son datos del negocio que la
+ * web no puede saber sola (la mayoría de las ventas se cierran por WhatsApp).
+ * Se guardan en settings como homepage_stats.
+ */
+export interface TrustStat {
+  value: string;
+  label: string;
+}
+
+export const MAX_TRUST_STATS = 4;
+
+export function parseTrustStats(value: unknown): TrustStat[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((s) => ({ value: String(s?.value ?? '').trim(), label: String(s?.label ?? '').trim() }))
+    .filter((s) => s.value && s.label)
+    .slice(0, MAX_TRUST_STATS);
+}
