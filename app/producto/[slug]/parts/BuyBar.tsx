@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Product, ProductVariant } from '@/types/db';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { trackEvent } from '@/lib/analytics/track';
@@ -95,6 +95,7 @@ export function BuyBar({
   const selectSize = (s: string) => {
     setSize(s);
     setAskSize(false);
+    trackEvent('size_selected', 'discovery', { slug: product.slug, size: s, source: 'buybar' });
   };
 
   // Portal a <body>: el contenedor de la página tiene una animación con
@@ -146,10 +147,10 @@ export function BuyBar({
 
           <div className="min-w-0">
             <p className="text-lg font-semibold text-gray-900 leading-tight truncate">
-              {formatCurrency(priceArs)}
+              {formatARS(priceArs)}
             </p>
             <p className="text-xs font-normal text-gray-500 leading-tight">
-              ${priceUsd.toFixed(2)} USD · transf. / efectivo
+              Transferencia o efectivo
             </p>
           </div>
 

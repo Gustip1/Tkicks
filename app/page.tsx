@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { Product } from '@/types/db';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { CategoryShowcase, CATEGORY_TILES, CategoryTileConfig } from '@/components/landing/CategoryShowcase';
-import { NewArrivalsCarousel } from '@/components/landing/NewArrivalsCarousel';
+import { CATEGORY_TILES, CategoryTileConfig } from '@/components/landing/CategoryShowcase';
+import { CategoryHighlights } from '@/components/landing/CategoryHighlights';
+import { HomeProductGrid } from '@/components/landing/HomeProductGrid';
 import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/components/landing/HomepageBrands';
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
@@ -184,36 +185,50 @@ async function getHomeContent(): Promise<HomeContent> {
   };
 }
 
-async function getHomeProducts(): Promise<{ products: Product[]; curated: boolean }> {
+const HOME_GRID_SIZE = 8;
+
+const inStock = (p: any) => (p.product_variants ?? []).some((v: any) => Number(v.stock) > 0);
+
+/**
+ * Los productos de la grilla de la portada: los marcados como "nuevo ingreso"
+ * (o lo último del catálogo si no hay), los que tienen stock primero, y nunca
+ * uno agotado arriba. También devuelve cuántos hay a la venta y una foto de
+ * oferta para el círculo de "Ofertas".
+ */
+async function getHomeProducts(): Promise<{ products: Product[]; total: number; offersImage: string | null }> {
   // Cliente anónimo sin cookies: mantiene la página estática (ISR)
   const supabase = supabaseAnon();
 
-  const { data: newArrivals } = await supabase
-    .from('products')
-    .select('*, product_variants(stock,size)')
-    .eq('active', true)
-    .eq('is_new', true)
-    .order('created_at', { ascending: false })
-    .limit(12);
+  const [{ data: newArrivals }, { data: latest }, { data: all }, { data: sale }] = await Promise.all([
+    supabase.from('products').select('*, product_variants(stock,size)').eq('active', true).eq('is_new', true)
+      .order('created_at', { ascending: false }).limit(24),
+    supabase.from('products').select('*, product_variants(stock,size)').eq('active', true)
+      .order('created_at', { ascending: false }).limit(24),
+    supabase.from('products').select('id, product_variants(stock)').eq('active', true).limit(2000),
+    supabase.from('products').select('images').eq('active', true).eq('on_sale', true)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+  ]);
 
-  if (newArrivals && newArrivals.length > 0) {
-    return { products: newArrivals as unknown as Product[], curated: true };
+  // Primero los nuevos con stock; si no alcanzan, se completa con lo último que tiene stock
+  const seen = new Set<string>();
+  const picked: any[] = [];
+  for (const p of [...(newArrivals ?? []).filter(inStock), ...(latest ?? []).filter(inStock)]) {
+    if (picked.length >= HOME_GRID_SIZE) break;
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    picked.push(p);
   }
 
-  // Fallback: si no hay productos marcados como "nuevo ingreso" en el admin
-  // (o la query falló), la home muestra igual lo último del catálogo.
-  const { data: latest } = await supabase
-    .from('products')
-    .select('*, product_variants(stock,size)')
-    .eq('active', true)
-    .order('created_at', { ascending: false })
-    .limit(12);
-
-  return { products: (latest ?? []) as unknown as Product[], curated: false };
+  const saleImages = (sale as { images?: { url: string }[] } | null)?.images;
+  return {
+    products: picked as unknown as Product[],
+    total: (all ?? []).filter(inStock).length,
+    offersImage: saleImages?.[0]?.url ?? null,
+  };
 }
 
 export default async function HomePage() {
-  const [{ products, curated }, content] = await Promise.all([
+  const [{ products, total, offersImage }, content] = await Promise.all([
     getHomeProducts(),
     getHomeContent(),
   ]);
@@ -223,17 +238,19 @@ export default async function HomePage() {
   return (
     // Las franjas se apilan pegadas hasta el footer, como en apple.com
     <div className="-mb-3 md:-mb-8">
-      {/* Hero — sólo la marca: titular en dos tonos y las píldoras */}
+      {/* Hero — sólo la marca, en una línea y su ubicación */}
       <HeroSection content={content.hero} />
+
+      {/* Categorías en círculos, como las destacadas de Instagram (de ahí llega
+          el 80% de la gente) */}
+      <CategoryHighlights images={content.categoryImages} offersImage={offersImage} />
+
+      {/* Productos en la primera pantalla: un tercio se iba en menos de 5 s sin
+          haber visto ninguno */}
+      <HomeProductGrid products={products} total={total} />
 
       {/* Banner promocional — solo se muestra si está habilitado desde /admin/portada */}
       <PromoBanner content={content.banner} />
-
-      {/* Elegí tu estilo — remeras / hoodies / pantalones */}
-      <CategoryShowcase images={content.categoryImages} />
-
-      {/* Nuevos ingresos en carrusel — server-rendered */}
-      <NewArrivalsCarousel products={products} curated={curated} />
 
       {/* Clue sorteo */}
       <div className="flex justify-center py-1 bg-white">

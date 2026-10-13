@@ -9,13 +9,14 @@ import { DolarWidget } from '@/components/DolarWidget';
  * mensaje corto y un link. En lugar de una marquesina, los mensajes se turnan
  * con un fundido suave cada pocos segundos.
  */
+// `short` es la versión de celular: una sola línea, para no gastar pantalla
 const BASE_ITEMS = [
-  { text: 'Productos 100% originales, con su comprobante de compra.', cta: 'Ver catálogo', href: '/productos' },
-  { text: 'Envíos a todo el país con seguimiento.', cta: 'Cómo comprar', href: '/#como-comprar' },
+  { text: 'Productos 100% originales, con su comprobante de compra.', short: '100% originales, con comprobante', cta: 'Ver catálogo', href: '/productos' },
+  { text: 'Envíos a todo el país con seguimiento.', short: 'Envíos a todo el país', cta: 'Cómo comprar', href: '/#como-comprar' },
 ];
 
-const NORMAL_INSTALLMENT = { text: 'Pagá en 3 cuotas con tarjeta (10% de recargo).', cta: 'Comprar', href: '/productos' };
-const PROMO_INSTALLMENT = { text: 'Por tiempo limitado: 3 cuotas sin interés y sin recargo.', cta: 'Comprar', href: '/productos' };
+const NORMAL_INSTALLMENT = { text: 'Pagá en 3 cuotas con tarjeta (10% de recargo).', short: '3 cuotas con tarjeta', cta: 'Comprar', href: '/productos' };
+const PROMO_INSTALLMENT = { text: 'Por tiempo limitado: 3 cuotas sin interés y sin recargo.', short: '3 cuotas sin interés', cta: 'Comprar', href: '/productos' };
 
 const ROTATE_MS = 5000;
 
@@ -34,9 +35,10 @@ export function BannerTicker() {
 
   return (
     <div className="bg-parchment text-gray-900" role="region" aria-label="Novedades">
-      <div className="relative max-w-[1440px] mx-auto px-4 md:px-6 py-3 flex items-center justify-center min-h-[44px]">
-        <p key={i} className="t-caption text-center animate-fadeIn">
-          {item.text}{' '}
+      <div className="relative max-w-[1440px] mx-auto px-4 md:px-6 py-2 md:py-3 flex items-center justify-center min-h-[36px] md:min-h-[44px]">
+        <p key={i} className="t-caption text-center animate-fadeIn whitespace-nowrap">
+          <span className="md:hidden">{item.short}</span>
+          <span className="hidden md:inline">{item.text}</span>{' '}
           <Link href={item.href} className="link-apple">
             {item.cta}
           </Link>

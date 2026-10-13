@@ -5,6 +5,7 @@ import { motion, MotionConfig } from 'framer-motion';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { RefreshCw, Smartphone, Monitor, Tablet, Info, PackageX, PackageMinus } from 'lucide-react';
 import { isBotUserAgent } from '@/lib/analytics/bots';
+import { diagnose, Leak, SlugStatus } from '@/lib/analytics/diagnosis';
 import {
   RANGES, RangeKey, periodFor, sourceName, sectionName, LEGACY_EVENTS, StockStatus,
 } from '@/lib/analytics/dashboard';
@@ -47,6 +48,7 @@ const EVENT_LABELS: Record<string, string> = {
   purchase: 'Órdenes creadas',
   product_card_click: 'Clicks en productos',
   homepage_banner_click: 'Clicks en el banner de la home',
+  size_selected: 'Eligieron talle',
 };
 
 function dateKey(d: Date) {
@@ -122,6 +124,8 @@ interface EventRow {
   session_id: string;
   event_name: string;
   created_at: string;
+  page_path: string | null;
+  event_data: Record<string, unknown> | null;
 }
 interface ViewedProduct {
   slug: string;
@@ -168,6 +172,8 @@ interface Stats {
   byHour: { hour: number; sessions: number }[];
   trend: TrendPoint[];
   otherEvents: { label: string; count: number }[];
+  leaks: Leak[];
+  viewedNoAction: ViewedProduct[];
 }
 
 export default function AnalyticsPage() {
@@ -201,7 +207,7 @@ export default function AnalyticsPage() {
           .select('session_id,user_agent')
           .gte('created_at', p0).lt('created_at', p1).range(f, t)),
         fetchAll<EventRow>(nEvents, (f, t) => supabase.from('analytics_events')
-          .select('session_id,event_name,created_at')
+          .select('session_id,event_name,created_at,page_path,event_data')
           .gte('created_at', s0).lt('created_at', s1).range(f, t)),
         fetchAll<{ session_id: string }>(nPrevEvents, (f, t) => supabase.from('analytics_events')
           .select('session_id')
@@ -305,10 +311,15 @@ export default function AnalyticsPage() {
       const topSlugs = Object.entries(productPathSessions)
         .map(([slug, set]) => ({ slug, sessions: set.size }))
         .sort((a, b) => b.sessions - a.sessions).slice(0, 40);
-      const { data: catalog } = topSlugs.length
-        ? await supabase.from('products').select('slug,title,active,images,product_variants(stock)').in('slug', topSlugs.map((t) => t.slug))
-        : { data: [] as any[] };
+      // Todo el catálogo (son decenas de productos): hace falta el estado de
+      // cada producto que se abrió para el diagnóstico, no solo de los más vistos
+      const { data: catalog } = await supabase.from('products').select('slug,title,active,images,product_variants(stock)').limit(5000);
       const catalogBySlug = Object.fromEntries((catalog ?? []).map((p: any) => [p.slug, p]));
+      const statusBySlug: Record<string, SlugStatus> = {};
+      (catalog ?? []).forEach((p: any) => {
+        const stock = (p.product_variants ?? []).reduce((a: number, v: any) => a + (Number(v.stock) || 0), 0);
+        statusBySlug[String(p.slug).toLowerCase()] = !p.active ? 'removed' : stock > 0 ? 'in_stock' : 'sold_out';
+      });
       const viewed: ViewedProduct[] = topSlugs.map(({ slug, sessions: n }) => {
         const p = catalogBySlug[slug];
         if (!p || !p.active) return { slug, title: p?.title ?? prettySlug(slug), image: p?.images?.[0]?.url ?? null, sessions: n, status: 'removed' };
@@ -364,6 +375,13 @@ export default function AnalyticsPage() {
         .map(([n, count]) => ({ label: EVENT_LABELS[n] ?? n, count }))
         .sort((a, b) => b.count - a.count).slice(0, 6);
 
+      // ── Dónde se pierden las ventas ──
+      const diag = diagnose(visits, events, statusBySlug);
+      const viewedNoAction: ViewedProduct[] = diag.viewedNoAction.map(({ slug, sessions: n }) => {
+        const p = catalogBySlug[slug];
+        return { slug, title: p?.title ?? prettySlug(slug), image: p?.images?.[0]?.url ?? null, sessions: n, status: 'in_stock' };
+      });
+
       const liveHumans = (liveRows.data ?? []).filter((v: any) => !isBotUserAgent(v.user_agent));
 
       setStats({
@@ -380,6 +398,7 @@ export default function AnalyticsPage() {
         avgDuration, medianDuration: median(durations), bounceRate, avgScroll,
         pagesPerSession: sessions ? visits.length / sessions : 0,
         bySource, byDevice, byPage, viewedAvailable, viewedUnavailable, topSold, byDay, byHour, trend, otherEvents,
+        leaks: diag.leaks, viewedNoAction,
       });
     } catch (err) {
       console.error('Error cargando analíticas:', err);
@@ -512,6 +531,24 @@ function Dashboard({ s, prevLabel, singleDay }: { s: Stats; prevLabel: string; s
         <TrendChart data={s.trend} />
       </Card>
 
+      {/* ── Diagnóstico: dónde se pierden las ventas ── */}
+      {s.leaks.length > 0 && (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
+          <Card
+            title="¿Dónde se pierden las ventas?"
+            help="Ordenado por cuánta gente se va en cada punto. El de arriba es el que más conviene arreglar."
+          >
+            <Leaks leaks={s.leaks} />
+          </Card>
+          <Card
+            title="Miran mucho y nadie agrega"
+            help="Con stock, abiertos por 3 o más personas, y nadie los agregó ni consultó. Revisá precio, fotos y talles."
+          >
+            <ProductList items={s.viewedNoAction} empty="Todo lo que se mira bastante tuvo al menos un interesado." />
+          </Card>
+        </div>
+      )}
+
       {/* ── Embudo + contactos ── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
         <Card
@@ -616,6 +653,56 @@ function Dashboard({ s, prevLabel, singleDay }: { s: Stats; prevLabel: string; s
 }
 
 /* ── Piezas propias del panel ─────────────────────────────────────────────── */
+
+function Leaks({ leaks }: { leaks: Leak[] }) {
+  return (
+    <ol className="space-y-5">
+      {leaks.map((l, i) => {
+        const share = pct(l.lost, l.of);
+        return (
+          <motion.li
+            key={l.key}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.28, 0.11, 0.32, 1], delay: 0.05 + i * 0.06 }}
+            className="flex gap-4"
+          >
+            <span
+              className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${
+                i === 0 ? 'bg-[#1d1d1f] text-white' : 'bg-[#f0f0f2] text-[#1d1d1f]'
+              }`}
+            >
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-[15px] font-semibold text-[#1d1d1f]">{l.title}</p>
+                <p className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1d1d1f]">
+                  {fmtInt(l.lost)} <span className="text-[13px] font-normal text-[#86868b]">de {fmtInt(l.of)}</span>
+                </p>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#f0f0f2]">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: i === 0 ? '#e30000' : '#86868b' }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.max(share, 2)}%` }}
+                  transition={{ duration: 0.9, ease: [0.28, 0.11, 0.32, 1], delay: 0.15 + i * 0.06 }}
+                />
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-[#6e6e73]">
+                <span className="font-semibold text-[#1d1d1f]">{fmtPct(share)}.</span> {l.detail}
+              </p>
+              <p className="mt-1 text-[13px] leading-relaxed text-[#1d1d1f]">
+                <span className="font-semibold">Qué hacer:</span> {l.action}
+              </p>
+            </div>
+          </motion.li>
+        );
+      })}
+    </ol>
+  );
+}
 
 function MiniStat({ label, value, format, note }: { label: string; value: number; format?: (n: number) => string; note: string }) {
   return (

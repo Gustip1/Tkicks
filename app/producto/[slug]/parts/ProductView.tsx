@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { Product, ProductVariant } from '@/types/db';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, cn } from '@/lib/utils';
 import { AddToCart } from './AddToCart';
 import { MakeOffer } from './MakeOffer';
 import { BuyBar } from './BuyBar';
@@ -92,22 +92,16 @@ export function ProductView({
 
             return (
               <div className="space-y-4 pb-4 md:pb-6 border-b border-gray-200">
-                {/* Precio principal (USD) */}
+                {/* Precio en pesos arriba de todo (transferencia/efectivo, el mejor),
+                    cuotas en una línea y el USD como referencia. Antes eran dos
+                    tarjetas grandes que empujaban los talles fuera de la pantalla. */}
                 <div>
                   <div className="flex items-baseline gap-2.5 flex-wrap">
-                    <span className="t-lead text-gray-900">
-                      ${activePrice.toFixed(2)}
-                      <span className="t-body text-gray-500 ml-1">USD</span>
+                    <span className={cn('text-[32px] md:text-[40px] leading-none font-semibold tracking-[-0.02em] tabular-nums', hasSale ? 'text-red-600' : 'text-gray-900')}>
+                      {formatARS(priceInArs)}
                     </span>
-                    {hasSale && (
-                      <span className="t-body text-gray-400 line-through">
-                        ${Number(product.price).toFixed(2)}
-                      </span>
-                    )}
                     {hasSale && discountPct > 0 && (
-                      <span className="t-caption font-semibold text-red-600">
-                        -{discountPct}%
-                      </span>
+                      <span className="t-caption font-semibold text-red-600">-{discountPct}%</span>
                     )}
                     {productClueInfo && (
                       <GiveawayInlinePriceClue
@@ -118,69 +112,25 @@ export function ProductView({
                       />
                     )}
                   </div>
-                  {hasSale && (
-                    <p className="mt-1.5 t-caption text-red-600">
-                      Ahorrás ${(Number(product.price) - activePrice).toFixed(0)} USD.
-                    </p>
-                  )}
+                  <p className="mt-2 t-caption text-gray-600">
+                    Transferencia o efectivo
+                    {hasSale && (
+                      <> · antes <span className="line-through">{formatARS(Number(product.price) * dolarOficial)}</span></>
+                    )}
+                  </p>
+                  <p className={cn('mt-1 t-caption', promoOn ? 'text-red-600' : 'text-gray-600')}>
+                    <CreditCard className="inline h-3.5 w-3.5 -mt-0.5 mr-1" aria-hidden />
+                    3 × {formatARS(installment)} con tarjeta
+                    {promoOn ? ' · sin interés' : ` · total ${formatARS(cardPriceArs)}`}
+                  </p>
+                  <p className="mt-1 t-caption text-gray-400 tabular-nums">
+                    USD {activePrice.toFixed(0)}
+                    {hasSale && <> · antes USD {Number(product.price).toFixed(0)}</>}
+                  </p>
                 </div>
 
-                {/* Métodos de pago — precios en ARS.
-                    Van una debajo de otra hasta que la columna de info es
-                    ancha de verdad: en tablet, con la ficha ya en dos
-                    columnas, dos tarjetas lado a lado dejaban ~180px cada una
-                    y el importe se cortaba a la mitad. */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                  {/* Transferencia / Efectivo */}
-                  <div className="relative rounded-lg bg-gray-100 p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 shrink-0">
-                        <Banknote className="w-4 h-4 text-white" />
-                      </div>
-                      <p className="text-xs font-normal text-gray-600 leading-tight">
-                        Transferencia<br className="hidden sm:block" /> / Efectivo
-                      </p>
-                    </div>
-                    <p className="text-2xl md:text-[28px] font-semibold text-gray-900 tracking-tight break-words">
-                      {formatCurrency(priceInArs)}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-900 font-semibold">
-                      Mejor precio
-                    </p>
-                  </div>
-
-                  {/* Tarjeta — 3 cuotas */}
-                  <div className={cn(
-                    'relative rounded-lg border p-5',
-                    promoOn ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white',
-                  )}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={cn(
-                        'flex items-center justify-center w-8 h-8 rounded-full shrink-0',
-                        promoOn ? 'bg-red-600' : 'bg-gray-100',
-                      )}>
-                        <CreditCard className={cn('w-4 h-4', promoOn ? 'text-white' : 'text-gray-900')} />
-                      </div>
-                      <p className="text-[11px] md:text-xs font-black text-gray-500 leading-tight">
-                        Tarjeta<br className="hidden sm:block" /> {promoOn ? '3 cuotas sin interés' : '3 cuotas (10% de recargo)'}
-                      </p>
-                      {promoOn && (
-                        <span className="ml-auto inline-flex self-start rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
-                          Promo
-                        </span>
-                      )}
-                    </div>
-                    <p className={cn('text-2xl md:text-3xl font-black tracking-tight break-words', promoOn ? 'text-red-600' : 'text-gray-900')}>
-                      3 × {formatCurrency(installment)}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
-                      {promoOn ? 'Sin recargo' : `Total ${formatCurrency(cardPriceArs)}`}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-gray-400 font-medium">
-                  Precios en pesos calculados al tipo de cambio actual. El valor en USD es de referencia.
+                <p className="text-[11px] text-gray-400">
+                  Pesos al dólar oficial del día. El valor en USD es de referencia.
                 </p>
               </div>
             );

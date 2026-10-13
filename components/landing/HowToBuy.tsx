@@ -11,7 +11,7 @@ export function HowToBuy({ content = DEFAULT_HOW_TO_BUY_CONTENT }: { content?: H
       <div className="tile-inner">
         <div className="text-center mb-10 md:mb-14">
           <h2 id="how-to-buy-title" className="t-display max-w-[22ch] mx-auto">
-            Comprar es simple. <span className="t-muted">Tres pasos y tu pedido sale.</span>
+            Cómo comprar
           </h2>
         </div>
 

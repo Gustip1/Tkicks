@@ -40,7 +40,7 @@ export function InstagramFeed() {
       <div className="tile-inner">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10">
           <h2 id="instagram-title" className="t-section">
-            {BACKUP_HANDLE}. <span className="t-muted">Lo que pasa en el showroom.</span>
+            {BACKUP_HANDLE}
           </h2>
           <a
             href={BACKUP_URL}

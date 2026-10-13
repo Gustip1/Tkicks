@@ -119,7 +119,7 @@ export function Reviews({
       <div className="tile-inner">
         <div className="text-center mb-7 md:mb-9">
           <h2 id="reviews-title" className="t-section max-w-[26ch] mx-auto">
-            Lo que dicen. <span className="t-muted">Opiniones reales de quienes ya compraron.</span>
+            Lo que dicen los que ya compraron
           </h2>
         </div>
 

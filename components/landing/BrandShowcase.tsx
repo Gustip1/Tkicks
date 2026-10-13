@@ -12,6 +12,7 @@ interface BrandShowcaseProps {
   /** Texto grande que titula la sección (ej. "Eme Studios") */
   title: string;
   /** Subtítulo opcional sobre el título */
+  /** Ya no se muestra (sonaba a plantilla); se mantiene para no romper la config del admin */
   eyebrow?: string;
   /** Filtra por marca (slug en products.brand). Omitir si se usa `category`. */
   brandSlug?: string;
@@ -33,7 +34,6 @@ interface BrandShowcaseProps {
 
 export function BrandShowcase({
   title,
-  eyebrow,
   brandSlug,
   category,
   href,
@@ -95,9 +95,9 @@ export function BrandShowcase({
     <section className={`bleed tile ${tone === 'light' ? 'tile-light' : 'tile-parchment'}`} aria-label={title}>
       <div className="tile-inner">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10">
-          <h2 className="t-section max-w-[26ch]">
-            {title}.{eyebrow && <> <span className="t-muted">{eyebrow}.</span></>}
-          </h2>
+          {/* El nombre de la marca solo: el "Marca destacada." en gris al lado
+              se repetía igual en cada fila y sonaba a plantilla */}
+          <h2 className="text-[21px] md:text-[28px] font-semibold tracking-[-0.015em]">{title}</h2>
           <Link href={href} className="link-apple t-body">
             Comprar {title}
           </Link>
