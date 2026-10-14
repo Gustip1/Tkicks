@@ -26,12 +26,17 @@ export function CategoryHighlights({
 
   return (
     <nav aria-label="Categorías" className="bleed tile-light">
-      <ul className="tile-inner flex gap-3 md:gap-5 overflow-x-auto md:justify-center pt-1 pb-5 md:pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Celular: todas entran en el ancho (una columna por categoría, sin
+          deslizar). Escritorio: tamaño fijo y centradas. */}
+      <ul
+        className="tile-inner grid gap-2 md:flex md:justify-center md:gap-5 pt-1 pb-5 md:pb-10"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
         {items.map((it) => (
-          <li key={it.label} className="shrink-0">
+          <li key={it.label} className="min-w-0 md:shrink-0">
             <Link
               href={it.href}
-              className="group flex w-[76px] md:w-[150px] lg:w-[176px] flex-col items-center gap-1.5 md:gap-2.5 active:scale-[0.97] transition-transform duration-100"
+              className="group flex w-full md:w-[150px] lg:w-[176px] flex-col items-center gap-1.5 md:gap-2.5 active:scale-[0.97] transition-transform duration-100"
             >
               {/* Cuadrado con esquinas suaves: la foto se ve entera, sin el anillo
                   de las historias que la achicaba. Ofertas lleva un borde rojo.
@@ -39,7 +44,7 @@ export function CategoryHighlights({
                   gris del cuadrado (como en las tarjetas de producto) y el zoom
                   leve las recorta, así todos se leen como el mismo cuadrado. */}
               <span
-                className={`relative block h-[76px] w-[76px] md:h-[150px] md:w-[150px] lg:h-[176px] lg:w-[176px] overflow-hidden rounded-[14px] md:rounded-[20px] bg-parchment ${
+                className={`relative block aspect-square w-full md:h-[150px] md:w-[150px] lg:h-[176px] lg:w-[176px] overflow-hidden rounded-[12px] md:rounded-[20px] bg-parchment ${
                   it.accent ? 'ring-2 ring-red-500 ring-offset-2' : ''
                 }`}
               >
@@ -48,12 +53,12 @@ export function CategoryHighlights({
                     src={it.image}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 76px, 176px"
+                    sizes="(max-width: 768px) 20vw, 176px"
                     className="object-cover mix-blend-multiply scale-[1.12] transition-transform duration-500 ease-apple group-hover:scale-[1.17]"
                   />
                 )}
               </span>
-              <span className={`text-[12px] md:text-[15px] font-semibold ${it.accent ? 'text-red-600' : 'text-gray-900'}`}>
+              <span className={`whitespace-nowrap tracking-[-0.01em] text-[10px] min-[360px]:text-[11px] min-[380px]:text-[12px] md:text-[15px] font-semibold ${it.accent ? 'text-red-600' : 'text-gray-900'}`}>
                 {it.label}
               </span>
             </Link>
