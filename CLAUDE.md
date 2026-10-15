@@ -10,8 +10,8 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Lenguaje visual de apple.com. Fuente: solo la de Apple (SF Pro / system-ui). Nada de fuentes nuevas.
 - Tipografía uniforme y con peso; no mezclar pesos finos. Textos en español rioplatense (vos: "Seleccioná", "Mirá").
 - Celular primero: 93% del tráfico. Carruseles compactos de a dos en celular.
-- Hero de la home: solo la marca, sin fotos de productos; debajo categorías con fotos (fila de cuadrados con esquinas suaves, chicos en celular y grandes en escritorio; nada de círculos, recortan la foto) y enseguida la grilla de productos: tienen que verse en la primera pantalla del celular (el 80% llega desde la app de Instagram). Opiniones al final.
-- Precios: en pesos primero (sin centavos, `formatARS`), cuotas en una línea y el USD como referencia chica. El checkout sigue con centavos.
+- Hero de la home: solo la marca y las dos píldoras, sin fotos de productos; debajo "Elegí tu estilo" con las categorías en fotos grandes (`CategoryShowcase`) y después la grilla de recién llegados. Opiniones al final. Se probaron círculos y cuadraditos tipo historias de Instagram (oct 2026) y al dueño le parecieron menos profesionales: no volver a eso.
+- Precios: el USD es el precio principal (como lo carga el dueño) y los pesos van debajo, con las tarjetas de transferencia y cuotas en la ficha. Se probó poner los pesos primero (oct 2026) y el dueño pidió volver al USD.
 - Titulares directos, de un solo tono, sin punto final ("Recién llegados"). El titular en dos tonos con frase gris se usaba en todas las secciones y sonaba a plantilla.
 - "Subí a GitHub" = commit a `main` + push = producción (Vercel). Compilar con `npm run build` antes.
 

@@ -14,7 +14,7 @@ export function HomeProductGrid({ products, total }: { products: Product[]; tota
   if (products.length === 0) return null;
 
   return (
-    <section className="bleed tile-light pb-12 md:pb-16" aria-labelledby="home-products-title">
+    <section className="bleed tile-light pt-10 md:pt-14 pb-12 md:pb-16" aria-labelledby="home-products-title">
       <div className="tile-inner">
         <div className="flex items-baseline justify-between gap-4 mb-3 md:mb-6">
           <h2 id="home-products-title" className="text-[21px] md:text-[28px] font-semibold tracking-[-0.015em]">

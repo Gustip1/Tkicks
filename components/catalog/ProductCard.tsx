@@ -1,9 +1,10 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Info } from 'lucide-react';
 import { Product } from '@/types/db';
-import { formatARS, cn } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
@@ -15,9 +16,24 @@ interface ProductCardProps {
   size?: 'normal' | 'large';
 }
 
+type InfoPopover = 'usd' | 'installments' | null;
+
 export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const [loaded, setLoaded]     = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!activeInfo) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setActiveInfo(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [activeInfo]);
   const images                  = product.images || [];
   const primary                 = images[0];
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
@@ -56,6 +72,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
   return (
     <Link
+      ref={cardRef}
       href={`/producto/${product.slug}`}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
       className="group store-card flex flex-col h-full p-2.5 sm:p-4 md:p-5"
@@ -143,38 +160,101 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
           {product.title}
         </h3>
 
-        {/* Talles disponibles: en celular en una línea de texto, para saber
-            antes de abrir si está el tuyo */}
-        {availableSizes.length > 0 && !isSoldOut && (
-          <p className="mb-1.5 truncate text-[12px] sm:text-[13px] text-gray-500">
-            {availableSizes.length === 1 ? 'Talle ' : 'Talles '}
-            {availableSizes.slice(0, 6).join(' · ')}
-            {availableSizes.length > 6 && ` +${availableSizes.length - 6}`}
-          </p>
+        {availableSizes.length > 0 && (
+          <div className="hidden sm:flex flex-wrap gap-1 mb-2">
+            {availableSizes.slice(0, 4).map(s => (
+              <span key={s} className="text-[11px] text-gray-600 bg-gray-100 rounded-full px-2 py-0.5">
+                {s}
+              </span>
+            ))}
+            {availableSizes.length > 4 && (
+              <span className="text-[11px] text-gray-500 self-center">+{availableSizes.length - 4}</span>
+            )}
+          </div>
         )}
 
-        {/* Precio en pesos primero: la gente de Instagram piensa en pesos.
-            El USD y las cuotas quedan en una línea chica de referencia. */}
-        <div className="mt-auto">
+        <div className="space-y-0.5 mt-auto">
+          {/* USD — precio principal */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              'text-[16px] sm:text-[19px] font-semibold tracking-[-0.02em] tabular-nums',
+              't-strong text-[15px] sm:text-[17px]',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
-              {formatARS(priceInArs)}
+              ${activePrice.toFixed(2)}
+              <span className="text-xs text-gray-500 font-normal ml-0.5 align-top">USD</span>
             </span>
             {hasSale && (
-              <span className="text-[12px] text-gray-400 line-through tabular-nums">
-                {formatARS(Number(product.price) * dolarOficial)}
+              <span className="text-xs text-gray-400 line-through font-normal">
+                ${Number(product.price).toFixed(2)}
               </span>
             )}
           </div>
+
+          {/* ARS — mismo tamaño que el USD */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className={cn(
+              't-body text-[13px] sm:text-[17px]',
+              hasSale ? 'text-red-600' : 'text-gray-700',
+            )}>
+              {formatCurrency(priceInArs)}
+            </span>
+            {hasSale && (
+              <span className="hidden sm:inline text-xs text-gray-400 line-through font-normal">
+                {formatCurrency(Number(product.price) * dolarOficial)}
+              </span>
+            )}
+          </div>
+
+          {/* Aclaración: precios en USD, conversión a cambio oficial */}
+          <div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setActiveInfo((v) => (v === 'usd' ? null : 'usd'));
+              }}
+              className="hidden sm:inline-flex items-center gap-1 text-xs text-primary font-normal hover:text-primary-hover transition-colors"
+            >
+              <Info className="w-3 h-3" />
+              Precios en USD
+            </button>
+            {activeInfo === 'usd' && (
+              <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
+                Todos los precios están expresados en USD. Las conversiones a pesos son al cambio oficial.
+              </div>
+            )}
+          </div>
+
+          {/* Tarjeta 3 cuotas — clickeable, comparte la aclaración con el de arriba */}
           {!isSoldOut && (
-            <p className={cn('mt-0.5 text-[12px] sm:text-[13px] leading-snug tabular-nums', promoOn ? 'text-red-600' : 'text-gray-500')}>
-              3 × {formatARS(cardArs / 3)}{promoOn && ' sin interés'}
-            </p>
+            <div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setActiveInfo((v) => (v === 'installments' ? null : 'installments'));
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                  promoOn ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700',
+                )}
+              >
+                3 × {formatCurrency(cardArs / 3)}
+                <span className="hidden sm:inline font-normal opacity-70">
+                  {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
+                </span>
+              </button>
+              {activeInfo === 'installments' && (
+                <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
+                  {promoOn
+                    ? 'Promo activa: 3 cuotas sin interés, al mismo precio que efectivo/transferencia.'
+                    : 'Pagando en 3 cuotas con tarjeta se aplica un 10% de recargo sobre el precio base.'}
+                </div>
+              )}
+            </div>
           )}
-          <p className="hidden sm:block mt-0.5 text-[12px] text-gray-400 tabular-nums">USD {activePrice.toFixed(0)}</p>
         </div>
       </div>
     </Link>
