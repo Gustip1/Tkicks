@@ -454,6 +454,8 @@ img {
    pero no dibuja el outline global: el anillo tiene que verse en el botón y el
    link, no alrededor de todo el diálogo. */
 .notice-card:focus-visible { outline: none; }
+/* La hoja recibe el foco al abrir (para el lector de pantalla); no necesita anillo */
+.sheet-panel:focus, .sheet-panel:focus-visible { outline: none; }
 
 .notice-stamp-delay-1 { animation-delay: 0.30s; }
 .notice-stamp-delay-2 { animation-delay: 0.38s; }
@@ -742,4 +744,61 @@ img {
 }
 @media (prefers-reduced-motion: reduce) {
   .page-enter { animation: tk-fade 150ms ease-out both; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POPUPS (components/ui/Sheet.tsx) — una sola forma para todos.
+   Celular: hoja que sube con la curva de iOS. Escritorio: tarjeta que se
+   materializa (desenfoque + escala, sin rebote). Son transiciones, no
+   keyframes: si se cierra a mitad de la entrada, vuelve desde donde está.
+   ════════════════════════════════════════════════════════════════════════════ */
+.sheet-scrim { opacity: 0; transition: opacity 300ms var(--ease-out); }
+[data-state="open"] > .sheet-scrim { opacity: 1; }
+
+.sheet-panel {
+  transform: translate3d(0, 100%, 0);
+  transition: transform 260ms var(--ease-out);
+}
+[data-state="open"] > .sheet-panel {
+  transform: translate3d(0, 0, 0);
+  transition: transform 500ms var(--ease-drawer);
+}
+.sheet-panel[data-dragging="true"] { transition: none !important; }
+
+@media (min-width: 640px) {
+  .sheet-panel {
+    transform: scale(0.96);
+    opacity: 0;
+    filter: blur(8px);
+    transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out), filter 200ms var(--ease-out);
+  }
+  [data-state="open"] > .sheet-panel {
+    transform: none;
+    opacity: 1;
+    filter: blur(0);
+    transition: transform 380ms var(--ease-out), opacity 300ms var(--ease-out), filter 300ms var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel,
+  [data-state="open"] > .sheet-panel {
+    transform: none !important;
+    filter: none !important;
+    transition: opacity 150ms ease-out !important;
+  }
+  .sheet-panel { opacity: 0; }
+  [data-state="open"] > .sheet-panel { opacity: 1; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .sheet-scrim { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(0, 0, 0, 0.6); }
+}
+
+/* Aviso de venta reciente: entra y sale por el mismo lado (abajo) */
+.toast-enter { animation: tk-toast-in 420ms var(--ease-out) both; }
+@keyframes tk-toast-in {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter { animation: tk-fade 150ms ease-out both; }
 }

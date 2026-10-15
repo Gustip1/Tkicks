@@ -144,11 +144,11 @@ export function GiveawayClue() {
 
   return (
     <Link href="/sorteo" aria-label="Ver progreso del sorteo">
-      <div className="fixed bottom-4 right-4 z-50 cursor-pointer select-none rounded-2xl border border-zinc-800 bg-black/95 p-3 shadow-2xl shadow-black/60 backdrop-blur-md transition duration-200 hover:border-zinc-700">
-        <p className="mb-2 text-[9px] font-black text-zinc-600">
-          Pistas · <span className={foundCount > 0 ? 'text-red-500' : 'text-zinc-600'}>{foundCount}</span>/{TOTAL_CLUES}
+      {/* Mismo material que los demás avisos: vidrio claro, esquinas de 18px */}
+      <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 cursor-pointer select-none rounded-[18px] bg-white/95 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.16)] ring-1 ring-black/[0.06] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.97]">
+        <p className="mb-2 text-[11px] font-semibold text-gray-500">
+          Pistas del sorteo · <span className={foundCount > 0 ? 'text-red-600' : ''}>{foundCount}</span>/{TOTAL_CLUES}
         </p>
-        {/* Slots en orden de descubrimiento */}
         <div className="flex gap-1.5">
           {Array.from({ length: TOTAL_CLUES }).map((_, i) => {
             const clue = foundClues[i];
@@ -156,20 +156,20 @@ export function GiveawayClue() {
             return (
               <div
                 key={i}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black transition duration-300 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-[9px] text-[15px] font-semibold tabular-nums transition-[transform,background-color] duration-300 ${
                   clue
                     ? isNew
-                      ? 'scale-110 bg-red-400 text-white shadow-lg shadow-red-800/60'
-                      : 'bg-red-500 text-white shadow-md shadow-red-900/40'
-                    : 'border border-zinc-800 bg-zinc-950 text-zinc-700'
+                      ? 'scale-110 bg-red-500 text-white'
+                      : 'bg-red-600 text-white'
+                    : 'bg-[#f0f0f2] text-gray-400'
                 }`}
               >
-                {clue ? clue.digit : <span className="text-[10px]">?</span>}
+                {clue ? clue.digit : <span className="text-[12px]">?</span>}
               </div>
             );
           })}
         </div>
-        <p className="mt-1.5 text-center text-[9px] font-bold text-zinc-700">ver en /sorteo →</p>
+        <p className="mt-2 text-center text-[11px] text-primary">Ver el sorteo ›</p>
       </div>
     </Link>
   );

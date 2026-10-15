@@ -1,60 +1,66 @@
 "use client";
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { CreditCard } from 'lucide-react';
+import { Sheet } from '@/components/ui/Sheet';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useAccountNotice } from '@/components/announcement/AccountNoticeProvider';
-import { PROMO_TEXT } from '@/lib/promo';
 
+/**
+ * Promo de 3 cuotas sin interés. Aparece al entrar mientras la promo esté
+ * prendida en /admin/ajustes; si el aviso de cuenta está en pantalla espera su
+ * turno (encimados no se lee ninguno).
+ *
+ * El dato que importa va grande: "0%" de interés, y debajo cómo se paga.
+ * Sin emojis ni brillos: el rojo alcanza para que se lea como promo.
+ */
 export function PromoModal() {
   const { active } = useInstallmentsPromo();
   const { open: noticeOpen } = useAccountNotice();
   const [open, setOpen] = useState(false);
 
-  // Aparece SIEMPRE que entran al sitio (refresh / pestaña nueva /
-  // visita nueva) mientras la promo esté activa desde /admin/ajustes.
-  // Si el aviso de cuenta está en pantalla espera su turno: encimados no se
-  // lee ninguno de los dos.
   useEffect(() => {
     if (active && !noticeOpen) setOpen(true);
   }, [active, noticeOpen]);
 
   const dismiss = () => setOpen(false);
 
-  if (!open) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="promo-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-    >
-      <div className="relative max-w-md w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-red-600 rounded-2xl shadow-2xl shadow-red-600/30 p-6 sm:p-8 text-center animate-promo-glow">
-        <div className="flex justify-center mb-3">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black ">
-            🔥🔥 Promo por tiempo limitado 🔥🔥
-          </span>
-        </div>
-
-        <h2
-          id="promo-title"
-          className="t-section text-white mb-3"
-        >
-          3 cuotas <span className="text-red-500">sin interés</span>
+    <Sheet open={open} onClose={dismiss} labelledBy="promo-title" describedBy="promo-text">
+      <div className="px-6 pt-5 sm:px-8 sm:pt-10 text-center">
+        <p aria-hidden className="text-[72px] sm:text-[88px] font-semibold leading-none tracking-[-0.04em] text-red-600 tabular-nums">
+          0%
+        </p>
+        <h2 id="promo-title" className="mt-3 text-[24px] sm:text-[28px] font-semibold leading-tight tracking-[-0.015em]">
+          3 cuotas sin interés
         </h2>
-
-        <p className="text-sm sm:text-base text-zinc-300 leading-relaxed mb-6">
-          {PROMO_TEXT}
+        <p id="promo-text" className="mx-auto mt-2.5 max-w-[32ch] text-[15px] leading-relaxed text-gray-600">
+          Pagás con tarjeta en 3 cuotas, al mismo precio que en efectivo o transferencia.
         </p>
 
+        {/* Cómo se ve en la práctica: mismo precio, dividido en 3 */}
+        <div className="mt-6 flex items-center justify-center gap-2" aria-hidden>
+          {[1, 2, 3].map((n) => (
+            <span key={n} className="flex h-11 flex-1 max-w-[96px] items-center justify-center gap-1.5 rounded-[12px] bg-red-50 text-[13px] font-semibold text-red-600">
+              <CreditCard className="h-3.5 w-3.5" />
+              Cuota {n}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1 px-6 pb-2 pt-6 sm:px-8 sm:pb-7">
+        <Link href="/productos" onClick={dismiss} className="btn-apple w-full">
+          Ver productos
+        </Link>
         <button
           type="button"
           onClick={dismiss}
-          className="w-full sm:w-auto sm:min-w-[180px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-sm transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          autoFocus
+          className="min-h-[44px] w-full rounded-full text-[17px] text-primary transition-colors hover:bg-gray-50 active:scale-[0.98]"
         >
-          Entendido
+          Ahora no
         </button>
       </div>
-    </div>
+    </Sheet>
   );
 }

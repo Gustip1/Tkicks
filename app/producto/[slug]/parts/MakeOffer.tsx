@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics/track';
+import { Sheet, SheetHandleArea } from '@/components/ui/Sheet';
 
 const WA_NUMBER = '5492644802994';
 
@@ -38,72 +39,75 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
   };
 
   return (
-    <div className="rounded-lg bg-gray-100 p-5">
-      {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-full border border-primary bg-white text-primary font-normal text-[17px] hover:bg-primary hover:text-white active:scale-95 transition-[transform,background-color,color] duration-200"
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="btn-apple-ghost w-full"
+      >
+        Hacer una oferta
+      </button>
+
+      {/* La oferta en su propia hoja: el teclado numérico aparece solo y el
+          resto de la ficha no salta mientras se escribe */}
+      <Sheet open={open} onClose={() => setOpen(false)} labelledBy="offer-title" describedBy="offer-help">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
         >
-          Hacer una oferta
-        </button>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-[17px] font-semibold text-gray-900">¿Cuánto ofrecés?</p>
+          <SheetHandleArea className="px-6 pt-4 sm:px-8 sm:pt-8">
+            <h2 id="offer-title" className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
+              ¿Cuánto ofrecés?
+            </h2>
+            <p id="offer-help" className="mt-1.5 truncate text-[15px] text-gray-500">{productTitle}</p>
+          </SheetHandleArea>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrency('ARS')}
-              className={cn(
-                'flex-1 py-2.5 rounded-full text-sm transition-colors',
-                currency === 'ARS' ? 'bg-white text-gray-900 font-semibold ring-2 ring-primary-hover' : 'bg-white/60 text-gray-600 font-normal ring-1 ring-gray-200',
-              )}
-            >
-              Pesos (ARS)
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrency('USD')}
-              className={cn(
-                'flex-1 py-2.5 rounded-full text-sm transition-colors',
-                currency === 'USD' ? 'bg-white text-gray-900 font-semibold ring-2 ring-primary-hover' : 'bg-white/60 text-gray-600 font-normal ring-1 ring-gray-200',
-              )}
-            >
-              Dólares (USD)
-            </button>
+          <div className="px-6 pt-5 sm:px-8">
+            {/* Moneda: control segmentado, como en iOS */}
+            <div role="radiogroup" aria-label="Moneda" className="grid grid-cols-2 gap-1 rounded-[12px] bg-[#f0f0f2] p-1">
+              {(['ARS', 'USD'] as Currency[]).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={currency === c}
+                  onClick={() => setCurrency(c)}
+                  className={cn(
+                    'min-h-[40px] rounded-[9px] text-[15px] transition-[background-color,box-shadow,color] duration-200',
+                    currency === c ? 'bg-white font-semibold text-gray-900 shadow-[0_1px_4px_rgba(0,0,0,0.12)]' : 'text-gray-600'
+                  )}
+                >
+                  {c === 'ARS' ? 'Pesos' : 'Dólares'}
+                </button>
+              ))}
+            </div>
+
+            <label className="mt-4 flex items-center gap-2 rounded-[14px] border border-gray-200 px-4 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+              <span className="text-[24px] font-semibold text-gray-400">{currency === 'USD' ? 'US$' : '$'}</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={currency === 'ARS' ? '800000' : '500'}
+                autoFocus
+                aria-label={`Monto en ${currency === 'ARS' ? 'pesos' : 'dólares'}`}
+                className="h-16 w-full bg-transparent text-[28px] font-semibold tabular-nums text-gray-900 placeholder:text-gray-300 focus:outline-none"
+              />
+            </label>
+            <p className="mt-2.5 text-[13px] text-gray-500">Se abre WhatsApp con tu oferta lista para mandar.</p>
           </div>
 
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder={currency === 'ARS' ? 'Ej: 800000' : 'Ej: 500'}
-            autoFocus
-            className="w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-[17px] font-normal text-gray-900 focus:outline-none focus:border-primary transition-colors"
-          />
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="flex-1 py-3 rounded-full text-primary font-normal text-[17px] hover:bg-white transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!amount.trim()}
-              className="flex-1 py-3 rounded-full bg-primary text-white font-normal text-[17px] hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Enviar oferta
+          <div className="px-6 pb-2 pt-6 sm:px-8 sm:pb-7">
+            <button type="submit" disabled={!amount.trim()} className="btn-apple w-full disabled:opacity-40">
+              Enviar oferta por WhatsApp
             </button>
           </div>
-        </div>
-      )}
-    </div>
+        </form>
+      </Sheet>
+    </>
   );
 }

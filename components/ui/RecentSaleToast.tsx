@@ -2,15 +2,18 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { ShoppingBag, X } from 'lucide-react';
+import { useUIStore } from '@/store/ui';
 
 interface Sale {
   title: string;
-  city: string;
+  /** Solo si el pedido la tiene: nunca se inventa */
+  city: string | null;
   minutesAgo: number;
   imageUrl?: string;
 }
 
-const FALLBACK_CITIES = ['San Juan', 'Buenos Aires', 'Córdoba', 'Mendoza', 'Rosario', 'Tucumán'];
+/** Como mucho tantos avisos por visita: más que eso molesta */
+const MAX_PER_VISIT = 3;
 
 function randomBetween(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -20,7 +23,7 @@ export function RecentSaleToast() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [current, setCurrent] = useState<Sale | null>(null);
   const [visible, setVisible] = useState(false);
-  const [index, setIndex] = useState(0);
+  const [, setIndex] = useState(0);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -59,7 +62,7 @@ export function RecentSaleToast() {
         .map((o: any) => {
           const title = itemMap.get(o.id) || '';
           const rawCity = cityMap.get(o.id);
-          const city = rawCity || FALLBACK_CITIES[randomBetween(0, FALLBACK_CITIES.length - 1)];
+          const city = rawCity ? String(rawCity).trim() || null : null;
           const createdMs = new Date(o.created_at).getTime();
           const diffMin = Math.max(5, Math.round((now - createdMs) / 60000));
           // Cap at 2 days for believability; show as "hace X hs" if > 60 min
@@ -72,23 +75,31 @@ export function RecentSaleToast() {
     })();
   }, []);
 
-  // Show a toast every 25–45 seconds
+  // Un aviso cada 25–45 s, hasta MAX_PER_VISIT. Si hay un popup abierto
+  // (aviso de cuenta, promo, carrito) espera: encimados no se lee nada.
   useEffect(() => {
     if (!sales.length) return;
+    let shownCount = 0;
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
     const show = () => {
-      setIndex(i => {
+      if (shownCount >= MAX_PER_VISIT) return;
+      // Hay un popup (hoja), el carrito o el menú abiertos: este aviso espera
+      const ui = useUIStore.getState();
+      if (document.querySelector('.sheet-panel') || ui.isCartOpen || ui.isSidebarOpen) return;
+      shownCount += 1;
+      setIndex((i) => {
         const next = (i + 1) % sales.length;
         setCurrent(sales[next]);
         setVisible(true);
-        setTimeout(() => setVisible(false), 5000);
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => setVisible(false), 6000);
         return next;
       });
     };
 
-    // First one after 12 seconds
     const first = setTimeout(show, 12000);
     const interval = setInterval(show, randomBetween(25000, 45000));
-    return () => { clearTimeout(first); clearInterval(interval); };
+    return () => { clearTimeout(first); clearInterval(interval); clearTimeout(hideTimer); };
   }, [sales]);
 
   if (!current || !visible) return null;
@@ -96,32 +107,41 @@ export function RecentSaleToast() {
   const timeLabel = current.minutesAgo < 60
     ? `hace ${current.minutesAgo} min`
     : current.minutesAgo < 1440
-    ? `hace ${Math.round(current.minutesAgo / 60)} hs`
+    ? `hace ${Math.round(current.minutesAgo / 60)} h`
     : 'ayer';
 
   return (
-    <div className="fixed bottom-24 left-4 z-50 max-w-[280px] animate-slideIn">
-      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-xl">
-        {/* Imagen o ícono */}
-        <div className="shrink-0 w-11 h-11 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
-          {current.imageUrl
-            ? <img src={current.imageUrl} alt="" className="w-full h-full object-contain" />
-            : <ShoppingBag className="w-5 h-5 text-gray-400" />
-          }
+    // Notificación como las del iPhone: vidrio claro, foto del producto, qué
+    // se vendió y cuándo. Abajo a la izquierda, lejos del botón de WhatsApp.
+    <div
+      role="status"
+      aria-live="polite"
+      className="toast-enter fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 right-24 z-50 sm:left-5 sm:right-auto sm:w-[340px]"
+    >
+      <div className="flex items-center gap-3 rounded-[18px] bg-white py-2.5 pl-2.5 pr-1 shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.06]">
+        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[10px] bg-[#f5f5f7]">
+          {current.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={current.imageUrl} alt="" className="h-full w-full object-contain mix-blend-multiply" />
+          ) : (
+            <ShoppingBag className="absolute inset-0 m-auto h-5 w-5 text-gray-400" aria-hidden />
+          )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <p className="text-gray-900 text-xs font-black leading-tight line-clamp-1">{current.title}</p>
-          <p className="text-gray-500 text-[10px] font-bold mt-0.5">
-            Comprado desde <span className="text-gray-700">{current.city}</span> · {timeLabel}
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] text-gray-500">
+            Se vendió {timeLabel}{current.city ? ` · ${current.city}` : ''}
           </p>
+          <p className="mt-0.5 truncate text-[14px] font-semibold leading-tight text-gray-900">{current.title}</p>
         </div>
 
         <button
+          type="button"
           onClick={() => setVisible(false)}
-          className="shrink-0 text-gray-400 hover:text-gray-700 transition-colors ml-1"
+          aria-label="Cerrar aviso"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:text-gray-700 active:scale-95"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
     </div>

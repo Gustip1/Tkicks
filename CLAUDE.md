@@ -24,6 +24,7 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Curvas: `var(--ease-out)` entradas/UI, `var(--ease-in-out)` movimiento en pantalla, `var(--ease-drawer)` paneles; `ease-apple` en Tailwind.
 - Material: `material-nav` (vidrio oscuro de la barra). Gesto: `lib/useSwipeToDismiss.ts` (paneles que se cierran con el dedo). `lib/haptics.ts` (vibración en momentos clave).
 - `TouchFeedback` hace funcionar `:active` en iPhone; no sacarlo.
+- Popups: siempre `components/ui/Sheet.tsx` (hoja desde abajo en celular, tarjeta centrada en escritorio, fondo desenfocado, foco adentro, se cierra deslizando). Sin `onClose` es bloqueante. Avisos flotantes (venta reciente, pistas): tarjeta blanca sólida de 18px con sombra suave. Nunca degradés, brillos ni emojis; nunca inventar datos (ej.: ciudad de una venta).
 
 ## Movimiento (Emil + Apple)
 - ¿Se ve cien veces por día? No animar. Acciones de teclado: nunca.
