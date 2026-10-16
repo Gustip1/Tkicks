@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart';
 import { useCheckoutStore, PaymentMethod } from '@/store/checkout';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { getCardSurchargeRate } from '@/lib/promo';
@@ -35,6 +35,9 @@ const PAYMENT_HOLDER = 'Gustavo Facundo Piñones Tello';
 const PAYMENT_ALIAS_USD = 'gusti.dolares';
 const CRYPTO_WALLET = '0x9f5e152b579263fbb2b88f976fa4bb4bbac21e20';
 
+const CARD_BRANDS = ['Visa', 'Mastercard', 'American Express'] as const;
+type CardBrand = (typeof CARD_BRANDS)[number];
+
 export default function CheckoutPage() {
   // Recupera los datos que el cliente ya había escrito (ver store/checkout.ts)
   useEffect(() => {
@@ -62,6 +65,10 @@ export default function CheckoutPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string | null>(null);
   const [completedPaymentMethod, setCompletedPaymentMethod] = useState<string | null>(null);
+  // Marca de la tarjeta para cuotas: va en el WhatsApp así el link de pago se
+  // arma de una, sin tener que preguntar
+  const [cardBrand, setCardBrand] = useState<CardBrand | null>(null);
+  const [cardBrandError, setCardBrandError] = useState(false);
   const [completedProofUploaded, setCompletedProofUploaded] = useState(false);
 
   // Check cart expiry
@@ -259,15 +266,22 @@ export default function CheckoutPage() {
 
   // ─── Installments: solo abre WhatsApp con el link de pago — no crea ninguna orden ───
   const handleInstallmentsWhatsApp = () => {
+    if (!cardBrand) {
+      setCardBrandError(true);
+      document.getElementById('card-brand')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setSubmitting(true);
     try {
       trackEvent('installments_link_requested', 'ecommerce', {
         total_usd: totalUSD,
         method: 'installments_3',
+        card_brand: cardBrand,
       });
 
       const waMessage =
-        `¡Hola! Quiero pagar en *3 cuotas sin interés* con tarjeta de crédito.\n\n` +
+        `¡Hola! Quiero pagar en *3 cuotas${promoOn ? ' sin interés' : ''}* con tarjeta de crédito.\n` +
+        `💳 *Tarjeta:* ${cardBrand}\n\n` +
         `📦 *Productos:*\n${cart.items
           .map((it) => `• ${it.title} (Talle ${it.size}) x${it.quantity} — $${it.price.toFixed(2)} USD`)
           .join('\n')}\n\n` +
@@ -711,7 +725,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="text-sm font-black text-gray-900">
-                          3 Cuotas sin interés
+                          {promoOn ? '3 cuotas sin interés' : '3 cuotas con tarjeta'}
                           {promoOn && (
                             <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black align-middle">
                               Promo
@@ -725,6 +739,41 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Marca de la tarjeta: obligatoria, viaja en el mensaje de WhatsApp */}
+                    <fieldset id="card-brand" className="scroll-mt-24">
+                      <legend className="text-sm font-black text-gray-900">¿Con qué tarjeta vas a pagar?</legend>
+                      <div role="radiogroup" aria-label="Tarjeta de crédito" className="mt-2.5 grid grid-cols-3 gap-2">
+                        {CARD_BRANDS.map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            role="radio"
+                            aria-checked={cardBrand === b}
+                            onClick={() => {
+                              setCardBrand(b);
+                              setCardBrandError(false);
+                            }}
+                            className={cn(
+                              'min-h-[48px] rounded-xl border px-2 text-[14px] leading-tight transition-[border-color,box-shadow,color] duration-150 active:scale-[0.98]',
+                              cardBrand === b
+                                ? 'border-transparent bg-white font-semibold text-gray-900 ring-2 ring-primary'
+                                : cardBrandError
+                                  ? 'border-red-300 bg-white text-gray-900'
+                                  : 'border-gray-200 bg-white text-gray-900 hover:border-gray-400'
+                            )}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                      {cardBrandError && (
+                        <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600">
+                          <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                          Elegí la tarjeta para que te mandemos el link de pago.
+                        </p>
+                      )}
+                    </fieldset>
 
                     {/* Surcharge breakdown */}
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
