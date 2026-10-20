@@ -40,6 +40,8 @@ export interface Product {
   active: boolean;
   created_at: string | null;
   updated_at: string | null;
+  /** Guía de talles { rows: [{ size, largo, ancho }] } en cm — leer siempre con parseSizeGuide (lib/sizeGuide). Null o ausente si no se cargó (o si falta la migración) */
+  size_guide?: unknown | null;
   /** Joined from product_variants when using select('*, product_variants(stock,size)') */
   product_variants?: { stock: number; size?: string }[];
 }

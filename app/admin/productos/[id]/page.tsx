@@ -1,9 +1,19 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { VariantEditor } from '@/components/admin/VariantEditor';
+import {
+  SizeGuideEditor,
+  INVALID_MEASURE,
+  firstInvalidMeasure,
+  SIZE_GUIDE_NOT_SAVED,
+  guideAsDescriptionText,
+  guideForSizes,
+  isMissingSizeGuideColumn,
+} from '@/components/admin/SizeGuideEditor';
+import { extractFromDescription, garmentKind, parseSizeGuide, type SizeGuide } from '@/lib/sizeGuide';
 import { Save, Trash2, ArrowLeft, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -34,6 +44,26 @@ export default function EditProductPage() {
   const [variants, setVariants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sizeGuide, setSizeGuide] = useState<SizeGuide | null>(null);
+  // Si la base todavía no tiene products.size_guide (falta la migración), el
+  // producto se guarda igual, sin la guía
+  const [hasGuideColumn, setHasGuideColumn] = useState(true);
+  const [guideWarning, setGuideWarning] = useState<string | null>(null);
+
+  const sizes = useMemo(
+    () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
+    [variants]
+  );
+  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null);
+
+  // Viene de "Nuevo producto" y la guía no se pudo guardar (falta la migración)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('guia') !== 'sin-guardar') return;
+    setGuideWarning(SIZE_GUIDE_NOT_SAVED);
+    url.searchParams.delete('guia');
+    window.history.replaceState(null, '', url.pathname + url.search);
+  }, []);
 
   useEffect(() => {
     supabase.from('brands').select('*').eq('active', true).order('name')
@@ -60,6 +90,8 @@ export default function EditProductPage() {
         setOnSale(p.on_sale || false);
         setIsNew(!!p.is_new);
         setActive(p.active);
+        setSizeGuide(parseSizeGuide(p.size_guide));
+        setHasGuideColumn('size_guide' in p);
       }
       setVariants((v || []) as any);
       setLoading(false);
@@ -70,29 +102,58 @@ export default function EditProductPage() {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    setGuideWarning(null);
+    const badMeasure = firstInvalidMeasure();
+    if (badMeasure) {
+      badMeasure.focus();
+      return setError(INVALID_MEASURE);
+    }
     setSaving(true);
     
     try {
-      const { error: pErr } = await supabase
-        .from('products')
-        .update({ 
-          title, 
-          slug, 
-          category, 
-          subcategory: category === 'streetwear' && subcategory ? subcategory : null,
-          brand: brand || null,
-          price,
-          sale_price: salePrice !== '' ? Number(salePrice) : null,
-          description,
-          images,
-          featured_sneakers: featuredSneakers,
-          featured_streetwear: featuredStreetwear,
-          on_sale: onSale,
-          is_new: isNew,
-          active 
-        })
-        .eq('id', id);
-      
+      const guide = guideForSizes(sizeGuide, sizes);
+      const fields = {
+        title,
+        slug,
+        category,
+        subcategory: category === 'streetwear' && subcategory ? subcategory : null,
+        brand: brand || null,
+        price,
+        sale_price: salePrice !== '' ? Number(salePrice) : null,
+        description,
+        images,
+        featured_sneakers: featuredSneakers,
+        featured_streetwear: featuredStreetwear,
+        on_sale: onSale,
+        is_new: isNew,
+        active,
+      };
+      const update = (values: Record<string, unknown>) =>
+        supabase.from('products').update(values).eq('id', id);
+
+      let guideSaved = hasGuideColumn;
+      let { error: pErr } = hasGuideColumn
+        ? await update({ ...fields, size_guide: guide })
+        : await update(fields);
+
+      // Falta la columna (no se corrió la migración): se guarda el resto igual.
+      // Para que las medidas no se pierdan, si se habían sacado de la
+      // descripción vuelven a quedar escritas ahí (la ficha también las lee de ahí).
+      if (pErr && hasGuideColumn && isMissingSizeGuideColumn(pErr)) {
+        setHasGuideColumn(false);
+        guideSaved = false;
+        const text = guideAsDescriptionText(guide, sizes);
+        const restore = !!text && !extractFromDescription(description, sizes).guide;
+        const nextDescription = restore ? `${description.trimEnd()}\n${text}` : description;
+        ({ error: pErr } = await update({ ...fields, description: nextDescription }));
+        if (!pErr && restore) setDescription(nextDescription);
+        if (!pErr && guide) {
+          setGuideWarning(
+            restore ? `${SIZE_GUIDE_NOT_SAVED} Mientras tanto, las medidas quedaron escritas en la descripción.` : SIZE_GUIDE_NOT_SAVED
+          );
+        }
+      }
+
       if (pErr) {
         setError(pErr.message);
         return;
@@ -106,8 +167,10 @@ export default function EditProductPage() {
         );
       }
       
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      if (guideSaved || !guide) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      }
       await revalidateHome();
     } finally {
       setSaving(false);
@@ -181,6 +244,15 @@ export default function EditProductPage() {
         </div>
       )}
       
+      {guideWarning && (
+        <div role="alert" className="rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <span className="text-amber-700">!</span>
+          </div>
+          <p className="text-sm text-amber-900">{guideWarning}</p>
+        </div>
+      )}
+
       {success && (
         <div className="rounded-xl bg-green-50 border border-green-200 p-4 flex items-center gap-3 animate-fadeIn">
           <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -358,6 +430,24 @@ export default function EditProductPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">
             <h2 className="font-semibold text-gray-900 mb-4">Variantes (talles y stock)</h2>
             <VariantEditor value={variants as any} onChange={setVariants as any} />
+          </div>
+
+          {/* Size guide card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">
+            <SizeGuideEditor
+              sizes={sizes}
+              value={sizeGuide}
+              onChange={setSizeGuide}
+              kind={kind}
+              description={description}
+              onDescriptionChange={setDescription}
+              columnMissing={!hasGuideColumn}
+              unavailableMessage={
+                category === 'sneakers'
+                  ? 'Las zapatillas no llevan guía de medidas.'
+                  : 'Los accesorios no llevan guía de medidas.'
+              }
+            />
           </div>
         </div>
         

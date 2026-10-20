@@ -1,8 +1,17 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { ImageUploader, UploadedImage } from '@/components/admin/ImageUploader';
 import { VariantEditor } from '@/components/admin/VariantEditor';
+import {
+  SizeGuideEditor,
+  INVALID_MEASURE,
+  firstInvalidMeasure,
+  guideAsDescriptionText,
+  guideForSizes,
+  isMissingSizeGuideColumn,
+} from '@/components/admin/SizeGuideEditor';
+import { extractFromDescription, garmentKind, type SizeGuide } from '@/lib/sizeGuide';
 import { slugify } from '@/lib/utils';
 import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
@@ -24,10 +33,23 @@ export default function NewProductPage() {
   const [active, setActive] = useState(true);
   const [variants, setVariants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [sizeGuide, setSizeGuide] = useState<SizeGuide | null>(null);
+  // Se asume que la columna products.size_guide existe; si la base dice que no
+  // (falta la migración), el producto se guarda igual, sin la guía
+  const [hasGuideColumn, setHasGuideColumn] = useState(true);
+
+  const sizes = useMemo(
+    () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
+    [variants]
+  );
+  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null);
 
   useEffect(() => {
     supabase.from('brands').select('*').eq('active', true).order('name')
       .then(({ data }) => setBrandOptions((data || []) as Brand[]));
+    // Solo lectura: si la columna no existe, Supabase responde con error
+    supabase.from('products').select('size_guide').limit(1)
+      .then(({ error }) => { if (isMissingSizeGuideColumn(error)) setHasGuideColumn(false); });
   }, []);
 
   const save = async (e: React.FormEvent) => {
@@ -36,6 +58,11 @@ export default function NewProductPage() {
     if (!title) return setError('Título requerido');
     if (price < 0) return setError('Precio inválido');
     if (images.length === 0) return setError('Al menos una imagen');
+    const badMeasure = firstInvalidMeasure();
+    if (badMeasure) {
+      badMeasure.focus();
+      return setError(INVALID_MEASURE);
+    }
     const baseSlug = slugify(title);
     let finalSlug = baseSlug;
     let attempt = 1;
@@ -46,25 +73,42 @@ export default function NewProductPage() {
       finalSlug = `${baseSlug}-${attempt}`;
     }
 
-    const { data: product, error: pErr } = await supabase
-      .from('products')
-      .insert({ 
-        title, 
-        slug: finalSlug, 
-        category, 
-        subcategory: category === 'streetwear' && subcategory ? subcategory : null,
-        price, 
-        description, 
-        images,
-        sale_price: salePrice !== '' ? Number(salePrice) : null,
-        brand: brand || null,
-        featured_sneakers: featuredSneakers,
-        featured_streetwear: featuredStreetwear,
-        is_new: isNew,
-        active
-      })
-      .select('*')
-      .single();
+    const guide = guideForSizes(sizeGuide, sizes);
+    const fields = {
+      title,
+      slug: finalSlug,
+      category,
+      subcategory: category === 'streetwear' && subcategory ? subcategory : null,
+      price,
+      description,
+      images,
+      sale_price: salePrice !== '' ? Number(salePrice) : null,
+      brand: brand || null,
+      featured_sneakers: featuredSneakers,
+      featured_streetwear: featuredStreetwear,
+      is_new: isNew,
+      active
+    };
+    const insert = (values: Record<string, unknown>) =>
+      supabase.from('products').insert(values).select('*').single();
+
+    let guideSaved = hasGuideColumn;
+    let { data: product, error: pErr } = hasGuideColumn
+      ? await insert({ ...fields, size_guide: guide })
+      : await insert(fields);
+
+    // Falta la columna (no se corrió la migración): se guarda el resto igual, y
+    // si las medidas se habían sacado de la descripción vuelven ahí para no perderlas
+    if (pErr && hasGuideColumn && isMissingSizeGuideColumn(pErr)) {
+      setHasGuideColumn(false);
+      guideSaved = false;
+      const text = guideAsDescriptionText(guide, sizes);
+      const restore = !!text && !extractFromDescription(description, sizes).guide;
+      ({ data: product, error: pErr } = await insert({
+        ...fields,
+        description: restore ? `${description.trimEnd()}\n${text}` : description,
+      }));
+    }
     if (pErr) return setError(pErr.message);
     if (variants.length) {
       const toInsert = variants.map((v: any) => ({ product_id: product!.id, size: v.size, stock: Number(v.stock || 0) }));
@@ -72,7 +116,8 @@ export default function NewProductPage() {
       if (vErr) return setError(vErr.message);
     }
     await revalidateHome();
-    window.location.href = `/admin/productos/${product!.id}`;
+    // La ficha de edición avisa que la guía no se guardó
+    window.location.href = `/admin/productos/${product!.id}${!guideSaved && guide ? '?guia=sin-guardar' : ''}`;
   };
 
   return (
@@ -178,6 +223,22 @@ export default function NewProductPage() {
           <div>
             <label className="block text-sm font-medium">Variantes (talles)</label>
             <VariantEditor value={variants as any} onChange={setVariants as any} />
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6">
+            <SizeGuideEditor
+              sizes={sizes}
+              value={sizeGuide}
+              onChange={setSizeGuide}
+              kind={kind}
+              description={description}
+              onDescriptionChange={setDescription}
+              columnMissing={!hasGuideColumn}
+              unavailableMessage={
+                category === 'sneakers'
+                  ? 'Las zapatillas no llevan guía de medidas.'
+                  : 'Los accesorios no llevan guía de medidas.'
+              }
+            />
           </div>
         </div>
       </div>

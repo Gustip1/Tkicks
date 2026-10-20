@@ -38,8 +38,8 @@ export function Sheet({
   describedBy?: string;
   children: ReactNode;
   className?: string;
-  /** md: avisos (420px) · lg: textos largos (560px) */
-  size?: 'md' | 'lg';
+  /** md: avisos (420px) · lg: textos largos (560px) · xl: dos columnas en escritorio (880px) */
+  size?: 'md' | 'lg' | 'xl';
   /** El contenido trae su propio pie fijo con el margen de abajo (textos largos) */
   flushBottom?: boolean;
 }) {
@@ -88,9 +88,13 @@ export function Sheet({
         return;
       }
       if (e.key !== 'Tab' || !panel) return;
-      const items = panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), textarea, select, [tabindex]:not([tabindex="-1"])'
-      );
+      // Solo los que se ven: en celular el botón de cerrar está oculto y, si
+      // contara, el foco se trababa en el último o se escapaba de la hoja
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea, select, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.getClientRects().length > 0);
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
@@ -194,7 +198,7 @@ export function Sheet({
           'rounded-t-[22px] sm:rounded-[22px] max-h-[92dvh] overflow-y-auto overscroll-contain',
           !flushBottom && 'pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-0',
           'shadow-[0_-8px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_24px_80px_rgba(0,0,0,0.22)]',
-          size === 'lg' ? 'sm:max-w-[560px]' : 'sm:max-w-[420px]',
+          size === 'xl' ? 'sm:max-w-[560px] md:max-w-[880px]' : size === 'lg' ? 'sm:max-w-[560px]' : 'sm:max-w-[420px]',
           className
         )}
       >

@@ -8,11 +8,27 @@ import { trackEvent } from '@/lib/analytics/track';
 import { haptic } from '@/lib/haptics';
 import { formatCurrency } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
+import { GarmentIcon } from '@/components/pdp/GarmentDiagram';
+import { SizeGuide } from '@/components/pdp/SizeGuide';
+import { formatCm, rowFor, waistStyle, type GarmentKind, type SizeGuide as SizeGuideData } from '@/lib/sizeGuide';
 
 const WA_NUMBER = '5492644802994';
 
-export function AddToCart({ product, variants }: { product: Product; variants: ProductVariant[] }) {
+export function AddToCart({
+  product,
+  variants,
+  guide = null,
+  kind = null,
+}: {
+  product: Product;
+  variants: ProductVariant[];
+  /** Medidas de la prenda por talle (si hay guía cargada) */
+  guide?: SizeGuideData | null;
+  /** Qué maqueta corresponde; null en zapatillas */
+  kind?: GarmentKind | null;
+}) {
   const [size, setSize] = useState<string>('');
+  const [guideOpen, setGuideOpen] = useState(false);
   const [qty, setQty] = useState<number>(1);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useUIStore((s) => s.openCart);
@@ -50,6 +66,21 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
     `Hola! Me interesa *${product.title}*${size ? ` en talle *${size}*` : ''} (${priceText}). ¿Está disponible?\n${productUrl}`;
   const missingSizeText = `Hola! Busco *${product.title}* en otro talle. ¿Lo pueden conseguir?\n${productUrl}`;
   const allSoldOut = variants.every((v) => Number(v.stock) <= 0);
+
+  // Guía de talles: las medidas del talle elegido (o del único que hay)
+  const showGuide = Boolean(guide && kind);
+  const guideSize = size || (variants.length === 1 ? variants[0].size : '');
+  const guideRow =
+    rowFor(guide, guideSize) ?? (guide && guide.rows.length === 1 && variants.length <= 1 ? guide.rows[0] : null);
+  const measures = guideRow
+    ? [guideRow.largo !== null && `Largo ${formatCm(guideRow.largo)}`, guideRow.ancho !== null && `Ancho ${formatCm(guideRow.ancho)}`]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+  const openGuide = () => {
+    setGuideOpen(true);
+    trackEvent('size_guide_open', 'discovery', { slug: product.slug });
+  };
 
   const handleAdd = () => {
     if (!size) return;
@@ -115,6 +146,29 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
           <p className="mt-2 text-xs text-gray-400 font-bold">
             {maxQty > 0 ? maxQty === 1 ? 'Última unidad' : `${maxQty} unidades disponibles` : 'Sin stock'}
           </p>
+        )}
+        {/* Medidas del talle y acceso a la guía completa */}
+        {showGuide && guide && kind && (
+          <button
+            type="button"
+            onClick={openGuide}
+            aria-haspopup="dialog"
+            className="mt-3 flex w-full min-h-[56px] items-center gap-3 rounded-[14px] bg-[#f5f5f7] px-3 py-2.5 text-left transition-transform duration-150 ease-apple active:scale-[0.98]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white">
+              <GarmentIcon kind={kind} className="h-8 w-8" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className={`block truncate text-[15px] leading-tight tabular-nums ${measures ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                {measures
+                  ? measures
+                  : guideSize
+                    ? `Sin medidas cargadas para el ${guideSize}`
+                    : 'Elegí un talle para ver sus medidas'}
+              </span>
+              <span className="link-apple mt-1 text-[14px] leading-tight">Guía de talles</span>
+            </span>
+          </button>
         )}
         {/* Quien no encuentra su talle se iba sin decir nada: ahora pregunta */}
         <a
@@ -194,6 +248,19 @@ export function AddToCart({ product, variants }: { product: Product; variants: P
         </svg>
         {size ? `Preguntar por el talle ${size}` : 'Preguntar por WhatsApp'}
       </a>
+
+      {showGuide && guide && kind && (
+        <SizeGuide
+          open={guideOpen}
+          onClose={() => setGuideOpen(false)}
+          kind={kind}
+          guide={guide}
+          sizes={variants.map((v) => v.size)}
+          selectedSize={guideSize || null}
+          productTitle={product.title}
+          waist={waistStyle(product.title)}
+        />
+      )}
 
     </div>
   );

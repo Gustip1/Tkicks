@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { Product, ProductVariant } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -13,6 +14,7 @@ import { useComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
 import { Shield, Truck, Banknote, CreditCard } from 'lucide-react';
 import { getCardPriceMultiplier } from '@/lib/promo';
+import { extractFromDescription, garmentKind, parseSizeGuide } from '@/lib/sizeGuide';
 
 /**
  * Ficha de producto (parte interactiva). Los datos llegan resueltos desde el
@@ -37,6 +39,23 @@ export function ProductView({
   const priceInArs = activePrice * dolarOficial;
   const productClueInfo = getProductClueInfo(product.slug, product.category);
   const isComingSoon = comingSoonFlag;
+
+  // Guía de talles: la cargada en el admin; si todavía no hay (o falta la
+  // columna en la base), la que estaba escrita en la descripción, y esas
+  // líneas salen de la descripción para no mostrar lo mismo dos veces.
+  const kind = garmentKind(product.category, product.subcategory);
+  const { guide, description } = useMemo(() => {
+    const stored = parseSizeGuide(product.size_guide);
+    if (!kind || stored) return { guide: kind ? stored : null, description: product.description };
+    const sizes = variants.map((v) => v.size);
+    const found = extractFromDescription(product.description, sizes);
+    // Solo los talles que existen: una medida de otro talle confundiría
+    const keys = new Set(sizes.map((s) => s.trim().toLowerCase()));
+    const rows = found.guide?.rows.filter((r) => !sizes.length || keys.has(r.size.trim().toLowerCase())) ?? [];
+    return rows.length
+      ? { guide: { rows }, description: found.cleaned }
+      : { guide: null, description: product.description };
+  }, [kind, product.size_guide, product.description, variants]);
 
   return (
     <div className="max-w-7xl mx-auto animate-fadeIn bg-white min-h-screen overflow-x-hidden pb-24">
@@ -76,9 +95,9 @@ export function ProductView({
           </div>
 
           {/* Description */}
-          {product.description && (
+          {description && (
             <p className="t-body text-gray-600 whitespace-pre-wrap">
-              {product.description}
+              {description}
             </p>
           )}
 
@@ -205,7 +224,7 @@ export function ProductView({
 
           {/* Add to cart section */}
           <div id="comprar-section" className="py-2 md:py-4 scroll-mt-24">
-            <AddToCart product={product} variants={variants} />
+            <AddToCart product={product} variants={variants} guide={guide} kind={kind} />
           </div>
 
           {/* Hacer una oferta — la alternativa, después de la compra directa. Se activa desde /admin/ajustes */}
