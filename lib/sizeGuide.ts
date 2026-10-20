@@ -13,7 +13,8 @@
  *   ancho = la cintura de lado a lado.
  */
 
-export type GarmentKind = 'top' | 'bottom';
+/** top = remera · sweater = buzo, hoodie o sweater (manga larga) · bottom = pantalón o short */
+export type GarmentKind = 'top' | 'sweater' | 'bottom';
 
 export interface SizeGuideRow {
   size: string;
@@ -29,6 +30,7 @@ export interface SizeGuide {
 export function garmentKind(category: string | null | undefined, subcategory: string | null | undefined): GarmentKind | null {
   if (category === 'sneakers' || subcategory === 'accesorios') return null;
   if (subcategory === 'pantalones') return 'bottom';
+  if (subcategory === 'hoodies') return 'sweater';
   return 'top';
 }
 
@@ -47,6 +49,10 @@ export function waistStyle(title: string | null | undefined): 'button' | 'elasti
 export const MEASURE_HELP: Record<GarmentKind, { largo: string; ancho: string }> = {
   top: {
     largo: 'Del punto más alto del hombro hasta el ruedo.',
+    ancho: 'De axila a axila, con la prenda apoyada en plano.',
+  },
+  sweater: {
+    largo: 'Del punto más alto del hombro hasta el borde de abajo.',
     ancho: 'De axila a axila, con la prenda apoyada en plano.',
   },
   bottom: {

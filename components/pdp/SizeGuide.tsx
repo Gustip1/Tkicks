@@ -6,7 +6,8 @@ import { GarmentDiagram } from '@/components/pdp/GarmentDiagram';
 import { MEASURE_HELP, formatCm, orderRows, rowFor, type GarmentKind, type SizeGuide as SizeGuideData } from '@/lib/sizeGuide';
 
 const TIP: Record<GarmentKind, string> = {
-  top: 'Medí una prenda tuya que te quede bien, apoyada en plano, y comparala.',
+  top: 'Medí una remera tuya que te quede bien, apoyada en plano, y comparala.',
+  sweater: 'Medí un buzo tuyo que te quede bien, apoyado en plano, y comparalo.',
   bottom: 'Medí un pantalón tuyo que te quede bien, apoyado en plano, y comparalo.',
 };
 

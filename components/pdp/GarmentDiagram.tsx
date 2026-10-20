@@ -9,7 +9,8 @@ import { formatCm, type GarmentKind } from '@/lib/sizeGuide';
  * la silueta (una remera oversize se ve más ancha y con el hombro caído, una
  * musculosa más angosta), con límites para que nunca se deforme. Las cotas van
  * donde se mide de verdad:
- * - Remera: largo del punto más alto del hombro al ruedo (al costado, fuera
+ * - Remera y buzo (manga larga, puños y cintura de elástico): largo del
+ *   punto más alto del hombro al ruedo (al costado, fuera
  *   de la prenda) y ancho de axila a axila, cruzando el pecho.
  * - Pantalón: largo de la cintura al ruedo por el costado y ancho de la
  *   cintura de lado a lado (arriba de la pretina).
@@ -35,10 +36,11 @@ const LABEL_GRAY = '#6e6e73';
 /** Medidas típicas para dibujar cuando falta un dato (no se muestran como medida). */
 const DEFAULTS: Record<GarmentKind, { largo: number; ancho: number; ratio: number }> = {
   top: { largo: 70, ancho: 54, ratio: 0.77 },
+  sweater: { largo: 70, ancho: 62, ratio: 0.89 },
   bottom: { largo: 104, ancho: 42, ratio: 0.42 },
 };
 
-const NAMES: Record<GarmentKind, string> = { top: 'Remera', bottom: 'Pantalón' };
+const NAMES: Record<GarmentKind, string> = { top: 'Remera', sweater: 'Buzo', bottom: 'Pantalón' };
 
 type Pt = [number, number];
 
@@ -106,6 +108,11 @@ interface TopGeo {
   hemStitch: string;
   chestY: number;
   sleeveBottomY: number;
+  /** Buzo: puños y cintura de elástico (franjas y acanalado) */
+  bands?: string;
+  ribs?: string;
+  /** Dónde va la etiqueta del largo (cm desde arriba), si no es debajo de la manga */
+  largoLabelY?: number;
 }
 
 function topGeometry(largo: number, ancho: number): TopGeo {
@@ -220,6 +227,140 @@ function topGeometry(largo: number, ancho: number): TopGeo {
     hemStitch,
     chestY: ad + 0.04 * L,
     sleeveBottomY: Math.max(SB[1], ST[1]),
+  };
+}
+
+/**
+ * Buzo (hoodies, sweaters, buzos): manga larga que cae en diagonal, puños y
+ * cintura de elástico, cuello redondo con ribete. Cuanto más ancho que largo,
+ * más caído el hombro y más corta la manga, como un buzo oversize.
+ */
+function sweaterGeometry(largo: number, ancho: number): TopGeo {
+  const L = largo;
+  const r = clamp(ancho / largo, 0.7, 1.25);
+  const c = (L * r) / 2;
+  const t = clamp((r - 0.8) / (1.15 - 0.8), 0, 1);
+
+  const n = 0.085 * L + 0.14 * c;
+  const rb = 0.035 * L; // ribete del cuello
+  const d = 0.1 * L; // caída del cuello adelante
+  const bd = 0.024 * L;
+  const sw = lerp(0.9, 1.1, t) * c;
+  const sd = lerp(0.065, 0.085, t) * L;
+  const ad = lerp(0.3, 0.36, t) * L;
+  const a = (lerp(19, 25, t) * Math.PI) / 180; // la manga, abierta respecto de la vertical
+  const slen = lerp(0.8, 0.66, t) * L;
+  const cw = lerp(0.13, 0.14, t) * L; // ancho del puño
+  const hb = 0.075 * L; // cintura de elástico
+  const cb = 0.08 * L; // puño de elástico
+
+  const dir: Pt = [Math.sin(a), Math.cos(a)];
+  const inward: Pt = [-Math.cos(a), Math.sin(a)];
+  const SP: Pt = [sw, sd];
+  const CO: Pt = [SP[0] + slen * dir[0], SP[1] + slen * dir[1]];
+  const CI: Pt = [CO[0] + cw * inward[0], CO[1] + cw * inward[1]];
+  const AP: Pt = [c, ad];
+  const hemIn = 0.955 * c; // el elástico de abajo ciñe un poco
+
+  const k = 0.02 * L;
+  const ux = CI[0] - AP[0];
+  const uy = CI[1] - AP[1];
+  const ul = Math.hypot(ux, uy);
+  const nearAP: Pt = [AP[0] + (ux / ul) * k, AP[1] + (uy / ul) * k];
+  const hr = 0.008 * L;
+
+  const R = (p: Pt) => `${f(p[0])} ${f(p[1])}`;
+  const Lf = (p: Pt) => `${f(-p[0])} ${f(p[1])}`;
+
+  const outline = [
+    `M ${f(-n)} 0`,
+    `Q 0 ${f(bd * 2)} ${f(n)} 0`,
+    `L ${R(SP)}`,
+    `L ${R(CO)}`,
+    `L ${R(CI)}`,
+    `L ${R(nearAP)}`,
+    `Q ${R(AP)} ${f(c)} ${f(ad + k)}`,
+    `L ${f(c)} ${f(L - hb)}`,
+    `L ${f(hemIn)} ${f(L - hr)}`,
+    `Q ${f(hemIn)} ${f(L)} ${f(hemIn - hr)} ${f(L)}`,
+    `L ${f(-hemIn + hr)} ${f(L)}`,
+    `Q ${f(-hemIn)} ${f(L)} ${f(-hemIn)} ${f(L - hr)}`,
+    `L ${f(-c)} ${f(L - hb)}`,
+    `L ${f(-c)} ${f(ad + k)}`,
+    `Q ${Lf(AP)} ${Lf(nearAP)}`,
+    `L ${Lf(CI)}`,
+    `L ${Lf(CO)}`,
+    `L ${Lf(SP)}`,
+    'Z',
+  ].join(' ');
+
+  // Cuello: interior de la espalda y ribete adelante (como la remera, más cerrado)
+  const ni = n - rb;
+  const y0 = rb * 0.5;
+  const backInnerMid = bd + rb * 0.85;
+  const backCtrl = 2 * backInnerMid - y0;
+  const di = d - rb;
+  const frontOpen = (from: number, to: number) =>
+    `C ${f(from)} ${f(y0 + 0.62 * (di - y0))} ${f(0.56 * from)} ${f(di)} 0 ${f(di)} ` +
+    `C ${f(0.56 * to)} ${f(di)} ${f(to)} ${f(y0 + 0.62 * (di - y0))} ${f(to)} ${f(y0)}`;
+  const inside = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)} ${frontOpen(ni, -ni)} Z`;
+  const backRib = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)}`;
+  const collar =
+    `M ${f(-n)} 0 C ${f(-n)} ${f(0.62 * d)} ${f(-0.56 * n)} ${f(d)} 0 ${f(d)} ` +
+    `C ${f(0.56 * n)} ${f(d)} ${f(n)} ${f(0.62 * d)} ${f(n)} 0`;
+  const off = 0.012 * L;
+  const ns = n + off;
+  const shoulderY = (x: number) => (sd * (x - n)) / (sw - n);
+  const ds = d + off;
+  const collarStitch =
+    `M ${f(-ns)} ${f(shoulderY(ns))} C ${f(-ns)} ${f(0.62 * ds)} ${f(-0.56 * ns)} ${f(ds)} 0 ${f(ds)} ` +
+    `C ${f(0.56 * ns)} ${f(ds)} ${f(ns)} ${f(0.62 * ds)} ${f(ns)} ${f(shoulderY(ns))}`;
+
+  // Costura de la sisa
+  const arm = (s: 1 | -1) =>
+    `M ${f(s * SP[0])} ${f(SP[1])} C ${f(s * (sw - 0.03 * c))} ${f(sd + 0.45 * (ad - sd))} ` +
+    `${f(s * lerp(sw, c, 0.7))} ${f(ad - 0.14 * (ad - sd))} ${f(s * c)} ${f(ad)}`;
+  const armholes = `${arm(1)} ${arm(-1)}`;
+
+  // Puños: la costura del elástico, paralela al borde, y el acanalado
+  const cuffO: Pt = [CO[0] - dir[0] * cb, CO[1] - dir[1] * cb];
+  const cuffI: Pt = [CI[0] - dir[0] * cb, CI[1] - dir[1] * cb];
+  const cuff = (s: 1 | -1) => `M ${f(s * cuffO[0])} ${f(cuffO[1])} L ${f(s * cuffI[0])} ${f(cuffI[1])}`;
+  const cuffRibs = (s: 1 | -1) =>
+    Array.from({ length: 4 }, (_, i) => {
+      const q = (i + 1) / 5;
+      const top: Pt = [lerp(cuffO[0], cuffI[0], q), lerp(cuffO[1], cuffI[1], q)];
+      const bot: Pt = [lerp(CO[0], CI[0], q), lerp(CO[1], CI[1], q)];
+      return `M ${f(s * top[0])} ${f(top[1] + 0.15 * cb * dir[1])} L ${f(s * bot[0])} ${f(bot[1] - 0.15 * cb * dir[1])}`;
+    }).join(' ');
+
+  // Cintura de elástico abajo
+  const hemBand = `M ${f(-c)} ${f(L - hb)} L ${f(c)} ${f(L - hb)}`;
+  const count = Math.max(10, Math.round((2 * c) / 2.6));
+  const hemRibs = Array.from({ length: count - 1 }, (_, i) => {
+    const x = -hemIn + ((i + 1) * 2 * hemIn) / count;
+    return `M ${f(x)} ${f(L - hb + 0.2 * hb)} L ${f(x)} ${f(L - 0.2 * hb)}`;
+  }).join(' ');
+
+  return {
+    L,
+    c,
+    X: Math.max(CO[0], CI[0], c),
+    n,
+    outline,
+    inside,
+    collar,
+    collarStitch,
+    backRib,
+    armholes,
+    sleeveStitches: '',
+    hemStitch: '',
+    bands: `${cuff(1)} ${cuff(-1)} ${hemBand}`,
+    ribs: `${cuffRibs(1)} ${cuffRibs(-1)} ${hemRibs}`,
+    chestY: ad + 0.05 * L,
+    sleeveBottomY: Math.max(CO[1], CI[1]),
+    // Entre el hombro y la axila la manga todavía no llegó a la línea del largo
+    largoLabelY: lerp(0.42, 0.37, t) * L,
   };
 }
 
@@ -477,6 +618,7 @@ function Shadow({ id }: { id: string }) {
 const W = 360;
 const H_TOP = 262;
 const H_BOTTOM = 360;
+const H_SWEATER = 300;
 const PAD_X = 8;
 /** Medio ancho reservado para la píldora del largo (fijo: así el dibujo no salta cuando cambia el número). */
 const PH = 38;
@@ -490,10 +632,10 @@ const TOP_GAP = 16;
 const TOP_PAD_Y = 10;
 
 /** Escala y ubicación comunes a todas las prendas de la lista (la actual y las de referencia). */
-function topLayout(geos: TopGeo[]) {
+function topLayout(geos: TopGeo[], maxH = H_TOP) {
   const Wa = W - 2 * PAD_X;
   const s = Math.min(
-    ...geos.map((g) => Math.min((Wa - TOP_GAP - PH) / (2 * g.X), (Wa - 2 * PH - 10) / (g.X + g.c), (H_TOP - 2 * TOP_PAD_Y) / g.L))
+    ...geos.map((g) => Math.min((Wa - TOP_GAP - PH) / (2 * g.X), (Wa - 2 * PH - 10) / (g.X + g.c), (maxH - 2 * TOP_PAD_Y) / g.L))
   );
   const reachOf = (g: TopGeo) => Math.max(g.X * s + TOP_GAP, g.c * s + PH + 10); // del centro a la línea del largo
   const X = Math.max(...geos.map((g) => g.X));
@@ -519,7 +661,7 @@ function TopDrawing({ g, layout, largoTxt, anchoTxt, compact, shadowId }: { g: T
   const labelBlock = compact ? h : h + 22;
   const minY = oy + g.sleeveBottomY * s + h / 2 + 10;
   const maxY = bottom - labelBlock + h / 2 - 6;
-  const ly = clamp((top + bottom) / 2, minY, Math.max(minY, maxY));
+  const ly = g.largoLabelY !== undefined ? oy + g.largoLabelY * s : clamp((top + bottom) / 2, minY, Math.max(minY, maxY));
   const cy = oy + g.chestY * s;
 
   return (
@@ -532,6 +674,8 @@ function TopDrawing({ g, layout, largoTxt, anchoTxt, compact, shadowId }: { g: T
         <path d={g.armholes} {...seam} strokeWidth={sw} />
         <path d={g.sleeveStitches} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
         <path d={g.hemStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
+        {g.ribs && <path d={g.ribs} {...seam} strokeWidth={sw} strokeOpacity={0.24} />}
+        {g.bands && <path d={g.bands} fill="none" {...ink} strokeWidth={1.1 * sw} strokeOpacity={0.6} />}
       </g>
 
       {/* Largo: del hombro al ruedo, al costado */}
@@ -645,9 +789,10 @@ export function GarmentDiagram({
   const label = `${NAMES[kind]}: largo ${said(largo)}, ancho ${said(ancho)}`;
   const refs = (scaleTo ?? []).filter((m) => m.largo || m.ancho).map((m) => shapeInputs(kind, m.largo, m.ancho));
 
-  if (kind === 'top') {
-    const g = topGeometry(gl, ga);
-    const layout = topLayout([g, ...refs.map(([l, a]) => topGeometry(l, a))]);
+  if (kind === 'top' || kind === 'sweater') {
+    const geo = kind === 'top' ? topGeometry : sweaterGeometry;
+    const g = geo(gl, ga);
+    const layout = topLayout([g, ...refs.map(([l, a]) => geo(l, a))], kind === 'top' ? H_TOP : H_SWEATER);
     return (
       <svg viewBox={`0 0 ${W} ${layout.H}`} role="img" aria-label={label} className={className} style={svgStyle}>
         <Shadow id={shadowId} />
@@ -677,8 +822,8 @@ const svgStyle = { display: 'block', width: '100%', height: 'auto', fontFamily: 
  */
 export function GarmentIcon({ kind, className }: { kind: GarmentKind; className?: string }) {
   const S = 40;
-  if (kind === 'top') {
-    const g = topGeometry(70, 54);
+  if (kind === 'top' || kind === 'sweater') {
+    const g = kind === 'top' ? topGeometry(70, 54) : sweaterGeometry(68, 62);
     const s = 30 / (2 * g.X);
     const ox = S / 2;
     const oy = (S - g.L * s) / 2;

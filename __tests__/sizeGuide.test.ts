@@ -70,7 +70,7 @@ describe('parseSizeGuide', () => {
 describe('ayudas', () => {
   it('elige la maqueta por categoría', () => {
     expect(garmentKind('streetwear', 'remeras')).toBe('top');
-    expect(garmentKind('streetwear', 'hoodies')).toBe('top');
+    expect(garmentKind('streetwear', 'hoodies')).toBe('sweater');
     expect(garmentKind('streetwear', 'pantalones')).toBe('bottom');
     expect(garmentKind('sneakers', null)).toBeNull();
     expect(garmentKind('streetwear', 'accesorios')).toBeNull();
