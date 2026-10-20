@@ -15,8 +15,14 @@ import { ProductGone } from './parts/ProductGone';
  *
  * Se genera en cada visita (no se cachea) porque el stock cambia con cada
  * venta y la ficha tiene que mostrar los talles reales.
+ *
+ * `fetchCache` también: con solo `force-dynamic`, Next guardaba igual las
+ * respuestas de la base en su caché de datos (que en Vercel sobrevive a los
+ * deploys) y algunas fichas mostraban datos viejos (oct 2026: la guía de
+ * talles no aparecía en 4 productos).
  */
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tkicks.com.ar').replace(/\/$/, '');
 
