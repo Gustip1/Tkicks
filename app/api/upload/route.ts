@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { normalizeProductImage } from '@/lib/images/normalize';
+import { normalizeProductImage, makeThumbnail } from '@/lib/images/normalize';
+import { THUMB_FOLDER } from '@/lib/images/thumbs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -67,6 +68,21 @@ export async function POST(req: NextRequest) {
       );
 
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+
+      // La miniatura va primero: las tarjetas la piden siempre, así que una
+      // foto sin miniatura se vería rota en la grilla. Si falla, no se sube.
+      const { error: thumbError } = await supabaseAdmin.storage
+        .from('product-images')
+        .upload(`${THUMB_FOLDER}/${fileName}`, await makeThumbnail(normalized.buffer), {
+          contentType: 'image/webp',
+          cacheControl: '31536000',
+          upsert: false,
+        });
+
+      if (thumbError) {
+        console.error('Storage upload error (miniatura):', thumbError.message);
+        continue;
+      }
 
       const { error } = await supabaseAdmin.storage
         .from('product-images')

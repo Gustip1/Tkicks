@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import { THUMB_SIZE, THUMB_QUALITY } from './thumbs';
 
 /**
  * Normaliza cualquier foto de producto a un único formato y tamaño.
@@ -131,4 +132,12 @@ export async function normalizeProductImage(input: Buffer): Promise<NormalizedIm
     bytes: buffer.length,
     warning: ow && oh ? revisarCalidad(ow, oh) : null,
   };
+}
+
+/** Copia chica de una foto ya normalizada, para tarjetas y carruseles (ver thumbs.ts). */
+export async function makeThumbnail(normalized: Buffer): Promise<Buffer> {
+  return sharp(normalized)
+    .resize(THUMB_SIZE, THUMB_SIZE)
+    .webp({ quality: THUMB_QUALITY, effort: 4 })
+    .toBuffer();
 }
