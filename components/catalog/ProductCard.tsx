@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info } from 'lucide-react';
-import { Product } from '@/types/db';
+import { Product, subcategoryLabel } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
@@ -67,7 +67,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
   const categoryLabel =
     product.category === 'streetwear' && product.subcategory
-      ? `${product.subcategory}`
+      ? subcategoryLabel(product.subcategory)
       : product.category;
 
   return (

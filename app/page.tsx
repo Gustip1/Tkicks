@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Product } from '@/types/db';
+import { Product, StreetWearSubcategory, subcategoriesOf } from '@/types/db';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { CategoryShowcase, CATEGORY_TILES, CategoryTileConfig } from '@/components/landing/CategoryShowcase';
 import { HomeProductGrid } from '@/components/landing/HomeProductGrid';
@@ -79,7 +79,9 @@ async function resolveCategoryImages(
     missing.map((c) => {
       // "sneakers" es una categoría propia, no una subcategoría de streetwear
       const query = supabase.from('products').select('images').eq('active', true);
-      return (c.sub === 'sneakers' ? query.eq('category', 'sneakers') : query.eq('subcategory', c.sub))
+      return (c.sub === 'sneakers'
+        ? query.eq('category', 'sneakers')
+        : query.in('subcategory', subcategoriesOf(c.sub as StreetWearSubcategory)))
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

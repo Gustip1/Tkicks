@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Product, STREETWEAR_SUBCATEGORIES } from '@/types/db';
+import { HOODIE_TYPES, Product, STREETWEAR_SUBCATEGORIES, groupOf, subcategoryLabel } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function AdminProductsPage() {
@@ -27,7 +27,8 @@ export default function AdminProductsPage() {
     return products.filter((p) => {
       if (q && !p.title.toLowerCase().includes(q.toLowerCase())) return false;
       if (category && p.category !== category) return false;
-      if (subcategoryFilter && p.subcategory !== subcategoryFilter) return false;
+      // "tipo:sweaters" filtra un tipo de Hoodies; el resto, el grupo entero
+      if (subcategoryFilter.startsWith('tipo:') ? p.subcategory !== subcategoryFilter.slice(5) : subcategoryFilter && groupOf(p.subcategory) !== subcategoryFilter) return false;
       if (activeFilter === 'active' && !p.active) return false;
       if (activeFilter === 'inactive' && p.active) return false;
       return true;
@@ -108,11 +109,18 @@ export default function AdminProductsPage() {
               onChange={(e) => setSubcategoryFilter(e.target.value)}
             >
               <option value="">Todas</option>
-              {STREETWEAR_SUBCATEGORIES.map((sub) => (
+              {STREETWEAR_SUBCATEGORIES.map((sub) => [
                 <option key={sub.value} value={sub.value}>
                   {sub.icon} {sub.label}
-                </option>
-              ))}
+                </option>,
+                ...(sub.value === 'hoodies'
+                  ? HOODIE_TYPES.map((t) => (
+                      <option key={`tipo:${t.value}`} value={`tipo:${t.value}`}>
+                        {'\u00a0\u00a0\u00a0\u00a0'}{t.label}
+                      </option>
+                    ))
+                  : []),
+              ])}
             </select>
           </div>
         )}
@@ -180,7 +188,7 @@ export default function AdminProductsPage() {
                       </span>
                       {p.subcategory && (
                         <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 ml-1">
-                          {STREETWEAR_SUBCATEGORIES.find(s => s.value === p.subcategory)?.label || p.subcategory}
+                          {subcategoryLabel(p.subcategory)}
                         </span>
                       )}
                     </td>
@@ -262,7 +270,7 @@ export default function AdminProductsPage() {
                 </span>
                 {p.subcategory && (
                   <span className="inline-flex px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">
-                    {STREETWEAR_SUBCATEGORIES.find(s => s.value === p.subcategory)?.label || p.subcategory}
+                    {subcategoryLabel(p.subcategory)}
                   </span>
                 )}
                 <span className={`inline-flex px-2 py-1 rounded-full font-medium ${

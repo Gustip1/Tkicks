@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Brand, Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, HOODIE_TYPES, Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, subcategoriesOf } from '@/types/db';
 import { ProductCard } from './ProductCard';
 import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -63,11 +63,24 @@ const categoryConfig = {
 const subcategoryLabels: Record<string, string> = {
   remeras: 'REMERAS',
   hoodies: 'HOODIES / ABRIGOS',
+  sweaters: 'SWEATERS',
+  'zip-hoodies': 'ZIP HOODIES',
   pantalones: 'PANTALONES',
   accesorios: 'ACCESORIOS',
 };
 
-export function ProductsClient({ category, subcategory, brand }: { category?: 'sneakers' | 'streetwear'; subcategory?: StreetWearSubcategory; brand?: string }) {
+export function ProductsClient({
+  category,
+  subcategory,
+  tipo,
+  brand,
+}: {
+  category?: 'sneakers' | 'streetwear';
+  subcategory?: StreetWearSubcategory;
+  /** Tipo dentro de Hoodies / Abrigos (hoodies, sweaters, zip-hoodies) */
+  tipo?: StreetWearSubcategory;
+  brand?: string;
+}) {
   const supabase = useRef(createBrowserClient());
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 350);
@@ -87,11 +100,15 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
   const title = useMemo(
     () => {
       if (brand) return brand.replace(/-/g, ' ').toUpperCase();
-      if (subcategory && subcategoryLabels[subcategory]) return subcategoryLabels[subcategory];
+      const sub = tipo ?? subcategory;
+      if (sub && subcategoryLabels[sub]) return subcategoryLabels[sub];
       return category ? categoryConfig[category].title : 'Productos';
     },
-    [category, subcategory, brand]
+    [category, subcategory, tipo, brand]
   );
+
+  // Un grupo del menú puede juntar varias subcategorías (Hoodies / Abrigos)
+  const subs = tipo ? [tipo] : subcategory ? subcategoriesOf(subcategory) : null;
 
   const config = category ? categoryConfig[category] : null;
 
@@ -119,7 +136,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
       .order('created_at', { ascending: false });
     
     if (category) query = query.eq('category', category);
-    if (subcategory) query = query.eq('subcategory', subcategory);
+    if (subs) query = query.in('subcategory', subs);
     if (selectedBrand) query = query.eq('brand', selectedBrand);
 
     if (dq) {
@@ -172,7 +189,7 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
           .select('id')
           .eq('category', category)
           .eq('active', true);
-        if (subcategory) prodQuery = prodQuery.eq('subcategory', subcategory);
+        if (subs) prodQuery = prodQuery.in('subcategory', subs);
         const { data: prod } = await prodQuery.limit(1000);
         productIds = (prod || []).map((p: any) => p.id);
       }
@@ -224,12 +241,12 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
         setAvailableBrands([]);
       }
     })();
-  }, [category, subcategory]);
+  }, [category, subcategory, tipo]);
 
   useEffect(() => {
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, subcategory, dq, selectedSizes, selectedBrand]);
+  }, [category, subcategory, tipo, dq, selectedSizes, selectedBrand]);
 
   return (
     <div className="space-y-6 animate-fadeIn bg-white">
@@ -270,6 +287,28 @@ export function ProductsClient({ category, subcategory, brand }: { category?: 's
             </Link>
           ))}
         </div>
+      )}
+
+      {/* Tipos dentro de Hoodies / Abrigos */}
+      {category === 'streetwear' && subcategory === 'hoodies' && (
+        <nav aria-label="Tipo" className="-mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+          {[{ value: undefined, label: 'Todos' }, ...HOODIE_TYPES].map((t) => {
+            const on = tipo === t.value;
+            return (
+              <Link
+                key={t.label}
+                href={t.value ? `/productos?streetwear&sub=hoodies&tipo=${t.value}` : '/productos?streetwear&sub=hoodies'}
+                aria-current={on ? 'page' : undefined}
+                className={cn(
+                  'inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3.5 text-[14px] transition-[background-color,color,transform] duration-150 active:scale-[0.97]',
+                  on ? 'bg-gray-900 font-semibold text-white' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                )}
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </nav>
       )}
 
       {/* Filters bar */}

@@ -1,850 +1,533 @@
-"use client";
-import { useEffect, useId, useRef, useState } from 'react';
-import { formatCm, type GarmentKind } from '@/lib/sizeGuide';
+import type { CSSProperties } from 'react';
+import { cn } from '@/lib/utils';
+import { type GarmentKind } from '@/lib/sizeGuide';
 
 /**
- * Maqueta de la prenda con sus medidas, como el plano de una ficha técnica.
+ * Dibujo de la prenda para la guía de talles: el plano de toda la vida de cada
+ * tipo (remera, hoodie, sweater, zip hoodie, pantalón y short), siempre igual,
+ * con dos líneas que marcan dónde se mide: 1 el largo y 2 el ancho. Los
+ * centímetros van al costado, en la tabla (components/pdp/SizeGuide.tsx).
  *
- * Se dibuja con las medidas reales: la proporción entre largo y ancho cambia
- * la silueta (una remera oversize se ve más ancha y con el hombro caído, una
- * musculosa más angosta), con límites para que nunca se deforme. Las cotas van
- * donde se mide de verdad:
- * - Remera y buzo (manga larga, puños y cintura de elástico): largo del
- *   punto más alto del hombro al ruedo (al costado, fuera
- *   de la prenda) y ancho de axila a axila, cruzando el pecho.
- * - Pantalón: largo de la cintura al ruedo por el costado y ancho de la
- *   cintura de lado a lado (arriba de la pretina).
+ * Antes la silueta se armaba con las medidas de cada talle y llevaba los
+ * números encima; el dueño prefirió el dibujo clásico (oct 2026).
  *
- * Al cambiar de talle la forma pasa de una medida a la otra en 280 ms
- * (ninguna transición si el sistema pide movimiento reducido). Con `scaleTo`
- * (todos los talles de la guía) la escala es la misma para todos: el talle
- * más chico se ve más chico, con los hombros a la misma altura.
+ * Dónde se mide:
+ * - Arriba: largo del punto más alto del hombro (junto al cuello o a la
+ *   capucha) al borde de abajo; ancho de axila a axila.
+ * - Abajo: largo de la cintura al ruedo, por el costado; ancho de la cintura
+ *   de lado a lado.
  *
- * Pantalón: con `waist="button"` lleva pretina de jean (presillas, botón y
- * bragueta); con "elastic", cintura elástica con cordón (joggers y shorts).
- *
- * No depende de la ficha: lo usa también la vista previa del admin.
+ * Los trazos no escalan (se ven igual de finos en la guía que en el ícono) y
+ * los números de las medidas van en HTML encima del dibujo: siempre del mismo
+ * tamaño, como en la tabla y en "Cómo medir".
  */
 
 const INK = '#1d1d1f';
 const BLUE = '#0071e3';
-const FILL = '#f5f5f7';
-const INSIDE = '#e3e3e8';
-const GUIDE = '#86868b';
-const LABEL_GRAY = '#6e6e73';
+const INSIDE = '#e8e8ed';
+/** Espacio que se deja para el número de cada medida, en unidades del dibujo */
+const BADGE = 11;
 
-/** Medidas típicas para dibujar cuando falta un dato (no se muestran como medida). */
-const DEFAULTS: Record<GarmentKind, { largo: number; ancho: number; ratio: number }> = {
-  top: { largo: 70, ancho: 54, ratio: 0.77 },
-  sweater: { largo: 70, ancho: 62, ratio: 0.89 },
-  bottom: { largo: 104, ancho: 42, ratio: 0.42 },
-};
+type P = [number, number];
 
-const NAMES: Record<GarmentKind, string> = { top: 'Remera', sweater: 'Buzo', bottom: 'Pantalón' };
+const CX = 120;
+const r1 = (n: number) => Math.round(n * 10) / 10;
+const s = (p: P) => `${r1(p[0])} ${r1(p[1])}`;
+const add = (a: P, b: P): P => [a[0] + b[0], a[1] + b[1]];
+const sub = (a: P, b: P): P => [a[0] - b[0], a[1] - b[1]];
+const mul = (a: P, k: number): P => [a[0] * k, a[1] * k];
+const lerp = (a: P, b: P, t: number): P => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const unit = (a: P): P => mul(a, 1 / Math.hypot(a[0], a[1]));
+const mir = (p: P): P => [2 * CX - p[0], p[1]];
+const same = (p: P) => p;
+/** Un trazo del lado izquierdo y su espejo */
+const both = (d: (m: (p: P) => P) => string) => `${d(same)} ${d(mir)}`;
 
-type Pt = [number, number];
-
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const f = (n: number) => (Math.round(n * 100) / 100).toString();
-
-/** Las medidas con las que se dibuja: las reales, o las típicas si falta alguna. */
-function shapeInputs(kind: GarmentKind, largo: number | null, ancho: number | null): [number, number] {
-  const d = DEFAULTS[kind];
-  if (largo && ancho) return [largo, ancho];
-  if (largo) return [largo, largo * d.ratio];
-  if (ancho) return [ancho / d.ratio, ancho];
-  return [d.largo, d.ancho];
+/** Donde se cruzan la recta p + t·u y la recta q + k·v */
+function meet(p: P, u: P, q: P, v: P): P {
+  const det = u[0] * v[1] - u[1] * v[0];
+  const t = ((q[0] - p[0]) * v[1] - (q[1] - p[1]) * v[0]) / det;
+  return add(p, mul(u, t));
 }
 
-// ── Transición entre talles ──────────────────────────────────────────────────
-
-function useTweened(target: [number, number], ms = 280): [number, number] {
-  const [value, setValue] = useState(target);
-  const current = useRef(target);
-  const [a, b] = target;
-
-  useEffect(() => {
-    const from = current.current;
-    if (from[0] === a && from[1] === b) return;
-    const reduce =
-      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) {
-      current.current = [a, b];
-      setValue([a, b]);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / ms);
-      const e = 1 - Math.pow(1 - t, 4); // ease-out, como var(--ease-out)
-      const next: [number, number] = [lerp(from[0], a, e), lerp(from[1], b, e)];
-      current.current = next;
-      setValue(next);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [a, b, ms]);
-
-  return value;
+interface Measure {
+  a: P;
+  b: P;
+  badge: P;
+  /** Líneas punteadas que llevan la medida hasta la prenda */
+  ext?: string;
 }
 
-// ── Geometría (en cm, con el origen arriba al centro) ────────────────────────
-
-interface TopGeo {
-  L: number;
-  c: number; // medio ancho de pecho
-  X: number; // punto más alejado del centro (puño de la manga)
-  n: number; // medio ancho del cuello (hasta la costura)
+interface Flat {
+  box: [number, number, number, number];
   outline: string;
-  inside: string;
-  collar: string;
-  collarStitch: string;
-  backRib: string;
-  armholes: string;
-  sleeveStitches: string;
-  hemStitch: string;
-  chestY: number;
-  sleeveBottomY: number;
-  /** Buzo: puños y cintura de elástico (franjas y acanalado) */
-  bands?: string;
+  /** Lo que se ve por dentro: la espalda por el cuello, el interior de la capucha */
+  inside?: string;
+  /** Piezas con relleno propio encima de la prenda (presillas del pantalón) */
+  patches?: string;
+  seams: string;
+  stitches: string;
   ribs?: string;
-  /** Dónde va la etiqueta del largo (cm desde arriba), si no es debajo de la manga */
-  largoLabelY?: number;
-}
-
-function topGeometry(largo: number, ancho: number): TopGeo {
-  const L = largo;
-  const r = clamp(ancho / largo, 0.62, 1.2);
-  const c = (L * r) / 2;
-  // 0 = calce justo, 1 = oversize (hombro caído, manga más abierta)
-  const t = clamp((r - 0.72) / (1.02 - 0.72), 0, 1);
-
-  const n = 0.09 * L + 0.17 * c;
-  const rb = 0.03 * L; // ancho del ribete del cuello
-  const d = 0.125 * L; // caída del cuello adelante (hasta la costura)
-  const bd = 0.026 * L; // caída del cuello atrás
-  const sw = lerp(0.87, 1.05, t) * c;
-  const sd = lerp(0.062, 0.075, t) * L;
-  const a = (lerp(24, 31, t) * Math.PI) / 180;
-  const sl = lerp(0.3, 0.24, t) * L;
-  const so = lerp(0.24, 0.265, t) * L;
-  const ad = lerp(0.34, 0.39, t) * L;
-
-  const dir: Pt = [Math.cos(a), Math.sin(a)];
-  const SP: Pt = [sw, sd];
-  const ST: Pt = [SP[0] + sl * dir[0], SP[1] + sl * dir[1]];
-  const SB: Pt = [ST[0] - so * dir[1], ST[1] + so * dir[0]];
-  const AP: Pt = [c, ad];
-
-  // Esquina de la axila redondeada
-  const k = 0.018 * L;
-  const ux = SB[0] - AP[0];
-  const uy = SB[1] - AP[1];
-  const ul = Math.hypot(ux, uy);
-  const nearAP: Pt = [AP[0] + (ux / ul) * k, AP[1] + (uy / ul) * k];
-  const hr = 0.008 * L;
-
-  const R = (p: Pt) => `${f(p[0])} ${f(p[1])}`;
-  const Lf = (p: Pt) => `${f(-p[0])} ${f(p[1])}`;
-
-  const outline = [
-    `M ${f(-n)} 0`,
-    `Q 0 ${f(bd * 2)} ${f(n)} 0`,
-    `L ${R(SP)}`,
-    `L ${R(ST)}`,
-    `L ${R(SB)}`,
-    `L ${R(nearAP)}`,
-    `Q ${R(AP)} ${f(c)} ${f(ad + k)}`,
-    `L ${f(c)} ${f(L - hr)}`,
-    `Q ${f(c)} ${f(L)} ${f(c - hr)} ${f(L)}`,
-    `L ${f(-c + hr)} ${f(L)}`,
-    `Q ${f(-c)} ${f(L)} ${f(-c)} ${f(L - hr)}`,
-    `L ${f(-c)} ${f(ad + k)}`,
-    `Q ${Lf(AP)} ${Lf(nearAP)}`,
-    `L ${Lf(SB)}`,
-    `L ${Lf(ST)}`,
-    `L ${Lf(SP)}`,
-    'Z',
-  ].join(' ');
-
-  // Interior del cuello: lo que se ve de la espalda entre el ribete de atrás y el de adelante
-  const ni = n - rb;
-  const y0 = rb * 0.5;
-  const backInnerMid = bd + rb * 0.85;
-  const backCtrl = 2 * backInnerMid - y0;
-  const di = d - rb;
-  const frontOpen = (from: number, to: number) =>
-    `C ${f(from)} ${f(y0 + 0.62 * (di - y0))} ${f(0.56 * from)} ${f(di)} 0 ${f(di)} ` +
-    `C ${f(0.56 * to)} ${f(di)} ${f(to)} ${f(y0 + 0.62 * (di - y0))} ${f(to)} ${f(y0)}`;
-  const inside = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)} ${frontOpen(ni, -ni)} Z`;
-  const backRib = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)}`;
-
-  const collar =
-    `M ${f(-n)} 0 C ${f(-n)} ${f(0.62 * d)} ${f(-0.56 * n)} ${f(d)} 0 ${f(d)} ` +
-    `C ${f(0.56 * n)} ${f(d)} ${f(n)} ${f(0.62 * d)} ${f(n)} 0`;
-
-  // Pespunte del cuello, apenas por debajo de la costura
-  const off = 0.012 * L;
-  const ns = n + off;
-  const shoulderY = (x: number) => (sd * (x - n)) / (sw - n);
-  const ds = d + off;
-  const collarStitch =
-    `M ${f(-ns)} ${f(shoulderY(ns))} C ${f(-ns)} ${f(0.62 * ds)} ${f(-0.56 * ns)} ${f(ds)} 0 ${f(ds)} ` +
-    `C ${f(0.56 * ns)} ${f(ds)} ${f(ns)} ${f(0.62 * ds)} ${f(ns)} ${f(shoulderY(ns))}`;
-
-  // Costura de la sisa (donde se une la manga)
-  const arm = (s: 1 | -1) =>
-    `M ${f(s * SP[0])} ${f(SP[1])} C ${f(s * (sw - 0.03 * c))} ${f(sd + 0.45 * (ad - sd))} ` +
-    `${f(s * lerp(sw, c, 0.7))} ${f(ad - 0.14 * (ad - sd))} ${f(s * c)} ${f(ad)}`;
-  const armholes = `${arm(1)} ${arm(-1)}`;
-
-  // Pespunte del puño, paralelo al borde de la manga
-  const ks = 0.028 * L;
-  const p1: Pt = [ST[0] - dir[0] * ks, ST[1] - dir[1] * ks];
-  const dot = (AP[0] - SB[0]) * dir[0] + (AP[1] - SB[1]) * dir[1];
-  const u = -ks / dot;
-  const p2: Pt = [SB[0] + (AP[0] - SB[0]) * u, SB[1] + (AP[1] - SB[1]) * u];
-  const sleeveStitches = `M ${R(p1)} L ${R(p2)} M ${Lf(p1)} L ${Lf(p2)}`;
-
-  const hy = L - 0.03 * L;
-  const hemStitch = `M ${f(-c + 0.4)} ${f(hy)} L ${f(c - 0.4)} ${f(hy)}`;
-
-  return {
-    L,
-    c,
-    X: Math.max(ST[0], SB[0], c),
-    n,
-    outline,
-    inside,
-    collar,
-    collarStitch,
-    backRib,
-    armholes,
-    sleeveStitches,
-    hemStitch,
-    chestY: ad + 0.04 * L,
-    sleeveBottomY: Math.max(SB[1], ST[1]),
-  };
+  cords?: string;
+  aglets?: string;
+  dots?: { p: P; r: number }[];
+  /** Cierre del zip hoodie: de dónde a dónde baja */
+  zipper?: [number, number];
+  largo: Measure;
+  ancho: Measure;
 }
 
 /**
- * Buzo (hoodies, sweaters, buzos): manga larga que cae en diagonal, puños y
- * cintura de elástico, cuello redondo con ribete. Cuanto más ancho que largo,
- * más caído el hombro y más corta la manga, como un buzo oversize.
+ * Encuadre de la prenda. La proporción se limita a un rango (un pantalón no
+ * queda como una tira ni un buzo como una franja) y se completa con aire.
  */
-function sweaterGeometry(largo: number, ancho: number): TopGeo {
-  const L = largo;
-  const r = clamp(ancho / largo, 0.7, 1.25);
-  const c = (L * r) / 2;
-  const t = clamp((r - 0.8) / (1.15 - 0.8), 0, 1);
-
-  const n = 0.085 * L + 0.14 * c;
-  const rb = 0.035 * L; // ribete del cuello
-  const d = 0.1 * L; // caída del cuello adelante
-  const bd = 0.024 * L;
-  const sw = lerp(0.9, 1.1, t) * c;
-  const sd = lerp(0.065, 0.085, t) * L;
-  const ad = lerp(0.3, 0.36, t) * L;
-  const a = (lerp(19, 25, t) * Math.PI) / 180; // la manga, abierta respecto de la vertical
-  const slen = lerp(0.8, 0.66, t) * L;
-  const cw = lerp(0.13, 0.14, t) * L; // ancho del puño
-  const hb = 0.075 * L; // cintura de elástico
-  const cb = 0.08 * L; // puño de elástico
-
-  const dir: Pt = [Math.sin(a), Math.cos(a)];
-  const inward: Pt = [-Math.cos(a), Math.sin(a)];
-  const SP: Pt = [sw, sd];
-  const CO: Pt = [SP[0] + slen * dir[0], SP[1] + slen * dir[1]];
-  const CI: Pt = [CO[0] + cw * inward[0], CO[1] + cw * inward[1]];
-  const AP: Pt = [c, ad];
-  const hemIn = 0.955 * c; // el elástico de abajo ciñe un poco
-
-  const k = 0.02 * L;
-  const ux = CI[0] - AP[0];
-  const uy = CI[1] - AP[1];
-  const ul = Math.hypot(ux, uy);
-  const nearAP: Pt = [AP[0] + (ux / ul) * k, AP[1] + (uy / ul) * k];
-  const hr = 0.008 * L;
-
-  const R = (p: Pt) => `${f(p[0])} ${f(p[1])}`;
-  const Lf = (p: Pt) => `${f(-p[0])} ${f(p[1])}`;
-
-  const outline = [
-    `M ${f(-n)} 0`,
-    `Q 0 ${f(bd * 2)} ${f(n)} 0`,
-    `L ${R(SP)}`,
-    `L ${R(CO)}`,
-    `L ${R(CI)}`,
-    `L ${R(nearAP)}`,
-    `Q ${R(AP)} ${f(c)} ${f(ad + k)}`,
-    `L ${f(c)} ${f(L - hb)}`,
-    `L ${f(hemIn)} ${f(L - hr)}`,
-    `Q ${f(hemIn)} ${f(L)} ${f(hemIn - hr)} ${f(L)}`,
-    `L ${f(-hemIn + hr)} ${f(L)}`,
-    `Q ${f(-hemIn)} ${f(L)} ${f(-hemIn)} ${f(L - hr)}`,
-    `L ${f(-c)} ${f(L - hb)}`,
-    `L ${f(-c)} ${f(ad + k)}`,
-    `Q ${Lf(AP)} ${Lf(nearAP)}`,
-    `L ${Lf(CI)}`,
-    `L ${Lf(CO)}`,
-    `L ${Lf(SP)}`,
-    'Z',
-  ].join(' ');
-
-  // Cuello: interior de la espalda y ribete adelante (como la remera, más cerrado)
-  const ni = n - rb;
-  const y0 = rb * 0.5;
-  const backInnerMid = bd + rb * 0.85;
-  const backCtrl = 2 * backInnerMid - y0;
-  const di = d - rb;
-  const frontOpen = (from: number, to: number) =>
-    `C ${f(from)} ${f(y0 + 0.62 * (di - y0))} ${f(0.56 * from)} ${f(di)} 0 ${f(di)} ` +
-    `C ${f(0.56 * to)} ${f(di)} ${f(to)} ${f(y0 + 0.62 * (di - y0))} ${f(to)} ${f(y0)}`;
-  const inside = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)} ${frontOpen(ni, -ni)} Z`;
-  const backRib = `M ${f(-ni)} ${f(y0)} Q 0 ${f(backCtrl)} ${f(ni)} ${f(y0)}`;
-  const collar =
-    `M ${f(-n)} 0 C ${f(-n)} ${f(0.62 * d)} ${f(-0.56 * n)} ${f(d)} 0 ${f(d)} ` +
-    `C ${f(0.56 * n)} ${f(d)} ${f(n)} ${f(0.62 * d)} ${f(n)} 0`;
-  const off = 0.012 * L;
-  const ns = n + off;
-  const shoulderY = (x: number) => (sd * (x - n)) / (sw - n);
-  const ds = d + off;
-  const collarStitch =
-    `M ${f(-ns)} ${f(shoulderY(ns))} C ${f(-ns)} ${f(0.62 * ds)} ${f(-0.56 * ns)} ${f(ds)} 0 ${f(ds)} ` +
-    `C ${f(0.56 * ns)} ${f(ds)} ${f(ns)} ${f(0.62 * ds)} ${f(ns)} ${f(shoulderY(ns))}`;
-
-  // Costura de la sisa
-  const arm = (s: 1 | -1) =>
-    `M ${f(s * SP[0])} ${f(SP[1])} C ${f(s * (sw - 0.03 * c))} ${f(sd + 0.45 * (ad - sd))} ` +
-    `${f(s * lerp(sw, c, 0.7))} ${f(ad - 0.14 * (ad - sd))} ${f(s * c)} ${f(ad)}`;
-  const armholes = `${arm(1)} ${arm(-1)}`;
-
-  // Puños: la costura del elástico, paralela al borde, y el acanalado
-  const cuffO: Pt = [CO[0] - dir[0] * cb, CO[1] - dir[1] * cb];
-  const cuffI: Pt = [CI[0] - dir[0] * cb, CI[1] - dir[1] * cb];
-  const cuff = (s: 1 | -1) => `M ${f(s * cuffO[0])} ${f(cuffO[1])} L ${f(s * cuffI[0])} ${f(cuffI[1])}`;
-  const cuffRibs = (s: 1 | -1) =>
-    Array.from({ length: 4 }, (_, i) => {
-      const q = (i + 1) / 5;
-      const top: Pt = [lerp(cuffO[0], cuffI[0], q), lerp(cuffO[1], cuffI[1], q)];
-      const bot: Pt = [lerp(CO[0], CI[0], q), lerp(CO[1], CI[1], q)];
-      return `M ${f(s * top[0])} ${f(top[1] + 0.15 * cb * dir[1])} L ${f(s * bot[0])} ${f(bot[1] - 0.15 * cb * dir[1])}`;
-    }).join(' ');
-
-  // Cintura de elástico abajo
-  const hemBand = `M ${f(-c)} ${f(L - hb)} L ${f(c)} ${f(L - hb)}`;
-  const count = Math.max(10, Math.round((2 * c) / 2.6));
-  const hemRibs = Array.from({ length: count - 1 }, (_, i) => {
-    const x = -hemIn + ((i + 1) * 2 * hemIn) / count;
-    return `M ${f(x)} ${f(L - hb + 0.2 * hb)} L ${f(x)} ${f(L - 0.2 * hb)}`;
-  }).join(' ');
-
-  return {
-    L,
-    c,
-    X: Math.max(CO[0], CI[0], c),
-    n,
-    outline,
-    inside,
-    collar,
-    collarStitch,
-    backRib,
-    armholes,
-    sleeveStitches: '',
-    hemStitch: '',
-    bands: `${cuff(1)} ${cuff(-1)} ${hemBand}`,
-    ribs: `${cuffRibs(1)} ${cuffRibs(-1)} ${hemRibs}`,
-    chestY: ad + 0.05 * L,
-    sleeveBottomY: Math.max(CO[1], CI[1]),
-    // Entre el hombro y la axila la manga todavía no llegó a la línea del largo
-    largoLabelY: lerp(0.42, 0.37, t) * L,
-  };
-}
-
-interface BottomGeo {
-  L: number;
-  w: number; // medio ancho de cintura
-  X: number;
-  ho: number; // borde de afuera del ruedo
-  outline: string;
-  band: string;
-  bandStitch: string;
-  loops: { x: number; y: number; w: number; h: number }[];
-  button: { x: number; y: number; r: number };
-  fly: string;
-  flyStitch: string;
-  pockets: string;
-  hemStitch: string;
-  /** Cintura elástica: frunces y cordón */
-  gathers: string;
-  cord: string;
-  aglets: { x: number; y: number; w: number; h: number }[];
-  bh: number;
-  t: number;
-}
-
-function bottomGeometry(largo: number, ancho: number, elastic = false): BottomGeo {
-  const L = largo;
-  const w = (clamp(ancho / largo, 0.32, 1.05) * L) / 2;
-  // 0 = short, 1 = pantalón largo
-  const t = clamp((L / w - 2.4) / (4.6 - 2.4), 0, 1);
-
-  const bh = (elastic ? 0.24 : 0.17) * w;
-  const hp = lerp(1.08, 1.07, t) * w; // cadera
-  const hy = 0.8 * w;
-  const cr = Math.min(1.25 * w, 0.72 * L); // tiro
-  const ho = lerp(1.12, 1.02, t) * w;
-  const hemW = lerp(0.95, 0.84, t) * w;
-  const hi = ho - hemW;
-  const g = 0.018 * w; // ancho de la entrepierna (curva chica)
-
-  const side = (s: 1 | -1, reverse: boolean) => {
-    const pts = [
-      `C ${f(s * (w + (hp - w) * 0.9))} ${f(0.35 * hy)} ${f(s * hp)} ${f(0.7 * hy)} ${f(s * hp)} ${f(hy)}`,
-      `C ${f(s * hp)} ${f(hy + 0.35 * (L - hy))} ${f(s * ho)} ${f(L - 0.4 * (L - hy))} ${f(s * ho)} ${f(L)}`,
-    ];
-    if (!reverse) return pts.join(' ');
-    // mismo trazo, del ruedo a la cintura
-    return (
-      `C ${f(s * ho)} ${f(L - 0.4 * (L - hy))} ${f(s * hp)} ${f(hy + 0.35 * (L - hy))} ${f(s * hp)} ${f(hy)} ` +
-      `C ${f(s * hp)} ${f(0.7 * hy)} ${f(s * (w + (hp - w) * 0.9))} ${f(0.35 * hy)} ${f(s * w)} 0`
-    );
-  };
-  const inseamUp = (s: 1 | -1) =>
-    `C ${f(s * hi)} ${f(L - 0.55 * (L - cr))} ${f(s * (g * 2))} ${f(cr + 0.18 * (L - cr))} ${f(s * g)} ${f(cr + 0.8 * g + 0.012 * L)}`;
-  const inseamDown = (s: 1 | -1) =>
-    `C ${f(s * (g * 2))} ${f(cr + 0.18 * (L - cr))} ${f(s * hi)} ${f(L - 0.55 * (L - cr))} ${f(s * hi)} ${f(L)}`;
-
-  const outline = [
-    `M ${f(-w)} 0`,
-    `L ${f(w)} 0`,
-    side(1, false),
-    `L ${f(hi)} ${f(L)}`,
-    inseamUp(1),
-    `Q 0 ${f(cr - 0.004 * L)} ${f(-g)} ${f(cr + 0.8 * g + 0.012 * L)}`,
-    inseamDown(-1),
-    `L ${f(-ho)} ${f(L)}`,
-    side(-1, true),
-    'Z',
-  ].join(' ');
-
-  const bandX = w + (hp - w) * 0.16;
-  const band = `M ${f(-bandX)} ${f(bh)} L ${f(bandX)} ${f(bh)}`;
-  const st = 0.22 * bh;
-  const bandStitch = `M ${f(-w + 0.3)} ${f(st)} L ${f(w - 0.3)} ${f(st)} M ${f(-bandX + 0.3)} ${f(bh - st)} L ${f(bandX - 0.3)} ${f(bh - st)}`;
-
-  const lw = 0.07 * w;
-  const lh = bh * 1.25;
-  const loops = [-0.82, -0.4, 0.4, 0.82].map((p) => ({ x: p * w - lw / 2, y: -bh * 0.12, w: lw, h: lh }));
-
-  const fly = `M 0 ${f(bh)} L 0 ${f(cr * 0.86)}`;
-  const fx = 0.17 * w;
-  const flyStitch = `M ${f(fx)} ${f(bh + 0.15 * bh)} L ${f(fx)} ${f(cr * 0.6)} Q ${f(fx)} ${f(cr * 0.78)} 0.3 ${f(cr * 0.82)}`;
-
-  const py = 0.74 * w;
-  const pocketSide = w + (hp - w) * 0.97;
-  const pocket = (s: 1 | -1) =>
-    `M ${f(s * 0.58 * w)} ${f(bh)} C ${f(s * 0.6 * w)} ${f(0.52 * w)} ${f(s * 0.82 * w)} ${f(0.7 * w)} ${f(s * pocketSide)} ${f(py)}`;
-  const pockets = `${pocket(1)} ${pocket(-1)}`;
-
-  const hs = clamp(0.02 * L, 1.1, 2.3);
-  const hemStitch =
-    `M ${f(hi + 0.4)} ${f(L - hs)} L ${f(ho - 0.4)} ${f(L - hs)} ` + `M ${f(-hi - 0.4)} ${f(L - hs)} L ${f(-ho + 0.4)} ${f(L - hs)}`;
-
-  // Elástico: frunces cortos repartidos en la pretina y un cordón con dos puntas
-  const gathers = Array.from({ length: 13 }, (_, i) => {
-    const x = -w + ((i + 1) * 2 * w) / 14;
-    if (Math.abs(x) < 0.16 * w) return '';
-    return `M ${f(x)} ${f(0.26 * bh)} L ${f(x)} ${f(0.74 * bh)}`;
-  }).join(' ');
-  const cy0 = bh * 0.62;
-  const cl = clamp(0.62 * w, 7, 14);
-  const cord =
-    `M ${f(-0.07 * w)} ${f(cy0)} C ${f(-0.12 * w)} ${f(cy0 + 0.35 * cl)} ${f(-0.15 * w)} ${f(cy0 + 0.7 * cl)} ${f(-0.13 * w)} ${f(cy0 + cl)} ` +
-    `M ${f(0.07 * w)} ${f(cy0)} C ${f(0.12 * w)} ${f(cy0 + 0.35 * cl)} ${f(0.1 * w)} ${f(cy0 + 0.75 * cl)} ${f(0.15 * w)} ${f(cy0 + 1.05 * cl)}`;
-  const aw = 0.035 * w;
-  const ah = 0.16 * cl;
-  const aglets = [
-    { x: -0.13 * w - aw / 2, y: cy0 + cl - 0.1 * ah, w: aw, h: ah },
-    { x: 0.15 * w - aw / 2, y: cy0 + 1.05 * cl - 0.1 * ah, w: aw, h: ah },
-  ];
-
-  return {
-    L,
-    w,
-    X: Math.max(hp, ho),
-    ho,
-    outline,
-    band,
-    bandStitch,
-    loops,
-    button: { x: 0, y: bh / 2, r: 0.3 * bh },
-    fly,
-    flyStitch,
-    pockets,
-    hemStitch,
-    gathers,
-    cord,
-    aglets,
-    bh,
-    t,
-  };
-}
-
-// ── Cotas ───────────────────────────────────────────────────────────────────
-
-/** Ancho aproximado del texto (SF Pro semibold) para dimensionar la píldora. */
-function textWidth(s: string, size: number) {
-  let wdt = 0;
-  for (const ch of s) {
-    if (/[0-9]/.test(ch)) wdt += 0.6;
-    else if (ch === ',' || ch === '.') wdt += 0.28;
-    else if (ch === ' ') wdt += 0.27;
-    else if (ch === 'm') wdt += 0.86;
-    else if (ch === '—') wdt += 0.9;
-    else wdt += 0.55;
+function frame(points: P[], pad = 12): Flat['box'] {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  let x = Math.min(...xs) - pad;
+  let y = Math.min(...ys) - pad;
+  let w = Math.max(...xs) + pad - x;
+  let h = Math.max(...ys) + pad - y;
+  const ratio = Math.min(1.4, Math.max(0.9, w / h));
+  if (w / h < ratio) {
+    x -= (h * ratio - w) / 2;
+    w = h * ratio;
+  } else {
+    y -= (w / ratio - h) / 2;
+    h = w / ratio;
   }
-  return wdt * size;
+  return [r1(x), r1(y), r1(w), r1(h)];
 }
 
-function Arrow({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number }) {
-  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
-  const ux = (x2 - x1) / len;
-  const uy = (y2 - y1) / len;
-  const al = Math.min(7, len / 3);
-  const aw = al * 0.46;
-  const head = (tx: number, ty: number, dx: number, dy: number) =>
-    `M ${f(tx)} ${f(ty)} L ${f(tx - dx * al - dy * aw)} ${f(ty - dy * al + dx * aw)} L ${f(tx - dx * al + dy * aw)} ${f(ty - dy * al - dx * aw)} Z`;
-  return (
-    <g>
-      <line
-        x1={f(x1 + ux * (al - 1))}
-        y1={f(y1 + uy * (al - 1))}
-        x2={f(x2 - ux * (al - 1))}
-        y2={f(y2 - uy * (al - 1))}
-        stroke={BLUE}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-      <path d={`${head(x1, y1, -ux, -uy)} ${head(x2, y2, ux, uy)}`} fill={BLUE} stroke={BLUE} strokeWidth={0.8} strokeLinejoin="round" />
-    </g>
+// ── Prendas de arriba ────────────────────────────────────────────────────────
+
+interface TopSpec {
+  y0: number; // hombro junto al cuello
+  n: number; // medio cuello, hasta la costura
+  shoulder: P; // punta del hombro (lado izquierdo)
+  armpit: P; // axila (lado izquierdo)
+  hem: number; // borde de abajo
+  band: number; // alto de la cintura acanalada; 0 = ruedo con pespunte
+  angle: number; // inclinación de la manga, en grados desde la vertical
+  sleeve: number; // largo de la manga por arriba
+  cuffW: number; // ancho de la manga en la punta
+  cuff: number; // alto del puño acanalado; 0 = manga corta con pespunte
+}
+
+function topBody(t: TopSpec) {
+  const rad = (t.angle * Math.PI) / 180;
+  const d: P = [-Math.sin(rad), Math.cos(rad)]; // a lo largo de la manga
+  const across: P = [Math.cos(rad), Math.sin(rad)]; // de arriba a abajo de la manga
+  const N: P = [CX - t.n, t.y0];
+  const S = t.shoulder;
+  const A = t.armpit;
+  const O = add(S, mul(d, t.sleeve));
+  const I = add(O, mul(across, t.cuffW));
+  const under = unit(sub(A, I));
+  const bandTop = t.hem - t.band;
+  const H: P = [A[0] + (t.band ? 2.5 : 0), t.hem];
+
+  const half: P[] = [S, O, I, A, ...(t.band ? [[A[0], bandTop] as P] : []), H];
+  const body = `M ${s(N)} ${[...half, ...half.map(mir).reverse()].map((p) => `L ${s(p)}`).join(' ')} L ${s(mir(N))}`;
+
+  // Puño acanalado, o pespunte de la manga corta
+  const O2 = sub(O, mul(d, t.cuff || 4.5));
+  const I2 = meet(O2, across, I, under);
+  const cuffLine = both((m) => `M ${s(m(O2))} L ${s(m(I2))}`);
+
+  const dy = A[1] - S[1];
+  const armhole = both(
+    (m) => `M ${s(m(S))} C ${s(m([S[0] + 1, S[1] + dy * 0.45]))} ${s(m([A[0] + 2, A[1] - dy * 0.25]))} ${s(m(A))}`
   );
+
+  const ribs: string[] = [];
+  if (t.cuff) {
+    for (let i = 1; i < 5; i++) ribs.push(both((m) => `M ${s(m(lerp(O, I, i / 5)))} L ${s(m(lerp(O2, I2, i / 5)))}`));
+  }
+  const x0 = A[0];
+  const x1 = 2 * CX - A[0];
+  if (t.band) {
+    const count = Math.round((x1 - x0) / 5.5);
+    for (let i = 1; i < count; i++) {
+      const x = x0 + ((x1 - x0) * i) / count;
+      ribs.push(`M ${r1(x)} ${r1(bandTop + 0.8)} L ${r1(x)} ${r1(t.hem - 0.8)}`);
+    }
+  }
+
+  return {
+    N,
+    A,
+    O,
+    I,
+    bandTop,
+    body,
+    seams: [armhole, t.cuff ? cuffLine : '', t.band ? `M ${r1(x0)} ${r1(bandTop)} L ${r1(x1)} ${r1(bandTop)}` : ''].join(' '),
+    stitches: [t.cuff ? '' : cuffLine, t.band ? '' : `M ${r1(x0)} ${r1(t.hem - 4.5)} L ${r1(x1)} ${r1(t.hem - 4.5)}`].join(' '),
+    ribs: ribs.join(' '),
+  };
 }
 
-function Label({
-  x,
-  y,
-  value,
-  name,
-  namePos = 'below',
-  halo = '#fff',
-  compact,
-  shadowId,
-}: {
-  x: number;
-  y: number;
-  value: string;
-  name: string;
-  namePos?: 'below' | 'above';
-  /** Color del contorno del nombre: lo separa de la línea de la cota que pasa por detrás */
-  halo?: string;
-  compact?: boolean;
-  shadowId: string;
-}) {
-  const size = compact ? 17 : 15;
-  const h = compact ? 30 : 26;
-  const w = Math.max(h * 1.6, textWidth(value, size) + (compact ? 24 : 22));
+/** Las dos medidas de arriba; `free` es hasta dónde baja el lugar libre para el número del largo */
+function topMeasures(t: TopSpec, A: P, free: number): Pick<Flat, 'largo' | 'ancho'> {
+  const ay = A[1] + 5;
+  const x = CX + t.n;
+  return {
+    largo: { a: [x, t.y0], b: [x, t.hem], badge: [x, (ay + free) / 2] },
+    ancho: { a: [A[0], ay], b: [2 * CX - A[0], ay], badge: [(A[0] + CX) / 2, ay] },
+  };
+}
+
+/** Cuello redondo con su ribete */
+function crew(N: P, y0: number, rib: number, drop: number) {
+  const OL: P = [N[0] + rib * 0.9, y0 - 1.5];
+  const OR = mir(OL);
+  // De izquierda a derecha, desde (x0, y), bajando `depth` en el centro
+  const front = (x0: number, y: number, depth: number) =>
+    `C ${r1(x0 + 1.5)} ${r1(y + depth * 0.78)} ${r1(CX - (CX - x0) * 0.55)} ${r1(y + depth)} ${CX} ${r1(y + depth)} ` +
+    `C ${r1(CX + (CX - x0) * 0.55)} ${r1(y + depth)} ${r1(2 * CX - x0 - 1.5)} ${r1(y + depth * 0.78)} ${r1(2 * CX - x0)} ${r1(y)}`;
+  const backY = y0 + 5;
+  return {
+    // Cierra la silueta por la espalda, del lado derecho al izquierdo
+    close: `L ${s(OR)} Q ${CX} ${r1(backY)} ${s(OL)} Z`,
+    inside: `M ${s(OR)} Q ${CX} ${r1(backY)} ${s(OL)} ${front(OL[0], OL[1], drop - rib)} Z`,
+    seams:
+      `M ${s(N)} ${front(N[0], y0, drop)} M ${s(OL)} ${front(OL[0], OL[1], drop - rib)} ` +
+      `M ${s(add(OL, [2, 2]))} Q ${CX} ${r1(backY + rib * 0.7)} ${s(add(OR, [-2, 2]))}`,
+    stitches: `M ${s(add(N, [0.4, 3]))} ${front(N[0] + 0.4, y0 + 3, drop)}`,
+  };
+}
+
+/** Capucha vista de frente, con la abertura que termina en punta sobre el pecho */
+function hood(N: P, y0: number, h: number, v: number) {
+  const n = CX - N[0];
+  const top = y0 - h;
+  // Abertura de la cara: `w` de ancho a media altura, `gap` debajo del borde de arriba
+  const opening = (w: number, gap: number, tip: number) => {
+    const half = (m: (p: P) => P) =>
+      `C ${s(m([CX - 10, tip - 6]))} ${s(m([CX - w + 1, y0 - 4]))} ${s(m([CX - w, y0 - h * 0.45]))} ` +
+      `C ${s(m([CX - w + 1, top + gap + 8]))} ${s(m([CX - 12, top + gap]))} ${s(m([CX, top + gap]))}`;
+    // El lado derecho se recorre al revés: de arriba hacia la punta
+    const right =
+      `C ${s([CX + 12, top + gap])} ${s([CX + w - 1, top + gap + 8])} ${s([CX + w, y0 - h * 0.45])} ` +
+      `C ${s([CX + w - 1, y0 - 4])} ${s([CX + 10, tip - 6])} ${s([CX, tip])}`;
+    return `M ${CX} ${r1(tip)} ${half(same)} ${right}`;
+  };
+  return {
+    close:
+      `C ${s([CX + n + 14, y0 - h * 0.3])} ${s([CX + n * 1.15, top])} ${s([CX, top])} ` +
+      `C ${s([CX - n * 1.15, top])} ${s([CX - n - 14, y0 - h * 0.3])} ${s(N)} Z`,
+    inside: `${opening(n - 3, 8, y0 + v)} Z`,
+    seams:
+      // Borde de la capucha y costura con el cuerpo
+      `${opening(n + 0.5, 4.5, y0 + v + 3)} ` +
+      `M ${s(N)} C ${s([N[0] + 1, y0 + 13])} ${s([CX - 11, y0 + v + 7])} ${s([CX, y0 + v + 7])} ` +
+      `C ${s([CX + 11, y0 + v + 7])} ${s([2 * CX - N[0] - 1, y0 + 13])} ${s(mir(N))}`,
+    top,
+  };
+}
+
+function cords(y0: number) {
+  const L: P = [CX - 12.5, y0 + 7];
+  const R = mir(L);
+  return {
+    cords:
+      `M ${s(L)} C ${s([CX - 13.5, y0 + 20])} ${s([CX - 15.5, y0 + 34])} ${s([CX - 13.5, y0 + 46])} ` +
+      `M ${s(R)} C ${s([CX + 13, y0 + 22])} ${s([CX + 12.5, y0 + 36])} ${s([CX + 14.5, y0 + 50])}`,
+    aglets: `M ${s([CX - 13.5, y0 + 46])} L ${s([CX - 13, y0 + 52])} M ${s([CX + 14.5, y0 + 50])} L ${s([CX + 15, y0 + 56])}`,
+    dots: [
+      { p: L, r: 1.9 },
+      { p: R, r: 1.9 },
+    ],
+  };
+}
+
+const REMERA: TopSpec = {
+  y0: 30, n: 21, shoulder: [62, 40], armpit: [55, 86], hem: 200, band: 0,
+  angle: 58, sleeve: 50, cuffW: 34, cuff: 0,
+};
+
+const ABRIGO: TopSpec = {
+  y0: 66, n: 27, shoulder: [46, 82], armpit: [50, 132], hem: 232, band: 15,
+  angle: 28, sleeve: 120, cuffW: 22, cuff: 13,
+};
+
+function remera(): Flat {
+  const b = topBody(REMERA);
+  const c = crew(b.N, REMERA.y0, 4, 20);
+  const m = topMeasures(REMERA, b.A, REMERA.hem);
+  return {
+    box: frame([b.O, b.I, mir(b.O), mir(b.I), [CX, REMERA.y0 - 4], [CX, REMERA.hem]]),
+    outline: `${b.body} ${c.close}`,
+    inside: c.inside,
+    seams: `${b.seams} ${c.seams}`,
+    stitches: `${b.stitches} ${c.stitches}`,
+    ...m,
+  };
+}
+
+function sweater(): Flat {
+  const t: TopSpec = { ...ABRIGO, y0: 30, n: 20, shoulder: [46, 46], armpit: [50, 96], hem: 196 };
+  const b = topBody(t);
+  const c = crew(b.N, t.y0, 6, 17);
+  return {
+    box: frame([b.O, b.I, mir(b.O), mir(b.I), [CX, t.y0 - 4], [CX, t.hem]]),
+    outline: `${b.body} ${c.close}`,
+    inside: c.inside,
+    seams: `${b.seams} ${c.seams}`,
+    stitches: `${b.stitches} ${c.stitches}`,
+    ribs: b.ribs,
+    ...topMeasures(t, b.A, b.bandTop),
+  };
+}
+
+function hoodie(zip: boolean): Flat {
+  const t = ABRIGO;
+  const b = topBody(t);
+  const v = 16;
+  const h = hood(b.N, t.y0, 47, v);
+  const k = cords(t.y0);
+  // Bolsillo bajo: deja lugar para el número del largo entre el ancho y el bolsillo
+  const pTop = b.bandTop - 34;
+  // Bolsillo canguro, o uno a cada lado del cierre
+  const pocket = zip
+    ? both((m) => `M ${s(m([CX - 2.2, pTop]))} L ${s(m([CX - 30, pTop]))} L ${s(m([CX - 46, b.bandTop]))}`)
+    : `M ${s([CX - 46, b.bandTop])} L ${s([CX - 30, pTop])} L ${s([CX + 30, pTop])} L ${s([CX + 46, b.bandTop])}`;
+  const pocketStitch = zip
+    ? both((m) => `M ${s(m([CX - 3, pTop + 3]))} L ${s(m([CX - 28.6, pTop + 3]))} L ${s(m([CX - 42.6, b.bandTop]))}`)
+    : `M ${s([CX - 42.6, b.bandTop])} L ${s([CX - 28.6, pTop + 3])} L ${s([CX + 28.6, pTop + 3])} L ${s([CX + 42.6, b.bandTop])}`;
+  return {
+    box: frame([b.O, b.I, mir(b.O), mir(b.I), [CX, h.top], [CX, t.hem]]),
+    outline: `${b.body} ${h.close}`,
+    inside: h.inside,
+    seams: `${b.seams} ${h.seams} ${pocket}`,
+    stitches: `${b.stitches} ${pocketStitch}`,
+    ribs: b.ribs,
+    ...k,
+    zipper: zip ? [t.y0 + v, t.hem] : undefined,
+    ...topMeasures(t, b.A, pTop),
+  };
+}
+
+// ── Prendas de abajo ─────────────────────────────────────────────────────────
+
+interface BottomSpec {
+  y0: number; // borde de arriba de la cintura
+  w: number; // media cintura
+  wb: number; // alto de la pretina
+  hip: number; // media cadera
+  crotch: number; // tiro (y de la entrepierna)
+  hem: number; // ruedo
+  out: number; // ruedo, lado de afuera (distancia al centro)
+  inner: number; // ruedo, lado de adentro (distancia al centro)
+}
+
+function bottom(b: BottomSpec, elastic: boolean): Flat {
+  const W0: P = [CX - b.w, b.y0];
+  const W1: P = [CX - b.w, b.y0 + b.wb];
+  const Hp: P = [CX - b.hip, b.y0 + b.wb + 26];
+  const Ho: P = [CX - b.out, b.hem];
+  const Hi: P = [CX - b.inner, b.hem];
+  const C: P = [CX, b.crotch];
+  const c1: P = [W1[0] - 1.5, W1[1] + 9];
+  const c2: P = [Hp[0], Hp[1] - 10];
+
+  const outline =
+    `M ${s(W0)} L ${s(mir(W0))} L ${s(mir(W1))} C ${s(mir(c1))} ${s(mir(c2))} ${s(mir(Hp))} ` +
+    `L ${s(mir(Ho))} L ${s(mir(Hi))} L ${s(C)} L ${s(Hi)} L ${s(Ho)} L ${s(Hp)} C ${s(c2)} ${s(c1)} ${s(W1)} Z`;
+
+  const seams = [`M ${s(W1)} L ${s(mir(W1))}`, `M ${s([CX, W1[1]])} L ${s(C)}`];
+  const stitches = [both((m) => `M ${s(m([Ho[0] + 0.4, b.hem - 5]))} L ${s(m([Hi[0] - 0.2, b.hem - 5]))}`)];
+  const ribs: string[] = [];
+  let patches: string | undefined;
+  let extra: Partial<Flat> = {};
+
+  if (elastic) {
+    // Cintura elástica fruncida, cordón y bolsillos al costado
+    for (let x = W0[0] + 4; x < 2 * CX - W0[0] - 2; x += 4) ribs.push(`M ${r1(x)} ${r1(b.y0 + 1.5)} L ${r1(x)} ${r1(W1[1] - 1.5)}`);
+    seams.push(both((m) => `M ${s(m([W1[0] + 4, W1[1] + 3]))} L ${s(m([Hp[0] + 3.5, Hp[1] + 14]))}`));
+    const L: P = [CX - 4.5, W1[1] - 3.5];
+    extra = {
+      cords:
+        `M ${s(L)} C ${s([CX - 6, W1[1] + 5])} ${s([CX - 8, W1[1] + 12])} ${s([CX - 7, W1[1] + 20])} ` +
+        `M ${s(mir(L))} C ${s([CX + 5, W1[1] + 6])} ${s([CX + 5.5, W1[1] + 14])} ${s([CX + 8, W1[1] + 22])}`,
+      aglets: `M ${s([CX - 7, W1[1] + 20])} L ${s([CX - 6.6, W1[1] + 25])} M ${s([CX + 8, W1[1] + 22])} L ${s([CX + 8.5, W1[1] + 27])}`,
+      dots: [
+        { p: L, r: 1.6 },
+        { p: mir(L), r: 1.6 },
+      ],
+    };
+  } else {
+    // Pretina de jean: presillas, botón, bragueta y bolsillos
+    stitches.push(`M ${s([W0[0] + 1, b.y0 + 3])} L ${s([2 * CX - W0[0] - 1, b.y0 + 3])}`);
+    stitches.push(`M ${s([CX + 8, W1[1]])} L ${s([CX + 8, C[1] - 22])} Q ${s([CX + 8, C[1] - 11])} ${s([CX, C[1] - 8])}`);
+    seams.push(both((m) => `M ${s(m([W1[0] + 13, W1[1]]))} Q ${s(m([W1[0] + 13, W1[1] + 16]))} ${s(m([Hp[0] + 0.6, W1[1] + 20]))}`));
+    patches = [CX - 26, CX + 26, W0[0] + 4, 2 * CX - W0[0] - 4]
+      .map((x) => `M ${r1(x - 1.6)} ${r1(b.y0 - 1.5)} h 3.2 v ${r1(b.wb + 4)} h -3.2 Z`)
+      .join(' ');
+    extra = { dots: [{ p: [CX, b.y0 + b.wb / 2], r: 2.6 }] };
+  }
+
+  // Largo por el costado, afuera; ancho de la cintura, arriba
+  const x = CX + Math.max(b.out, b.hip) + 13;
+  const y = b.y0 - 13;
+  const largo: Measure = {
+    a: [x, b.y0],
+    b: [x, b.hem],
+    badge: [x, (b.y0 + b.hem) / 2],
+    ext: `M ${r1(CX + b.w + 3)} ${r1(b.y0)} L ${r1(x + 5)} ${r1(b.y0)} M ${r1(CX + b.out + 3)} ${r1(b.hem)} L ${r1(x + 5)} ${r1(b.hem)}`,
+  };
+  const ancho: Measure = {
+    a: [CX - b.w, y],
+    b: [CX + b.w, y],
+    badge: [CX, y],
+    ext: both((m) => `M ${s(m([CX - b.w, b.y0 - 3]))} L ${s(m([CX - b.w, y - 5]))}`),
+  };
+
+  return {
+    box: frame([Ho, mir(Ho), mir(Hp), [x + BADGE, b.hem], [CX, y - BADGE]]),
+    outline,
+    patches,
+    seams: seams.join(' '),
+    stitches: stitches.join(' '),
+    ribs: ribs.join(' '),
+    ...extra,
+    largo,
+    ancho,
+  };
+}
+
+const PANTALON: BottomSpec = { y0: 30, w: 40, wb: 10, hip: 46, crotch: 110, hem: 236, out: 48, inner: 6 };
+const SHORT: BottomSpec = { y0: 30, w: 40, wb: 12, hip: 47, crotch: 96, hem: 134, out: 54, inner: 6 };
+
+// ── Dibujo ───────────────────────────────────────────────────────────────────
+
+const cache = new Map<string, Flat>();
+
+/** Pantalón: jean por defecto; short: cintura elástica por defecto */
+function flatFor(kind: GarmentKind, waist?: 'button' | 'elastic'): Flat {
+  const key = `${kind}-${waist ?? ''}`;
+  let f = cache.get(key);
+  if (!f) {
+    f =
+      kind === 'remera' ? remera()
+      : kind === 'sweater' ? sweater()
+      : kind === 'hoodie' ? hoodie(false)
+      : kind === 'zip-hoodie' ? hoodie(true)
+      : kind === 'short' ? bottom(SHORT, waist !== 'button')
+      : bottom(PANTALON, waist === 'elastic');
+    cache.set(key, f);
+  }
+  return f;
+}
+
+const NAMES: Record<GarmentKind, string> = {
+  remera: 'Remera',
+  hoodie: 'Hoodie',
+  sweater: 'Sweater',
+  'zip-hoodie': 'Zip hoodie',
+  pantalon: 'Pantalón',
+  short: 'Short',
+};
+
+const line = { vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+
+function Garment({ f, weight }: { f: Flat; weight: number }) {
+  const detail = { ...line, fill: 'none', stroke: INK, strokeOpacity: 0.42, strokeWidth: weight * 0.66 };
   return (
-    <g transform={`translate(${f(x)} ${f(y)})`}>
-      <rect
-        x={f(-w / 2)}
-        y={f(-h / 2)}
-        width={f(w)}
-        height={h}
-        rx={h / 2}
-        fill="#fff"
-        stroke="rgba(0,0,0,0.08)"
-        strokeWidth={0.75}
-        filter={`url(#${shadowId})`}
-      />
-      <text
-        x={0}
-        y={0.5}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={size}
-        fontWeight={600}
-        fill={INK}
-        style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}
-      >
-        {value}
-      </text>
-      {!compact && (
-        <text
-          x={0}
-          y={namePos === 'below' ? h / 2 + 15 : -h / 2 - 7}
-          textAnchor="middle"
-          fontSize={12.5}
-          fontWeight={600}
-          fill={LABEL_GRAY}
-          stroke={halo}
-          strokeWidth={5}
-          strokeLinejoin="round"
-          paintOrder="stroke"
-          style={{ letterSpacing: '0.01em' }}
-        >
-          {name}
-        </text>
+    <>
+      <path d={f.outline} fill="#fff" stroke={INK} strokeWidth={weight} {...line} />
+      {f.inside && <path d={f.inside} fill={INSIDE} stroke={INK} strokeOpacity={0.55} strokeWidth={weight * 0.75} {...line} />}
+      {f.ribs && <path d={f.ribs} {...detail} strokeOpacity={0.26} />}
+      <path d={f.seams} {...detail} />
+      <path d={f.stitches} {...detail} strokeOpacity={0.38} strokeDasharray="2 2.2" />
+      {f.patches && <path d={f.patches} fill="#fff" stroke={INK} strokeOpacity={0.6} strokeWidth={weight * 0.66} {...line} />}
+      {f.zipper && (
+        <>
+          <path d={`M ${CX - 2.2} ${f.zipper[0]} V ${f.zipper[1]} H ${CX + 2.2} V ${f.zipper[0]} Z`} fill="#fff" stroke={INK} strokeOpacity={0.55} strokeWidth={weight * 0.66} {...line} />
+          <path d={`M ${CX} ${f.zipper[0] + 1} V ${f.zipper[1] - 1}`} fill="none" stroke={INK} strokeOpacity={0.45} strokeWidth={weight * 1.3} strokeDasharray="0.9 1.1" style={{ vectorEffect: 'non-scaling-stroke' }} />
+          <rect x={CX - 2.8} y={f.zipper[0] + 1.5} width={5.6} height={11} rx={2.2} fill={INK} fillOpacity={0.78} />
+        </>
       )}
-    </g>
-  );
-}
-
-function Shadow({ id }: { id: string }) {
-  return (
-    <defs>
-      <filter id={id} x="-30%" y="-40%" width="160%" height="200%" colorInterpolationFilters="sRGB">
-        <feDropShadow dx="0" dy="1" stdDeviation="1.6" floodColor="#000" floodOpacity="0.1" />
-      </filter>
-    </defs>
-  );
-}
-
-// ── Dibujos ─────────────────────────────────────────────────────────────────
-
-const W = 360;
-const H_TOP = 262;
-const H_BOTTOM = 360;
-const H_SWEATER = 300;
-const PAD_X = 8;
-/** Medio ancho reservado para la píldora del largo (fijo: así el dibujo no salta cuando cambia el número). */
-const PH = 38;
-
-const ink = { stroke: INK, strokeOpacity: 0.78, strokeWidth: 1.5, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
-const seam = { stroke: INK, strokeOpacity: 0.32, strokeWidth: 1, fill: 'none', strokeLinecap: 'round' as const };
-const stitch = { ...seam, strokeOpacity: 0.36, strokeDasharray: '2.4 2.6' };
-const ext = { stroke: GUIDE, strokeOpacity: 0.7, strokeWidth: 1, strokeDasharray: '2 3' };
-
-const TOP_GAP = 16;
-const TOP_PAD_Y = 10;
-
-/** Escala y ubicación comunes a todas las prendas de la lista (la actual y las de referencia). */
-function topLayout(geos: TopGeo[], maxH = H_TOP) {
-  const Wa = W - 2 * PAD_X;
-  const s = Math.min(
-    ...geos.map((g) => Math.min((Wa - TOP_GAP - PH) / (2 * g.X), (Wa - 2 * PH - 10) / (g.X + g.c), (maxH - 2 * TOP_PAD_Y) / g.L))
-  );
-  const reachOf = (g: TopGeo) => Math.max(g.X * s + TOP_GAP, g.c * s + PH + 10); // del centro a la línea del largo
-  const X = Math.max(...geos.map((g) => g.X));
-  const reach = Math.max(...geos.map(reachOf));
-  const cw = X * s + reach + PH;
-  const ox = (W - cw) / 2 + X * s;
-  const H = Math.ceil(Math.max(...geos.map((g) => g.L)) * s + 2 * TOP_PAD_Y);
-  return { s, ox, oy: TOP_PAD_Y, H, reachOf };
-}
-
-function TopDrawing({ g, layout, largoTxt, anchoTxt, compact, shadowId }: { g: TopGeo; layout: ReturnType<typeof topLayout>; largoTxt: string; anchoTxt: string; compact?: boolean; shadowId: string }) {
-  const { s, ox, oy } = layout;
-  const reach = layout.reachOf(g);
-  const sw = 1 / s; // trazos en unidades de pantalla aunque el dibujo esté escalado
-
-  const lx = ox + reach;
-  const top = oy;
-  const bottom = oy + g.L * s;
-  const hpsX = ox + g.n * s;
-  const sideX = ox + g.c * s;
-  // La etiqueta del largo, a la altura del cuerpo (debajo de la manga)
-  const h = compact ? 30 : 26;
-  const labelBlock = compact ? h : h + 22;
-  const minY = oy + g.sleeveBottomY * s + h / 2 + 10;
-  const maxY = bottom - labelBlock + h / 2 - 6;
-  const ly = g.largoLabelY !== undefined ? oy + g.largoLabelY * s : clamp((top + bottom) / 2, minY, Math.max(minY, maxY));
-  const cy = oy + g.chestY * s;
-
-  return (
-    <>
-      <g transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`}>
-        <path d={g.outline} fill={FILL} {...ink} strokeWidth={1.5 * sw} />
-        <path d={g.inside} fill={INSIDE} {...ink} strokeWidth={1.2 * sw} />
-        <path d={g.collar} fill="none" {...ink} strokeWidth={1.2 * sw} />
-        <path d={g.collarStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-        <path d={g.armholes} {...seam} strokeWidth={sw} />
-        <path d={g.sleeveStitches} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-        <path d={g.hemStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-        {g.ribs && <path d={g.ribs} {...seam} strokeWidth={sw} strokeOpacity={0.24} />}
-        {g.bands && <path d={g.bands} fill="none" {...ink} strokeWidth={1.1 * sw} strokeOpacity={0.6} />}
-      </g>
-
-      {/* Largo: del hombro al ruedo, al costado */}
-      <line x1={f(hpsX + 4)} y1={f(top)} x2={f(lx + 7)} y2={f(top)} {...ext} />
-      <line x1={f(sideX + 4)} y1={f(bottom)} x2={f(lx + 7)} y2={f(bottom)} {...ext} />
-      <Arrow x1={lx} y1={top} x2={lx} y2={bottom} />
-      <Label x={lx} y={ly} value={largoTxt} name="Largo" compact={compact} shadowId={shadowId} />
-
-      {/* Ancho: de axila a axila */}
-      <Arrow x1={ox - g.c * s + 1} y1={cy} x2={ox + g.c * s - 1} y2={cy} />
-      <Label x={ox} y={cy} value={anchoTxt} name="Ancho" halo={FILL} compact={compact} shadowId={shadowId} />
+      {f.cords && <path d={f.cords} fill="none" stroke={INK} strokeOpacity={0.7} strokeWidth={weight * 0.85} {...line} />}
+      {f.aglets && <path d={f.aglets} fill="none" stroke={INK} strokeOpacity={0.8} strokeWidth={weight * 2} {...line} />}
+      {f.dots?.map((d, i) => (
+        <circle key={i} cx={d.p[0]} cy={d.p[1]} r={d.r} fill="#fff" stroke={INK} strokeOpacity={0.7} strokeWidth={weight * 0.66} style={{ vectorEffect: 'non-scaling-stroke' }} />
+      ))}
     </>
   );
 }
 
-function bottomLayout(geos: BottomGeo[], compact?: boolean) {
-  const Wa = W - 2 * PAD_X;
-  const topReserve = compact ? 40 : 60;
-  const s = Math.min(...geos.map((g) => Math.min((Wa - 2 * PH - 10) / (2 * g.X), (H_BOTTOM - topReserve - 14) / g.L)));
-  const X = Math.max(...geos.map((g) => g.X));
-  const cw = 2 * X * s + 2 * PH + 10;
-  const ox = (W - cw) / 2 + X * s;
-  const H = Math.ceil(topReserve + Math.max(...geos.map((g) => g.L)) * s + 14);
-  return { s, ox, oy: topReserve, H };
-}
-
-function BottomDrawing({ g, layout, elastic, largoTxt, anchoTxt, compact, shadowId }: { g: BottomGeo; layout: ReturnType<typeof bottomLayout>; elastic: boolean; largoTxt: string; anchoTxt: string; compact?: boolean; shadowId: string }) {
-  const { s, ox, oy } = layout;
-  const reach = g.X * s + PH + 10;
-  const sw = 1 / s;
-
-  const lx = ox + reach;
-  const top = oy;
-  const bottom = oy + g.L * s;
-  const waistR = ox + g.w * s;
-  const waistL = ox - g.w * s;
-  const ay = oy - (compact ? 22 : 24);
-
+function MeasureLine({ m }: { m: Measure }) {
+  const u = unit(sub(m.b, m.a));
+  const p: P = [-u[1], u[0]];
+  const head = (tip: P, dir: 1 | -1) => {
+    const back = add(tip, mul(u, -5.5 * dir));
+    return `M ${s(add(back, mul(p, 3.2)))} L ${s(tip)} L ${s(add(back, mul(p, -3.2)))}`;
+  };
   return (
     <>
-      <g transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`}>
-        <path d={g.outline} fill={FILL} {...ink} strokeWidth={1.5 * sw} />
-        {!elastic &&
-          g.loops.map((l, i) => (
-            <rect key={i} x={f(l.x)} y={f(l.y)} width={f(l.w)} height={f(l.h)} rx={f(l.w * 0.25)} fill={FILL} {...ink} strokeWidth={1.1 * sw} />
-          ))}
-        <path d={g.band} fill="none" {...ink} strokeWidth={1.2 * sw} />
-        {elastic ? (
-          <>
-            <path d={g.gathers} {...seam} strokeWidth={sw} strokeOpacity={0.3} />
-            <path d={g.cord} fill="none" stroke={INK} strokeOpacity={0.7} strokeWidth={1.3 * sw} strokeLinecap="round" />
-            {g.aglets.map((a, i) => (
-              <rect key={i} x={f(a.x)} y={f(a.y)} width={f(a.w)} height={f(a.h)} rx={f(a.w * 0.4)} fill={INK} fillOpacity={0.7} />
-            ))}
-          </>
-        ) : (
-          <>
-            <path d={g.bandStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-            <circle cx={f(g.button.x)} cy={f(g.button.y)} r={f(g.button.r)} fill="#fff" {...ink} strokeWidth={1.1 * sw} />
-            <path d={g.fly} {...seam} strokeWidth={1.1 * sw} strokeOpacity={0.45} />
-            <path d={g.flyStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-          </>
-        )}
-        <path d={g.pockets} {...seam} strokeWidth={1.1 * sw} strokeOpacity={0.5} />
-        <path d={g.hemStitch} {...stitch} strokeWidth={sw} strokeDasharray={`${2.4 * sw} ${2.6 * sw}`} />
-      </g>
-
-      {/* Largo: de la cintura al ruedo, por el costado */}
-      <line x1={f(waistR + 4)} y1={f(top)} x2={f(lx + 7)} y2={f(top)} {...ext} />
-      <line x1={f(ox + g.ho * s + 4)} y1={f(bottom)} x2={f(lx + 7)} y2={f(bottom)} {...ext} />
-      <Arrow x1={lx} y1={top} x2={lx} y2={bottom} />
-      <Label x={lx} y={(top + bottom) / 2} value={largoTxt} name="Largo" compact={compact} shadowId={shadowId} />
-
-      {/* Ancho: la cintura de lado a lado */}
-      <line x1={f(waistL)} y1={f(top - 4)} x2={f(waistL)} y2={f(ay - 7)} {...ext} />
-      <line x1={f(waistR)} y1={f(top - 4)} x2={f(waistR)} y2={f(ay - 7)} {...ext} />
-      <Arrow x1={waistL} y1={ay} x2={waistR} y2={ay} />
-      <Label x={ox} y={ay} value={anchoTxt} name="Ancho" namePos="above" compact={compact} shadowId={shadowId} />
+      {m.ext && <path d={m.ext} fill="none" stroke={BLUE} strokeOpacity={0.55} strokeWidth={1} strokeDasharray="2 2.5" {...line} />}
+      <path d={`M ${s(m.a)} L ${s(m.b)} ${head(m.b, 1)} ${head(m.a, -1)}`} fill="none" stroke={BLUE} strokeWidth={1.6} {...line} />
     </>
   );
 }
 
-type Measures = { largo: number | null; ancho: number | null };
+/** El número de una medida: en el dibujo, en la tabla y en "Cómo medir" */
+export function MeasureBadge({ n, className, style }: { n: 1 | 2; className?: string; style?: CSSProperties }) {
+  return (
+    <span
+      aria-hidden
+      style={style}
+      className={cn(
+        'flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-[#0071e3] text-[13px] font-semibold leading-none text-white tabular-nums',
+        className
+      )}
+    >
+      {n}
+    </span>
+  );
+}
 
 export function GarmentDiagram({
   kind,
-  largo,
-  ancho,
-  scaleTo,
   waist,
+  maxHeight,
   className,
-  compact,
 }: {
   kind: GarmentKind;
-  largo: number | null;
-  ancho: number | null;
-  /** Todos los talles de la guía: se dibujan a la misma escala, así se nota la diferencia */
-  scaleTo?: Measures[];
-  /** Pantalón: pretina de jean o cintura elástica. Si no se dice, elástica en shorts */
+  /** Pantalón o short: pretina de jean o cintura elástica */
   waist?: 'button' | 'elastic';
+  /** Alto máximo en px: el dibujo se achica sin deformarse (y los números lo siguen) */
+  maxHeight?: number;
   className?: string;
-  /** Para usarlo chico: solo los números, sin los nombres de las medidas */
-  compact?: boolean;
 }) {
-  const rawId = useId();
-  const shadowId = `gd-shadow-${rawId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  const [gl, ga] = useTweened(shapeInputs(kind, largo, ancho));
-  const largoTxt = formatCm(largo);
-  const anchoTxt = formatCm(ancho);
-  const said = (n: number | null) => (n === null ? 'sin dato' : formatCm(n));
-  const label = `${NAMES[kind]}: largo ${said(largo)}, ancho ${said(ancho)}`;
-  const refs = (scaleTo ?? []).filter((m) => m.largo || m.ancho).map((m) => shapeInputs(kind, m.largo, m.ancho));
-
-  if (kind === 'top' || kind === 'sweater') {
-    const geo = kind === 'top' ? topGeometry : sweaterGeometry;
-    const g = geo(gl, ga);
-    const layout = topLayout([g, ...refs.map(([l, a]) => geo(l, a))], kind === 'top' ? H_TOP : H_SWEATER);
-    return (
-      <svg viewBox={`0 0 ${W} ${layout.H}`} role="img" aria-label={label} className={className} style={svgStyle}>
-        <Shadow id={shadowId} />
-        <TopDrawing g={g} layout={layout} largoTxt={largoTxt} anchoTxt={anchoTxt} compact={compact} shadowId={shadowId} />
-      </svg>
-    );
-  }
-
-  const probe = bottomGeometry(gl, ga);
-  const elastic = waist ? waist === 'elastic' : probe.t < 0.5;
-  const g = bottomGeometry(gl, ga, elastic);
-  const layout = bottomLayout([g, ...refs.map(([l, a]) => bottomGeometry(l, a, elastic))], compact);
+  const f = flatFor(kind, waist);
+  const [bx, by, bw, bh] = f.box;
+  const at = (p: P): CSSProperties => ({ left: `${((p[0] - bx) / bw) * 100}%`, top: `${((p[1] - by) / bh) * 100}%` });
   return (
-    <svg viewBox={`0 0 ${W} ${layout.H}`} role="img" aria-label={label} className={className} style={svgStyle}>
-      <Shadow id={shadowId} />
-      <BottomDrawing g={g} layout={layout} elastic={elastic} largoTxt={largoTxt} anchoTxt={anchoTxt} compact={compact} shadowId={shadowId} />
-    </svg>
+    <div
+      className={cn('relative mx-auto', className)}
+      style={maxHeight ? { width: `min(100%, ${Math.round((maxHeight * bw) / bh)}px)` } : undefined}
+    >
+      <svg viewBox={f.box.join(' ')} role="img" aria-label={`${NAMES[kind]}: la línea 1 marca el largo y la 2 el ancho`} style={svgStyle}>
+        <Garment f={f} weight={1.5} />
+        <MeasureLine m={f.largo} />
+        <MeasureLine m={f.ancho} />
+      </svg>
+      <MeasureBadge n={1} className="absolute -translate-x-1/2 -translate-y-1/2 ring-2 ring-white" style={at(f.largo.badge)} />
+      <MeasureBadge n={2} className="absolute -translate-x-1/2 -translate-y-1/2 ring-2 ring-white" style={at(f.ancho.badge)} />
+    </div>
   );
 }
 
-const svgStyle = { display: 'block', width: '100%', height: 'auto', fontFamily: 'inherit' } as const;
+const svgStyle = { display: 'block', width: '100%', height: 'auto' } as const;
 
-/**
- * Ícono de la prenda con sus dos cotas, sin números (para filas compactas,
- * como la de "Guía de talles" en la ficha). Decorativo: el texto de al lado
- * dice las medidas.
- */
+/** La prenda sola, chica (fila de "Guía de talles" en la ficha). Decorativo. */
 export function GarmentIcon({ kind, className }: { kind: GarmentKind; className?: string }) {
-  const S = 40;
-  if (kind === 'top' || kind === 'sweater') {
-    const g = kind === 'top' ? topGeometry(70, 54) : sweaterGeometry(68, 62);
-    const s = 30 / (2 * g.X);
-    const ox = S / 2;
-    const oy = (S - g.L * s) / 2;
-    const cy = oy + g.chestY * s;
-    return (
-      <svg viewBox={`0 0 ${S} ${S}`} aria-hidden className={className} style={{ display: 'block' }}>
-        <path d={g.outline} transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`} fill={FILL} stroke={INK} strokeOpacity={0.8} strokeWidth={1.3 / s} strokeLinejoin="round" />
-        <path d={g.collar} transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`} fill="none" stroke={INK} strokeOpacity={0.8} strokeWidth={1.1 / s} />
-        <line x1={f(ox - g.c * s + 1.6)} y1={f(cy)} x2={f(ox + g.c * s - 1.6)} y2={f(cy)} stroke={BLUE} strokeWidth={1.5} strokeLinecap="round" />
-      </svg>
-    );
-  }
-  const g = bottomGeometry(104, 42);
-  const s = 32 / g.L;
-  const ox = S / 2;
-  const oy = (S - g.L * s) / 2;
+  const f = flatFor(kind);
   return (
-    <svg viewBox={`0 0 ${S} ${S}`} aria-hidden className={className} style={{ display: 'block' }}>
-      <path d={g.outline} transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`} fill={FILL} stroke={INK} strokeOpacity={0.8} strokeWidth={1.3 / s} strokeLinejoin="round" />
-      <path d={g.band} transform={`translate(${f(ox)} ${f(oy)}) scale(${f(s)})`} fill="none" stroke={INK} strokeOpacity={0.8} strokeWidth={1.1 / s} />
-      <line x1={f(ox + g.X * s + 3)} y1={f(oy + 0.6)} x2={f(ox + g.X * s + 3)} y2={f(oy + g.L * s - 0.6)} stroke={BLUE} strokeWidth={1.5} strokeLinecap="round" />
+    <svg viewBox={f.box.join(' ')} aria-hidden className={className} style={{ display: 'block' }}>
+      <Garment f={{ ...f, stitches: '', ribs: undefined, cords: undefined, aglets: undefined, dots: undefined }} weight={1.1} />
     </svg>
   );
 }

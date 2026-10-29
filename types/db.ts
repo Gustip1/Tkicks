@@ -1,13 +1,44 @@
 export type ProductCategory = 'sneakers' | 'streetwear';
 
-export type StreetWearSubcategory = 'remeras' | 'hoodies' | 'pantalones' | 'accesorios';
+export type StreetWearSubcategory = 'remeras' | 'hoodies' | 'sweaters' | 'zip-hoodies' | 'pantalones' | 'accesorios';
 
+/** Grupos del menú, del catálogo (?sub=…) y de la portada */
 export const STREETWEAR_SUBCATEGORIES: { value: StreetWearSubcategory; label: string; icon: string }[] = [
   { value: 'remeras', label: 'Remeras', icon: '👕' },
   { value: 'hoodies', label: 'Hoodies / Abrigos', icon: '🧥' },
   { value: 'pantalones', label: 'Pantalones', icon: '👖' },
   { value: 'accesorios', label: 'Accesorios', icon: '🧢' },
 ];
+
+/**
+ * Tipos dentro de "Hoodies / Abrigos" (oct 2026). El grupo usa la clave
+ * 'hoodies', que es también la del primer tipo: lo que se cargó antes como
+ * hoodie sigue en su lugar. En el catálogo se filtran con ?tipo=….
+ * El tipo decide además el dibujo de la guía de talles.
+ */
+export const HOODIE_TYPES: { value: StreetWearSubcategory; label: string }[] = [
+  { value: 'hoodies', label: 'Hoodies' },
+  { value: 'sweaters', label: 'Sweaters' },
+  { value: 'zip-hoodies', label: 'Zip hoodies' },
+];
+
+/** Las subcategorías que entran en un grupo del menú */
+export function subcategoriesOf(group: StreetWearSubcategory): StreetWearSubcategory[] {
+  return group === 'hoodies' ? HOODIE_TYPES.map((t) => t.value) : [group];
+}
+
+/** El grupo del menú de una subcategoría ('sweaters' → 'hoodies') */
+export function groupOf(sub: string | null | undefined): StreetWearSubcategory | null {
+  if (!sub) return null;
+  if (HOODIE_TYPES.some((t) => t.value === sub)) return 'hoodies';
+  return (STREETWEAR_SUBCATEGORIES.find((g) => g.value === sub)?.value ?? null);
+}
+
+/** Nombre para mostrar: el tipo si es de Hoodies ("Sweaters"), si no el grupo */
+export function subcategoryLabel(sub: string | null | undefined): string {
+  if (!sub) return '';
+  return HOODIE_TYPES.find((t) => t.value === sub)?.label ?? STREETWEAR_SUBCATEGORIES.find((g) => g.value === sub)?.label ?? sub;
+}
 
 export interface ProductImage {
   url: string;

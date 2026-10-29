@@ -7,6 +7,7 @@ import {
   MEASURE_HELP,
   extractFromDescription,
   formatCm,
+  isBottom,
   parseSizeGuide,
   type GarmentKind,
   type SizeGuide,
@@ -138,6 +139,7 @@ export function SizeGuideEditor({
   value,
   onChange,
   kind,
+  waist,
   description,
   onDescriptionChange,
   columnMissing = false,
@@ -149,6 +151,8 @@ export function SizeGuideEditor({
   onChange: (v: SizeGuide | null) => void;
   /** Qué prenda se dibuja; null = el producto no lleva guía */
   kind: GarmentKind | null;
+  /** Pantalón o short: pretina de jean o cintura elástica */
+  waist?: 'button' | 'elastic';
   description: string;
   onDescriptionChange: (d: string) => void;
   /** La base todavía no tiene la columna size_guide: se avisa y no se deja editar */
@@ -417,7 +421,7 @@ export function SizeGuideEditor({
               const bad = { largo: Number.isNaN(readCm(d.largo)), ancho: Number.isNaN(readCm(d.ancho)) };
               const l = validCm(d.largo);
               const a = validCm(d.ancho);
-              const swapped = kind === 'bottom' && l !== null && a !== null && a > l;
+              const swapped = isBottom(kind) && l !== null && a !== null && a > l;
               const errId = `sge-err-${uid}-${k.replace(/[^a-z0-9]/g, '_')}`;
               const message =
                 bad.largo || bad.ancho
@@ -498,14 +502,14 @@ export function SizeGuideEditor({
             <p className="text-sm font-semibold text-gray-900">Así se ve en la ficha</p>
             <p className="truncate text-sm text-gray-500">Talle {active}</p>
           </div>
-          <div className="mx-auto mt-3 max-w-[360px]">
-            <GarmentDiagram kind={kind} largo={preview.largo} ancho={preview.ancho} />
+          <div className="mx-auto mt-3 max-w-[360px] rounded-xl bg-[#f5f5f7] p-3">
+            <GarmentDiagram kind={kind} waist={waist} maxHeight={240} />
           </div>
-          {preview.largo === null && preview.ancho === null && (
-            <p className="mt-2 text-center text-xs text-gray-500">
-              Cargá el largo y el ancho para ver la prenda con sus medidas.
-            </p>
-          )}
+          <p className="mt-2 text-center text-xs text-gray-500 tabular-nums">
+            {preview.largo === null && preview.ancho === null
+              ? 'Cargá el largo (1) y el ancho (2) de este talle.'
+              : `1 Largo ${formatCm(preview.largo)} · 2 Ancho ${formatCm(preview.ancho)}`}
+          </p>
         </div>
       </fieldset>
 

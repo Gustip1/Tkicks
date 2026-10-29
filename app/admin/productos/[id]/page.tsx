@@ -13,11 +13,11 @@ import {
   guideForSizes,
   isMissingSizeGuideColumn,
 } from '@/components/admin/SizeGuideEditor';
-import { extractFromDescription, garmentKind, parseSizeGuide, type SizeGuide } from '@/lib/sizeGuide';
+import { extractFromDescription, garmentKind, parseSizeGuide, waistStyle, type SizeGuide } from '@/lib/sizeGuide';
 import { Save, Trash2, ArrowLeft, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, HOODIE_TYPES, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, groupOf } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function EditProductPage() {
@@ -54,7 +54,7 @@ export default function EditProductPage() {
     () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
     [variants]
   );
-  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null);
+  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null, title);
 
   // Viene de "Nuevo producto" y la guía no se pudo guardar (falta la migración)
   useEffect(() => {
@@ -382,10 +382,10 @@ export default function EditProductPage() {
                     <button
                       key={sub.value}
                       type="button"
-                      onClick={() => setSubcategory(subcategory === sub.value ? '' : sub.value)}
+                      onClick={() => setSubcategory(groupOf(subcategory) === sub.value ? '' : sub.value)}
                       className={cn(
                         "flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
-                        subcategory === sub.value
+                        groupOf(subcategory) === sub.value
                           ? "border-primary bg-primary-light text-primary"
                           : "border-gray-200 text-gray-600 hover:border-gray-300"
                       )}
@@ -394,6 +394,31 @@ export default function EditProductPage() {
                     </button>
                   ))}
                 </div>
+                {/* Tipo dentro de Hoodies / Abrigos: ordena el catálogo y elige el dibujo de la guía de talles */}
+                {groupOf(subcategory) === 'hoodies' && (
+                  <div className="mt-3">
+                    <p id="tipo-hoodie" className="mb-1.5 text-sm font-medium text-gray-700">Tipo</p>
+                    <div role="radiogroup" aria-labelledby="tipo-hoodie" className="grid grid-cols-3 gap-2">
+                      {HOODIE_TYPES.map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={subcategory === t.value}
+                          onClick={() => setSubcategory(t.value)}
+                          className={cn(
+                            "min-h-[44px] px-3 rounded-xl border-2 text-sm font-medium transition-all",
+                            subcategory === t.value
+                              ? "border-primary bg-primary-light text-primary"
+                              : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          )}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {!subcategory && (
                   <p className="mt-1.5 text-xs text-amber-600">
                     Seleccioná una subcategoría para mejor organización
@@ -439,6 +464,7 @@ export default function EditProductPage() {
               value={sizeGuide}
               onChange={setSizeGuide}
               kind={kind}
+              waist={waistStyle(title)}
               description={description}
               onDescriptionChange={setDescription}
               columnMissing={!hasGuideColumn}

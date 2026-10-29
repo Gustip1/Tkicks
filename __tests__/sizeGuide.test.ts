@@ -68,10 +68,14 @@ describe('parseSizeGuide', () => {
 });
 
 describe('ayudas', () => {
-  it('elige la maqueta por categoría', () => {
-    expect(garmentKind('streetwear', 'remeras')).toBe('top');
-    expect(garmentKind('streetwear', 'hoodies')).toBe('sweater');
-    expect(garmentKind('streetwear', 'pantalones')).toBe('bottom');
+  it('elige el dibujo por subcategoría y reconoce los shorts por el nombre', () => {
+    expect(garmentKind('streetwear', 'remeras')).toBe('remera');
+    expect(garmentKind('streetwear', null)).toBe('remera');
+    expect(garmentKind('streetwear', 'hoodies')).toBe('hoodie');
+    expect(garmentKind('streetwear', 'sweaters')).toBe('sweater');
+    expect(garmentKind('streetwear', 'zip-hoodies')).toBe('zip-hoodie');
+    expect(garmentKind('streetwear', 'pantalones', 'Scuffers "Mowa Grey Pants"')).toBe('pantalon');
+    expect(garmentKind('streetwear', 'pantalones', 'Essentials "Strech Limo" Shorts')).toBe('short');
     expect(garmentKind('sneakers', null)).toBeNull();
     expect(garmentKind('streetwear', 'accesorios')).toBeNull();
   });

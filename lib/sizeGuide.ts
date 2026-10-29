@@ -13,8 +13,8 @@
  *   ancho = la cintura de lado a lado.
  */
 
-/** top = remera · sweater = buzo, hoodie o sweater (manga larga) · bottom = pantalón o short */
-export type GarmentKind = 'top' | 'sweater' | 'bottom';
+/** Qué dibujo lleva la guía: uno por tipo de prenda */
+export type GarmentKind = 'remera' | 'hoodie' | 'sweater' | 'zip-hoodie' | 'pantalon' | 'short';
 
 export interface SizeGuideRow {
   size: string;
@@ -26,13 +26,25 @@ export interface SizeGuide {
   rows: SizeGuideRow[];
 }
 
-/** Qué maqueta y qué explicación corresponde. Zapatillas y accesorios no llevan guía de medidas. */
-export function garmentKind(category: string | null | undefined, subcategory: string | null | undefined): GarmentKind | null {
+/**
+ * Qué dibujo y qué explicación corresponde. Zapatillas y accesorios no llevan
+ * guía de medidas. Los shorts están dentro de Pantalones: se reconocen por el nombre.
+ */
+export function garmentKind(
+  category: string | null | undefined,
+  subcategory: string | null | undefined,
+  title?: string | null
+): GarmentKind | null {
   if (category === 'sneakers' || subcategory === 'accesorios') return null;
-  if (subcategory === 'pantalones') return 'bottom';
-  if (subcategory === 'hoodies') return 'sweater';
-  return 'top';
+  if (subcategory === 'pantalones') return /\bshorts?\b/i.test(title ?? '') ? 'short' : 'pantalon';
+  if (subcategory === 'hoodies') return 'hoodie';
+  if (subcategory === 'sweaters') return 'sweater';
+  if (subcategory === 'zip-hoodies') return 'zip-hoodie';
+  return 'remera';
 }
+
+/** Pantalón o short: se miden de la cintura para abajo */
+export const isBottom = (kind: GarmentKind) => kind === 'pantalon' || kind === 'short';
 
 /**
  * Cómo dibujar la cintura del pantalón según el nombre: jeans, chinos y cargos
@@ -46,19 +58,27 @@ export function waistStyle(title: string | null | undefined): 'button' | 'elasti
   return undefined;
 }
 
+const TOP_HELP = {
+  largo: 'Del punto más alto del hombro hasta el ruedo.',
+  ancho: 'De axila a axila, con la prenda apoyada en plano.',
+};
+const WARM_HELP = {
+  largo: 'Del punto más alto del hombro hasta el borde de abajo.',
+  ancho: 'De axila a axila, con la prenda apoyada en plano.',
+};
+const BOTTOM_HELP = {
+  largo: 'De la cintura hasta el ruedo, por el costado.',
+  ancho: 'La cintura de lado a lado, con la prenda apoyada en plano.',
+};
+
+/** Qué mide la línea 1 (largo) y la 2 (ancho) del dibujo */
 export const MEASURE_HELP: Record<GarmentKind, { largo: string; ancho: string }> = {
-  top: {
-    largo: 'Del punto más alto del hombro hasta el ruedo.',
-    ancho: 'De axila a axila, con la prenda apoyada en plano.',
-  },
-  sweater: {
-    largo: 'Del punto más alto del hombro hasta el borde de abajo.',
-    ancho: 'De axila a axila, con la prenda apoyada en plano.',
-  },
-  bottom: {
-    largo: 'De la cintura hasta el ruedo, por el costado.',
-    ancho: 'La cintura de lado a lado, con la prenda apoyada en plano.',
-  },
+  remera: TOP_HELP,
+  hoodie: WARM_HELP,
+  sweater: WARM_HELP,
+  'zip-hoodie': WARM_HELP,
+  pantalon: BOTTOM_HELP,
+  short: BOTTOM_HELP,
 };
 
 const MAX_CM = 300;
@@ -108,6 +128,11 @@ export function rowFor(guide: SizeGuide | null, size: string | null | undefined)
 export function formatCm(n: number | null): string {
   if (n === null) return '—';
   return `${String(n).replace('.', ',')} cm`;
+}
+
+/** El número solo, para la tabla (la unidad va en el encabezado) */
+export function formatNumber(n: number | null): string {
+  return n === null ? '—' : String(n).replace('.', ',');
 }
 
 // ── Lectura de las medidas escritas en la descripción ─────────────────────────

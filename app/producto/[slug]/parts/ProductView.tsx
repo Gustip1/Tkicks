@@ -43,7 +43,7 @@ export function ProductView({
   // Guía de talles: la cargada en el admin; si todavía no hay (o falta la
   // columna en la base), la que estaba escrita en la descripción, y esas
   // líneas salen de la descripción para no mostrar lo mismo dos veces.
-  const kind = garmentKind(product.category, product.subcategory);
+  const kind = garmentKind(product.category, product.subcategory, product.title);
   const { guide, description } = useMemo(() => {
     const stored = parseSizeGuide(product.size_guide);
     if (!kind || stored) return { guide: kind ? stored : null, description: product.description };

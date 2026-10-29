@@ -11,9 +11,9 @@ import {
   guideForSizes,
   isMissingSizeGuideColumn,
 } from '@/components/admin/SizeGuideEditor';
-import { extractFromDescription, garmentKind, type SizeGuide } from '@/lib/sizeGuide';
+import { extractFromDescription, garmentKind, waistStyle, type SizeGuide } from '@/lib/sizeGuide';
 import { slugify } from '@/lib/utils';
-import { Brand, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory } from '@/types/db';
+import { Brand, HOODIE_TYPES, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, groupOf } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
 
 export default function NewProductPage() {
@@ -42,7 +42,7 @@ export default function NewProductPage() {
     () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
     [variants]
   );
-  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null);
+  const kind = garmentKind(category, category === 'streetwear' ? subcategory || null : null, title);
 
   useEffect(() => {
     supabase.from('brands').select('*').eq('active', true).order('name')
@@ -155,7 +155,7 @@ export default function NewProductPage() {
               <label className="block text-sm font-medium">Subcategoría</label>
               <select
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                value={subcategory}
+                value={groupOf(subcategory) ?? ''}
                 onChange={(e) => setSubcategory(e.target.value as StreetWearSubcategory | '')}
               >
                 <option value="">— Sin subcategoría —</option>
@@ -165,6 +165,24 @@ export default function NewProductPage() {
                   </option>
                 ))}
               </select>
+              {/* Tipo dentro de Hoodies / Abrigos: ordena el catálogo y elige el dibujo de la guía de talles */}
+              {groupOf(subcategory) === 'hoodies' && (
+                <>
+                  <label htmlFor="tipo-hoodie" className="mt-3 block text-sm font-medium">Tipo</label>
+                  <select
+                    id="tipo-hoodie"
+                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value as StreetWearSubcategory)}
+                  >
+                    {HOODIE_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           )}
           <div>
@@ -230,6 +248,7 @@ export default function NewProductPage() {
               value={sizeGuide}
               onChange={setSizeGuide}
               kind={kind}
+              waist={waistStyle(title)}
               description={description}
               onDescriptionChange={setDescription}
               columnMissing={!hasGuideColumn}
