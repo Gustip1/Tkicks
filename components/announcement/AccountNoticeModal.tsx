@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import logo from '@/public/logo-white.png';
 import { Sheet } from '@/components/ui/Sheet';
 import { useAccountNotice } from '@/components/announcement/AccountNoticeProvider';
-import { ACCOUNT_NOTICE, BACKUP_HANDLE, BACKUP_URL } from '@/lib/accountNotice';
+import { ACCOUNT_NOTICE, INSTAGRAM_HANDLE, INSTAGRAM_URL } from '@/lib/accountNotice';
 
 /**
  * Aviso de cuenta. Es lo primero que ve el visitante, así que es bloqueante a
@@ -12,7 +12,7 @@ import { ACCOUNT_NOTICE, BACKUP_HANDLE, BACKUP_URL } from '@/lib/accountNotice';
  * con "Entrar a la web". Se prende desde /admin/ajustes y se recuerda por
  * pestaña.
  *
- * La cuenta de respaldo se muestra como un perfil de Instagram (foto, usuario
+ * La cuenta se muestra como un perfil de Instagram (foto, usuario
  * y para qué es): se reconoce de un vistazo qué hay que seguir.
  */
 export function AccountNoticeModal() {
@@ -30,7 +30,7 @@ export function AccountNoticeModal() {
 
         {/* La cuenta, como se ve en Instagram */}
         <a
-          href={BACKUP_URL}
+          href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-6 flex items-center gap-3.5 rounded-[16px] bg-[#f5f5f7] p-3.5 transition-colors hover:bg-[#ececf0] active:scale-[0.99]"
@@ -39,7 +39,7 @@ export function AccountNoticeModal() {
             <Image src={logo} alt="" className="h-auto w-10" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[17px] font-semibold">{BACKUP_HANDLE.replace(/^@/, '')}</span>
+            <span className="block truncate text-[17px] font-semibold">{INSTAGRAM_HANDLE.replace(/^@/, '')}</span>
             <span className="block text-[13px] text-gray-500">{ACCOUNT_NOTICE.badge}</span>
           </span>
           <span className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-semibold text-white">
@@ -50,7 +50,7 @@ export function AccountNoticeModal() {
 
       <div className="flex flex-col gap-1 px-6 pb-2 pt-5 sm:px-8 sm:pb-7">
         <a
-          href={BACKUP_URL}
+          href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-apple w-full"

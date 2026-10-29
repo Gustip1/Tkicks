@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { X, ChevronDown } from 'lucide-react';
 import { STREETWEAR_SUBCATEGORIES, Brand } from '@/types/db';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { BACKUP_URL } from '@/lib/accountNotice';
+import { INSTAGRAM_URL } from '@/lib/accountNotice';
 
 export function Sidebar() {
   const isOpen = useUIStore((s) => s.isSidebarOpen);
@@ -210,7 +210,7 @@ export function Sidebar() {
           )}
           <li><Link href="/track" onClick={close} className="hover:text-white">Seguí tu pedido</Link></li>
           <li>
-            <a href={BACKUP_URL} target="_blank" rel="noreferrer" className="hover:text-white">Instagram</a>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="hover:text-white">Instagram</a>
           </li>
           <li>
             <a href="https://www.tiktok.com/@tkicks.sj" target="_blank" rel="noreferrer" className="hover:text-white">TikTok</a>

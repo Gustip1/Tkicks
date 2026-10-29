@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import { getInstagramPosts } from '@/lib/instagram';
-import { BACKUP_HANDLE, BACKUP_URL } from '@/lib/accountNotice';
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '@/lib/accountNotice';
 
 export const metadata: Metadata = {
   title: 'Nosotros | Tkicks',
@@ -21,10 +21,6 @@ export const metadata: Metadata = {
     'Conocé Tkicks: el reseller de sneakers y streetwear originales en San Juan. Nuestra historia, nuestros valores y el feed en vivo de nuestras redes.',
 };
 
-// Instagram principal (@tkicks.sj) está deshabilitada: mientras tanto publicamos
-// en la cuenta de respaldo. Cuando se recupere, basta con volver a apuntar acá.
-const INSTAGRAM_URL = BACKUP_URL;
-const INSTAGRAM_HANDLE = BACKUP_HANDLE;
 const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5492644802994';
 
@@ -214,11 +210,11 @@ export default async function NosotrosPage() {
               <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
             </span>
             <h2 className="t-section mt-4 text-gray-900">
-              Por ahora somos <span className="text-gray-900">{INSTAGRAM_HANDLE}</span>
+              Ahora somos <span className="text-gray-900">{INSTAGRAM_HANDLE}</span>
             </h2>
             <p className="mt-4 t-body text-gray-600">
-              Nuestra cuenta de siempre, @tkicks.sj, está deshabilitada. Hasta tener novedades publicamos todo
-              acá: drops, stock del día y unboxings.
+              Es nuestra cuenta oficial de ahora en adelante: ahí publicamos los drops, el stock del día y
+              los unboxings.
             </p>
           </div>
 
@@ -239,7 +235,7 @@ export default async function NosotrosPage() {
                 <div>
                   <p className="t-display text-gray-900">{INSTAGRAM_HANDLE}</p>
                   <p className="mt-2 t-body text-gray-600">
-                    Nuestra cuenta activa: feed de producto, lanzamientos y stories con el stock del día.
+                    Nuestra cuenta oficial: feed de producto, lanzamientos y stories con el stock del día.
                   </p>
                 </div>
                 <div className="mt-auto inline-flex items-center gap-2 text-sm font-black text-gray-900">

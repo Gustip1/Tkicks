@@ -18,7 +18,7 @@ interface RawInstagramMedia {
 }
 
 /**
- * Trae los últimos posts de @tkicks.sj. El token se carga desde /admin/ajustes
+ * Trae los últimos posts de @tkicks.gp. El token se carga desde /admin/ajustes
  * (tabla settings, key "instagram_access_token") — no depende de env vars, así
  * el dueño lo puede renovar sin redeploy. Usado tanto por /api/instagram/posts
  * (home, fetch client-side) como por la página /nosotros (server component).

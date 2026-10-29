@@ -320,7 +320,7 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Instagram (@tkicks.sj)</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Instagram (@tkicks.gp)</h2>
         <p className="text-sm text-gray-500 mb-4 max-w-lg">
           Pegá acá el access token de Instagram para mostrar tus últimos posts en la home. Se genera desde
           developers.facebook.com (producto &quot;Instagram API with Instagram Login&quot;) conectando tu cuenta profesional.

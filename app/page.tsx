@@ -257,7 +257,7 @@ export default async function HomePage() {
           justo antes de "Cómo comprar". */}
       <Reviews reviews={content.reviews} stats={content.stats} brandCount={content.brandCount} />
 
-      {/* Feed de Instagram @tkicks.sj — se oculta sola si no hay token cargado */}
+      {/* Feed de Instagram @tkicks.gp — se oculta sola si no hay token cargado */}
       <InstagramFeed />
 
       {/* Cómo comprar — último bloque antes del footer */}

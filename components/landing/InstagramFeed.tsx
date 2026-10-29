@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { BACKUP_HANDLE, BACKUP_URL } from '@/lib/accountNotice';
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '@/lib/accountNotice';
 
 interface InstagramPost {
   id: string;
@@ -40,10 +40,10 @@ export function InstagramFeed() {
       <div className="tile-inner">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 mb-8 md:mb-10">
           <h2 id="instagram-title" className="t-section">
-            {BACKUP_HANDLE}
+            {INSTAGRAM_HANDLE}
           </h2>
           <a
-            href={BACKUP_URL}
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="link-apple t-body"
@@ -71,7 +71,7 @@ export function InstagramFeed() {
               >
                 <Image
                   src={post.imageUrl}
-                  alt={post.caption || `Post de ${BACKUP_HANDLE}`}
+                  alt={post.caption || `Post de ${INSTAGRAM_HANDLE}`}
                   fill
                   sizes="(max-width: 640px) 50vw, 25vw"
                   className="object-cover transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
