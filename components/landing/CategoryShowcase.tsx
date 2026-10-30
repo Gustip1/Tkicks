@@ -48,7 +48,7 @@ function CategoryTile({
           fill
           sizes={imgSizes}
           quality={90}
-          className="object-cover transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
+          className="object-cover object-top transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
         />
       )}
 
