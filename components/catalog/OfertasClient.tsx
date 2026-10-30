@@ -29,14 +29,12 @@ export function OfertasClient() {
 
   return (
     <div className="-mt-3 md:-mt-8">
-      {/* Franja negra de campaña, como las de apple.com: sin degradés ni adornos */}
-      <section className="bleed tile-black text-center">
-        <div className="tile-inner py-14 md:py-20">
-          <h1 className="t-display max-w-[20ch] mx-auto">
-            Ofertas. <span className="t-muted">Originales, con precio rebajado.</span>
-          </h1>
+      {/* Presentación en blanco, como el hero de apple.com: titular directo y una línea gris */}
+      <section className="bleed tile-light text-center">
+        <div className="tile-inner pt-10 pb-6 md:pt-16 md:pb-10">
+          <h1 className="t-hero">Ofertas</h1>
           {!loading && products.length > 0 && (
-            <p className="t-caption mt-4 text-[#86868b]">
+            <p className="t-caption md:text-[21px] md:leading-[1.19] mt-3 text-[#6e6e73]">
               {products.length} {products.length === 1 ? 'producto rebajado' : 'productos rebajados'} ahora
             </p>
           )}

@@ -152,7 +152,7 @@ export function CartDrawer() {
                 <Link
                   href="/productos"
                   onClick={close}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary text-white px-6 py-3 text-xs font-normal hover:bg-primary-hover active:scale-[0.98] transition"
+                  className="inline-flex items-center gap-2 rounded-full bg-pricing text-white px-6 py-3 text-xs font-normal hover:bg-pricing-hover active:scale-[0.98] transition"
                 >
                   Ver productos
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -239,11 +239,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={close}
-              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-black shadow-lg transition ${
-                items.length === 0
-                  ? 'bg-gray-100 text-gray-400 pointer-events-none shadow-none'
-                  : 'bg-gray-900 text-white hover:bg-black active:scale-[0.99]'
-              }`}
+              className={`btn-apple mt-3 w-full ${items.length === 0 ? '!bg-gray-100 !text-gray-400 pointer-events-none' : ''}`}
             >
               Ir al Checkout
               {items.length > 0 && <ArrowRight className="w-4 h-4" />}

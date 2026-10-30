@@ -72,7 +72,7 @@ async function listar(carpeta) {
       const buf = Buffer.from(await original.arrayBuffer());
 
       const out = await sharp(buf).rotate()
-        .resize(SIZE, SIZE, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .resize(SIZE, SIZE, { fit: 'inside' }) // las de producto ya son cuadradas; las de ambiente conservan su encuadre
         .flatten({ background: { r: 255, g: 255, b: 255 } })
         .webp({ quality: QUALITY, effort: 4 })
         .toBuffer();

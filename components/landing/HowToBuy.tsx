@@ -17,7 +17,7 @@ export function HowToBuy({ content = DEFAULT_HOW_TO_BUY_CONTENT }: { content?: H
 
         <ol className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 max-w-[1100px] mx-auto">
           {steps.map((step, i) => (
-            <li key={i} data-reveal="" className="rounded-lg bg-parchment p-7 md:p-8 flex flex-col gap-3">
+            <li key={i} data-reveal="" className="rounded-3xl bg-parchment p-7 md:p-8 flex flex-col gap-3">
               <p className="t-caption font-semibold text-gray-500">Paso {i + 1}</p>
               <h3 className="t-tagline">{step.title}</h3>
               <p className="t-body text-gray-600">{step.desc}</p>

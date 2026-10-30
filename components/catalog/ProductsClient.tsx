@@ -43,7 +43,7 @@ function useDebouncedValue<T>(value: T, delayMs: number) {
 
 const categoryConfig = {
   sneakers: {
-    title: 'SNEAKERS',
+    title: 'Sneakers',
     gradient: 'from-blue-600 via-purple-600 to-pink-600',
     accent: 'bg-blue-500',
     pattern: 'sneakers',
@@ -51,7 +51,7 @@ const categoryConfig = {
     filterColor: 'blue'
   },
   streetwear: {
-    title: 'STREETWEAR',
+    title: 'Streetwear',
     gradient: 'from-orange-500 via-red-500 to-pink-600',
     accent: 'bg-purple-500',
     pattern: 'streetwear',
@@ -61,12 +61,12 @@ const categoryConfig = {
 };
 
 const subcategoryLabels: Record<string, string> = {
-  remeras: 'REMERAS',
-  hoodies: 'HOODIES / ABRIGOS',
-  sweaters: 'SWEATERS',
-  'zip-hoodies': 'ZIP HOODIES',
-  pantalones: 'PANTALONES',
-  accesorios: 'ACCESORIOS',
+  remeras: 'Remeras',
+  hoodies: 'Hoodies / Abrigos',
+  sweaters: 'Sweaters',
+  'zip-hoodies': 'Zip hoodies',
+  pantalones: 'Pantalones',
+  accesorios: 'Accesorios',
 };
 
 export function ProductsClient({
@@ -99,7 +99,7 @@ export function ProductsClient({
 
   const title = useMemo(
     () => {
-      if (brand) return brand.replace(/-/g, ' ').toUpperCase();
+      if (brand) return brand.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       const sub = tipo ?? subcategory;
       if (sub && subcategoryLabels[sub]) return subcategoryLabels[sub];
       return category ? categoryConfig[category].title : 'Productos';
@@ -110,7 +110,6 @@ export function ProductsClient({
   // Un grupo del menú puede juntar varias subcategorías (Hoodies / Abrigos)
   const subs = tipo ? [tipo] : subcategory ? subcategoriesOf(subcategory) : null;
 
-  const config = category ? categoryConfig[category] : null;
 
   const load = async (reset = true) => {
     setLoading(true);
@@ -253,45 +252,32 @@ export function ProductsClient({
       {/* Simple category title */}
       <div className="flex items-center justify-between">
         <h1 className="t-display text-gray-900">
-          {config ? config.title : title}
+          {title}
         </h1>
       </div>
 
-      {/* Subcategory tabs for streetwear */}
+      {/* Subcategorías: píldoras de apple.com, en una fila que se desliza en el celular */}
       {category === 'streetwear' && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/productos?streetwear"
-            className={cn(
-              "px-4 py-2 rounded-xl text-sm font-bold transition",
-              !subcategory
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
-            )}
-          >
+        <nav aria-label="Subcategoría" className="-mx-2 flex gap-2 overflow-x-auto px-2 py-0.5 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
+          <Link href="/productos?streetwear" aria-current={!subcategory ? 'page' : undefined} className="pill-apple">
             Todo
           </Link>
           {STREETWEAR_SUBCATEGORIES.map((sub) => (
             <Link
               key={sub.value}
               href={`/productos?streetwear&sub=${sub.value}`}
-              className={cn(
-                "px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5",
-                subcategory === sub.value
-                  ? "bg-gray-900 text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
-              )}
+              aria-current={subcategory === sub.value ? 'page' : undefined}
+              className="pill-apple"
             >
-              <span>{sub.icon}</span>
               {sub.label}
             </Link>
           ))}
-        </div>
+        </nav>
       )}
 
-      {/* Tipos dentro de Hoodies / Abrigos */}
+      {/* Tipos dentro de Hoodies / Abrigos: un nivel más abajo, solo texto */}
       {category === 'streetwear' && subcategory === 'hoodies' && (
-        <nav aria-label="Tipo" className="-mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+        <nav aria-label="Tipo" className="-mt-3 -mx-2 flex overflow-x-auto px-0.5 [scrollbar-width:none] md:mx-0">
           {[{ value: undefined, label: 'Todos' }, ...HOODIE_TYPES].map((t) => {
             const on = tipo === t.value;
             return (
@@ -300,8 +286,8 @@ export function ProductsClient({
                 href={t.value ? `/productos?streetwear&sub=hoodies&tipo=${t.value}` : '/productos?streetwear&sub=hoodies'}
                 aria-current={on ? 'page' : undefined}
                 className={cn(
-                  'inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3.5 text-[14px] transition-[background-color,color,transform] duration-150 active:scale-[0.97]',
-                  on ? 'bg-gray-900 font-semibold text-white' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  'inline-flex min-h-[44px] shrink-0 items-center px-2.5 text-[17px] tracking-[-0.022em] transition-colors duration-150',
+                  on ? 'font-semibold text-[#1d1d1f]' : 'text-[#6e6e73] hover:text-[#1d1d1f]'
                 )}
               >
                 {t.label}
@@ -318,12 +304,9 @@ export function ProductsClient({
           {(availableSizes.length > 0 || availableBrands.length > 0) && (
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition",
-                showFilters || selectedSizes.length > 0 || selectedBrand
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-              )}
+              aria-expanded={showFilters}
+              aria-pressed={showFilters || selectedSizes.length > 0 || !!selectedBrand}
+              className="pill-apple gap-2"
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filtrar
@@ -446,7 +429,7 @@ export function ProductsClient({
           {(selectedSizes.length > 0 || selectedBrand) && (
             <button
               onClick={() => { setSelectedSizes([]); setSelectedBrand(''); }}
-              className="mt-4 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover active:scale-[0.98] transition"
+              className="mt-4 px-5 py-2.5 rounded-full bg-pricing text-white text-sm font-normal hover:bg-pricing-hover active:scale-[0.98] transition"
             >
               Limpiar filtros
             </button>
@@ -476,7 +459,7 @@ export function ProductsClient({
       {hasMore && (
         <div className="flex justify-center pt-8">
           <button
-            className="flex items-center gap-2 rounded-full bg-primary text-white px-8 py-3.5 text-sm font-normal hover:bg-primary-hover transition disabled:opacity-60 disabled:cursor-not-allowed disabled:"
+            className="flex items-center gap-2 rounded-full bg-pricing text-white px-8 py-3.5 text-sm font-normal hover:bg-pricing-hover transition disabled:opacity-60 disabled:cursor-not-allowed disabled:"
             disabled={loading}
             onClick={() => load(false)}
           >

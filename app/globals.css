@@ -7,15 +7,18 @@
   --header-height-mobile: 76px;
 
   /* Sistema de diseño Apple — única fuente de verdad (tailwind.config.ts las referencia via var()).
-     Un solo acento: Action Blue. Los colores de estado (rojo de rebaja, verde de éxito)
-     son sólo para estados, nunca para decorar. */
-  --color-primary: #0066cc;        /* Action Blue — links, CTAs, estados activos */
+     Valores de DESIGN.md (apple.com). Dos azules con roles fijos: Apple Blue para links
+     y controles de texto; Pricing Blue sólo para los botones llenos. Los colores de
+     estado (rojo de rebaja, verde de éxito) son sólo para estados, nunca para decorar. */
+  --color-primary: #0066cc;        /* Apple Blue — links y controles de texto */
   --color-primary-hover: #0071e3;  /* primaryFocus */
+  --color-pricing: #0071e3;        /* Pricing Blue — botones llenos */
+  --color-launch: #b64400;         /* Launch Orange — "Nuevo", "Próximo ingreso" */
   --color-primary-light: #e8f1fb;
   --color-accent: #0066cc;
   --color-text: #1d1d1f;
   --color-text-secondary: #6e6e73;
-  --color-border: #e0e0e0;         /* hairline */
+  --color-border: #d6d6d6;         /* Hairline Silver */
   --color-surface: #f5f5f7;        /* canvasParchment */
   --color-surface-dark: #272729;   /* surfaceTile1 */
 }
@@ -472,13 +475,14 @@ img {
   /* ── Escala tipográfica ─────────────────────────────────────────────────────
      Titulares en 600 con el tracking negativo leve de SF Pro ("Apple tight"). */
   .t-hero {
-    font-size: 48px; line-height: 1.08; font-weight: 600; letter-spacing: -0.005em;
+    font-size: 80px; line-height: 1.05; font-weight: 600; letter-spacing: -0.015em;
   }
   .t-display {
-    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.003em;
+    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: 0;
   }
+  /* Titular de sección (feature-heading de DESIGN.md: 40px/600) */
   .t-section {
-    font-size: 34px; line-height: 1.18; font-weight: 600; letter-spacing: -0.011em;
+    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: 0;
   }
   .t-lead {
     font-size: 28px; line-height: 1.14; font-weight: 400; letter-spacing: 0.007em;
@@ -491,28 +495,31 @@ img {
   .t-caption { font-size: 14px; line-height: 1.43; font-weight: 400; letter-spacing: -0.016em; }
   .t-fine   { font-size: 12px; line-height: 1.33; font-weight: 400; letter-spacing: -0.01em; }
 
-  /* Hero compacto de la home: presenta la marca sin empujar los productos
-     fuera de la pantalla. 40px en escritorio, 26px en celular. */
+  /* Hero de la home: en escritorio, el titular de 80px de apple.com; en el
+     celular queda compacto (30px) para que las categorías asomen debajo. */
   .t-hero-compact {
-    font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.012em;
+    font-size: 80px; line-height: 1.05; font-weight: 600; letter-spacing: -0.015em;
+  }
+  @media (max-width: 1068px) {
+    .t-hero-compact { font-size: 56px; line-height: 1.07; letter-spacing: -0.012em; }
   }
   @media (max-width: 734px) {
-    .t-hero-compact { font-size: 26px; line-height: 1.15; letter-spacing: -0.008em; }
+    .t-hero-compact { font-size: 30px; line-height: 1.13; letter-spacing: -0.008em; }
   }
 
-  /* El hero baja 48 → 42 → 34 → 30 según el ancho (escalones de apple.com) */
+  /* El hero baja 80 → 64 → 40 → 34 según el ancho (escalones de apple.com) */
   @media (max-width: 1068px) {
-    .t-hero { font-size: 42px; line-height: 1.1; }
+    .t-hero { font-size: 64px; line-height: 1.06; }
   }
   @media (max-width: 734px) {
-    .t-hero { font-size: 34px; line-height: 1.12; }
+    .t-hero { font-size: 40px; line-height: 1.1; letter-spacing: -0.01em; }
     .t-display { font-size: 32px; line-height: 1.125; }
-    .t-section { font-size: 24px; line-height: 1.2; }
+    .t-section { font-size: 28px; line-height: 1.14; }
     .t-lead { font-size: 21px; line-height: 1.19; }
     .t-tagline { font-size: 19px; }
   }
   @media (max-width: 419px) {
-    .t-hero { font-size: 30px; }
+    .t-hero { font-size: 34px; }
   }
 
   /* Titular en dos tonos: la primera frase en tinta, el resto en gris.
@@ -550,7 +557,7 @@ img {
       color 0.2s cubic-bezier(0.28, 0.11, 0.32, 1),
       transform 0.2s cubic-bezier(0.28, 0.11, 0.32, 1);
   }
-  .btn-apple { background: var(--color-primary); color: #fff; }
+  .btn-apple { background: var(--color-pricing); color: #fff; }
   /* Píldora chica: misma altura táctil (40px), menos presencia */
   .btn-apple-sm { min-height: 40px; padding: 8px 18px; font-size: 15px; }
   .btn-apple-ghost { background: transparent; color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); }
@@ -583,8 +590,8 @@ img {
     margin-left: -50vw;
     margin-right: -50vw;
   }
-  .tile { padding-block: 80px; }
-  @media (max-width: 734px) { .tile { padding-block: 44px; } }
+  .tile { padding-block: 90px; }
+  @media (max-width: 734px) { .tile { padding-block: 52px; } }
   .tile-light { background: #ffffff; color: #1d1d1f; }
   .tile-parchment { background: #f5f5f7; color: #1d1d1f; }
   .tile-dark { background: #272729; color: #ffffff; }
@@ -592,11 +599,26 @@ img {
   .tile-inner { max-width: 1440px; margin-inline: auto; padding-inline: 22px; }
   @media (min-width: 735px) { .tile-inner { padding-inline: 40px; } }
 
-  /* ── Tarjeta de tienda (store-utility-card) ─────────────────────────────── */
+  /* ── Tarjeta de producto ──────────────────────────────────────────────────
+     Depende de la superficie, como en apple.com:
+     - Sobre blanco: sin tarjeta; la foto en un marco gris claro de esquinas
+       grandes y el texto debajo (la grilla de accesorios de Apple).
+     - Sobre la franja gris (tile-parchment): tarjeta blanca de 28px, sin borde
+       ni sombra, con la foto en su marco gris adentro (las fotos no son de un
+       blanco puro: sobre blanco se les notaba el recuadro).
+     En el celular las esquinas bajan a 20px: en una foto de 170px, 28 es casi
+     un círculo. */
   .store-card {
-    background: #ffffff;
-    border-radius: 18px;
+    border-radius: 20px;
     transition: transform 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
+  }
+  .store-media { background: #f5f5f7; border-radius: 20px; }
+  .tile-parchment .store-card { background: #ffffff; padding: 10px; }
+  .tile-parchment .store-media { border-radius: 14px; }
+  @media (min-width: 735px) {
+    .store-card, .store-media { border-radius: 28px; }
+    .tile-parchment .store-card { padding: 20px; }
+    .tile-parchment .store-media { border-radius: 18px; }
   }
 
   /* Efectos de mouse: sólo donde hay mouse (en el celular quedaban pegados tras el toque) */
@@ -607,15 +629,25 @@ img {
     .tile-dark .btn-apple-ghost:hover { background: #2997ff; color: #fff; }
     .paddle-apple:hover { background: rgba(223, 223, 227, 0.8); color: rgba(0, 0, 0, 0.72); }
     .store-card:hover { transform: scale(1.012); }
+    .pill-apple:not([aria-current="page"]):not([aria-pressed="true"]):hover { box-shadow: inset 0 0 0 1px #1d1d1f; }
   }
 
   /* Tarjeta: responde al dedo apenas se apoya (Emil: 0.97–0.98, 160ms) */
   .store-card:active { transform: scale(0.98); transition-duration: 160ms; }
 
-  /* Sobre blanco la tarjeta se delimita con un hilo; sobre parchment el propio
-     cambio de superficie alcanza (así lo resuelve apple.com). */
-  .store-card { box-shadow: inset 0 0 0 1px #e8e8ed; }
-  .tile-parchment .store-card { box-shadow: none; }
+  /* Píldora de filtro (Outlined Explore Pill de DESIGN.md): sin relleno, texto
+     en tinta y un hilo gris; la elegida, llena en tinta. */
+  .pill-apple {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    min-height: 44px; padding: 0 18px; border-radius: 9999px;
+    font-size: 14px; line-height: 1.29; letter-spacing: -0.016em; white-space: nowrap;
+    color: #1d1d1f; box-shadow: inset 0 0 0 1px #86868b;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .pill-apple:active { transform: scale(0.97); transition-duration: 100ms; }
+  .pill-apple[aria-current="page"], .pill-apple[aria-pressed="true"] {
+    background: #1d1d1f; color: #fff; box-shadow: none; font-weight: 600;
+  }
 }
 
 /* ── Aparición al hacer scroll ─────────────────────────────────────────────
@@ -636,10 +668,10 @@ img {
 .reveal-ready [data-reveal="clip"] {
   opacity: 1;
   transform: none;
-  clip-path: inset(0 0 100% 0 round 18px);
+  clip-path: inset(0 0 100% 0 round 28px);
   transition: clip-path 1s var(--ease-out) var(--reveal-delay, 0ms), transform 160ms var(--ease-out);
 }
-.reveal-ready [data-reveal="clip"].is-revealed { clip-path: inset(0 0 0 0 round 18px); }
+.reveal-ready [data-reveal="clip"].is-revealed { clip-path: inset(0 0 0 0 round 28px); }
 .reveal-ready [data-reveal="fade"] { transform: none; }
 .reveal-ready [data-reveal].is-revealed { opacity: 1; transform: none; }
 
@@ -711,15 +743,15 @@ img {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   MATERIALES — la barra de arriba es vidrio oscuro: el contenido pasa por
-   debajo desenfocado en vez de cortarse contra una franja negra (apple.com usa
-   rgba(22,22,23,.8) con saturate(180%) blur(20px); acá un poco más oscuro
-   para que arriba de todo se siga leyendo negra, como siempre fue).
+   MATERIALES — la barra de arriba es vidrio claro, como la de apple.com
+   (DESIGN.md): blanco translúcido con saturate(180%) blur(20px), el contenido
+   pasa por debajo desenfocado, y un hilo de 1px #e6e6e8 la separa.
    ════════════════════════════════════════════════════════════════════════════ */
 .material-nav {
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(255, 255, 255, 0.8);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 1px 0 #e6e6e8;
 }
 
 /* Arrastrando el carrito con el dedo no hay transición: sigue al dedo 1:1 */
@@ -727,7 +759,7 @@ img {
 
 /* Quien pidió menos transparencia recibe superficies sólidas */
 @media (prefers-reduced-transparency: reduce) {
-  .material-nav { background: #000; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .material-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .paddle-apple { background: #d2d2d7; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 /* Y quien pidió más contraste, bordes definidos */

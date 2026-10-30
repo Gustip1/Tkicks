@@ -41,7 +41,7 @@ export default async function NuevosIngresosPage() {
             </p>
             <Link
               href="/productos"
-              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition-colors"
+              className="inline-flex items-center justify-center mt-4 px-6 py-2.5 rounded-full bg-pricing text-white text-sm font-normal hover:bg-pricing-hover transition-colors"
             >
               Ver catálogo general
             </Link>

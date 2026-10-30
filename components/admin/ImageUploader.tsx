@@ -6,7 +6,16 @@ import { cn } from '@/lib/utils';
 
 export interface UploadedImage { url: string; alt: string }
 
-export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onChange: (v: UploadedImage[]) => void }) {
+export function ImageUploader({
+  value,
+  onChange,
+  mode = 'producto',
+}: {
+  value: UploadedImage[];
+  onChange: (v: UploadedImage[]) => void;
+  /** "foto": foto de ambiente, se guarda con su encuadre (no se lleva a un cuadrado blanco) */
+  mode?: 'producto' | 'foto';
+}) {
   const [loading, setLoading] = useState(false);
   // Avisos de calidad de las fotos recién subidas (foto chica = se ve borrosa)
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -21,6 +30,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
       // la prenda y dejaba solo el estampado.
       const form = new FormData();
       accepted.forEach((f) => form.append('files', f));
+      if (mode === 'foto') form.append('modo', 'foto');
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const payload = await res.json();
 
@@ -43,7 +53,7 @@ export function ImageUploader({ value, onChange }: { value: UploadedImage[]; onC
     } finally {
       setLoading(false);
     }
-  }, [value, onChange]);
+  }, [value, onChange, mode]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop, 

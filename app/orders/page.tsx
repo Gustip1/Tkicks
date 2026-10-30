@@ -80,7 +80,7 @@ export default function OrdersPage() {
           <p className="text-gray-500 font-bold">No tienes pedidos aún.</p>
           <Link
             href="/productos"
-            className="mt-3 inline-block rounded-full bg-primary px-4 py-2 text-sm font-normal text-white hover:bg-primary-hover transition-colors"
+            className="mt-3 inline-block rounded-full bg-pricing px-4 py-2 text-sm font-normal text-white hover:bg-pricing-hover transition-colors"
           >
             Explorar productos
           </Link>

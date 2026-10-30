@@ -75,10 +75,10 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       ref={cardRef}
       href={`/producto/${product.slug}`}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
-      className="group store-card flex flex-col h-full p-2.5 sm:p-4 md:p-5"
+      className="group store-card flex flex-col h-full"
     >
-      {/* ── Imagen (swap en hover) — dentro de la tarjeta, esquinas de 8px ── */}
-      <div className="relative w-full aspect-square overflow-hidden rounded-sm bg-parchment">
+      {/* ── Imagen (swap en hover): marco gris sobre blanco, blanco sobre la franja gris (store-media) ── */}
+      <div className="store-media relative w-full aspect-square overflow-hidden">
         {/* El esqueleto solo pulsa mientras hay una imagen real cargando; si no
             hay imagen o falló, no queda pulsando para siempre. */}
         {!!primary?.url && !imgError && !loaded && (
@@ -140,15 +140,15 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
 
       {/* ── Info ── */}
       <div className="pt-2.5 sm:pt-4 flex-1 flex flex-col">
-        {/* Eyebrow de apple.com: "Nuevo" en naranja; si no, la categoría en gris */}
+        {/* Eyebrow de apple.com: "Nuevo" en Launch Orange, texto solo; si no, la categoría en gris */}
         {comingSoon ? (
-          <p className="t-fine font-semibold text-[#bf4800] mb-1">
+          <p className="t-fine font-semibold text-[#b64400] mb-1">
             Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
           </p>
         ) : hasSale && !isSoldOut ? (
           <p className="t-fine font-semibold text-red-600 mb-1">Oferta</p>
         ) : product.is_new && !isSoldOut ? (
-          <p className="t-fine font-semibold text-[#bf4800] mb-1">Nuevo</p>
+          <p className="t-fine font-semibold text-[#b64400] mb-1">Nuevo</p>
         ) : (
           <p className="t-fine text-gray-500 mb-1 capitalize">{categoryLabel}</p>
         )}

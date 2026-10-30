@@ -81,13 +81,13 @@ export function ProductView({
           {/* Eyebrow + título, como la página "Comprar" de apple.com */}
           <div className="hero-rise">
             {isComingSoon ? (
-              <p className="t-caption font-semibold text-[#bf4800]">
+              <p className="t-caption font-semibold text-[#b64400]">
                 Próximo ingreso{comingSoonEta && ` · ${comingSoonEta}`}
               </p>
             ) : hasSale ? (
               <p className="t-caption font-semibold text-red-600">Oferta</p>
             ) : product.is_new ? (
-              <p className="t-caption font-semibold text-[#bf4800]">Nuevo</p>
+              <p className="t-caption font-semibold text-[#b64400]">Nuevo</p>
             ) : (
               <p className="t-caption text-gray-500 capitalize">{product.category}</p>
             )}

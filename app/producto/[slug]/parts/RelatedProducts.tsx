@@ -72,7 +72,7 @@ export function RelatedProducts({
         </div>
         <Link
           href={`/productos?${category}`}
-          className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover transition-colors shrink-0"
+          className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pricing text-white text-xs font-normal hover:bg-pricing-hover transition-colors shrink-0"
         >
           Ver todo <ArrowRight className="w-3.5 h-3.5" />
         </Link>

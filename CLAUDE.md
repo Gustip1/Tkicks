@@ -7,10 +7,11 @@ diseño alcanza con esto**. Leer una skill completa solo si el dueño la pide po
 nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 
 ## Reglas del dueño (no negociables)
-- Lenguaje visual de apple.com. Fuente: solo la de Apple (SF Pro / system-ui). Nada de fuentes nuevas.
+- Lenguaje visual de apple.com, según **`DESIGN.md`** (la referencia que mandó el dueño, oct 2026: copiarla lo más parecido posible). Fuente: solo la de Apple (SF Pro / system-ui). Nada de fuentes nuevas.
+- Tokens de DESIGN.md ya aplicados: tinta `#1d1d1f`; franjas `#ffffff` / `#f5f5f7`; links `#0066cc` (`text-primary`); botones llenos `#0071e3` (`btn-apple`, `bg-pricing`); "Nuevo" `#b64400` en texto solo; hilos `#d6d6d6`; tarjetas y fotos 28px (`rounded-2xl`/`3xl`); hero 80px/600; titular de sección 40px/600 (`t-section`); 90px entre secciones (`tile`); sin sombras ni degradés.
 - Tipografía uniforme y con peso; no mezclar pesos finos. Textos en español rioplatense (vos: "Seleccioná", "Mirá").
 - Celular primero: 93% del tráfico. Carruseles compactos de a dos en celular.
-- Hero de la home: solo la marca y las dos píldoras, sin fotos de productos; debajo "Elegí tu estilo" con las categorías en fotos grandes (`CategoryShowcase`) y después la grilla de recién llegados. Opiniones al final. Se probaron círculos y cuadraditos tipo historias de Instagram (oct 2026) y al dueño le parecieron menos profesionales: no volver a eso.
+- Hero de la home: solo la marca y las dos píldoras, sin fotos de productos (80px en escritorio, compacto en celular); debajo "Elegí tu estilo" con las categorías en fotos grandes (`CategoryShowcase`) y después la grilla de recién llegados. Opiniones al final. Se probaron círculos y cuadraditos tipo historias de Instagram (oct 2026) y al dueño le parecieron menos profesionales: no volver a eso.
 - Precios: el USD es el precio principal (como lo carga el dueño) y los pesos van debajo, con las tarjetas de transferencia y cuotas en la ficha. Se probó poner los pesos primero (oct 2026) y el dueño pidió volver al USD.
 - Titulares directos, de un solo tono, sin punto final ("Recién llegados"). El titular en dos tonos con frase gris se usaba en todas las secciones y sonaba a plantilla.
 - "Subí a GitHub" = commit a `main` + push = producción (Vercel). Compilar con `npm run build` antes.
@@ -18,11 +19,11 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 ## Piezas que ya existen (usarlas, no inventar otras)
 - Tipografía: `t-hero t-display t-section t-lead t-tagline t-body t-strong t-caption t-fine`; titular en dos tonos con `<span className="t-muted">`.
 - Franjas: `bleed` + `tile-light | tile-parchment | tile-dark | tile-black`, `tile-inner`. El cambio de color es el divisor (sin bordes ni sombras).
-- Botones: `btn-apple`, `btn-apple-ghost`, `link-apple` (con ›), `paddle-apple` (círculo sobre fotos). Tarjeta: `store-card`.
+- Botones: `btn-apple`, `btn-apple-ghost`, `link-apple` (con ›), `paddle-apple` (círculo sobre fotos), `pill-apple` (filtros: píldora con hilo gris, elegida en tinta vía `aria-current`/`aria-pressed`). Tarjeta de producto: `store-card` + `store-media` (sobre blanco, sin tarjeta y foto en marco gris; dentro de `tile-parchment`, tarjeta blanca).
 - Aparición al scrollear: `data-reveal` (sube) y `data-reveal="clip"` (fotos, recorte). Solo en contenido, **nunca en encabezados**.
 - Hero: `hero-line` (máscara) y `hero-rise hero-d1..d4`. Un solo momento animado por pantalla.
 - Curvas: `var(--ease-out)` entradas/UI, `var(--ease-in-out)` movimiento en pantalla, `var(--ease-drawer)` paneles; `ease-apple` en Tailwind.
-- Material: `material-nav` (vidrio oscuro de la barra). Gesto: `lib/useSwipeToDismiss.ts` (paneles que se cierran con el dedo). `lib/haptics.ts` (vibración en momentos clave).
+- Material: `material-nav` (vidrio claro de la barra, como apple.com; menús desplegables en `#fafafc`). Gesto: `lib/useSwipeToDismiss.ts` (paneles que se cierran con el dedo). `lib/haptics.ts` (vibración en momentos clave).
 - `TouchFeedback` hace funcionar `:active` en iPhone; no sacarlo.
 - Popups: siempre `components/ui/Sheet.tsx` (hoja desde abajo en celular, tarjeta centrada en escritorio, fondo desenfocado, foco adentro, se cierra deslizando). Sin `onClose` es bloqueante. Avisos flotantes (venta reciente, pistas): tarjeta blanca sólida de 18px con sombra suave. Nunca degradés, brillos ni emojis; nunca inventar datos (ej.: ciudad de una venta).
 

@@ -321,7 +321,7 @@ export default function EncargosPage() {
                   <button
                     type="button"
                     onClick={() => fileRefs.current[idx]?.click()}
-                    className="rounded-full bg-primary px-4 py-2 text-xs font-normal text-white hover:bg-primary-hover transition"
+                    className="rounded-full bg-pricing px-4 py-2 text-xs font-normal text-white hover:bg-pricing-hover transition"
                   >
                     Seleccionar archivos
                   </button>
@@ -494,7 +494,7 @@ export default function EncargosPage() {
         )}
         <button
           onClick={siguiente}
-          className="flex-1 rounded-full bg-primary py-3.5 text-sm font-normal text-white hover:bg-primary-hover transition"
+          className="flex-1 rounded-full bg-pricing py-3.5 text-sm font-normal text-white hover:bg-pricing-hover transition"
         >
           {paso === 2 ? "Enviar pedido por WhatsApp" : "Siguiente"}
         </button>

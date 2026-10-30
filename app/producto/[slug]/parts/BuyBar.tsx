@@ -181,7 +181,7 @@ export function BuyBar({
               'shrink-0 px-5 lg:px-10 py-3 rounded-full text-[17px] font-normal transition-[transform,background-color]',
               soldOut
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-primary text-white hover:bg-primary-hover active:scale-95'
+                : 'bg-pricing text-white hover:bg-pricing-hover active:scale-95'
             )}
           >
             {soldOut ? 'Sin stock' : size ? 'Agregar' : 'Elegir talle'}

@@ -148,7 +148,7 @@ export function Reviews({
                 key={r.id}
                 className="min-w-0 shrink-0 grow-0 basis-[85%] sm:basis-1/2 lg:basis-1/3 pl-4 md:pl-5"
               >
-                <figure data-reveal="" className="h-full rounded-lg bg-tile-2 p-5 md:p-6 flex flex-col gap-3.5">
+                <figure data-reveal="" className="h-full rounded-3xl bg-tile-2 p-5 md:p-6 flex flex-col gap-3.5">
                   <Stars rating={r.rating} />
                   <blockquote className="t-body text-[#f5f5f7] flex-1">
                     “{r.text.trim().replace(/^["“”«»\s]+|["“”«»\s]+$/g, '')}”

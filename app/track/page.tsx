@@ -73,7 +73,7 @@ export default function TrackPage() {
           />
         </div>
         <button
-          className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-normal text-white hover:bg-primary-hover disabled:opacity-60 transition-colors"
+          className="w-full rounded-full bg-pricing px-4 py-2.5 text-sm font-normal text-white hover:bg-pricing-hover disabled:opacity-60 transition-colors"
           onClick={lookup}
           disabled={loading || !orderNumber || !email}
         >

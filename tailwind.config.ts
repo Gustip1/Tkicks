@@ -57,6 +57,11 @@ const config: Config = {
           hover: 'var(--color-primary-hover)',
           light: 'var(--color-primary-light)'
         },
+        // Pricing Blue (DESIGN.md): sólo para botones llenos; los links siguen en primary
+        pricing: {
+          DEFAULT: 'var(--color-pricing)',
+          hover: '#0077ed'
+        },
         accent: 'var(--color-accent)',
         surface: {
           DEFAULT: 'var(--color-surface)',
@@ -113,15 +118,16 @@ const config: Config = {
         medium: '0 0 #0000',
         strong: '0 0 #0000'
       },
-      // Radios de apple.com: sm 8 (utilitarios, imagen dentro de tarjeta) · md 11 ·
-      // lg 18 (tarjetas de tienda). Nada en el medio; lo demás es píldora.
+      // Radios de DESIGN.md (apple.com): sm 8 (utilitarios) · md 10 (links) ·
+      // lg/xl 18 (controles y tarjetas chicas) · 2xl/3xl 28 (tarjetas y fotos).
+      // Lo demás es píldora.
       borderRadius: {
         sm: '8px',
-        md: '11px',
+        md: '10px',
         lg: '18px',
         xl: '18px',
-        '2xl': '18px',
-        '3xl': '18px'
+        '2xl': '28px',
+        '3xl': '28px'
       },
       // La curva de apple.com: arranque rápido, frenado largo y suave.
       transitionTimingFunction: {

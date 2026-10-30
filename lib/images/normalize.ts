@@ -134,10 +134,39 @@ export async function normalizeProductImage(input: Buffer): Promise<NormalizedIm
   };
 }
 
+/**
+ * Fotos de ambiente (las de las categorías de la home): se respeta el encuadre
+ * original. Antes pasaban por normalizeProductImage y quedaban dentro de un
+ * cuadrado con franjas blancas a los costados, que se veían en las tarjetas.
+ * Solo se endereza, se achica si es enorme y se pasa a WebP.
+ */
+export async function normalizePhoto(input: Buffer): Promise<NormalizedImage> {
+  const meta = await sharp(input).metadata();
+  const { data: buffer, info } = await sharp(input)
+    .rotate()
+    .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+    .flatten({ background: IMAGE_BACKGROUND })
+    .webp({ quality: IMAGE_QUALITY, effort: 4 })
+    .toBuffer({ resolveWithObject: true });
+  const ow = meta.width ?? 0;
+  const oh = meta.height ?? 0;
+  return {
+    buffer,
+    width: info.width,
+    height: info.height,
+    originalFormat: meta.format ?? 'desconocido',
+    originalWidth: ow,
+    originalHeight: oh,
+    originalBytes: input.length,
+    bytes: buffer.length,
+    warning: ow && oh ? revisarCalidad(ow, oh) : null,
+  };
+}
+
 /** Copia chica de una foto ya normalizada, para tarjetas y carruseles (ver thumbs.ts). */
 export async function makeThumbnail(normalized: Buffer): Promise<Buffer> {
   return sharp(normalized)
-    .resize(THUMB_SIZE, THUMB_SIZE)
+    .resize(THUMB_SIZE, THUMB_SIZE, { fit: 'inside' })
     .webp({ quality: THUMB_QUALITY, effort: 4 })
     .toBuffer();
 }

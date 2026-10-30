@@ -18,7 +18,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const base =
       'inline-flex items-center justify-center rounded-full font-normal transition-[transform,background-color,color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-hover focus-visible:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100';
     const variants = {
-      default: 'bg-primary text-white hover:bg-primary-hover',
+      default: 'bg-pricing text-white hover:bg-pricing-hover',
       outline: 'border border-gray-200 bg-white text-primary hover:bg-gray-50',
       ghost: 'text-primary hover:bg-gray-100',
     } as const;

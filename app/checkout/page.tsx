@@ -402,7 +402,7 @@ export default function CheckoutPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => router.push('/productos')}
-              className="flex-1 py-3 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors"
+              className="flex-1 py-3 rounded-full bg-pricing text-white font-normal text-sm hover:bg-pricing-hover transition-colors"
             >
               Seguir comprando
             </button>
@@ -556,7 +556,7 @@ export default function CheckoutPage() {
 
                   <button
                     onClick={handleContinueToPayment}
-                    className="w-full py-3.5 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-full bg-pricing text-white font-normal text-sm hover:bg-pricing-hover transition-colors flex items-center justify-center gap-2"
                   >
                     Continuar al pago
                     <ChevronRight className="w-4 h-4" />
@@ -810,7 +810,7 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={handleInstallmentsWhatsApp}
                       disabled={submitting}
-                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full bg-pricing text-white font-normal text-sm hover:bg-pricing-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? (
                         <>
@@ -840,7 +840,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleSubmitOrder}
                     disabled={submitting}
-                    className="w-full py-4 rounded-full bg-primary text-white font-normal text-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-full bg-pricing text-white font-normal text-sm hover:bg-pricing-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting ? (
                       <>
@@ -912,7 +912,7 @@ export default function CheckoutPage() {
                       <button
                         onClick={handleApplyCoupon}
                         disabled={couponValidating || !couponInput.trim()}
-                        className="px-4 py-2 rounded-full bg-primary text-white text-xs font-normal hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                        className="px-4 py-2 rounded-full bg-pricing text-white text-xs font-normal hover:bg-pricing-hover disabled:opacity-50 transition-colors"
                       >
                         {couponValidating ? '...' : 'Aplicar'}
                       </button>
@@ -1063,7 +1063,7 @@ function PaymentOption({
       }`}
     >
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-        selected ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
+        selected ? 'bg-pricing text-white' : 'bg-gray-100 text-gray-600'
       }`}>
         {icon}
       </div>

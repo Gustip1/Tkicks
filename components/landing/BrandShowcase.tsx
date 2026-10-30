@@ -97,7 +97,7 @@ export function BrandShowcase({
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-10">
           {/* El nombre de la marca solo: el "Marca destacada." en gris al lado
               se repetía igual en cada fila y sonaba a plantilla */}
-          <h2 className="text-[21px] md:text-[28px] font-semibold tracking-[-0.015em]">{title}</h2>
+          <h2 className="t-section">{title}</h2>
           <Link href={href} className="link-apple t-body">
             Comprar {title}
           </Link>

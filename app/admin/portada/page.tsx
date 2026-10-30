@@ -190,7 +190,7 @@ export default function AdminPortadaPage() {
                       <span className="text-xs font-semibold text-emerald-600">Imagen elegida</span>
                     )}
                   </div>
-                  <ImageUploader value={tiles[c.sub] || []} onChange={(imgs) => setSlot(c.sub, imgs)} />
+                  <ImageUploader mode="foto" value={tiles[c.sub] || []} onChange={(imgs) => setSlot(c.sub, imgs)} />
                 </div>
               ))}
             </div>

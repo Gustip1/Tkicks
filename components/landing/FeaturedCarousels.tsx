@@ -264,7 +264,7 @@ function OldStockSection({ products }: { products: Product[] }) {
           <button onClick={scrollNext} className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition" aria-label="Siguiente">
             <ChevronRight className="w-5 h-5 text-gray-900" />
           </button>
-          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-normal hover:bg-primary-hover transition">
+          <Link href="/productos" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-pricing text-white text-sm font-normal hover:bg-pricing-hover transition">
             Ver catálogo <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

@@ -42,7 +42,7 @@ export function AccountNoticeModal() {
             <span className="block truncate text-[17px] font-semibold">{INSTAGRAM_HANDLE.replace(/^@/, '')}</span>
             <span className="block text-[13px] text-gray-500">{ACCOUNT_NOTICE.badge}</span>
           </span>
-          <span className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-semibold text-white">
+          <span className="shrink-0 rounded-full bg-pricing px-3.5 py-1.5 text-[13px] font-semibold text-white">
             Seguir
           </span>
         </a>

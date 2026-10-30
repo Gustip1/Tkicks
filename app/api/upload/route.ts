@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { normalizeProductImage, makeThumbnail } from '@/lib/images/normalize';
+import { normalizeProductImage, normalizePhoto, makeThumbnail } from '@/lib/images/normalize';
 import { THUMB_FOLDER } from '@/lib/images/thumbs';
 
 export const runtime = 'nodejs';
@@ -31,6 +31,9 @@ export async function POST(req: NextRequest) {
   // Parse files
   const formData = await req.formData();
   const files = formData.getAll('files');
+  // "foto": fotos de ambiente (categorías de la home), con su encuadre original.
+  // Si no, foto de producto: cuadrada, 1400x1400, sobre blanco.
+  const isPhoto = formData.get('modo') === 'foto';
   if (!files || files.length === 0) return NextResponse.json([], { status: 200 });
 
   // Admin client for storage (bypass RLS)
@@ -54,10 +57,10 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const original = Buffer.from(arrayBuffer);
 
-      // Todas las fotos salen del mismo molde: cuadrada, 1400x1400 y WebP.
+      // Las de producto salen del mismo molde: cuadrada, 1400x1400 y WebP.
       let normalized;
       try {
-        normalized = await normalizeProductImage(original);
+        normalized = isPhoto ? await normalizePhoto(original) : await normalizeProductImage(original);
       } catch (e) {
         console.error(`No se pudo procesar ${file.name}:`, e);
         continue;

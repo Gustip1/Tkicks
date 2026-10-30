@@ -195,7 +195,7 @@ export function Sheet({
         tabIndex={-1}
         className={cn(
           'sheet-panel relative w-full bg-white text-gray-900 outline-none',
-          'rounded-t-[22px] sm:rounded-[22px] max-h-[92dvh] overflow-y-auto overscroll-contain',
+          'rounded-t-[28px] sm:rounded-[28px] max-h-[92dvh] overflow-y-auto overscroll-contain',
           !flushBottom && 'pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-0',
           'shadow-[0_-8px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_24px_80px_rgba(0,0,0,0.22)]',
           size === 'xl' ? 'sm:max-w-[560px] md:max-w-[880px]' : size === 'lg' ? 'sm:max-w-[560px]' : 'sm:max-w-[420px]',
