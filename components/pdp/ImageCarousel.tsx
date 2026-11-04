@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 export function ImageCarousel({ images }: { images: ProductImage[] }) {
   const [ref, api] = useEmblaCarousel({ loop: true, align: 'start' });
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState<Record<number, boolean>>({});
 
   const onSelect = useCallback(() => {
     if (!api) return;
@@ -42,7 +41,8 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
             {images.map((img, idx) => (
               <li key={img.url} className="min-w-0 shrink-0 grow-0 basis-full">
                 {/* El gris va en el slide: el carrusel mueve la lista con transform (capa propia),
-                    y el mix-blend de la foto sólo se funde con el fondo de esa capa. */}
+                    y el mix-blend de la foto sólo se funde con el fondo de esa capa. También es el
+                    lugar mientras carga: la foto no se oculta hasta que corre el JS. */}
                 <div className="relative aspect-[4/5] w-full overflow-hidden bg-parchment">
                   <Image 
                     src={img.url} 
@@ -51,15 +51,8 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
                     sizes="(max-width: 768px) 100vw, 50vw"
                     quality={85}
                     priority={idx === 0}
-                    className={cn(
-                      "object-contain mix-blend-multiply transition-[opacity,transform] duration-700 ease-apple",
-                      imageLoaded[idx] ? "opacity-100 scale-100" : "opacity-0 scale-105"
-                    )}
-                    onLoad={() => setImageLoaded(prev => ({ ...prev, [idx]: true }))}
+                    className="object-contain mix-blend-multiply"
                   />
-                  {!imageLoaded[idx] && (
-                    <div className="absolute inset-0 bg-gray-200/60 animate-pulse" />
-                  )}
                 </div>
               </li>
             ))}
