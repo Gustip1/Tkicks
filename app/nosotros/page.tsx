@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     'Conocé Tkicks: el reseller de sneakers y streetwear originales en San Juan. Nuestra historia, nuestros valores y el feed en vivo de nuestras redes.',
 };
 
+// El feed de Instagram se renueva cada hora (y al guardar el token en el admin)
+export const revalidate = 3600;
+
 const TIKTOK_URL = 'https://www.tiktok.com/@tkicks.sj';
 const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5492644802994';
 

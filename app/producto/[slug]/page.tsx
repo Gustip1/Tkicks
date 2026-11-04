@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Product, ProductVariant } from '@/types/db';
+import { SITE_URL as SITE } from '@/lib/site';
 import { ProductView } from './parts/ProductView';
 import { ProductGone } from './parts/ProductGone';
 
@@ -23,8 +24,6 @@ import { ProductGone } from './parts/ProductGone';
  */
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
-
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tkicks.com.ar').replace(/\/$/, '');
 
 function db() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {

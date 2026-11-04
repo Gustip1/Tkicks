@@ -17,13 +17,8 @@ interface RawInstagramMedia {
   permalink: string;
 }
 
-/**
- * Trae los últimos posts de @tkicks.gp. El token se carga desde /admin/ajustes
- * (tabla settings, key "instagram_access_token") — no depende de env vars, así
- * el dueño lo puede renovar sin redeploy. Usado tanto por /api/instagram/posts
- * (home, fetch client-side) como por la página /nosotros (server component).
- */
-export async function getInstagramPosts(limit = 8): Promise<InstagramPost[]> {
+/** El token vive en settings y solo se lee con la clave de servicio, nunca desde el navegador. */
+async function readToken(): Promise<string | undefined> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -31,11 +26,51 @@ export async function getInstagramPosts(limit = 8): Promise<InstagramPost[]> {
 
   const { data } = await supabase
     .from('settings')
-    .select('value')
+    .select('key, value')
     .eq('key', 'instagram_access_token')
     .maybeSingle();
 
-  const token = (data?.value as { token?: string } | null)?.token;
+  return (data?.value as { token?: string } | null)?.token;
+}
+
+/** Le pregunta a Instagram si el token guardado sirve. Lo usa /admin/ajustes al guardar. */
+export async function checkInstagramToken(): Promise<{ ok: true; username: string } | { ok: false; error: string }> {
+  const token = await readToken();
+  if (!token) return { ok: false, error: 'No hay ningún token guardado.' };
+
+  // Los de Facebook (por ejemplo, del Graph API Explorer) esta API no los acepta
+  if (token.startsWith('EAA')) {
+    return {
+      ok: false,
+      error:
+        'Es un token de Facebook (empieza con EAA) y acá hace falta uno de Instagram, que empieza con IG. ' +
+        'Generalo en developers.facebook.com, en "Instagram API with Instagram Login".',
+    };
+  }
+
+  try {
+    const res = await fetch(
+      `https://graph.instagram.com/me?fields=username&access_token=${encodeURIComponent(token)}`,
+      { cache: 'no-store' }
+    );
+    const json = await res.json();
+    if (!res.ok || !json?.username) {
+      return { ok: false, error: `Instagram lo rechazó: ${json?.error?.message ?? `error ${res.status}`}` };
+    }
+    return { ok: true, username: json.username };
+  } catch {
+    return { ok: false, error: 'No se pudo consultar a Instagram. Probá de nuevo en un rato.' };
+  }
+}
+
+/**
+ * Trae los últimos posts de @tkicks.gp. El token se carga desde /admin/ajustes
+ * (tabla settings, key "instagram_access_token") — no depende de env vars, así
+ * el dueño lo puede renovar sin redeploy. Usado tanto por /api/instagram/posts
+ * (home, fetch client-side) como por la página /nosotros (server component).
+ */
+export async function getInstagramPosts(limit = 8): Promise<InstagramPost[]> {
+  const token = await readToken();
   if (!token) return [];
 
   try {

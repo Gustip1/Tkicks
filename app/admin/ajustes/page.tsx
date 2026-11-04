@@ -156,10 +156,21 @@ export default function AdminSettingsPage() {
       .from('settings')
       .upsert({ key: 'instagram_access_token', value: { token: instagramToken.trim() } }, { onConflict: 'key' });
 
+    if (upsertError) {
+      setInstagramMessage(`Error al guardar: ${upsertError.message}`);
+      setSavingInstagram(false);
+      return;
+    }
+    await revalidateHome();
+    // Se prueba de verdad contra Instagram: guardar no significa que el token sirva
+    const check = await fetch('/api/admin/instagram', { method: 'POST' })
+      .then((r) => r.json())
+      .catch(() => null);
     setInstagramMessage(
-      upsertError ? `Error al guardar: ${upsertError.message}` : '✓ Token guardado — el feed de Instagram lo usa en la próxima carga'
+      check?.ok
+        ? `✓ Token guardado. Conectado como @${check.username}: el feed ya usa esta cuenta.`
+        : `El token se guardó, pero no funciona. ${check?.error ?? 'No se pudo comprobar con Instagram.'}`
     );
-    if (!upsertError) await revalidateHome();
     setSavingInstagram(false);
   };
 
@@ -323,7 +334,8 @@ export default function AdminSettingsPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Instagram (@tkicks.gp)</h2>
         <p className="text-sm text-gray-500 mb-4 max-w-lg">
           Pegá acá el access token de Instagram para mostrar tus últimos posts en la home. Se genera desde
-          developers.facebook.com (producto &quot;Instagram API with Instagram Login&quot;) conectando tu cuenta profesional.
+          developers.facebook.com (producto &quot;Instagram API with Instagram Login&quot;) conectando tu cuenta profesional,
+          y tiene que empezar con IG (los que empiezan con EAA son de Facebook y no sirven).
           El token de larga duración vence cada ~60 días — cuando venza, generá uno nuevo y pegalo acá de nuevo.
         </p>
         <form onSubmit={handleSaveInstagramToken} className="space-y-4 max-w-lg">
@@ -338,7 +350,7 @@ export default function AdminSettingsPage() {
                 name="instagram_token"
                 value={instagramToken}
                 onChange={(e) => setInstagramToken(e.target.value)}
-                placeholder="IGQ..."
+                placeholder="IG..."
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none"
               />
             </div>

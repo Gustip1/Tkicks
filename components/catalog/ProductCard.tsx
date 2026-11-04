@@ -74,6 +74,9 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
     <Link
       ref={cardRef}
       href={`/producto/${product.slug}`}
+      // Sin precarga al aparecer en pantalla: la ficha se genera en cada visita, así que
+      // eran 15-21 llamadas al servidor por página que devolvían unos 200 bytes sin datos.
+      prefetch={false}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
       className="group store-card flex flex-col h-full"
     >

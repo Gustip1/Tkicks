@@ -108,7 +108,9 @@ create table if not exists public.settings (
 
 alter table public.settings enable row level security;
 drop policy if exists "read settings" on public.settings;
-create policy "read settings" on public.settings for select using (true);
+-- El token de Instagram y los datos de los ganadores no son públicos (ver migration-settings-privados.sql)
+create policy "read settings" on public.settings for select
+  using (key not in ('instagram_access_token', 'giveaway_winners'));
 drop policy if exists "admin write settings" on public.settings;
 create policy "admin write settings" on public.settings
   for all

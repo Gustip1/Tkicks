@@ -19,6 +19,7 @@ export async function POST() {
 
   revalidatePath('/');
   revalidatePath('/nosotros');
+  revalidatePath('/api/instagram/posts');
 
   return NextResponse.json({ revalidated: true });
 }

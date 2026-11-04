@@ -101,7 +101,7 @@ export function Sidebar() {
     >
       {/* Barra superior: misma altura que la nav, con el logo y la X */}
       <div className="h-12 shrink-0 flex items-center justify-between px-2">
-        <Link href="/" onClick={close} className="px-2" aria-label="Inicio">
+        <Link prefetch={false} href="/" onClick={close} className="px-2" aria-label="Inicio">
           <Image src={logo} alt="Tkicks" className="h-8 w-auto invert" />
         </Link>
         <button
@@ -113,11 +113,13 @@ export function Sidebar() {
         </button>
       </div>
 
+      {/* prefetch={false} en todos los links: el menú está siempre montado aunque no se vea, y
+          precargaba 11 páginas (unos 210 KB) en cada visita desde el celular */}
       {/* key: al abrir se vuelve a montar la lista y la entrada escalonada se repite */}
       <nav key={isOpen ? 'abierto' : 'cerrado'} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-8 pt-4 pb-10">
         <ul>
           <li className="hero-rise" {...item(0)}>
-            <Link href="/nuevos-ingresos" onClick={close} className={bigLink}>Nuevos ingresos</Link>
+            <Link prefetch={false} href="/nuevos-ingresos" onClick={close} className={bigLink}>Nuevos ingresos</Link>
           </li>
 
           {brands.length > 0 && (
@@ -136,6 +138,7 @@ export function Sidebar() {
                   {brands.map((brand) => (
                     <li key={brand.id}>
                       <Link
+                        prefetch={false}
                         href={`/productos?brand=${brand.slug}`}
                         onClick={close}
                         className="block py-1.5 t-body text-[#6e6e73] hover:text-[#1d1d1f]"
@@ -150,7 +153,7 @@ export function Sidebar() {
           )}
 
           <li className="hero-rise" {...item(2)}>
-            <Link href="/productos?sneakers" onClick={close} className={bigLink}>Sneakers</Link>
+            <Link prefetch={false} href="/productos?sneakers" onClick={close} className={bigLink}>Sneakers</Link>
           </li>
 
           <li className="hero-rise" {...item(3)}>
@@ -168,6 +171,7 @@ export function Sidebar() {
                 {STREETWEAR_SUBCATEGORIES.map((sub) => (
                   <li key={sub.value}>
                     <Link
+                      prefetch={false}
                       href={`/productos?streetwear&sub=${sub.value}`}
                       onClick={close}
                       className="block py-1.5 t-body text-[#6e6e73] hover:text-[#1d1d1f]"
@@ -177,7 +181,7 @@ export function Sidebar() {
                   </li>
                 ))}
                 <li>
-                  <Link href="/productos?streetwear" onClick={close} className="block py-1.5 t-body text-[#0066cc]">
+                  <Link prefetch={false} href="/productos?streetwear" onClick={close} className="block py-1.5 t-body text-[#0066cc]">
                     Ver todo streetwear
                   </Link>
                 </li>
@@ -186,16 +190,16 @@ export function Sidebar() {
           </li>
 
           <li className="hero-rise" {...item(4)}>
-            <Link href="/ofertas" onClick={close} className={bigLink}>Ofertas</Link>
+            <Link prefetch={false} href="/ofertas" onClick={close} className={bigLink}>Ofertas</Link>
           </li>
           <li className="hero-rise" {...item(5)}>
-            <Link href="/subastas" onClick={close} className={bigLink}>Subastas</Link>
+            <Link prefetch={false} href="/subastas" onClick={close} className={bigLink}>Subastas</Link>
           </li>
           <li className="hero-rise" {...item(6)}>
-            <Link href="/encargos" onClick={close} className={bigLink}>Encargos</Link>
+            <Link prefetch={false} href="/encargos" onClick={close} className={bigLink}>Encargos</Link>
           </li>
           <li className="hero-rise" {...item(7)}>
-            <Link href="/nosotros" onClick={close} className={bigLink}>Nosotros</Link>
+            <Link prefetch={false} href="/nosotros" onClick={close} className={bigLink}>Nosotros</Link>
           </li>
         </ul>
 
@@ -203,12 +207,12 @@ export function Sidebar() {
         <ul className="hero-rise mt-8 space-y-3 t-caption text-[#6e6e73]" {...item(9)}>
           {/* El link "Admin" del header está oculto en celular: éste es el único acceso al panel */}
           {isAdmin && (
-            <li><Link href="/admin" onClick={close} className="hover:text-[#1d1d1f]">Panel de administración</Link></li>
+            <li><Link prefetch={false} href="/admin" onClick={close} className="hover:text-[#1d1d1f]">Panel de administración</Link></li>
           )}
           {!isAdmin && !hasSession && (
-            <li><Link href="/login" onClick={close} className="hover:text-[#1d1d1f]">Ingresar</Link></li>
+            <li><Link prefetch={false} href="/login" onClick={close} className="hover:text-[#1d1d1f]">Ingresar</Link></li>
           )}
-          <li><Link href="/track" onClick={close} className="hover:text-[#1d1d1f]">Seguí tu pedido</Link></li>
+          <li><Link prefetch={false} href="/track" onClick={close} className="hover:text-[#1d1d1f]">Seguí tu pedido</Link></li>
           <li>
             <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="hover:text-[#1d1d1f]">Instagram</a>
           </li>

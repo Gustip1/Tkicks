@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // 30 minutos
+
+// El CDN de Vercel responde la cotización sin pasar por el servidor: antes cada
+// visita disparaba una función y un pedido a dolarapi (unos 350 ms) mientras los
+// precios en pesos esperaban. El valor por defecto (rate 1000) no se cachea.
+const CDN_CACHE = { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1800' };
 
 interface DollarApiResponse {
   moneda: string;
@@ -44,7 +48,7 @@ export async function GET(_req: NextRequest) {
       source: 'dolarapi.com',
       lastUpdate: data.fechaActualizacion,
       timestamp: new Date().toISOString()
-    });
+    }, { headers: CDN_CACHE });
 
   } catch (error) {
     console.error('[DOLLAR API] Primary source failed:', error);
@@ -76,7 +80,7 @@ export async function GET(_req: NextRequest) {
             source: 'bluelytics.com.ar',
             lastUpdate: new Date().toISOString(),
             timestamp: new Date().toISOString()
-          });
+          }, { headers: CDN_CACHE });
         }
       }
       
