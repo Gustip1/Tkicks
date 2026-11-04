@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { Brand, HOODIE_TYPES, Product, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, subcategoriesOf } from '@/types/db';
 import { ProductCard } from './ProductCard';
+import { CARD_COLUMNS, CATALOG_PAGE_SIZE } from '@/lib/catalog';
 import { X, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -74,28 +75,38 @@ export function ProductsClient({
   subcategory,
   tipo,
   brand,
+  initialProducts,
+  initialHasMore,
 }: {
   category?: 'sneakers' | 'streetwear';
   subcategory?: StreetWearSubcategory;
   /** Tipo dentro de Hoodies / Abrigos (hoodies, sweaters, zip-hoodies) */
   tipo?: StreetWearSubcategory;
   brand?: string;
+  /** Primera tanda, armada en el servidor. Sin esto (búsquedas), la pide el navegador */
+  initialProducts?: Product[];
+  initialHasMore?: boolean;
 }) {
   const supabase = useRef(createBrowserClient());
-  const [q, setQ] = useState('');
+  const searchParams = useSearchParams();
+  const urlQuery = (searchParams.get('q') || '').trim();
+  const [q, setQ] = useState(urlQuery);
   const dq = useDebouncedValue(q, 350);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(!initialProducts);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [hasMore, setHasMore] = useState(initialHasMore ?? false);
+  const skipFirstLoad = useRef(Boolean(initialProducts));
   const [availableSizes, setAvailableSizes] = useState<{ size: string; count: number }[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availableBrands, setAvailableBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState(brand || '');
   const [showFilters, setShowFilters] = useState(false);
   const [gridSize, setGridSize] = useState<'normal' | 'large'>('normal');
+  // Los talles y marcas del filtro se piden al abrirlo: casi nadie lo abre y eran 3 consultas por visita
+  const [filterOptions, setFilterOptions] = useState<'idle' | 'loading' | 'ready'>('idle');
 
-  const pageSize = dq ? 24 : 60;
+  const pageSize = dq ? 24 : CATALOG_PAGE_SIZE;
 
   const title = useMemo(
     () => {
@@ -130,7 +141,7 @@ export function ProductsClient({
 
     let query = supabase.current
       .from('products')
-      .select('*, product_variants(stock,size)', { count: 'exact' })
+      .select(CARD_COLUMNS, { count: 'exact' })
       .eq('active', true)
       .order('created_at', { ascending: false });
     
@@ -172,15 +183,13 @@ export function ProductsClient({
     else setPage(0);
   };
 
-  const searchParams = useSearchParams();
-  const urlQuery = (searchParams.get('q') || '').trim();
-  
   useEffect(() => {
     setQ(urlQuery);
   }, [urlQuery]);
 
-  useEffect(() => {
-    (async () => {
+  const loadFilterOptions = async () => {
+    setFilterOptions('loading');
+    {
       let productIds: string[] = [];
       if (category) {
         let prodQuery = supabase.current
@@ -226,7 +235,6 @@ export function ProductsClient({
       } else {
         setAvailableSizes([]);
       }
-      setSelectedSizes([]);
 
       // Load brands for streetwear filter
       if (category === 'streetwear') {
@@ -239,16 +247,21 @@ export function ProductsClient({
       } else {
         setAvailableBrands([]);
       }
-    })();
-  }, [category, subcategory, tipo]);
+    }
+    setFilterOptions('ready');
+  };
 
   useEffect(() => {
+    if (skipFirstLoad.current) {
+      skipFirstLoad.current = false;
+      return;
+    }
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, subcategory, tipo, dq, selectedSizes, selectedBrand]);
 
   return (
-    <div className="space-y-6 animate-fadeIn bg-white">
+    <div className="space-y-6 bg-white">
       {/* Simple category title */}
       <div className="flex items-center justify-between">
         <h1 className="t-display text-gray-900">
@@ -301,9 +314,12 @@ export function ProductsClient({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {/* Filter toggle button */}
-          {(availableSizes.length > 0 || availableBrands.length > 0) && (
+          {category && (
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => {
+                setShowFilters(!showFilters);
+                if (filterOptions === 'idle') void loadFilterOptions();
+              }}
               aria-expanded={showFilters}
               aria-pressed={showFilters || selectedSizes.length > 0 || !!selectedBrand}
               className="pill-apple gap-2"
@@ -356,6 +372,9 @@ export function ProductsClient({
       </div>
 
       {/* Filters panel */}
+      {showFilters && filterOptions !== 'ready' && (
+        <p className="t-caption text-gray-500" role="status">Cargando filtros…</p>
+      )}
       {showFilters && (availableSizes.length > 0 || availableBrands.length > 0) && (
         <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn space-y-4">
           {availableSizes.length > 0 && (
@@ -445,12 +464,8 @@ export function ProductsClient({
           : "grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
       )}>
         {products.map((p, idx) => (
-          <div 
-            key={p.id} 
-            className="animate-fadeIn"
-            style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
-          >
-            <ProductCard product={p} size={gridSize} />
+          <div key={p.id}>
+            <ProductCard product={p} size={gridSize} priority={idx < 2} />
           </div>
         ))}
       </div>

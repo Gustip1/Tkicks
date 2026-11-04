@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info } from 'lucide-react';
 import { Product, subcategoryLabel } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
-import { useDolarRate } from '@/components/DolarRateProvider';
+import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
 import { getCardPriceMultiplier } from '@/lib/promo';
@@ -14,13 +14,18 @@ import { trackEvent } from '@/lib/analytics/track';
 interface ProductCardProps {
   product: Product;
   size?: 'normal' | 'large';
+  /** Foto que se ve apenas abre la página: se pide primero */
+  priority?: boolean;
 }
 
 type InfoPopover = 'usd' | 'installments' | null;
 
-export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
-  const [loaded, setLoaded]     = useState(false);
+export function ProductCard({ product, size = 'normal', priority = false }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
+  // La segunda foto se pide recién al pasar el mouse: en el celular nunca se ve y
+  // cada tarjeta la bajaba igual, el doble de datos para el 93% de las visitas.
+  const [wantsSecondary, setWantsSecondary] = useState(false);
+  const [secondaryReady, setSecondaryReady] = useState(false);
   const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
   const cardRef = useRef<HTMLAnchorElement>(null);
 
@@ -65,6 +70,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
   const cardMult    = getCardPriceMultiplier(promoOn);
   const cardArs     = priceInArs * cardMult;
 
+  // En escritorio la tarjeta mide unos 320px: con la miniatura de 640 se ve nítida
+  // en pantallas 2x y la portada baja de 4 MB. La grilla grande sí usa la original.
+  const imageSizes = size === 'large'
+    ? '(max-width: 768px) 50vw, 33vw'
+    : '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, min(25vw, 320px)';
+
   const categoryLabel =
     product.category === 'streetwear' && product.subcategory
       ? subcategoryLabel(product.subcategory)
@@ -77,17 +88,12 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
       // Sin precarga al aparecer en pantalla: la ficha se genera en cada visita, así que
       // eran 15-21 llamadas al servidor por página que devolvían unos 200 bytes sin datos.
       prefetch={false}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setWantsSecondary(true); }}
       onClick={() => trackEvent('product_card_click', 'discovery', { slug: product.slug })}
       className="group store-card flex flex-col h-full"
     >
       {/* ── Imagen (swap en hover): marco gris sobre blanco, blanco sobre la franja gris (store-media) ── */}
       <div className="store-media relative w-full aspect-square overflow-hidden">
-        {/* El esqueleto solo pulsa mientras hay una imagen real cargando; si no
-            hay imagen o falló, no queda pulsando para siempre. */}
-        {!!primary?.url && !imgError && !loaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
-        )}
-
         {(!primary?.url || imgError) && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-300">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6 sm:w-8 sm:h-8">
@@ -103,29 +109,32 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
             src={primary.url}
             alt={primary.alt || product.title}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={85}
+            sizes={imageSizes}
+            priority={priority}
             className={cn(
+              // Visible desde el principio: el marco gris es el lugar mientras carga.
+              // Antes quedaba oculta hasta que corría el JS (lo que prohíbe CLAUDE.md).
               'object-contain mix-blend-multiply transition duration-700 ease-out',
-              loaded ? 'opacity-100' : 'opacity-0',
-              // al pasar el mouse la primaria se desvanece si hay una segunda imagen
-              secondary?.url && 'group-hover:opacity-0',
+              // al pasar el mouse la primaria se desvanece, una vez que la segunda ya cargó
+              secondaryReady && 'group-hover:opacity-0',
               'group-hover:scale-[1.03]',
             )}
-            onLoad={() => setLoaded(true)}
             onError={() => setImgError(true)}
           />
         )}
 
         {/* Imagen secundaria: aparece con crossfade suave al hacer hover */}
-        {secondary?.url && (
+        {secondary?.url && wantsSecondary && (
           <Image
             src={secondary.url}
             alt={secondary.alt || product.title}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={85}
-            className="object-contain mix-blend-multiply opacity-0 scale-[1.03] transition duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
+            sizes={imageSizes}
+            onLoad={() => setSecondaryReady(true)}
+            className={cn(
+              'object-contain mix-blend-multiply opacity-0 scale-[1.03] transition duration-700 ease-out',
+              secondaryReady && 'group-hover:opacity-100 group-hover:scale-100',
+            )}
           />
         )}
 
@@ -199,11 +208,11 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
               't-body text-[13px] sm:text-[17px]',
               hasSale ? 'text-red-600' : 'text-gray-700',
             )}>
-              {formatCurrency(priceInArs)}
+              <Ars>{formatCurrency(priceInArs)}</Ars>
             </span>
             {hasSale && (
               <span className="hidden sm:inline text-xs text-gray-400 line-through font-normal">
-                {formatCurrency(Number(product.price) * dolarOficial)}
+                <Ars>{formatCurrency(Number(product.price) * dolarOficial)}</Ars>
               </span>
             )}
           </div>
@@ -244,7 +253,7 @@ export function ProductCard({ product, size = 'normal' }: ProductCardProps) {
                   promoOn ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700',
                 )}
               >
-                3 × {formatCurrency(cardArs / 3)}
+                <Ars>3 × {formatCurrency(cardArs / 3)}</Ars>
                 <span className="hidden sm:inline font-normal opacity-70">
                   {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
                 </span>

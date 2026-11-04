@@ -29,6 +29,18 @@ export type FoundClue = {
 const SNEAKERS_POS   = [0, 5] as const; // 2, 5
 const STREETWEAR_POS = [1, 3] as const; // 6, 7
 
+// Varios componentes de pistas por página: una sola consulta al servidor, no una por cada uno
+let giveawayState: Promise<{ active?: boolean; visible?: boolean }> | null = null;
+function fetchGiveawayState() {
+  giveawayState ??= fetch('/api/sorteo/state', { cache: 'no-store' })
+    .then((r) => r.json())
+    .catch((error) => {
+      giveawayState = null;
+      throw error;
+    });
+  return giveawayState;
+}
+
 export function getProductClueInfo(slug: string, category?: string): { digit: string; position: number } | null {
   // DJB2 hash
   let h = 5381;
@@ -113,8 +125,7 @@ export function GiveawayClue() {
     let mounted = true;
     const fetchState = async () => {
       try {
-        const res = await fetch('/api/sorteo/state', { cache: 'no-store' });
-        const data = await res.json();
+        const data = await fetchGiveawayState();
         const isVisible = data?.visible === undefined ? true : Boolean(data.visible);
         const isActive = Boolean(data?.active);
         if (!mounted) return;
@@ -192,8 +203,7 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
 
   useEffect(() => {
     let mounted = true;
-    fetch('/api/sorteo/state', { cache: 'no-store' })
-      .then((r) => r.json())
+    fetchGiveawayState()
       .then((data) => {
         if (!mounted) return;
         const isVisible = data?.visible === undefined ? true : Boolean(data.visible);

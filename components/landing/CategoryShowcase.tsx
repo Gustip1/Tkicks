@@ -26,15 +26,18 @@ function CategoryTile({
   images,
   className,
   imgSizes,
+  priority,
 }: {
   c: Tile;
   images: Record<string, string>;
   className?: string;
   imgSizes: string;
+  priority?: boolean;
 }) {
   return (
     <Link
       href={c.href}
+      prefetch={false}
       data-reveal="clip"
       className={cn(
         'group relative block overflow-hidden rounded-3xl bg-gray-200 active:scale-[0.98] transition-transform duration-200 ease-apple',
@@ -47,7 +50,7 @@ function CategoryTile({
           alt={c.label}
           fill
           sizes={imgSizes}
-          quality={90}
+          priority={priority}
           className="object-cover object-top transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
         />
       )}
@@ -76,15 +79,17 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
           Elegí tu estilo
         </h2>
 
-        {/* Mobile: bento — el tile grande alterna de lado en cada fila */}
+        {/* Mobile: bento — el tile grande alterna de lado en cada fila. Las cuatro se ven en la
+            primera pantalla, así que se piden antes que el resto (priority) y en 50vw, para
+            que un celular 3x use la miniatura de 640: 30 KB en vez de 100 por foto. */}
         <div className="sm:hidden space-y-3">
           <div className="flex gap-3 h-52">
-            <CategoryTile c={bySub.sneakers} images={images} className="flex-[3]" imgSizes="60vw" />
-            <CategoryTile c={bySub.remeras} images={images} className="flex-[2]" imgSizes="40vw" />
+            <CategoryTile c={bySub.sneakers} images={images} className="flex-[3]" imgSizes="50vw" priority />
+            <CategoryTile c={bySub.remeras} images={images} className="flex-[2]" imgSizes="40vw" priority />
           </div>
           <div className="flex gap-3 h-52">
-            <CategoryTile c={bySub.hoodies} images={images} className="flex-[2]" imgSizes="40vw" />
-            <CategoryTile c={bySub.pantalones} images={images} className="flex-[3]" imgSizes="60vw" />
+            <CategoryTile c={bySub.hoodies} images={images} className="flex-[2]" imgSizes="40vw" priority />
+            <CategoryTile c={bySub.pantalones} images={images} className="flex-[3]" imgSizes="50vw" priority />
           </div>
         </div>
 

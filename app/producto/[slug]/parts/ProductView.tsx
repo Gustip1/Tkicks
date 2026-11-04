@@ -8,7 +8,7 @@ import { MakeOffer } from './MakeOffer';
 import { BuyBar } from './BuyBar';
 import { RelatedProducts } from './RelatedProducts';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
-import { useDolarRate } from '@/components/DolarRateProvider';
+import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
@@ -161,7 +161,7 @@ export function ProductView({
                       </p>
                     </div>
                     <p className="text-2xl md:text-[28px] font-semibold text-gray-900 tracking-tight break-words">
-                      {formatCurrency(priceInArs)}
+                      <Ars>{formatCurrency(priceInArs)}</Ars>
                     </p>
                     <p className="mt-1 text-xs text-gray-900 font-semibold">
                       Mejor precio
@@ -190,10 +190,10 @@ export function ProductView({
                       )}
                     </div>
                     <p className={cn('text-2xl md:text-3xl font-black tracking-tight break-words', promoOn ? 'text-red-600' : 'text-gray-900')}>
-                      3 × {formatCurrency(installment)}
+                      <Ars>3 × {formatCurrency(installment)}</Ars>
                     </p>
                     <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
-                      {promoOn ? 'Sin recargo' : `Total ${formatCurrency(cardPriceArs)}`}
+                      {promoOn ? 'Sin recargo' : <Ars>Total {formatCurrency(cardPriceArs)}</Ars>}
                     </p>
                   </div>
                 </div>

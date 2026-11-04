@@ -46,10 +46,10 @@ export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: Hero
         )}
 
         <div className="hero-rise hero-d4 mt-4 md:mt-6 flex items-center justify-center gap-2.5">
-          <Link href={content.ctaPrimaryHref} className="btn-apple btn-apple-sm">
+          <Link prefetch={false} href={content.ctaPrimaryHref} className="btn-apple btn-apple-sm">
             {content.ctaPrimaryLabel}
           </Link>
-          <Link href={content.ctaSecondaryHref} className="btn-apple-ghost btn-apple-sm">
+          <Link prefetch={false} href={content.ctaSecondaryHref} className="btn-apple-ghost btn-apple-sm">
             {content.ctaSecondaryLabel}
           </Link>
         </div>

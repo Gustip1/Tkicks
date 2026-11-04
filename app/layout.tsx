@@ -50,8 +50,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-white text-gray-900 antialiased font-sans font-normal')}>
-        {/* Meta Pixel Code */}
-        <Script id="meta-pixel" strategy="afterInteractive">
+        {/* Meta Pixel. Después de que carga la página: son 223 KB que competían con las fotos
+            (más de 1 s con datos móviles). A cambio no cuenta a quien se va antes; el dueño lo eligió. */}
+        <Script id="meta-pixel" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

@@ -108,7 +108,7 @@ export function Header() {
             </button>
 
             <nav className="hidden xl:flex items-center">
-              <Link href="/nuevos-ingresos" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/nuevos-ingresos" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Nuevos ingresos
               </Link>
 
@@ -125,11 +125,12 @@ export function Header() {
                 </button>
               )}
 
-              <Link href="/productos?sneakers" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/productos?sneakers" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Sneakers
               </Link>
 
               <Link
+                prefetch={false}
                 href="/productos?streetwear"
                 className={cn(navLink, menu === 'streetwear' && 'text-black')}
                 onMouseEnter={() => setMenu('streetwear')}
@@ -139,16 +140,16 @@ export function Header() {
                 Streetwear
               </Link>
 
-              <Link href="/ofertas" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/ofertas" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Ofertas
               </Link>
-              <Link href="/subastas" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/subastas" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Subastas
               </Link>
-              <Link href="/encargos" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/encargos" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Encargos
               </Link>
-              <Link href="/nosotros" className={navLink} onMouseEnter={() => setMenu(null)}>
+              <Link prefetch={false} href="/nosotros" className={navLink} onMouseEnter={() => setMenu(null)}>
                 Nosotros
               </Link>
             </nav>
@@ -157,6 +158,7 @@ export function Header() {
           {/* Centro - Logo */}
           <div className="mx-auto min-[1440px]:mx-0 min-[1440px]:pointer-events-none min-[1440px]:absolute min-[1440px]:inset-0 min-[1440px]:flex min-[1440px]:items-center min-[1440px]:justify-center">
             <Link
+              prefetch={false}
               href="/"
               className="pointer-events-auto flex items-center shrink-0 px-2"
               aria-label="Inicio"
@@ -196,13 +198,13 @@ export function Header() {
             </button>
 
             {isAdmin && (
-              <Link href="/admin" className={cn(navLink, 'hidden sm:flex')}>
+              <Link prefetch={false} href="/admin" className={cn(navLink, 'hidden sm:flex')}>
                 Admin
               </Link>
             )}
 
             {!isAdmin && !user && (
-              <Link href="/login" className={cn(navLink, 'hidden sm:flex')}>
+              <Link prefetch={false} href="/login" className={cn(navLink, 'hidden sm:flex')}>
                 Ingresar
               </Link>
             )}
@@ -241,6 +243,7 @@ export function Header() {
                     {brands.map((brand, i) => (
                       <li key={brand.id} className="hero-rise" style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}>
                         <Link
+                          prefetch={false}
                           href={`/productos?brand=${brand.slug}`}
                           className="t-tagline text-[#1d1d1f] hover:text-[#0066cc] transition-colors"
                         >
@@ -253,9 +256,9 @@ export function Header() {
                 <div>
                   <p className="t-fine text-[#6e6e73] mb-4">Más</p>
                   <ul className="space-y-2.5 t-caption">
-                    <li><Link href="/productos" className="text-[#1d1d1f] hover:text-[#0066cc]">Ver todo el catálogo</Link></li>
-                    <li><Link href="/nuevos-ingresos" className="text-[#1d1d1f] hover:text-[#0066cc]">Nuevos ingresos</Link></li>
-                    <li><Link href="/ofertas" className="text-[#1d1d1f] hover:text-[#0066cc]">Ofertas</Link></li>
+                    <li><Link prefetch={false} href="/productos" className="text-[#1d1d1f] hover:text-[#0066cc]">Ver todo el catálogo</Link></li>
+                    <li><Link prefetch={false} href="/nuevos-ingresos" className="text-[#1d1d1f] hover:text-[#0066cc]">Nuevos ingresos</Link></li>
+                    <li><Link prefetch={false} href="/ofertas" className="text-[#1d1d1f] hover:text-[#0066cc]">Ofertas</Link></li>
                   </ul>
                 </div>
               </div>
@@ -269,6 +272,7 @@ export function Header() {
                     {STREETWEAR_SUBCATEGORIES.map((sub, i) => (
                       <li key={sub.value} className="hero-rise" style={{ animationDelay: `${i * 30}ms` }}>
                         <Link
+                          prefetch={false}
                           href={`/productos?streetwear&sub=${sub.value}`}
                           className="t-tagline text-[#1d1d1f] hover:text-[#0066cc] transition-colors"
                         >
@@ -281,8 +285,8 @@ export function Header() {
                 <div>
                   <p className="t-fine text-[#6e6e73] mb-4">Más</p>
                   <ul className="space-y-2.5 t-caption">
-                    <li><Link href="/productos?streetwear" className="text-[#1d1d1f] hover:text-[#0066cc]">Todo streetwear</Link></li>
-                    <li><Link href="/encargos" className="text-[#1d1d1f] hover:text-[#0066cc]">Encargos personalizados</Link></li>
+                    <li><Link prefetch={false} href="/productos?streetwear" className="text-[#1d1d1f] hover:text-[#0066cc]">Todo streetwear</Link></li>
+                    <li><Link prefetch={false} href="/encargos" className="text-[#1d1d1f] hover:text-[#0066cc]">Encargos personalizados</Link></li>
                   </ul>
                 </div>
               </div>

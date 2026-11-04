@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Product, ProductVariant } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
+import { Ars } from '@/components/DolarRateProvider';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
 import { trackEvent } from '@/lib/analytics/track';
@@ -147,7 +148,7 @@ export function BuyBar({
 
           <div className="min-w-0">
             <p className="text-lg font-semibold text-gray-900 leading-tight truncate">
-              {formatCurrency(priceArs)}
+              <Ars>{formatCurrency(priceArs)}</Ars>
             </p>
             <p className="text-xs font-normal text-gray-500 leading-tight">
               ${priceUsd.toFixed(2)} USD · transf. / efectivo

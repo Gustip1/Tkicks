@@ -39,7 +39,7 @@ export function BannerTicker() {
         <p key={i} className="t-caption text-center animate-fadeIn whitespace-nowrap">
           <span className="md:hidden">{item.short}</span>
           <span className="hidden md:inline">{item.text}</span>{' '}
-          <Link href={item.href} className="link-apple">
+          <Link prefetch={false} href={item.href} className="link-apple">
             {item.cta}
           </Link>
         </p>

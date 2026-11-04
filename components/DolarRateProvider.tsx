@@ -5,22 +5,36 @@ interface DolarRateContextType {
   rate: number;
   isLoading: boolean;
   lastUpdate: string | null;
+  /** false hasta que termina la primera consulta: mientras tanto rate vale 1000, no el real */
+  ready: boolean;
 }
 
 const DolarRateContext = createContext<DolarRateContextType>({
   rate: 1000,
   isLoading: false,
-  lastUpdate: null
+  lastUpdate: null,
+  ready: false
 });
 
 export function useDolarRate() {
   return useContext(DolarRateContext);
 }
 
+/**
+ * Un monto en pesos. No se muestra hasta tener la cotización: con el valor inicial
+ * un producto de USD 145 decía "$ 145.000" durante varios segundos en vez de "$ 226.200".
+ * Ocupa su lugar igual, así los precios no saltan cuando aparece.
+ */
+export function Ars({ children }: { children: ReactNode }) {
+  const { ready } = useDolarRate();
+  return <span className={ready ? undefined : 'invisible'}>{children}</span>;
+}
+
 export function DolarRateProvider({ children }: { children: ReactNode }) {
   const [rate, setRate] = useState<number>(1000);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -57,6 +71,7 @@ export function DolarRateProvider({ children }: { children: ReactNode }) {
         // Mantener el último valor conocido en caso de error
       } finally {
         setIsLoading(false);
+        setReady(true);
       }
     };
 
@@ -72,7 +87,7 @@ export function DolarRateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <DolarRateContext.Provider value={{ rate, isLoading, lastUpdate }}>
+    <DolarRateContext.Provider value={{ rate, isLoading, lastUpdate, ready }}>
       {children}
     </DolarRateContext.Provider>
   );

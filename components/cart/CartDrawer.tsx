@@ -150,6 +150,7 @@ export function CartDrawer() {
                   <p className="mt-1 text-xs text-gray-500 font-bold">Sumá tus próximos kicks al carrito.</p>
                 </div>
                 <Link
+                  prefetch={false}
                   href="/productos"
                   onClick={close}
                   className="inline-flex items-center gap-2 rounded-full bg-pricing text-white px-6 py-3 text-xs font-normal hover:bg-pricing-hover active:scale-[0.98] transition"
@@ -237,6 +238,8 @@ export function CartDrawer() {
               </p>
             )}
             <Link
+              // El carrito está siempre montado: solo se precarga el checkout si hay algo para comprar
+              prefetch={items.length > 0 ? undefined : false}
               href="/checkout"
               onClick={close}
               className={`btn-apple mt-3 w-full ${items.length === 0 ? '!bg-gray-100 !text-gray-400 pointer-events-none' : ''}`}
