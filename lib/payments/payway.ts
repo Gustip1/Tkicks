@@ -16,8 +16,10 @@ import { BillingAddress, CardBrand, CardInstallments, phoneWithCountry, province
  *   la variable, en la web publicada la tarjeta queda apagada (ver mode()).
  * - PAYWAY_BRANDS (opcional): marcas habilitadas, por defecto "visa,mastercard,amex".
  * - PAYWAY_MASTERCARD_ID (opcional): código de Mastercard en tu sitio, por defecto 104.
- * - PAYWAY_INSTALLMENTS_3 (opcional): lo que se manda a Payway cuando el cliente
- *   elige 3 cuotas, por defecto 3. Algunos planes promocionales usan otro código.
+ * - PAYWAY_INSTALLMENTS_3 (opcional): código de plan que se manda a Payway cuando
+ *   el cliente elige 3 cuotas. Por defecto 13 = Cuota MiPyME 3 (ex Cuota Simple /
+ *   Ahora 3), el plan que tiene habilitado Tkicks (nov 2026). El plan común de
+ *   3 cuotas del sitio es 3.
  * - PAYWAY_CYBERSOURCE=off (opcional): apaga el control de fraude. El sitio de
  *   Tkicks lo tiene activo (nov 2026), así que por defecto va prendido.
  *
@@ -125,7 +127,7 @@ export function paywayServerConfig(): ServerConfig | null {
     // Códigos de medio de pago de Payway: Visa 1, American Express 65,
     // Mastercard 104 (en algunos sitios viejos, 15)
     methodIds: { visa: 1, mastercard, amex: 65 },
-    installmentsCode: { 1: 1, 3: Number(env('PAYWAY_INSTALLMENTS_3')) || 3 },
+    installmentsCode: { 1: 1, 3: Number(env('PAYWAY_INSTALLMENTS_3')) || 13 },
     cybersource: cybersourceOn(),
     sandbox: !isProduction(),
   };
@@ -397,6 +399,8 @@ export function paymentSummary(payment: PaywayPayment | null) {
     authorization_code: payment.status_details?.card_authorization_code || null,
     reason: payment.status_details?.error?.reason?.description ?? null,
     fraud_decision: payment.fraud_detection?.status?.decision ?? null,
+    // Código de plan que confirmó Payway (13 = Cuota MiPyME 3)
+    plan: payment.installments,
     date: payment.date ?? null,
   };
 }

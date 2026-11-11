@@ -128,7 +128,8 @@ describe('Payway', () => {
     const r = await chargeCard(input);
     expect(r.kind).toBe('approved');
     const sent = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(sent).toMatchObject({ amount: 33000000, installments: 3, payment_method_id: 1, currency: 'ARS', site_transaction_id: 'pedido-1' });
+    // 3 cuotas van por Cuota MiPyME 3 (código 13)
+    expect(sent).toMatchObject({ amount: 33000000, installments: 13, payment_method_id: 1, currency: 'ARS', site_transaction_id: 'pedido-1' });
   });
 
   it('un rechazo del banco libera el pedido', async () => {
@@ -241,7 +242,7 @@ describe('facturación y control de fraude', () => {
   it('el cobro lleva el control de fraude y el código de cuotas configurado', async () => {
     process.env.PAYWAY_PUBLIC_KEY = 'pub';
     process.env.PAYWAY_PRIVATE_KEY = 'priv';
-    process.env.PAYWAY_INSTALLMENTS_3 = '13';
+    process.env.PAYWAY_INSTALLMENTS_3 = '3';
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ id: 9, site_transaction_id: 'p', status: 'approved', installments: 13 }), { status: 200 })
     );
@@ -250,7 +251,7 @@ describe('facturación y control de fraude', () => {
       customer: { id: '1', email: 'a@b.com' }, description: 'x', fraud,
     });
     const sent = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(sent.installments).toBe(13);
+    expect(sent.installments).toBe(3);
     expect(sent.fraud_detection.purchase_totals).toEqual({ currency: 'ARS', amount: 100000 });
     delete process.env.PAYWAY_INSTALLMENTS_3;
     process.env.PAYWAY_CYBERSOURCE = 'off';
@@ -260,7 +261,7 @@ describe('facturación y control de fraude', () => {
       customer: { id: '1', email: 'a@b.com' }, description: 'x', fraud,
     });
     const sent2 = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(sent2.installments).toBe(3);
+    expect(sent2.installments).toBe(13);
     expect(sent2.fraud_detection).toBeUndefined();
     delete process.env.PAYWAY_CYBERSOURCE;
     vi.restoreAllMocks();

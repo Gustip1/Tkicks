@@ -36,6 +36,7 @@ interface Order {
     authorization_code?: string | null;
     reason?: string | null;
     fraud_decision?: string | null;
+    plan?: number | null;
     billing?: { street?: string; postalCode?: string; city?: string; province?: string } | null;
   } | null;
   created_at: string;
@@ -526,6 +527,14 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
   );
 }
 
+/** Código de plan que confirmó Payway */
+function planLabel(plan?: number | null): string {
+  if (plan === 13) return 'Cuota MiPyME 3';
+  if (plan === 16) return 'Cuota MiPyME 6';
+  if (plan === 1) return '1 pago';
+  return typeof plan === 'number' ? `${plan} cuotas (plan común)` : '—';
+}
+
 /** Decisión de Cybersource: green aprueba, yellow revisa, red/black rechaza */
 function fraudLabel(decision?: string | null): string {
   switch ((decision || '').toLowerCase()) {
@@ -546,6 +555,7 @@ function PaywayDetails({ orderId, details }: { orderId: string; details: NonNull
     typeof n === 'number' ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n) : '—';
   const rows: [string, string][] = [
     ['Cobrado', details.amount_ars ? `${ars(details.amount_ars)}${details.installments === 3 ? ` en 3 cuotas de ${ars(details.amount_ars / 3)}` : ' en 1 pago'}` : '—'],
+    ['Plan en Payway', planLabel(details.plan)],
     ['Recargo', details.multiplier && details.multiplier > 1 ? `${Math.round((details.multiplier - 1) * 100)}%` : 'Sin recargo'],
     ['Dólar usado', details.dollar_rate ? ars(details.dollar_rate) : '—'],
     ['Tarjeta', [details.card_brand, details.last_four ? `terminada en ${details.last_four}` : null].filter(Boolean).join(' ') || '—'],
