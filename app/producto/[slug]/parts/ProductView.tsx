@@ -12,7 +12,7 @@ import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
-import { Shield, Truck, Banknote, CreditCard } from 'lucide-react';
+import { Shield, ShieldCheck, Truck, Banknote, CreditCard } from 'lucide-react';
 import { getCardPriceMultiplier } from '@/lib/promo';
 import { extractFromDescription, garmentKind, parseSizeGuide } from '@/lib/sizeGuide';
 
@@ -73,7 +73,15 @@ export function ProductView({
       <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
         {/* Image section */}
         <div className="md:sticky md:top-20 md:self-start">
-          <ImageCarousel images={product.images || []} />
+          <ImageCarousel
+            images={product.images || []}
+            badge={
+              // Lo primero que se ve de la ficha: que es original (como el "Autenticado" de OneKickz)
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-semibold text-[#1d1d1f] backdrop-blur-md">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#0071e3]" aria-hidden /> 100% original
+              </span>
+            }
+          />
         </div>
         
         {/* Product info section */}
@@ -234,7 +242,7 @@ export function ProductView({
           <ul className="grid grid-cols-2 gap-2.5 pt-2">
             {[
               { Icon: Shield, title: '100% original', sub: 'Con comprobante de compra' },
-              { Icon: Truck, title: 'Envíos a todo el país', sub: 'Con seguimiento' },
+              { Icon: Truck, title: 'Envío gratis', sub: 'A todo el país, con seguimiento' },
               { Icon: CreditCard, title: '3 cuotas con tarjeta', sub: promoOn ? 'Sin recargo (promo)' : 'Con 10% de recargo' },
               { Icon: Banknote, title: 'Mejor precio', sub: 'Transferencia o efectivo' },
             ].map(({ Icon, title, sub }) => (

@@ -172,17 +172,15 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
           {product.title}
         </h3>
 
+        {/* El talle a la vista, también en el celular: quien llega del anuncio sabe
+            sin entrar si hay el suyo. Casi todo es única unidad, así que va como
+            dato y no como sello sobre la foto (estaría en casi todas). */}
         {availableSizes.length > 0 && (
-          <div className="hidden sm:flex flex-wrap gap-1 mb-2">
-            {availableSizes.slice(0, 4).map(s => (
-              <span key={s} className="text-[11px] text-gray-600 bg-gray-100 rounded-full px-2 py-0.5">
-                {s}
-              </span>
-            ))}
-            {availableSizes.length > 4 && (
-              <span className="text-[11px] text-gray-500 self-center">+{availableSizes.length - 4}</span>
-            )}
-          </div>
+          <p className="mb-1.5 sm:mb-2 text-[12px] sm:text-[13px] text-gray-600 tabular-nums">
+            {availableSizes.length === 1 ? 'Talle' : 'Talles'} {availableSizes.slice(0, 4).join(', ')}
+            {availableSizes.length > 4 && ` +${availableSizes.length - 4}`}
+            {totalStock === 1 && ' · Última unidad'}
+          </p>
         )}
 
         <div className="space-y-0.5 mt-auto">

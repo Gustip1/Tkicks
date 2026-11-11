@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductImage } from '@/types/db';
 import { cn } from '@/lib/utils';
 
-export function ImageCarousel({ images }: { images: ProductImage[] }) {
+export function ImageCarousel({ images, badge }: { images: ProductImage[]; /** Sello sobre la foto, arriba a la izquierda */ badge?: ReactNode }) {
   const [ref, api] = useEmblaCarousel({ loop: true, align: 'start' });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -36,6 +36,7 @@ export function ImageCarousel({ images }: { images: ProductImage[] }) {
     <div className="space-y-2 md:space-y-4">
       {/* Main image carousel */}
       <div className="relative group rounded-2xl overflow-hidden bg-gray-100 mx-2 md:mx-0">
+        {badge && <div className="pointer-events-none absolute left-3 top-3 z-10">{badge}</div>}
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (

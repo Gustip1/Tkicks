@@ -9,10 +9,11 @@ import { DolarWidget } from '@/components/DolarWidget';
  * mensaje corto y un link. En lugar de una marquesina, los mensajes se turnan
  * con un fundido suave cada pocos segundos.
  */
-// `short` es la versión de celular: una sola línea, para no gastar pantalla
+// `short` es la versión de celular: una sola línea, para no gastar pantalla.
+// Envío gratis y originales van juntos y primero: quien llega del anuncio se va
+// a los 4 segundos, y es lo que más pesa para quedarse (lo que muestra OneKickz).
 const BASE_ITEMS = [
-  { text: 'Productos 100% originales, con su comprobante de compra.', short: '100% originales, con comprobante', cta: 'Ver catálogo', href: '/productos' },
-  { text: 'Envíos a todo el país con seguimiento.', short: 'Envíos a todo el país', cta: 'Cómo comprar', href: '/#como-comprar' },
+  { text: 'Envío gratis a todo el país. Productos 100% originales, con comprobante de compra.', short: 'Envío gratis · 100% originales', cta: 'Comprar', href: '/productos' },
 ];
 
 const NORMAL_INSTALLMENT = { text: 'Pagá en 3 cuotas con tarjeta (10% de recargo).', short: '3 cuotas con tarjeta', cta: 'Comprar', href: '/productos' };
@@ -22,7 +23,7 @@ const ROTATE_MS = 5000;
 
 export function BannerTicker() {
   const { active } = useInstallmentsPromo();
-  const items = [active ? PROMO_INSTALLMENT : NORMAL_INSTALLMENT, ...BASE_ITEMS];
+  const items = [...BASE_ITEMS, active ? PROMO_INSTALLMENT : NORMAL_INSTALLMENT];
   const [i, setI] = useState(0);
 
   useEffect(() => {
