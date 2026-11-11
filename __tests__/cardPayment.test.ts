@@ -266,3 +266,17 @@ describe('facturación y control de fraude', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('variables de Vercel', () => {
+  it('reconoce producción aunque el valor tenga comillas o espacios', () => {
+    process.env.PAYWAY_PUBLIC_KEY = ' "pub" ';
+    process.env.PAYWAY_PRIVATE_KEY = 'priv';
+    for (const v of ['production', ' production ', '"production"', 'Producción']) {
+      process.env.PAYWAY_ENV = v;
+      expect(paywayPublicConfig()).toMatchObject({ sandbox: false, publicKey: 'pub' });
+    }
+    process.env.PAYWAY_ENV = 'sandbox';
+    expect(paywayPublicConfig()?.sandbox).toBe(true);
+    delete process.env.PAYWAY_ENV;
+  });
+});

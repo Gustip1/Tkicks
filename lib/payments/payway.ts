@@ -38,12 +38,13 @@ export const DECIDIR_SCRIPT = 'https://live.decidir.com/static/v2.6.4/decidir.js
 
 const ALL_BRANDS: CardBrand[] = ['visa', 'mastercard', 'amex'];
 
+/** Tolera espacios y comillas pegadas al valor al cargarlo en Vercel ("production") */
 function env(name: string): string {
-  return (process.env[name] ?? '').trim();
+  return (process.env[name] ?? '').trim().replace(/^["']+|["']+$/g, '').trim();
 }
 
 function isProduction(): boolean {
-  return env('PAYWAY_ENV').toLowerCase() === 'production';
+  return /^(production|produccion|producción|prod)$/.test(env('PAYWAY_ENV').toLowerCase());
 }
 
 function enabledBrands(): CardBrand[] {
