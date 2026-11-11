@@ -6,6 +6,7 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { RefreshCw, Smartphone, Monitor, Tablet, Info, PackageX, PackageMinus } from 'lucide-react';
 import { isBotUserAgent } from '@/lib/analytics/bots';
 import { diagnose, Leak, SlugStatus } from '@/lib/analytics/diagnosis';
+import { cartJourney, CartProduct, CartTiming, ExitStage } from '@/lib/analytics/cart';
 import {
   RANGES, RangeKey, periodFor, sourceName, sectionName, LEGACY_EVENTS, StockStatus,
 } from '@/lib/analytics/dashboard';
@@ -32,6 +33,8 @@ import {
    7. Los productos se cruzan con el catálogo: los que siguen a la venta van por
       un lado y los que la gente busca pero ya no tenés (borrados o sin stock)
       por otro, porque eso es demanda para reponer, no ruido.
+   8. Carrito y salida (lib/analytics/cart.ts): por persona, no por sesión, así
+      quien agrega hoy y paga mañana cuenta con su demora real.
    ──────────────────────────────────────────────────────────────────────── */
 
 const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -174,6 +177,11 @@ interface Stats {
   otherEvents: { label: string; count: number }[];
   leaks: Leak[];
   viewedNoAction: ViewedProduct[];
+
+  cartProducts: (CartProduct & { image: string | null })[];
+  cartTiming: CartTiming;
+  exitStages: ExitStage[];
+  exitPages: { label: string; sessions: number }[];
 }
 
 export default function AnalyticsPage() {
@@ -382,6 +390,13 @@ export default function AnalyticsPage() {
         return { slug, title: p?.title ?? prettySlug(slug), image: p?.images?.[0]?.url ?? null, sessions: n, status: 'in_stock' };
       });
 
+      // ── Carrito, checkout y en qué momento se van ──
+      const journey = cartJourney(visits, events);
+      const cartProducts = journey.products.slice(0, 10).map((p) => {
+        const c = catalogBySlug[p.slug];
+        return { ...p, title: c?.title ?? p.title, image: c?.images?.[0]?.url ?? null };
+      });
+
       const liveHumans = (liveRows.data ?? []).filter((v: any) => !isBotUserAgent(v.user_agent));
 
       setStats({
@@ -399,6 +414,7 @@ export default function AnalyticsPage() {
         pagesPerSession: sessions ? visits.length / sessions : 0,
         bySource, byDevice, byPage, viewedAvailable, viewedUnavailable, topSold, byDay, byHour, trend, otherEvents,
         leaks: diag.leaks, viewedNoAction,
+        cartProducts, cartTiming: journey.timing, exitStages: journey.exitStages, exitPages: journey.exitPages.slice(0, 6),
       });
     } catch (err) {
       console.error('Error cargando analíticas:', err);
@@ -574,6 +590,49 @@ function Dashboard({ s, prevLabel, singleDay }: { s: Stats; prevLabel: string; s
           )}
         </Card>
       </div>
+
+      {/* ── Carrito: qué agregan y cuánto tardan en ir al checkout ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
+        <Card
+          title="¿Qué agregan al carrito?"
+          help="Cada producto con cuántas personas lo agregaron, cuántas siguieron al checkout y los talles que más piden."
+        >
+          <CartList items={s.cartProducts} />
+        </Card>
+        <Card
+          title="Del carrito al checkout"
+          help="Desde que agregan el primer producto hasta que entran al checkout. Tiempo típico: la mitad tarda menos y la otra mitad, más."
+        >
+          <CartTimingView t={s.cartTiming} />
+        </Card>
+      </div>
+
+      {/* ── En qué momento se van ── */}
+      <Card
+        title="¿En qué momento se van?"
+        help="Cada visita según hasta dónde llegó antes de irse, con el tiempo típico que estuvo en la web, y la última página que vio."
+      >
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
+          <BarList
+            color={SERIES.leads}
+            rows={s.exitStages.map((st) => ({
+              key: st.key,
+              label: st.label,
+              value: st.sessions,
+              extra: [
+                fmtPct(pct(st.sessions, s.sessions)),
+                st.medianSeconds !== null && st.sessions > 0 ? `a los ${formatDuration(st.medianSeconds)}` : null,
+              ].filter(Boolean).join(' · '),
+            }))}
+          />
+          <div>
+            <p className="mb-3 text-[13px] font-semibold text-[#6e6e73]">Última página antes de irse</p>
+            <BarList
+              rows={s.exitPages.map((p) => ({ key: p.label, label: p.label, value: p.sessions, extra: fmtPct(pct(p.sessions, s.sessions)) }))}
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* ── Fuentes + dispositivos ── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
@@ -840,6 +899,74 @@ function ProductList({ items, empty }: { items: ViewedProduct[]; empty: string }
         </motion.li>
       ))}
     </ul>
+  );
+}
+
+function CartList({ items }: { items: (CartProduct & { image: string | null })[] }) {
+  if (!items.length) return <p className="text-[13px] text-[#86868b]">Nadie agregó productos al carrito en este período.</p>;
+  const max = Math.max(1, ...items.map((p) => p.people));
+  return (
+    <ul className="space-y-3.5">
+      {items.map((p, i) => (
+        <motion.li
+          key={p.slug}
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: [0.28, 0.11, 0.32, 1], delay: 0.05 + i * 0.05 }}
+          className="flex items-center gap-3"
+        >
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[8px] bg-[#f5f5f7]">
+            {p.image && <Image src={p.image} alt="" fill sizes="44px" className="object-contain mix-blend-multiply" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="truncate text-[14px]">{p.title}</p>
+              <p className="shrink-0 text-[14px] font-semibold tabular-nums">
+                {fmtInt(p.people)} <span className="font-normal text-[#86868b]">{p.people === 1 ? 'persona' : 'personas'}</span>
+              </p>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#f0f0f2]">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: SERIES.leads }}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.max((p.people / max) * 100, 2)}%` }}
+                transition={{ duration: 0.9, ease: [0.28, 0.11, 0.32, 1], delay: 0.15 + i * 0.05 }}
+              />
+            </div>
+            <p className="mt-1.5 text-[12px] text-[#6e6e73]">
+              {fmtInt(p.toCheckout)} {p.toCheckout === 1 ? 'fue' : 'fueron'} al checkout
+              {p.adds > p.people && <> · agregado {fmtInt(p.adds)} veces</>}
+              {p.sizes.length > 0 && <> · {p.sizes.length === 1 ? 'Talle' : 'Talles'} {p.sizes.join(', ')}</>}
+            </p>
+          </div>
+        </motion.li>
+      ))}
+    </ul>
+  );
+}
+
+function CartTimingView({ t }: { t: CartTiming }) {
+  if (!t.people) return <p className="text-[13px] text-[#86868b]">Nadie agregó productos al carrito en este período.</p>;
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+        <MiniStat
+          label="Hasta el checkout"
+          value={t.medianToCheckout ?? 0}
+          format={(n) => (t.medianToCheckout === null ? '—' : formatDuration(n))}
+          note={`${fmtInt(t.toCheckout)} de ${fmtInt(t.people)} ${t.people === 1 ? 'persona fue' : 'personas fueron'}`}
+        />
+        <MiniStat
+          label="En el checkout"
+          value={t.medianToBuy ?? 0}
+          format={(n) => (t.medianToBuy === null ? '—' : formatDuration(n))}
+          note={t.checkoutPeople ? `${fmtInt(t.bought)} de ${fmtInt(t.checkoutPeople)} compraron` : 'Nadie entró al checkout'}
+        />
+      </div>
+      <p className="mt-6 mb-3 text-[13px] font-semibold text-[#6e6e73]">Cuánto tardan desde que agregan</p>
+      <BarList rows={t.buckets.map((b) => ({ key: b.label, label: b.label, value: b.count, extra: fmtPct(pct(b.count, t.people)) }))} />
+    </>
   );
 }
 
