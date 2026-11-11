@@ -49,7 +49,7 @@ export function Footer() {
           </p>
           <p>
             Los precios se publican en dólares y se convierten a pesos al tipo de cambio oficial del día. El pago en
-            3 cuotas con tarjeta puede tener recargo según la promoción vigente.
+            cuotas con tarjeta tiene recargo: 10% en 3 cuotas y 20% en 6, salvo promoción vigente.
           </p>
         </div>
 

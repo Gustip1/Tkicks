@@ -554,7 +554,7 @@ function PaywayDetails({ orderId, details }: { orderId: string; details: NonNull
   const ars = (n?: number) =>
     typeof n === 'number' ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n) : '—';
   const rows: [string, string][] = [
-    ['Cobrado', details.amount_ars ? `${ars(details.amount_ars)}${details.installments === 3 ? ` en 3 cuotas de ${ars(details.amount_ars / 3)}` : ' en 1 pago'}` : '—'],
+    ['Cobrado', details.amount_ars ? `${ars(details.amount_ars)}${details.installments && details.installments > 1 ? ` en ${details.installments} cuotas de ${ars(details.amount_ars / details.installments)}` : ' en 1 pago'}` : '—'],
     ['Plan en Payway', planLabel(details.plan)],
     ['Recargo', details.multiplier && details.multiplier > 1 ? `${Math.round((details.multiplier - 1) * 100)}%` : 'Sin recargo'],
     ['Dólar usado', details.dollar_rate ? ars(details.dollar_rate) : '—'],

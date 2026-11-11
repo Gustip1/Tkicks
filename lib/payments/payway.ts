@@ -20,6 +20,8 @@ import { BillingAddress, CardBrand, CardInstallments, phoneWithCountry, province
  *   el cliente elige 3 cuotas. Por defecto 13 = Cuota MiPyME 3 (ex Cuota Simple /
  *   Ahora 3), el plan que tiene habilitado Tkicks (nov 2026). El plan común de
  *   3 cuotas del sitio es 3.
+ * - PAYWAY_INSTALLMENTS_6 (opcional): lo mismo para 6 cuotas. Por defecto 16 =
+ *   Cuota MiPyME 6.
  * - PAYWAY_CYBERSOURCE=off (opcional): apaga el control de fraude. El sitio de
  *   Tkicks lo tiene activo (nov 2026), así que por defecto va prendido.
  *
@@ -127,7 +129,11 @@ export function paywayServerConfig(): ServerConfig | null {
     // Códigos de medio de pago de Payway: Visa 1, American Express 65,
     // Mastercard 104 (en algunos sitios viejos, 15)
     methodIds: { visa: 1, mastercard, amex: 65 },
-    installmentsCode: { 1: 1, 3: Number(env('PAYWAY_INSTALLMENTS_3')) || 13 },
+    installmentsCode: {
+      1: 1,
+      3: Number(env('PAYWAY_INSTALLMENTS_3')) || 13,
+      6: Number(env('PAYWAY_INSTALLMENTS_6')) || 16,
+    },
     cybersource: cybersourceOn(),
     sandbox: !isProduction(),
   };
@@ -266,8 +272,8 @@ export function rejectionMessage(payment: PaywayPayment | null, installments: Ca
     case 45:
     case 48:
     case 77:
-      return installments === 3
-        ? 'Esta tarjeta no permite pagar en 3 cuotas. Probá en 1 pago o con otra tarjeta.'
+      return installments > 1
+        ? `Esta tarjeta no permite pagar en ${installments} cuotas. Probá con otra cantidad de cuotas o con otra tarjeta.`
         : GENERIC_REJECTION;
     case 91:
     case 96:
@@ -399,7 +405,7 @@ export function paymentSummary(payment: PaywayPayment | null) {
     authorization_code: payment.status_details?.card_authorization_code || null,
     reason: payment.status_details?.error?.reason?.description ?? null,
     fraud_decision: payment.fraud_detection?.status?.decision ?? null,
-    // Código de plan que confirmó Payway (13 = Cuota MiPyME 3)
+    // Código de plan que confirmó Payway (13 = Cuota MiPyME 3, 16 = Cuota MiPyME 6)
     plan: payment.installments,
     date: payment.date ?? null,
   };

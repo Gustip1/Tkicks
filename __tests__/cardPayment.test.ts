@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   cardBrandOf,
+  isCardInstallments,
+  surchargeLabel,
   cardMultiplier,
   cardTotalArs,
   formatCardNumber,
@@ -21,11 +23,25 @@ describe('precio con tarjeta (reglas del dueño)', () => {
     expect(cardMultiplier(3, true)).toBe(1);
   });
 
+  it('6 cuotas con 20% de recargo, con o sin promo', () => {
+    expect(cardMultiplier(6, false)).toBeCloseTo(1.2);
+    expect(cardMultiplier(6, true)).toBeCloseTo(1.2);
+    expect(cardTotalArs(150, 6, false, 1452.5)).toBe(261450);
+  });
+
   it('el total en pesos se redondea al peso', () => {
     // 150 USD × 1.1 × 1452.5 = 239662.5 → 239663
     expect(cardTotalArs(150, 3, false, 1452.5)).toBe(239663);
     expect(cardTotalArs(150, 1, false, 1452.5)).toBe(217875);
     expect(cardTotalArs(150, 3, true, 1452.5)).toBe(217875);
+  });
+
+  it('solo 1, 3 o 6 cuotas, con su recargo', () => {
+    expect([1, 3, 6, 12, 2].map(isCardInstallments)).toEqual([true, true, true, false, false]);
+    expect(surchargeLabel(1, false)).toBeNull();
+    expect(surchargeLabel(3, false)).toBe('10%');
+    expect(surchargeLabel(3, true)).toBeNull();
+    expect(surchargeLabel(6, true)).toBe('20%');
   });
 
   it('tolera medio punto de diferencia de cotización, no más', () => {
@@ -296,5 +312,23 @@ describe('sin PAYWAY_ENV en la web publicada', () => {
     expect(paywayPublicConfig()?.sandbox).toBe(true);
     delete process.env.PAYWAY_ENV;
     delete process.env.VERCEL_ENV;
+  });
+});
+
+describe('6 cuotas por Cuota MiPyME 6', () => {
+  it('manda el plan 16 y el monto con 20%', async () => {
+    process.env.PAYWAY_PUBLIC_KEY = 'pub';
+    process.env.PAYWAY_PRIVATE_KEY = 'priv';
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 10, site_transaction_id: 'p6', status: 'approved', installments: 16 }), { status: 200 })
+    );
+    const r = await chargeCard({
+      siteTransactionId: 'p6', token: 't', bin: '450799', brand: 'visa', amountArs: cardTotalArs(150, 6, false, 1000), installments: 6,
+      customer: { id: '1', email: 'a@b.com' }, description: 'x',
+    });
+    const sent = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(r.kind).toBe('approved');
+    expect(sent).toMatchObject({ installments: 16, amount: 18000000 });
+    vi.restoreAllMocks();
   });
 });

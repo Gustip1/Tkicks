@@ -10,7 +10,7 @@ import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { getCardSurchargeRate } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 import { CardPayment, CardToken, ProvinceSelect } from '@/components/checkout/CardPayment';
-import { CardInstallments, cardTotalArs, cardTotalUsd, CARD_BRAND_LABEL, cardBrandOf, canonicalProvince } from '@/lib/payments/card';
+import { CardInstallments, cardTotalArs, cardTotalUsd, CARD_BRAND_LABEL, cardBrandOf, canonicalProvince, surchargeLabel } from '@/lib/payments/card';
 import type { PaywayPublicConfig } from '@/lib/payments/payway';
 import {
   MapPin,
@@ -201,9 +201,16 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     ? cardTotalArs(discountedSubtotalUSD, cardInstallments, cardPromoOn, cardRate)
     : totalUSD * dolarOficial;
   // Qué líneas lleva el resumen: recargo, promo y valor de la cuota
-  const inThreeInstallments = isCardPayment || (isPayway && cardInstallments === 3);
-  const showSurcharge = inThreeInstallments && !(isPayway ? cardPromoOn : promoOn);
-  const showPromo = inThreeInstallments && (isPayway ? cardPromoOn : promoOn);
+  // El link por WhatsApp es siempre en 3 cuotas; con Payway, lo que eligió el cliente
+  const installmentsCount = isCardPayment ? 3 : isPayway ? cardInstallments : 1;
+  const inInstallments = installmentsCount > 1;
+  const surchargePct = isPayway
+    ? surchargeLabel(cardInstallments, cardPromoOn)
+    : isCardPayment && !promoOn
+      ? '10%'
+      : null;
+  const showSurcharge = inInstallments && !!surchargePct;
+  const showPromo = installmentsCount === 3 && (isPayway ? cardPromoOn : isCardPayment && promoOn);
 
   // ─── Step 1 Validation ───
   const validateStep1 = useCallback((): boolean => {
@@ -476,7 +483,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   if (orderComplete && cardOutcome) {
     const o = cardOutcome;
     const approved = o.status === 'approved';
-    const paidLine = `${formatCurrency(o.totalArs)}${o.installments === 3 ? ` en 3 cuotas de ${formatCurrency(o.totalArs / 3)}` : ' en 1 pago'}${o.brand ? ` con ${o.brand}` : ''}${o.lastFour ? ` terminada en ${o.lastFour}` : ''}`;
+    const paidLine = `${formatCurrency(o.totalArs)}${o.installments > 1 ? ` en ${o.installments} cuotas de ${formatCurrency(o.totalArs / o.installments)}` : ' en 1 pago'}${o.brand ? ` con ${o.brand}` : ''}${o.lastFour ? ` terminada en ${o.lastFour}` : ''}`;
     const waText = encodeURIComponent(
       `Hola, pagué con tarjeta en la web y quiero confirmar el pago.${o.orderRef ? ` Pedido ${o.orderRef}.` : ''}`
     );
@@ -818,8 +825,8 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                         title="Tarjeta de crédito"
                         description={
                           cardPromoOn
-                            ? 'En 1 pago o en 3 cuotas sin interés'
-                            : 'En 1 pago sin recargo o en 3 cuotas con 10% de recargo'
+                            ? 'En 1 pago, 3 cuotas sin interés o 6 cuotas'
+                            : 'En 1 pago sin recargo, o en 3 o 6 cuotas con recargo'
                         }
                       />
                     ) : (
@@ -1188,7 +1195,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                 )}
                 {showSurcharge && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 font-bold">Recargo 3 cuotas (10%)</span>
+                    <span className="text-gray-500 font-bold">Recargo {installmentsCount} cuotas ({surchargePct})</span>
                     <span className="text-gray-700 font-black">+${(totalUSD - discountedSubtotalUSD).toFixed(2)} USD</span>
                   </div>
                 )}
@@ -1209,10 +1216,10 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                     <p className="text-xs text-gray-500 font-bold">{formatCurrency(totalARS)}</p>
                   </div>
                 </div>
-                {inThreeInstallments && (
+                {inInstallments && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-900 font-black">3 cuotas de</span>
-                    <span className="text-gray-900 font-black">{formatCurrency(totalARS / 3)}</span>
+                    <span className="text-gray-900 font-black">{installmentsCount} cuotas de</span>
+                    <span className="text-gray-900 font-black">{formatCurrency(totalARS / installmentsCount)}</span>
                   </div>
                 )}
               </div>

@@ -3,23 +3,35 @@ import { getCardPriceMultiplier } from '@/lib/promo';
 /**
  * Pago con tarjeta de crédito (Payway). Reglas del dueño (nov 2026):
  * - 1 pago: sin recargo.
- * - 3 cuotas: 10% de recargo. Con la promo "cuotas sin interés" activa en
- *   /admin/ajustes, 3 cuotas sin recargo.
+ * - 3 cuotas (Cuota MiPyME 3): 10% de recargo. Con la promo "cuotas sin
+ *   interés" activa en /admin/ajustes, 3 cuotas sin recargo.
+ * - 6 cuotas (Cuota MiPyME 6): 20% de recargo. La promo es de 3 cuotas: no lo cambia.
  *
  * Lo usan el checkout (para mostrar) y el servidor (para cobrar): el monto en
  * pesos sale siempre de estas funciones, así lo que se ve es lo que se cobra.
  */
 
-export const CARD_INSTALLMENTS = [1, 3] as const;
+export const CARD_INSTALLMENTS = [1, 3, 6] as const;
 export type CardInstallments = (typeof CARD_INSTALLMENTS)[number];
 
 export function isCardInstallments(n: unknown): n is CardInstallments {
-  return n === 1 || n === 3;
+  return n === 1 || n === 3 || n === 6;
 }
 
-/** Multiplicador sobre el precio: 1 pago y promo activa no tienen recargo */
+/** Recargo de 6 cuotas */
+export const SIX_INSTALLMENTS_SURCHARGE = 0.2;
+
+/** Multiplicador sobre el precio: 1 pago sin recargo; 3 cuotas 10% (0% con promo); 6 cuotas 20% */
 export function cardMultiplier(installments: CardInstallments, promoOn: boolean): number {
-  return installments === 3 ? getCardPriceMultiplier(promoOn) : 1;
+  if (installments === 3) return getCardPriceMultiplier(promoOn);
+  if (installments === 6) return 1 + SIX_INSTALLMENTS_SURCHARGE;
+  return 1;
+}
+
+/** "10%", o null sin recargo */
+export function surchargeLabel(installments: CardInstallments, promoOn: boolean): string | null {
+  const pct = Math.round((cardMultiplier(installments, promoOn) - 1) * 100);
+  return pct > 0 ? `${pct}%` : null;
 }
 
 export function cardTotalUsd(subtotalUsd: number, installments: CardInstallments, promoOn: boolean): number {

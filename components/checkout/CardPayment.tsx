@@ -1,10 +1,11 @@
 "use client";
 import { FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { AlertCircle, ChevronDown, Lock } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatARS, formatCurrency } from '@/lib/utils';
 import {
   BillingAddress,
   CARD_BRAND_LABEL,
+  CARD_INSTALLMENTS,
   CardInstallments,
   PROVINCES,
   canonicalProvince,
@@ -14,6 +15,7 @@ import {
   formatCardNumber,
   luhnValid,
   parseExpiry,
+  surchargeLabel,
   validPostalCode,
 } from '@/lib/payments/card';
 import type { PaywayPublicConfig } from '@/lib/payments/payway';
@@ -114,6 +116,7 @@ export function CardPayment({
   onToken: (card: CardToken) => void;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const formId = useId();
   const [number, setNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
@@ -158,9 +161,9 @@ export function CardPayment({
   const brandAccepted = !brand || config.brands.includes(brand);
   const exp = parseExpiry(expiry);
 
-  const total1 = cardTotalArs(subtotalUsd, 1, promoOn, dollarRate);
-  const total3 = cardTotalArs(subtotalUsd, 3, promoOn, dollarRate);
-  const total = installments === 3 ? total3 : total1;
+  const totalFor = (n: CardInstallments) => cardTotalArs(subtotalUsd, n, promoOn, dollarRate);
+  const total = totalFor(installments);
+  const surcharge = surchargeLabel(installments, promoOn);
   const busy = submitting || tokenizing;
   // Con retiro en el showroom no hay dirección de envío: se pide la de facturación
   const shippingUsable = !!shippingAddress && !!canonicalProvince(shippingAddress.province);
@@ -242,15 +245,15 @@ export function CardPayment({
     });
   };
 
-  const options: { n: CardInstallments; title: string; amount: string; note: string }[] = [
-    { n: 1, title: '1 pago', amount: formatCurrency(total1), note: 'Sin recargo' },
-    {
-      n: 3,
-      title: '3 cuotas',
-      amount: `3 × ${formatCurrency(total3 / 3)}`,
-      note: promoOn ? `Sin interés · Total ${formatCurrency(total3)}` : `10% de recargo · Total ${formatCurrency(total3)}`,
-    },
-  ];
+  // Texto de cada opción del menú, corto para que entre en el celular: el total
+  // exacto va debajo. La cuota en pesos redondos (el banco la redondea igual)
+  const optionLabel = (n: CardInstallments): string => {
+    const t = totalFor(n);
+    const pct = surchargeLabel(n, promoOn);
+    if (n === 1) return rateReady ? `1 pago de ${formatARS(t)}` : '1 pago';
+    const base = rateReady ? `${n} cuotas de ${formatARS(t / n)}` : `${n} cuotas`;
+    return pct ? `${base} (+${pct})` : `${base} sin interés`;
+  };
 
   const message = formError || error;
 
@@ -262,31 +265,31 @@ export function CardPayment({
         </p>
       )}
 
-      <fieldset>
-        <legend className="text-sm font-black text-gray-900">¿En cuántos pagos?</legend>
-        <div role="radiogroup" aria-label="Cantidad de pagos" className="mt-2.5 grid grid-cols-2 gap-2">
-          {options.map((o) => (
-            <button
-              key={o.n}
-              type="button"
-              role="radio"
-              aria-checked={installments === o.n}
-              disabled={busy}
-              onClick={() => onInstallmentsChange(o.n)}
-              className={cn(
-                'min-h-[76px] rounded-xl border bg-white px-3 py-2.5 text-left transition-[border-color,box-shadow] duration-150 active:scale-[0.98] disabled:opacity-60',
-                installments === o.n
-                  ? 'border-transparent ring-2 ring-primary'
-                  : 'border-gray-200 hover:border-gray-400'
-              )}
-            >
-              <span className="block text-[13px] font-semibold text-gray-600">{o.title}</span>
-              <span className={cn('block text-[17px] font-semibold text-gray-900', !rateReady && 'invisible')}>{o.amount}</span>
-              <span className={cn('block text-[12px] text-gray-500', !rateReady && 'invisible')}>{o.note}</span>
-            </button>
-          ))}
+      <div>
+        <label htmlFor={`${formId}-cuotas`} className="mb-1.5 block text-sm font-black text-gray-900">
+          ¿En cuántas cuotas?
+        </label>
+        <div className="relative">
+          <select
+            id={`${formId}-cuotas`}
+            value={installments}
+            disabled={busy}
+            onChange={(e) => onInstallmentsChange(Number(e.target.value) as CardInstallments)}
+            className="w-full appearance-none rounded-md border border-gray-200 bg-white py-3 pl-4 pr-10 text-[16px] text-gray-900 transition-colors focus:border-primary focus:outline-none disabled:opacity-60"
+          >
+            {CARD_INSTALLMENTS.map((n) => (
+              <option key={n} value={n}>
+                {optionLabel(n)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
         </div>
-      </fieldset>
+        <p className={cn('mt-2 text-[13px] text-gray-600', !rateReady && 'invisible')}>
+          Total con tarjeta <span className="font-semibold text-gray-900">{formatCurrency(total)}</span>
+          {surcharge ? ` · incluye ${surcharge} de recargo` : installments === 3 && promoOn ? ' · promo sin interés' : ' · sin recargo'}
+        </p>
+      </div>
 
       <div className="space-y-1">
         <CardField
@@ -461,7 +464,7 @@ export function CardPayment({
             <Lock className="h-4 w-4" aria-hidden />
             <span className={cn(!rateReady && 'invisible')}>
               Pagar {formatCurrency(total)}
-              {installments === 3 ? ' en 3 cuotas' : ''}
+              {installments > 1 ? ` en ${installments} cuotas` : ''}
             </span>
           </>
         )}

@@ -66,7 +66,8 @@ const TOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  *
  * 1. Reserva el stock creando el pedido (igual que efectivo y transferencia).
  * 2. Calcula el monto en pesos acá: precio de la base × dólar oficial × recargo
- *    (1 pago sin recargo; 3 cuotas +10%, o sin recargo con la promo activa).
+ *    (1 pago sin recargo; 3 cuotas +10%, o sin recargo con la promo activa;
+ *    6 cuotas +20%).
  *    Si no coincide con lo que vio el cliente, no cobra y le muestra el nuevo.
  * 3. Cobra el token. Aprobado: pedido pagado. Rechazado: se deshace el pedido y
  *    vuelve el stock. Sin respuesta del banco: el pedido queda pendiente para
