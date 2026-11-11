@@ -19,7 +19,7 @@ https.globalAgent = afipAgent;
 
 // ─── Tipos públicos ───────────────────────────────────────────────────────────
 
-export type PaymentMethod = 'cash' | 'crypto_transfer' | 'installments_3';
+export type PaymentMethod = 'cash' | 'crypto_transfer' | 'installments_3' | 'card';
 export type TipoComprobante = 1 | 6 | 11;  // A | B | C
 export type TipoConcepto    = 1 | 2 | 3;   // Productos | Servicios | Mixto
 
@@ -256,7 +256,7 @@ async function getLastCbteNro(
 // ─── API pública ──────────────────────────────────────────────────────────────
 
 export function getTitular(paymentMethod: PaymentMethod): 'standard' | 'card' {
-  return paymentMethod === 'installments_3' ? 'card' : 'standard';
+  return paymentMethod === 'installments_3' || paymentMethod === 'card' ? 'card' : 'standard';
 }
 
 export async function requestCAE(

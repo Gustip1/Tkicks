@@ -127,3 +127,6 @@ class RateLimiter {
 export const adminLoginLimiter = new RateLimiter(3, 2); // 3 intentos, 2 minutos de bloqueo
 export const publicApiLimiter = new RateLimiter(5, 1); // 5 intentos, 1 minuto de bloqueo
 
+// Tarjetas: frena la prueba de tarjetas robadas de a muchas. Cuentan los cobros
+// rechazados; quien paga bien vuelve a cero.
+export const cardPaymentLimiter = new RateLimiter(5, 15); // 5 rechazos, 15 minutos de bloqueo

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
 import { ShoppingBag, X } from 'lucide-react';
 import { useUIStore } from '@/store/ui';
 
@@ -26,50 +25,22 @@ export function RecentSaleToast() {
   const [, setIndex] = useState(0);
 
   useEffect(() => {
-    const supabase = createBrowserClient();
+    // Los pedidos son privados: el servidor devuelve solo qué se vendió, dónde y
+    // cuándo, de las últimas 48 h (así "hace X" y "ayer" son ciertos)
     (async () => {
-      // Fetch recent paid orders with their items and shipping addresses
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('id, created_at, first_name')
-        .eq('status', 'paid')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (!orders?.length) return;
-
-      const orderIds = orders.map((o: any) => o.id);
-
-      const [{ data: items }, { data: addresses }] = await Promise.all([
-        supabase.from('order_items').select('order_id, title, product_id').in('order_id', orderIds),
-        supabase.from('shipping_addresses').select('order_id, city').in('order_id', orderIds),
-      ]);
-
-      const cityMap = new Map((addresses || []).map((a: any) => [a.order_id, a.city]));
-      const itemMap = new Map((items || []).map((i: any) => [i.order_id, i.title]));
-
-      // Fetch product images for matching items
-      const productTitles = (items || []).map((i: any) => i.title);
-      const { data: products } = await supabase
-        .from('products')
-        .select('title, images')
-        .in('title', productTitles.slice(0, 20));
-      const imageMap = new Map((products || []).map((p: any) => [p.title, p.images?.[0]?.url]));
-
+      const res = await fetch('/api/recent-sales').catch(() => null);
+      if (!res?.ok) return;
+      const data: { sales?: { title: string; city: string | null; createdAt: string; imageUrl: string | null }[] } =
+        await res.json().catch(() => ({}));
       const now = Date.now();
-      const list: Sale[] = orders
-        .filter((o: any) => itemMap.has(o.id))
-        .map((o: any) => {
-          const title = itemMap.get(o.id) || '';
-          const rawCity = cityMap.get(o.id);
-          const city = rawCity ? String(rawCity).trim() || null : null;
-          const createdMs = new Date(o.created_at).getTime();
-          const diffMin = Math.max(5, Math.round((now - createdMs) / 60000));
-          // Cap at 2 days for believability; show as "hace X hs" if > 60 min
-          const minutesAgo = Math.min(diffMin, 2880);
-          return { title, city, minutesAgo, imageUrl: imageMap.get(title) };
-        })
-        .filter(s => s.title);
+      const list: Sale[] = (data.sales ?? [])
+        .filter((s) => s.title)
+        .map((s) => ({
+          title: s.title,
+          city: s.city,
+          minutesAgo: Math.max(1, Math.round((now - new Date(s.createdAt).getTime()) / 60000)),
+          imageUrl: s.imageUrl ?? undefined,
+        }));
 
       if (list.length) setSales(list);
     })();

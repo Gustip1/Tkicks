@@ -53,6 +53,7 @@ const paymentLabels: Record<string, string> = {
   crypto_transfer: '🏦 Transferencia/Cripto',
   bank_transfer: '🏦 Transferencia',
   installments_3: '💳 3 Cuotas',
+  card: '💳 Tarjeta (Payway)',
 };
 
 const paymentStatusLabels: Record<string, string> = {

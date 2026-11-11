@@ -161,6 +161,7 @@ create table if not exists public.orders (
   payment_status text default 'pending',      -- 'pending' | 'validated' | 'rejected'
   payment_alias text,                         -- alias para transferencia (ej: gus.p21)
   payment_proof_url text,                     -- URL del comprobante subido
+  payment_details jsonb,                      -- tarjeta (Payway): cuotas, monto cobrado, operación
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -192,27 +193,48 @@ alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 alter table public.shipping_addresses enable row level security;
 
--- Policies: por ahora lectura/insert libres (checkout sin login). Ajustar luego si se desea mayor privacidad.
+-- Pedidos privados (ver migration-pagos-tarjeta.sql): los crea el servidor con
+-- service role; los lee el admin y cada cliente los suyos. Nada público.
 drop policy if exists "public read orders" on public.orders;
-create policy "public read orders" on public.orders for select using (true);
 drop policy if exists "public write orders" on public.orders;
-create policy "public write orders" on public.orders for insert with check (true);
 drop policy if exists "public update orders" on public.orders;
-create policy "public update orders" on public.orders for update using (true) with check (true);
-
 drop policy if exists "public read order_items" on public.order_items;
-create policy "public read order_items" on public.order_items for select using (true);
 drop policy if exists "public write order_items" on public.order_items;
-create policy "public write order_items" on public.order_items for insert with check (true);
 drop policy if exists "public upsert order_items" on public.order_items;
-create policy "public upsert order_items" on public.order_items for update using (true) with check (true);
-
 drop policy if exists "public read shipping_addresses" on public.shipping_addresses;
-create policy "public read shipping_addresses" on public.shipping_addresses for select using (true);
 drop policy if exists "public write shipping_addresses" on public.shipping_addresses;
-create policy "public write shipping_addresses" on public.shipping_addresses for insert with check (true);
 drop policy if exists "public update shipping_addresses" on public.shipping_addresses;
-create policy "public update shipping_addresses" on public.shipping_addresses for update using (true) with check (true);
+
+drop policy if exists "orders: lee el admin o su cliente" on public.orders;
+create policy "orders: lee el admin o su cliente" on public.orders for select
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+    or (auth.uid() is not null and user_id = auth.uid())
+    or (coalesce(auth.jwt() ->> 'email', '') <> '' and lower(email) = lower(auth.jwt() ->> 'email'))
+  );
+drop policy if exists "orders: modifica el admin" on public.orders;
+create policy "orders: modifica el admin" on public.orders for update
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+drop policy if exists "orders: borra el admin" on public.orders;
+create policy "orders: borra el admin" on public.orders for delete
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+drop policy if exists "order_items: con su pedido" on public.order_items;
+create policy "order_items: con su pedido" on public.order_items for select
+  using (exists (select 1 from public.orders o where o.id = order_id));
+drop policy if exists "order_items: admin" on public.order_items;
+create policy "order_items: admin" on public.order_items for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+drop policy if exists "shipping_addresses: con su pedido" on public.shipping_addresses;
+create policy "shipping_addresses: con su pedido" on public.shipping_addresses for select
+  using (exists (select 1 from public.orders o where o.id = order_id));
+drop policy if exists "shipping_addresses: admin" on public.shipping_addresses;
+create policy "shipping_addresses: admin" on public.shipping_addresses for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 drop trigger if exists trg_products_set_updated_at on public.products;
 create trigger trg_products_set_updated_at

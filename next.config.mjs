@@ -61,12 +61,14 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://connect.facebook.net",
+              // Payway: decidir.js se carga de live.decidir.com y crea el token de la tarjeta ahí (o en el sandbox).
+              // Su control de fraude (Cybersource) suma la huella del dispositivo de online-metrix.net
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://connect.facebook.net https://live.decidir.com https://*.online-metrix.net",
               "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com",
-              "frame-src https://accounts.google.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com https://live.decidir.com https://developers.decidir.com https://*.online-metrix.net",
+              "frame-src https://accounts.google.com https://*.online-metrix.net",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

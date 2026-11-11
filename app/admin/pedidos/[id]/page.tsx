@@ -23,6 +23,21 @@ interface Order {
   payment_method: string | null;
   payment_status: string | null;
   payment_proof_url: string | null;
+  /** Pago con tarjeta (Payway): cuotas, monto cobrado, operación */
+  payment_details?: {
+    installments?: number;
+    amount_ars?: number;
+    multiplier?: number;
+    dollar_rate?: number;
+    card_brand?: string | null;
+    last_four?: string | null;
+    payment_id?: number;
+    status?: string;
+    authorization_code?: string | null;
+    reason?: string | null;
+    fraud_decision?: string | null;
+    billing?: { street?: string; postalCode?: string; city?: string; province?: string } | null;
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +66,7 @@ const paymentLabels: Record<string, string> = {
   crypto_transfer: '🏦 Transferencia / Cripto',
   bank_transfer: '🏦 Transferencia bancaria',
   installments_3: '💳 3 Cuotas sin interés',
+  card: '💳 Tarjeta (Payway)',
 };
 
 const paymentStatusLabels: Record<string, string> = {
@@ -299,6 +315,11 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
                 </span>
               </div>
               
+              {/* Tarjeta con Payway */}
+              {order.payment_method === 'card' && order.payment_details && (
+                <PaywayDetails orderId={order.id} details={order.payment_details} />
+              )}
+
               {/* Payment proof */}
               {order.payment_proof_url && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
@@ -500,6 +521,64 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
             </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+/** Decisión de Cybersource: green aprueba, yellow revisa, red/black rechaza */
+function fraudLabel(decision?: string | null): string {
+  switch ((decision || '').toLowerCase()) {
+    case 'green':
+      return 'Aprobado';
+    case 'yellow':
+      return 'En revisión';
+    case 'red':
+    case 'black':
+      return 'Rechazado';
+    default:
+      return '—';
+  }
+}
+
+function PaywayDetails({ orderId, details }: { orderId: string; details: NonNullable<Order['payment_details']> }) {
+  const ars = (n?: number) =>
+    typeof n === 'number' ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n) : '—';
+  const rows: [string, string][] = [
+    ['Cobrado', details.amount_ars ? `${ars(details.amount_ars)}${details.installments === 3 ? ` en 3 cuotas de ${ars(details.amount_ars / 3)}` : ' en 1 pago'}` : '—'],
+    ['Recargo', details.multiplier && details.multiplier > 1 ? `${Math.round((details.multiplier - 1) * 100)}%` : 'Sin recargo'],
+    ['Dólar usado', details.dollar_rate ? ars(details.dollar_rate) : '—'],
+    ['Tarjeta', [details.card_brand, details.last_four ? `terminada en ${details.last_four}` : null].filter(Boolean).join(' ') || '—'],
+    ['Operación Payway', details.payment_id ? String(details.payment_id) : '—'],
+    ['Autorización', details.authorization_code || '—'],
+    ['Estado en Payway', details.status || '—'],
+    ['Control de fraude', fraudLabel(details.fraud_decision)],
+    [
+      'Facturación',
+      details.billing
+        ? [details.billing.street, details.billing.city, details.billing.province, details.billing.postalCode].filter(Boolean).join(', ')
+        : '—',
+    ],
+  ];
+  const unconfirmed = details.status === 'unknown' || details.status === 'processing';
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+      {rows.map(([k, v]) => (
+        <div key={k} className="flex items-center justify-between gap-4">
+          <span className="text-sm font-medium text-gray-700">{k}</span>
+          <span className="text-sm text-gray-900 font-semibold text-right">{v}</span>
+        </div>
+      ))}
+      {unconfirmed && (
+        <p className="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-xs text-yellow-900">
+          Payway no llegó a confirmar este cobro. Buscalo en el panel de Payway con el número de operación del
+          comercio <span className="font-mono">{orderId}</span> y validá o cancelá el pedido según lo que figure.
+        </p>
+      )}
+      {details.status === 'review' && (
+        <p className="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-xs text-yellow-900">
+          El control de fraude de Payway está revisando este pago. Esperá su resultado antes de despachar.
+        </p>
       )}
     </div>
   );

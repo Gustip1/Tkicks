@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Fulfillment = 'pickup' | 'shipping';
-export type PaymentMethod = 'cash' | 'crypto_transfer' | 'installments_3';
+export type PaymentMethod = 'cash' | 'crypto_transfer' | 'installments_3' | 'card';
 
 export interface AppliedDiscount {
   code: string;
