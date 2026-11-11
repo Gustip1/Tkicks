@@ -2,7 +2,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { Package, ShoppingCart, DollarSign, Users, AlertTriangle } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, Users, AlertTriangle, CreditCard } from 'lucide-react';
+import {
+  SALE_COLUMNS,
+  TONE_CLASSES,
+  WebSale,
+  amountLabel,
+  customerName,
+  markSeen,
+  methodLabel,
+  needsReview,
+  readSeen,
+  saleRef,
+  saleState,
+  timeAgo,
+} from '@/lib/admin/webSales';
 
 interface Stats {
   totalProducts: number;
@@ -18,7 +32,9 @@ interface Stats {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<WebSale[]>([]);
+  // Lo que ya habías visto antes de entrar: lo posterior se marca como nuevo
+  const [seenBefore, setSeenBefore] = useState<string | null>(null);
   const supabase = createBrowserClient();
 
   useEffect(() => {
@@ -39,10 +55,15 @@ export default function AdminDashboard() {
     today.setHours(0, 0, 0, 0);
     const todayOrders = (orders || []).filter((o: any) => new Date(o.created_at) >= today).length;
     const pendingOrders = (orders || []).filter((o: any) => o.status === 'paid').length;
-    const revenue = (orders || []).reduce((sum: number, o: any) => sum + Number(o.total || 0), 0);
-    const month = new Date().getMonth();
-    const monthlyRevenue = (orders || [])
-      .filter((o: any) => new Date(o.created_at).getMonth() === month)
+    // Ingresos: solo lo pagado o entregado (antes sumaba pedidos sin pagar y cancelados)
+    const cashed = (orders || []).filter((o: any) => o.status === 'paid' || o.status === 'fulfilled');
+    const revenue = cashed.reduce((sum: number, o: any) => sum + Number(o.total || 0), 0);
+    const now = new Date();
+    const monthlyRevenue = cashed
+      .filter((o: any) => {
+        const d = new Date(o.created_at);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
       .reduce((sum: number, o: any) => sum + Number(o.total || 0), 0);
 
     // Customers
@@ -68,27 +89,20 @@ export default function AdminDashboard() {
       totalCustomers
     });
 
-    // Recent orders
+    // Ventas por la web: las últimas, con cómo pagaron y cuánto
     const { data: recent } = await supabase
       .from('orders')
-      .select('id, order_number, status, total, first_name, last_name, created_at')
+      .select(SALE_COLUMNS)
       .order('created_at', { ascending: false })
-      .limit(5);
-    setRecentOrders(recent || []);
-  };
-
-  const statusColors: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800',
-    paid: 'bg-green-100 text-green-800',
-    fulfilled: 'bg-blue-100 text-blue-800',
-    cancelled: 'bg-red-100 text-red-800'
-  };
-
-  const statusLabels: Record<string, string> = {
-    draft: 'Borrador',
-    paid: 'Pagado',
-    fulfilled: 'Entregado',
-    cancelled: 'Cancelado'
+      .limit(12);
+    const list = ((recent || []) as WebSale[]).filter(
+      // Un cobro con tarjeta en curso (unos segundos) todavía no es una venta
+      (s) => !(s.payment_method === 'card' && s.status === 'draft' && !needsReview(s))
+    );
+    setRecentOrders(list.slice(0, 10));
+    setSeenBefore(readSeen());
+    // Entrar al dashboard cuenta como haberlas visto: la campanita vuelve a cero
+    if (list.length) markSeen(list[0].created_at);
   };
 
   return (
@@ -193,45 +207,75 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <div className="bg-white shadow-sm rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium">Pedidos recientes</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{order.order_number || `#${order.id.slice(0, 8)}`}</div>
-                      <div className="text-sm text-gray-500">{order.first_name} {order.last_name}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[order.status]}`}>
-                        {statusLabels[order.status]}
+          {/* Cobros con tarjeta que Payway no llegó a confirmar o está revisando */}
+          {recentOrders.some(needsReview) && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
+                <div className="text-sm text-yellow-900">
+                  <p className="font-medium">Pagos con tarjeta para revisar</p>
+                  <p className="mt-0.5">
+                    Payway no confirmó estos cobros todavía. Revisalos en su panel antes de despachar:{' '}
+                    {recentOrders.filter(needsReview).map((s, i) => (
+                      <span key={s.id}>
+                        {i > 0 && ', '}
+                        <Link href={`/admin/pedidos/${s.id}`} className="underline">
+                          {saleRef(s)}
+                        </Link>
                       </span>
-                      <span className="text-sm font-semibold">${Number(order.total || 0).toFixed(2)}</span>
-                    </div>
-                  </div>
+                    ))}
+                  </p>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="px-6 py-3 bg-gray-50">
-              <Link href="/admin/pedidos" className="text-sm text-blue-600 hover:text-blue-500">Ver todos los pedidos →</Link>
-            </div>
-          </div>
+          )}
 
           <div className="bg-white shadow-sm rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium">Destacados</h2>
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-medium">Ventas por la web</h2>
+              <span className="text-xs text-gray-500">Las nuevas desde tu última visita están marcadas</span>
             </div>
-            <div className="p-6 overflow-hidden">
-              <div className="flex gap-4 overflow-x-auto snap-x">
-                {[1,2,3,4,5,6].map((i) => (
-                  <div key={i} className="snap-start min-w-[220px] rounded-lg border border-gray-200 p-4 bg-white text-sm text-gray-700">
-                    Item #{i}
-                  </div>
-                ))}
+            {recentOrders.length === 0 ? (
+              <p className="px-6 py-8 text-center text-sm text-gray-500">Todavía no entró ninguna venta por la web.</p>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {recentOrders.map((order) => {
+                  const state = saleState(order);
+                  const isNew = !!seenBefore && order.created_at > seenBefore;
+                  return (
+                    <Link
+                      key={order.id}
+                      href={`/admin/pedidos/${order.id}`}
+                      className={`block px-6 py-4 hover:bg-gray-50 ${isNew ? 'bg-green-50/60' : ''}`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            {order.payment_method === 'card' && <CreditCard className="h-4 w-4 text-gray-500 shrink-0" aria-hidden />}
+                            <span className="text-sm font-medium text-gray-900">{saleRef(order)}</span>
+                            {isNew && (
+                              <span className="rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-semibold text-white">Nueva</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600 truncate">
+                            {customerName(order)} · {methodLabel(order)}
+                          </div>
+                          <div className="text-xs text-gray-400">{timeAgo(order.created_at)}</div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className="text-sm font-semibold">{amountLabel(order)}</span>
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${TONE_CLASSES[state.tone]}`}>
+                            {state.label}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
+            )}
+            <div className="px-6 py-3 bg-gray-50">
+              <Link href="/admin/pedidos" className="text-sm text-blue-600 hover:text-blue-500">Ver todos los pedidos →</Link>
             </div>
           </div>
         </>

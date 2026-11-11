@@ -1,7 +1,8 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Settings, LogOut, Search, Plus } from 'lucide-react';
+import { Settings, LogOut, Search, Plus } from 'lucide-react';
+import { SalesBell } from '@/components/admin/SalesBell';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useState } from 'react';
 
@@ -83,14 +84,8 @@ export function AdminHeader() {
               </Link>
             )}
             
-            {/* Notifications */}
-            <button 
-              className="relative rounded-xl p-2.5 text-gray-500 hover:bg-gray-100 transition-colors" 
-              aria-label="Notificaciones"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            {/* Ventas nuevas: cuenta, avisa y lista las que entraron por la web */}
+            <SalesBell />
             
             {/* User menu */}
             <div className="hidden md:flex items-center gap-1 ml-2 pl-2 border-l border-gray-200">
