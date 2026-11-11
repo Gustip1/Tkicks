@@ -280,3 +280,20 @@ describe('variables de Vercel', () => {
     delete process.env.PAYWAY_ENV;
   });
 });
+
+describe('sin PAYWAY_ENV en la web publicada', () => {
+  it('apaga la tarjeta en vez de mandar claves reales al sandbox', () => {
+    process.env.PAYWAY_PUBLIC_KEY = 'pub';
+    process.env.PAYWAY_PRIVATE_KEY = 'priv';
+    delete process.env.PAYWAY_ENV;
+    process.env.VERCEL_ENV = 'production';
+    expect(paywayPublicConfig()).toBeNull();
+    expect(paywayServerConfig()).toBeNull();
+    process.env.PAYWAY_ENV = 'production';
+    expect(paywayPublicConfig()?.sandbox).toBe(false);
+    process.env.PAYWAY_ENV = 'sandbox';
+    expect(paywayPublicConfig()?.sandbox).toBe(true);
+    delete process.env.PAYWAY_ENV;
+    delete process.env.VERCEL_ENV;
+  });
+});

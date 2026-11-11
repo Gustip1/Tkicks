@@ -12,8 +12,8 @@ import { BillingAddress, CardBrand, CardInstallments, phoneWithCountry, province
  * Variables de entorno (Vercel → Settings → Environment Variables):
  * - PAYWAY_PUBLIC_KEY y PAYWAY_PRIVATE_KEY: las da Payway. Sin las dos, el
  *   checkout sigue con el link de pago por WhatsApp de antes.
- * - PAYWAY_ENV: "production" para cobrar de verdad; cualquier otro valor usa
- *   el sandbox de pruebas.
+ * - PAYWAY_ENV: "production" para cobrar de verdad; "sandbox" para probar. Sin
+ *   la variable, en la web publicada la tarjeta queda apagada (ver mode()).
  * - PAYWAY_BRANDS (opcional): marcas habilitadas, por defecto "visa,mastercard,amex".
  * - PAYWAY_MASTERCARD_ID (opcional): código de Mastercard en tu sitio, por defecto 104.
  * - PAYWAY_INSTALLMENTS_3 (opcional): lo que se manda a Payway cuando el cliente
@@ -43,8 +43,23 @@ function env(name: string): string {
   return (process.env[name] ?? '').trim().replace(/^["']+|["']+$/g, '').trim();
 }
 
+type Mode = 'production' | 'sandbox';
+
+/**
+ * Producción o sandbox según PAYWAY_ENV. Sin la variable, en la web publicada
+ * (VERCEL_ENV=production) no se adivina: claves reales contra el sandbox fallan
+ * y el cliente vería un error, así que la tarjeta se apaga y queda el link por
+ * WhatsApp (nov 2026, primer deploy con claves reales sin PAYWAY_ENV).
+ */
+function mode(): Mode | null {
+  const v = env('PAYWAY_ENV').toLowerCase();
+  if (/^(production|produccion|producción|prod)$/.test(v)) return 'production';
+  if (/^(sandbox|prueba|test)$/.test(v)) return 'sandbox';
+  return process.env.VERCEL_ENV === 'production' ? null : 'sandbox';
+}
+
 function isProduction(): boolean {
-  return /^(production|produccion|producción|prod)$/.test(env('PAYWAY_ENV').toLowerCase());
+  return mode() === 'production';
 }
 
 function enabledBrands(): CardBrand[] {
@@ -71,7 +86,7 @@ export interface PaywayPublicConfig {
 /** Lo que necesita el navegador para crear el token. null = tarjeta no habilitada */
 export function paywayPublicConfig(): PaywayPublicConfig | null {
   const publicKey = env('PAYWAY_PUBLIC_KEY');
-  if (!publicKey || !env('PAYWAY_PRIVATE_KEY')) return null;
+  if (!publicKey || !env('PAYWAY_PRIVATE_KEY') || !mode()) return null;
   const brands = enabledBrands();
   if (!brands.length) return null;
   return {
@@ -99,7 +114,7 @@ interface ServerConfig {
 
 export function paywayServerConfig(): ServerConfig | null {
   const privateKey = env('PAYWAY_PRIVATE_KEY');
-  if (!privateKey || !env('PAYWAY_PUBLIC_KEY')) return null;
+  if (!privateKey || !env('PAYWAY_PUBLIC_KEY') || !mode()) return null;
   const brands = enabledBrands();
   if (!brands.length) return null;
   const mastercard = Number(env('PAYWAY_MASTERCARD_ID')) || 104;
