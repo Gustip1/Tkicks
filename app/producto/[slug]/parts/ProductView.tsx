@@ -188,11 +188,11 @@ export function ProductView({
                       )}>
                         <CreditCard className={cn('w-4 h-4', promoOn ? 'text-white' : 'text-gray-900')} />
                       </div>
-                      <p className="text-[11px] md:text-xs font-black text-gray-500 leading-tight">
+                      <p className="text-xs font-black text-gray-500 leading-tight">
                         Tarjeta<br className="hidden sm:block" /> {promoOn ? '3 cuotas sin interés' : '3 cuotas (10% de recargo)'}
                       </p>
                       {promoOn && (
-                        <span className="ml-auto inline-flex self-start rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                        <span className="ml-auto inline-flex self-start rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
                           Promo
                         </span>
                       )}
@@ -200,13 +200,13 @@ export function ProductView({
                     <p className={cn('text-2xl md:text-3xl font-black tracking-tight break-words', promoOn ? 'text-red-600' : 'text-gray-900')}>
                       <Ars>3 × {formatCurrency(installment)}</Ars>
                     </p>
-                    <p className="mt-0.5 text-[11px] text-gray-500 font-bold">
+                    <p className="mt-0.5 text-xs text-gray-500 font-bold">
                       {promoOn ? 'Sin recargo' : <Ars>Total {formatCurrency(cardPriceArs)}</Ars>}
                     </p>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-gray-400 font-medium">
+                <p className="text-xs text-gray-400 font-medium">
                   Precios en pesos calculados al tipo de cambio actual. El valor en USD es de referencia.
                 </p>
               </div>
@@ -243,7 +243,7 @@ export function ProductView({
             {[
               { Icon: Shield, title: '100% original', sub: 'Con comprobante de compra' },
               { Icon: Truck, title: 'Envío gratis', sub: 'A todo el país, con seguimiento' },
-              { Icon: CreditCard, title: '3 cuotas con tarjeta', sub: promoOn ? 'Sin recargo (promo)' : 'Con 10% de recargo' },
+              { Icon: CreditCard, title: 'Tarjeta en 1, 3 o 6 cuotas', sub: promoOn ? '3 cuotas sin recargo (promo)' : '3 con 10% · 6 con 20% de recargo' },
               { Icon: Banknote, title: 'Mejor precio', sub: 'Transferencia o efectivo' },
             ].map(({ Icon, title, sub }) => (
               <li key={title} className="flex items-start gap-2.5 rounded-lg bg-gray-100 p-3.5">

@@ -67,7 +67,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com https://live.decidir.com https://developers.decidir.com https://*.online-metrix.net",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://dolarapi.com https://www.facebook.com https://live.decidir.com https://developers.decidir.com https://*.online-metrix.net",
               "frame-src https://accounts.google.com https://*.online-metrix.net",
               "object-src 'none'",
               "base-uri 'self'",

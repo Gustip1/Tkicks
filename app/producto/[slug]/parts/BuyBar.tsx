@@ -120,7 +120,7 @@ export function BuyBar({
               !askSize && !size && 'hidden'
             )}
           >
-            <span className="shrink-0 text-[11px] font-black text-gray-500">
+            <span className="shrink-0 text-xs font-black text-gray-500">
               Talle
             </span>
             {availableVariants.map((v) => (

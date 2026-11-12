@@ -209,9 +209,9 @@ export function CartDrawer() {
                 <div className="text-right shrink-0">
                   <p className="text-sm font-black text-gray-900">
                     ${(it.price * it.quantity).toFixed(2)}
-                    <span className="text-[10px] text-gray-400 ml-0.5">USD</span>
+                    <span className="text-xs text-gray-400 ml-0.5">USD</span>
                   </p>
-                  <p className="text-[11px] font-bold text-gray-500 mt-0.5">
+                  <p className="text-xs font-bold text-gray-500 mt-0.5">
                     {formatCurrency(it.price * it.quantity * dolarOficial)}
                   </p>
                 </div>
@@ -223,7 +223,7 @@ export function CartDrawer() {
               <span className="font-black text-gray-900 ">Subtotal</span>
               <span className="font-black text-gray-900">
                 ${subtotalUSD.toFixed(2)}
-                <span className="text-[10px] text-gray-400 ml-0.5">USD</span>
+                <span className="text-xs text-gray-400 ml-0.5">USD</span>
               </span>
             </div>
             {items.length > 0 && (

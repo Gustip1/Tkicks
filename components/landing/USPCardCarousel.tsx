@@ -31,7 +31,7 @@ export function USPCardCarousel() {
       <div className="max-w-[1600px] mx-auto px-4 space-y-5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-emerald-600">
+            <span className="inline-flex items-center gap-2 text-xs font-black text-emerald-600">
               <span className="h-px w-6 bg-emerald-500" /> Beneficios
             </span>
             <h2 id="beneficios-title" className="t-section mt-2 text-gray-900">

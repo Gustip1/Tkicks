@@ -987,7 +987,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                         <p className="text-sm font-black text-gray-900">
                           {promoOn ? '3 cuotas sin interés' : '3 cuotas con tarjeta'}
                           {promoOn && (
-                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black align-middle">
+                            <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-xs font-black align-middle">
                               Promo
                             </span>
                           )}
@@ -1131,13 +1131,13 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                       {it.imageUrl && (
                         <img src={it.imageUrl} alt={it.title} className="w-14 h-14 rounded-lg object-contain bg-gray-50 border border-gray-200" />
                       )}
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-700 text-white text-[10px] font-black flex items-center justify-center">
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-700 text-white text-xs font-black flex items-center justify-center">
                         {it.quantity}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-gray-900 line-clamp-1">{it.title}</p>
-                      <p className="text-[10px] text-gray-400 font-bold">Talle: {it.size}</p>
+                      <p className="text-xs text-gray-400 font-bold">Talle: {it.size}</p>
                     </div>
                     <p className="text-xs font-black text-gray-900 whitespace-nowrap">
                       ${(it.price * it.quantity).toFixed(2)}

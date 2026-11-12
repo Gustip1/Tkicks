@@ -2,11 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Instagram,
-  MapPin,
-  Shield,
-  Sparkles,
-  Truck,
-  Users,
   ArrowRight,
   CheckCircle2,
   Play,
@@ -43,28 +38,13 @@ export default async function NosotrosPage() {
 
       {/* ───────────────────────── HERO ───────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -left-32 h-[420px] w-[420px] rounded-full bg-gray-300/30 blur-[120px] animate-pulse-slow" />
-          <div className="absolute top-40 -right-24 h-[380px] w-[380px] rounded-full bg-gray-200/30 blur-[120px] animate-pulse-slow animation-delay-2000" />
-          <div className="absolute bottom-0 left-1/2 h-[320px] w-[520px] -translate-x-1/2 rounded-full bg-gray-300/20 blur-[140px]" />
-        </div>
-
         <div className="relative max-w-[1200px] mx-auto px-5 md:px-10 pt-16 md:pt-28 pb-16 md:pb-24">
-          <div className="animate-hero-enter inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 border border-gray-200 mb-6 md:mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-40" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-900" />
-            </span>
-            <span className="text-[10px] md:text-xs font-black text-gray-700">
-              Nosotros · Tkicks
-            </span>
-            <GiveawayInlinePriceClue clueId="/nosotros" label="Nosotros" position={4} digit="0" />
-          </div>
+          <GiveawayInlinePriceClue clueId="/nosotros" label="Nosotros" position={4} digit="0" />
 
           <h1 className="t-display animate-hero-enter hero-delay-1 max-w-5xl text-gray-900">
             Cultura urbana,
             <br />
-            <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">hecha en San&nbsp;Juan.</span>
+            hecha en San&nbsp;Juan
           </h1>
 
           <p className="animate-hero-enter hero-delay-2 mt-6 md:mt-8 max-w-2xl text-base md:text-xl leading-relaxed text-gray-600 font-medium">
@@ -92,7 +72,7 @@ export default async function NosotrosPage() {
             </a>
           </div>
 
-          <div className="animate-hero-enter hero-delay-4 mt-10 md:mt-14 flex flex-wrap gap-x-6 gap-y-3 text-[11px] md:text-xs font-bold text-gray-500">
+          <div className="animate-hero-enter hero-delay-4 mt-10 md:mt-14 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-gray-500">
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> 100% originales</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Showroom físico</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gray-900" /> Envíos a todo el país</span>
@@ -111,8 +91,8 @@ export default async function NosotrosPage() {
           ].map((s, i) => (
             <div key={s.v} className="animate-fade-up text-center md:text-left" style={{ animationDelay: `${i * 80}ms` }}>
               <p className="text-3xl md:text-5xl font-black text-gray-900 leading-none tracking-tighter">{s.k}</p>
-              <p className="mt-2 text-[11px] md:text-xs font-black text-gray-900">{s.v}</p>
-              <p className="mt-1 text-[11px] md:text-xs font-bold text-gray-400">{s.sub}</p>
+              <p className="mt-2 text-xs font-black text-gray-900">{s.v}</p>
+              <p className="mt-1 text-xs font-bold text-gray-400">{s.sub}</p>
             </div>
           ))}
         </div>
@@ -122,12 +102,9 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 grid gap-10 md:gap-16 md:grid-cols-[1fr_1.1fr] md:items-center">
           <div>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
-              <span className="h-px w-8 bg-gray-900" /> Nuestra historia
-            </span>
-            <h2 className="t-section mt-4 text-gray-900">
+            <h2 className="t-section text-gray-900">
               Empezó con una idea simple:<br className="hidden md:block" />
-              <span className="text-gray-400">que el hype</span> <span className="text-gray-900">también viva acá.</span>
+              que el hype también viva acá
             </h2>
             <div className="mt-6 space-y-4 text-[15px] md:text-base leading-relaxed text-gray-600 font-medium">
               <p>
@@ -144,26 +121,19 @@ export default async function NosotrosPage() {
           </div>
 
           <div className="relative">
-            <div className="relative rounded-3xl border border-gray-200 bg-gray-50 p-6 md:p-10 overflow-hidden shadow-sm">
-              <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-gray-200 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-gray-100 blur-3xl" />
-              <div className="relative grid grid-cols-2 gap-3">
-                {[
-                  { icon: Shield, title: 'Autenticidad', desc: 'Cada par, 100% original.' },
-                  { icon: Sparkles, title: 'Curaduría', desc: 'Sólo lo que vale la pena.' },
-                  { icon: MapPin, title: 'Local', desc: 'Showroom en San Juan.' },
-                  { icon: Users, title: 'Comunidad', desc: 'Tkicks Fam, real.' },
-                ].map(({ icon: Icon, title, desc }) => (
-                  <div key={title} className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 hover:border-gray-400 hover:shadow-sm transition">
-                    <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center mb-3">
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <p className="text-sm md:text-base font-black text-gray-900">{title}</p>
-                    <p className="text-[11px] md:text-xs text-gray-500 font-bold mt-1">{desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <dl className="divide-y divide-[#d6d6d6] border-y border-[#d6d6d6]">
+              {[
+                { title: 'Autenticidad', desc: 'Cada par, 100% original.' },
+                { title: 'Curaduría', desc: 'Sólo lo que vale la pena.' },
+                { title: 'Local', desc: 'Showroom en San Juan.' },
+                { title: 'Comunidad', desc: 'Tkicks Fam, real.' },
+              ].map(({ title, desc }) => (
+                <div key={title} className="flex items-baseline justify-between gap-6 py-4">
+                  <dt className="t-strong text-gray-900">{title}</dt>
+                  <dd className="t-caption text-gray-600 text-right">{desc}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </section>
@@ -172,33 +142,23 @@ export default async function NosotrosPage() {
       <section className="relative bg-gray-50 border-y border-gray-200">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
-              <span className="h-px w-8 bg-gray-900" /> Lo que nos define
-            </span>
-            <h2 className="t-section mt-4 text-gray-900">
-              No somos otro reseller. <span className="text-gray-400">Somos el tuyo.</span>
+            <h2 className="t-section text-gray-900">
+              No somos otro reseller. Somos el tuyo
             </h2>
           </div>
 
-          <div className="mt-10 md:mt-14 grid gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 md:mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { icon: Shield, title: 'Autenticidad garantizada', desc: 'Cada par y cada prenda pasa por control antes de salir. Si tenés dudas, te mostramos todo antes.' },
-              { icon: Truck, title: 'Envíos a todo el país', desc: 'Coordinamos entrega con seguimiento. Si estás en San Juan, te invitamos al showroom.' },
-              { icon: Sparkles, title: 'Drops curados', desc: 'Traemos sólo lo que vale la pena. Sin rellenar catálogo con cualquier cosa.' },
-              { icon: Users, title: 'Comunidad real', desc: 'Somos una crew, no un carrito. Outfits, rifas y contenido con la gente que ya compra acá.' },
-              { icon: CheckCircle2, title: 'Asesoramiento 1 a 1', desc: 'Te ayudamos con talles, combinaciones y ocasión. Sin presión de venta.' },
-              { icon: Play, title: 'Detrás de escena', desc: 'Cada lanzamiento con video, unboxing y stories. Todo se ve en nuestras redes.' },
-            ].map(({ icon: Icon, title, desc }, i) => (
-              <div
-                key={title}
-                className="group animate-fade-up rounded-2xl border border-gray-200 bg-white p-5 md:p-6 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5 transition"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:border-gray-900 transition-colors">
-                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-gray-900 group-hover:text-white transition-colors" />
-                </div>
+              { title: 'Autenticidad garantizada', desc: 'Cada par y cada prenda pasa por control antes de salir. Si tenés dudas, te mostramos todo antes.' },
+              { title: 'Envíos a todo el país', desc: 'Coordinamos entrega con seguimiento. Si estás en San Juan, te invitamos al showroom.' },
+              { title: 'Drops curados', desc: 'Traemos sólo lo que vale la pena. Sin rellenar catálogo con cualquier cosa.' },
+              { title: 'Comunidad real', desc: 'Somos una crew, no un carrito. Outfits, rifas y contenido con la gente que ya compra acá.' },
+              { title: 'Asesoramiento 1 a 1', desc: 'Te ayudamos con talles, combinaciones y ocasión. Sin presión de venta.' },
+              { title: 'Detrás de escena', desc: 'Cada lanzamiento con video, unboxing y stories. Todo se ve en nuestras redes.' },
+            ].map(({ title, desc }) => (
+              <div key={title} className="border-t border-[#d6d6d6] pt-5">
                 <h3 className="t-tagline text-gray-900">{title}</h3>
-                <p className="mt-2 text-sm text-gray-500 font-medium leading-relaxed">{desc}</p>
+                <p className="mt-2 t-caption text-gray-600 max-w-[42ch]">{desc}</p>
               </div>
             ))}
           </div>
@@ -209,10 +169,7 @@ export default async function NosotrosPage() {
       <section className="relative">
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
-              <span className="h-px w-8 bg-gray-900" /> Seguinos en las redes
-            </span>
-            <h2 className="t-section mt-4 text-gray-900">
+            <h2 className="t-section text-gray-900">
               Ahora somos <span className="text-gray-900">{INSTAGRAM_HANDLE}</span>
             </h2>
             <p className="mt-4 t-body text-gray-600">
@@ -233,7 +190,7 @@ export default async function NosotrosPage() {
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-900 flex items-center justify-center">
                     <Instagram className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <p className="text-[10px] md:text-xs font-black text-gray-500">Instagram</p>
+                  <p className="text-xs font-black text-gray-500">Instagram</p>
                 </div>
                 <div>
                   <p className="t-display text-gray-900">{INSTAGRAM_HANDLE}</p>
@@ -261,8 +218,8 @@ export default async function NosotrosPage() {
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
                     <TikTokIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <p className="text-[10px] md:text-xs font-black text-white/70">TikTok</p>
-                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-[9px] md:text-[10px] font-black text-white">Nuevo</span>
+                  <p className="text-xs font-black text-white/70">TikTok</p>
+                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-red-600 text-xs font-black text-white">Nuevo</span>
                 </div>
                 <div>
                   <p className="t-display text-white">@tkicks.sj</p>
@@ -283,10 +240,7 @@ export default async function NosotrosPage() {
         <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24">
           <div className="flex flex-wrap items-end justify-between gap-3 mb-8 md:mb-10">
             <div>
-              <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-gray-900">
-                <span className="h-px w-8 bg-gray-900" /> En vivo
-              </span>
-              <h2 className="t-section mt-3 text-gray-900">Último contenido del feed</h2>
+              <h2 className="t-section text-gray-900">Último contenido del feed</h2>
               <p className="mt-2 t-caption text-gray-500">Los posteos más recientes de {INSTAGRAM_HANDLE}.</p>
             </div>
             <a
@@ -337,10 +291,10 @@ export default async function NosotrosPage() {
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-gray-400">Sin vista previa</div>
+                        <div className="flex h-full w-full items-center justify-center text-xs font-bold text-gray-400">Sin vista previa</div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="absolute left-2 top-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[9px] md:text-[10px] font-black text-gray-700 border border-gray-200">
+                      <span className="absolute left-2 top-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-xs font-black text-gray-700 border border-gray-200">
                         {item.mediaType === 'VIDEO' ? 'Video' : item.mediaType === 'CAROUSEL_ALBUM' ? 'Carrusel' : 'Post'}
                       </span>
                       {item.mediaType === 'VIDEO' && (
@@ -351,7 +305,7 @@ export default async function NosotrosPage() {
                         </span>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="line-clamp-2 text-[11px] md:text-xs font-bold text-white leading-snug">
+                        <p className="line-clamp-2 text-xs font-bold text-white leading-snug">
                           {item.caption || 'Ver publicación'}
                         </p>
                       </div>
@@ -366,17 +320,11 @@ export default async function NosotrosPage() {
 
       {/* ───────────────────────── FINAL CTA ───────────────────────── */}
       <section className="relative overflow-hidden border-t border-gray-200">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-72 w-[700px] rounded-full bg-gray-100 blur-[120px]" />
-        </div>
         <div className="relative max-w-[1200px] mx-auto px-5 md:px-10 py-16 md:py-24 text-center">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-100 text-[10px] md:text-xs font-black text-gray-600">
-            <MapPin className="w-3.5 h-3.5 text-gray-900" /> Showroom · San Juan
-          </span>
-          <h2 className="t-section mt-5 max-w-3xl mx-auto text-gray-900">
+          <h2 className="t-section max-w-3xl mx-auto text-gray-900">
             Vení, probate un par
             <br />
-            <span className="text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4">y llevate lo que buscabas.</span>
+            y llevate lo que buscabas
           </h2>
           <p className="mt-5 max-w-xl mx-auto text-sm md:text-base text-gray-500 font-medium">
             Te esperamos en el showroom o coordinamos por WhatsApp. Siempre hay alguien del otro lado para ayudarte.

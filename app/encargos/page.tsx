@@ -455,7 +455,7 @@ export default function EncargosPage() {
               >
                 <m.Icon className="h-6 w-6 text-gray-900" aria-hidden />
                 <span className="text-sm font-semibold text-gray-900">{m.label}</span>
-                <span className="text-[11px] text-gray-500">{m.desc}</span>
+                <span className="text-xs text-gray-500">{m.desc}</span>
               </button>
             ))}
           </div>

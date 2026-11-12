@@ -151,7 +151,7 @@ export default function SorteoPage() {
 
         <img src="/logo.jpg" alt="Tkicks" className="relative mx-auto h-16 w-auto rounded-2xl opacity-70" />
 
-        <p className="relative mt-8 text-[10px] font-black text-red-500">
+        <p className="relative mt-8 text-xs font-black text-red-500">
           Tkicks · Sorteo
         </p>
         <h1 className="t-display relative mt-3 text-gray-900">
@@ -179,7 +179,7 @@ export default function SorteoPage() {
         <div className="relative overflow-hidden rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
           <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-200 blur-3xl" />
 
-          <p className="relative text-[9px] font-black text-red-500">
+          <p className="relative text-xs font-black text-red-500">
             ◈ · Sorteo Tkicks · ◈
           </p>
           <h1 className="t-display relative mt-2 text-gray-900">
@@ -192,8 +192,8 @@ export default function SorteoPage() {
 
           <div className="relative mt-5">
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[9px] font-black text-gray-400">Tu progreso</span>
-              <span className="text-[9px] font-black text-gray-500">
+              <span className="text-xs font-black text-gray-400">Tu progreso</span>
+              <span className="text-xs font-black text-gray-500">
                 <span className={foundCount > 0 ? 'text-red-500' : ''}>{foundCount}</span>/{TOTAL_CLUES} pistas
               </span>
             </div>
@@ -209,10 +209,10 @@ export default function SorteoPage() {
         {/* ── Pistas descubiertas ──────────────────────────────────────────── */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[9px] font-black text-gray-400">
+            <p className="text-xs font-black text-gray-400">
               Pistas descubiertas
             </p>
-            <p className="text-[9px] italic text-gray-400">en orden de hallazgo</p>
+            <p className="text-xs italic text-gray-400">en orden de hallazgo</p>
           </div>
 
           <div className="mb-3 flex justify-center gap-1.5">
@@ -244,13 +244,13 @@ export default function SorteoPage() {
                   key={clue.id}
                   className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
                 >
-                  <span className="w-4 text-[9px] font-black text-gray-400">#{idx + 1}</span>
+                  <span className="w-4 text-xs font-black text-gray-400">#{idx + 1}</span>
                   <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-red-500 text-sm font-black text-white">
                     {clue.digit}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-black text-gray-700">{clue.label}</p>
-                    <p className="text-[9px] text-gray-400">{formatDate(clue.foundAt)}</p>
+                    <p className="truncate text-xs font-black text-gray-700">{clue.label}</p>
+                    <p className="text-xs text-gray-400">{formatDate(clue.foundAt)}</p>
                   </div>
                 </div>
               ))}
@@ -258,7 +258,7 @@ export default function SorteoPage() {
           )}
 
           {foundCount > 0 && foundCount < TOTAL_CLUES && (
-            <p className="mt-3 text-center text-[9px] italic text-gray-400">
+            <p className="mt-3 text-center text-xs italic text-gray-400">
               Este no es el orden del código — tenés que reordenarlo.
             </p>
           )}
@@ -266,7 +266,7 @@ export default function SorteoPage() {
 
         {/* ── Ingresar la clave ─────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[9px] font-black text-gray-400">
+          <p className="mb-3 text-xs font-black text-gray-400">
             Ingresar clave
           </p>
 

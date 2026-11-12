@@ -36,13 +36,13 @@ function ProductSlide({ product }: { product: Product }) {
           />
         )}
         {hasSale && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-gray-900 text-[9px] font-black ">
+          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-gray-900 text-xs font-black ">
             SALE
           </span>
         )}
       </div>
       <div className="pt-3">
-        <p className="text-[9px] text-gray-900/30 font-bold mb-1">{product.category}</p>
+        <p className="text-xs text-gray-900/30 font-bold mb-1">{product.category}</p>
         <h3 className="t-tagline text-gray-900 line-clamp-2 mb-1.5 group-hover:text-gray-900/70 transition-colors">
           {product.title}
         </h3>

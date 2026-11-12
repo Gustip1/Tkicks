@@ -1,10 +1,9 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Info } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Product, subcategoryLabel } from '@/types/db';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, cn } from '@/lib/utils';
 import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
@@ -18,27 +17,12 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
-type InfoPopover = 'usd' | 'installments' | null;
-
 export function ProductCard({ product, size = 'normal', priority = false }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   // La segunda foto se pide recién al pasar el mouse: en el celular nunca se ve y
   // cada tarjeta la bajaba igual, el doble de datos para el 93% de las visitas.
   const [wantsSecondary, setWantsSecondary] = useState(false);
   const [secondaryReady, setSecondaryReady] = useState(false);
-  const [activeInfo, setActiveInfo] = useState<InfoPopover>(null);
-  const cardRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    if (!activeInfo) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
-        setActiveInfo(null);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [activeInfo]);
   const images                  = product.images || [];
   const primary                 = images[0];
   const secondary               = images[1]; // imagen para el swap en hover (estilo Shopify)
@@ -83,7 +67,6 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
 
   return (
     <Link
-      ref={cardRef}
       href={`/producto/${product.slug}`}
       // Sin precarga al aparecer en pantalla: la ficha se genera en cada visita, así que
       // eran 15-21 llamadas al servidor por página que devolvían unos 200 bytes sin datos.
@@ -166,8 +149,8 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
         )}
 
         <h3 className={cn(
-          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-1.5 sm:mb-2 tracking-[-0.022em]',
-          size === 'large' ? 'text-[15px] sm:text-[19px]' : 'text-[14px] sm:text-[17px]',
+          'font-semibold text-gray-900 leading-snug line-clamp-2 mb-1.5 sm:mb-2 tracking-[-0.022em] [text-wrap:pretty]',
+          size === 'large' ? 'text-[16px] sm:text-[19px]' : 'text-[15px] sm:text-[17px]',
         )}>
           {product.title}
         </h3>
@@ -176,7 +159,7 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
             sin entrar si hay el suyo. Casi todo es única unidad, así que va como
             dato y no como sello sobre la foto (estaría en casi todas). */}
         {availableSizes.length > 0 && (
-          <p className="mb-1.5 sm:mb-2 text-[12px] sm:text-[13px] text-gray-600 tabular-nums">
+          <p className="mb-1.5 sm:mb-2 text-[13px] sm:text-[14px] text-gray-600 tabular-nums">
             {availableSizes.length === 1 ? 'Talle' : 'Talles'} {availableSizes.slice(0, 4).join(', ')}
             {availableSizes.length > 4 && ` +${availableSizes.length - 4}`}
             {totalStock === 1 && ' · Última unidad'}
@@ -187,7 +170,7 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
           {/* USD — precio principal */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              't-strong text-[15px] sm:text-[17px]',
+              't-strong text-[16px] sm:text-[17px] tabular-nums',
               hasSale ? 'text-red-600' : 'text-gray-900',
             )}>
               ${activePrice.toFixed(2)}
@@ -203,67 +186,28 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
           {/* ARS — mismo tamaño que el USD */}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={cn(
-              't-body text-[13px] sm:text-[17px]',
+              't-body text-[14px] sm:text-[15px] tabular-nums',
               hasSale ? 'text-red-600' : 'text-gray-700',
             )}>
-              <Ars>{formatCurrency(priceInArs)}</Ars>
+              <Ars>{formatARS(priceInArs)}</Ars>
             </span>
             {hasSale && (
               <span className="hidden sm:inline text-xs text-gray-400 line-through font-normal">
-                <Ars>{formatCurrency(Number(product.price) * dolarOficial)}</Ars>
+                <Ars>{formatARS(Number(product.price) * dolarOficial)}</Ars>
               </span>
             )}
           </div>
 
-          {/* Aclaración: precios en USD, conversión a cambio oficial */}
-          <div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveInfo((v) => (v === 'usd' ? null : 'usd'));
-              }}
-              className="hidden sm:inline-flex items-center gap-1 text-xs text-primary font-normal hover:text-primary-hover transition-colors"
-            >
-              <Info className="w-3 h-3" />
-              Precios en USD
-            </button>
-            {activeInfo === 'usd' && (
-              <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
-                Todos los precios están expresados en USD. Las conversiones a pesos son al cambio oficial.
-              </div>
-            )}
-          </div>
-
-          {/* Tarjeta 3 cuotas — clickeable, comparte la aclaración con el de arriba */}
+          {/* Cuotas: una línea de texto, sin píldora ni botón. La aclaración de que los
+              precios son en USD al cambio oficial vive en el pie y en la ficha: repetida
+              en cada tarjeta era ruido (y un botón de 16px imposible de tocar). */}
           {!isSoldOut && (
-            <div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setActiveInfo((v) => (v === 'installments' ? null : 'installments'));
-                }}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  promoOn ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700',
-                )}
-              >
-                <Ars>3 × {formatCurrency(cardArs / 3)}</Ars>
-                <span className="hidden sm:inline font-normal opacity-70">
-                  {promoOn ? 'sin recargo' : 'c/ 10% recargo'}
-                </span>
-              </button>
-              {activeInfo === 'installments' && (
-                <div className="mt-1 w-full rounded-sm bg-gray-900 text-white text-xs leading-snug p-2.5">
-                  {promoOn
-                    ? 'Promo activa: 3 cuotas sin interés, al mismo precio que efectivo/transferencia.'
-                    : 'Pagando en 3 cuotas con tarjeta se aplica un 10% de recargo sobre el precio base.'}
-                </div>
-              )}
-            </div>
+            <p className={cn('pt-0.5 text-[12px] sm:text-[13px] tabular-nums', promoOn ? 'text-red-600' : 'text-gray-500')}>
+              <Ars>
+                3 cuotas de {formatARS(cardArs / 3)}
+                {promoOn ? ' sin interés' : ''}
+              </Ars>
+            </p>
           )}
         </div>
       </div>

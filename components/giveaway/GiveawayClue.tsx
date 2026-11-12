@@ -157,7 +157,7 @@ export function GiveawayClue() {
     <Link href="/sorteo" aria-label="Ver progreso del sorteo">
       {/* Mismo material que los demás avisos: vidrio claro, esquinas de 18px */}
       <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 cursor-pointer select-none rounded-[18px] bg-white/95 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.16)] ring-1 ring-black/[0.06] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.97]">
-        <p className="mb-2 text-[11px] font-semibold text-gray-500">
+        <p className="mb-2 text-xs font-semibold text-gray-500">
           Pistas del sorteo · <span className={foundCount > 0 ? 'text-red-600' : ''}>{foundCount}</span>/{TOTAL_CLUES}
         </p>
         <div className="flex gap-1.5">
@@ -180,7 +180,7 @@ export function GiveawayClue() {
             );
           })}
         </div>
-        <p className="mt-2 text-center text-[11px] text-primary">Ver el sorteo ›</p>
+        <p className="mt-2 text-center text-xs text-primary">Ver el sorteo ›</p>
       </div>
     </Link>
   );
@@ -230,7 +230,7 @@ export function GiveawayInlinePriceClue({ clueId, label, position, digit }: Inli
       onMouseEnter={handleHover}
       onMouseLeave={() => setHovered(false)}
       title={saved ? `Pista encontrada · ${digit}` : 'Pasá el mouse para revelar la pista'}
-      className={`inline-flex cursor-default select-none items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-black transition duration-300 ${
+      className={`inline-flex cursor-default select-none items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-black transition duration-300 ${
         saved
           ? 'border-red-500/60 bg-red-500/10 text-red-400'
           : hovered

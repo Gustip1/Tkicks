@@ -227,11 +227,11 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
               <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-black text-lg shrink-0">★</div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-gray-900 font-black leading-none">Va ganando</p>
+                  <p className="text-xs text-gray-900 font-black leading-none">Va ganando</p>
                   <p className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] text-gray-900 font-bold">Con</p>
+                  <p className="text-xs text-gray-900 font-bold">Con</p>
                   <p className="text-sm sm:text-base font-black text-gray-900">{formatARS(Number(bids[0].amount))}</p>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                 <span>Incremento mín.: +{formatARS(Number(auction.min_increment))}</span>
                 <span>Pujas: {bids.length}</span>
               </div>
-              <div className="flex items-center justify-between pt-2 text-[11px] text-gray-400">
+              <div className="flex items-center justify-between pt-2 text-xs text-gray-400">
                 <span>
                   {lastUpdate
                     ? `Actualizado ${lastUpdate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
@@ -282,7 +282,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
 
                 <div className="grid grid-cols-2 gap-2">
                   <label className="block">
-                    <span className="text-[10px] text-gray-500 font-bold">Nombre *</span>
+                    <span className="text-xs text-gray-500 font-bold">Nombre *</span>
                     <input
                       type="text"
                       autoComplete="given-name"
@@ -293,7 +293,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                     />
                   </label>
                   <label className="block">
-                    <span className="text-[10px] text-gray-500 font-bold">Apellido *</span>
+                    <span className="text-xs text-gray-500 font-bold">Apellido *</span>
                     <input
                       type="text"
                       autoComplete="family-name"
@@ -305,7 +305,7 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                   </label>
                 </div>
                 <label className="block">
-                  <span className="text-[10px] text-gray-500 font-bold">Teléfono *</span>
+                  <span className="text-xs text-gray-500 font-bold">Teléfono *</span>
                   <input
                     type="tel"
                     inputMode="tel"
@@ -427,21 +427,21 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
             <div className="space-y-3">
               <div className="bg-gradient-to-br from-gray-50 via-white to-white border border-gray-200 rounded-2xl p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] text-gray-900 font-black">Va ganando</p>
+                  <p className="text-xs text-gray-900 font-black">Va ganando</p>
                   <p className="text-2xl sm:text-3xl font-black text-gray-900 truncate mt-1">{bids[0].alias}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {bids.length} {bids.length === 1 ? 'puja' : 'pujas'} · última {new Date(bids[0].created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] text-gray-400 font-bold">Con</p>
+                  <p className="text-xs text-gray-400 font-bold">Con</p>
                   <p className="text-xl sm:text-2xl font-black text-gray-900">{formatARS(Number(bids[0].amount))}</p>
                 </div>
               </div>
 
               <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <p className="text-[10px] text-gray-500 font-bold">Historial de pujas</p>
+                  <p className="text-xs text-gray-500 font-bold">Historial de pujas</p>
                 </div>
                 <ul className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
                   {bids.map((b, i) => {
@@ -459,12 +459,12 @@ export default function AuctionDetailPage({ params }: { params: { id: string } }
                             <p className={`font-bold truncate ${isTop ? 'text-gray-900' : 'text-gray-600'}`}>
                               {b.alias}
                               {isTop && (
-                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-[9px] font-black align-middle">
+                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-gray-900 text-white text-xs font-black align-middle">
                                   Top
                                 </span>
                               )}
                             </p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">
+                            <p className="text-xs text-gray-400 mt-0.5">
                               {new Date(b.created_at).toLocaleString('es-AR', {
                                 day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
                               })}

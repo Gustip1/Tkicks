@@ -71,7 +71,7 @@ function AuctionCard({ a }: { a: ActiveAuctionRow }) {
           {a.bid_count} {a.bid_count === 1 ? 'puja' : 'pujas'} · Mínimo +{formatARS(Number(a.min_increment))}
         </p>
         {a.top_bidder_alias && (
-          <p className="text-[11px] text-gray-900 font-bold truncate">
+          <p className="text-xs text-gray-900 font-bold truncate">
             ★ Va ganando {a.top_bidder_alias}
           </p>
         )}
