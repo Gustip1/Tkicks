@@ -99,6 +99,17 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     if (orderComplete) window.scrollTo({ top: 0 });
   }, [orderComplete]);
 
+  // Al cambiar de paso se vuelve arriba: el paso nuevo arrancaba a la altura
+  // del botón "Continuar" y había que subir para ver de qué se trataba.
+  const stepChanged = useRef(false);
+  const lastStep = useRef(step);
+  if (lastStep.current !== step) stepChanged.current = true;
+  useEffect(() => {
+    if (lastStep.current === step) return;
+    lastStep.current = step;
+    window.scrollTo({ top: 0 });
+  }, [step]);
+
   // Check cart expiry
   useEffect(() => {
     const interval = setInterval(() => {
@@ -489,9 +500,9 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     );
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-white px-4">
-        <div className="max-w-md w-full text-center space-y-6">
+        <div className="success-enter max-w-md w-full text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
-            {approved ? <Check className="w-10 h-10 text-white" /> : <Clock className="w-10 h-10 text-white" />}
+            {approved ? <DrawnCheck /> : <Clock className="w-10 h-10 text-white" />}
           </div>
           <h1 className="t-display text-gray-900">
             {o.sandbox && approved ? 'Pago de prueba aprobado.' : approved ? 'Pago aprobado.' : 'Estamos confirmando tu pago.'}
@@ -559,9 +570,9 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   if (orderComplete) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-white px-4">
-        <div className="max-w-md w-full text-center space-y-6">
+        <div className="success-enter max-w-md w-full text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center mx-auto">
-            <Check className="w-10 h-10 text-white" />
+            <DrawnCheck />
           </div>
           <h1 className="t-display text-gray-900">
             {completedPaymentMethod === 'installments_3' ? 'Listo.' : 'Pedido confirmado.'}
@@ -649,8 +660,8 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr,380px]">
-          {/* Main content */}
-          <div className="space-y-6">
+          {/* Main content — al cambiar de paso entra de nuevo */}
+          <div key={step} className={`space-y-6 ${stepChanged.current ? 'step-enter' : ''}`}>
             {/* ═══════════════ STEP 1: DELIVERY ═══════════════ */}
             {step === 1 && (
               <>
@@ -851,7 +862,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
 
                 {/* Tarjeta de crédito con Payway */}
                 {isPayway && payway && (
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6">
+                  <div className="step-enter rounded-2xl border border-gray-200 bg-white p-5 md:p-6">
                     <CardPayment
                       config={payway}
                       subtotalUsd={discountedSubtotalUSD}
@@ -1254,6 +1265,15 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
 }
 
 /* ─── Reusable Components ─── */
+
+/** Tilde que se dibuja al confirmar la compra */
+function DrawnCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-10 w-10 text-white" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path className="check-draw" pathLength={1} d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
 
 function InputField({
   label,

@@ -27,7 +27,7 @@ export function HomeProductGrid({ products, total }: { products: Product[]; tota
 
         <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4 md:gap-5">
           {products.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} data-reveal="card">
               <ProductCard product={p} />
             </li>
           ))}

@@ -464,7 +464,7 @@ export function ProductsClient({
           : "grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
       )}>
         {products.map((p, idx) => (
-          <div key={p.id}>
+          <div key={p.id} data-reveal="card">
             <ProductCard product={p} size={gridSize} priority={idx < 2} />
           </div>
         ))}

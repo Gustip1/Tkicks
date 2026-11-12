@@ -141,14 +141,16 @@ export function Reviews({
           </dl>
         )}
 
-        <div className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10" ref={emblaRef}>
+        {/* Entra el carrusel entero: tarjeta por tarjeta, las de costado aparecían
+            de a una recién al deslizar y se sentía lento */}
+        <div data-reveal="" className="overflow-hidden -mx-[22px] px-[22px] md:-mx-10 md:px-10" ref={emblaRef}>
           <div className="flex -ml-4 md:-ml-5">
             {reviews.map((r) => (
               <div
                 key={r.id}
                 className="min-w-0 shrink-0 grow-0 basis-[85%] sm:basis-1/2 lg:basis-1/3 pl-4 md:pl-5"
               >
-                <figure data-reveal="" className="h-full rounded-3xl bg-tile-2 p-5 md:p-6 flex flex-col gap-3.5">
+                <figure className="h-full rounded-3xl bg-tile-2 p-5 md:p-6 flex flex-col gap-3.5">
                   <Stars rating={r.rating} />
                   <blockquote className="t-body text-[#f5f5f7] flex-1">
                     “{r.text.trim().replace(/^["“”«»\s]+|["“”«»\s]+$/g, '')}”

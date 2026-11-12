@@ -27,6 +27,17 @@ export function CartDrawer() {
   }, [pathname, close]);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
+  // Renglones que se están cerrando antes de salir del carrito
+  const [leaving, setLeaving] = useState<string[]>([]);
+  const removeLine = (productId: string, size: string) => {
+    const key = `${productId}-${size}`;
+    if (leaving.includes(key)) return;
+    setLeaving((l) => [...l, key]);
+    setTimeout(() => {
+      removeItem(productId, size);
+      setLeaving((l) => l.filter((k) => k !== key));
+    }, 240);
+  };
 
   // Timer tick every second
   useEffect(() => {
@@ -139,7 +150,7 @@ export function CartDrawer() {
             </div>
           )}
 
-          <div className="touch-pan-y flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
+          <div className="touch-pan-y flex-1 overflow-y-auto overscroll-contain p-4">
             {items.length === 0 && !expired && (
               <div className="flex flex-col items-center justify-center text-center py-16 gap-4">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
@@ -161,7 +172,13 @@ export function CartDrawer() {
               </div>
             )}
             {items.map((it) => (
-              <div key={`${it.productId}-${it.size}`} className="flex gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div
+                key={`${it.productId}-${it.size}`}
+                className="cart-line"
+                data-leaving={leaving.includes(`${it.productId}-${it.size}`) || undefined}
+              >
+              <div>
+              <div className="mb-4 flex gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
                 {it.imageUrl && (
                   <img
                     src={it.imageUrl}
@@ -200,7 +217,7 @@ export function CartDrawer() {
                     </div>
                     <button
                       className="ml-auto rounded-lg px-3 min-h-[40px] text-xs text-red-500 hover:bg-red-50 active:bg-red-100 font-black transition-colors"
-                      onClick={() => removeItem(it.productId, it.size)}
+                      onClick={() => removeLine(it.productId, it.size)}
                     >
                       Eliminar
                     </button>
@@ -215,6 +232,8 @@ export function CartDrawer() {
                     {formatCurrency(it.price * it.quantity * dolarOficial)}
                   </p>
                 </div>
+              </div>
+              </div>
               </div>
             ))}
           </div>

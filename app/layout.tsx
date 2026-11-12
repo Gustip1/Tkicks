@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/Header';
@@ -20,6 +20,7 @@ import { RecentSaleToast } from '@/components/ui/RecentSaleToast';
 import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
 import { RevealObserver } from '@/components/RevealObserver';
+import { NavProgress } from '@/components/NavProgress';
 import { TouchFeedback } from '@/components/TouchFeedback';
 import { StaleDeployReload } from '@/components/StaleDeployReload';
 
@@ -100,6 +101,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </HideOnAdmin>
               <WhatsAppFab />
               <RevealObserver />
+              {/* useSearchParams necesita su propio límite de Suspense */}
+              <Suspense fallback={null}>
+                <NavProgress />
+              </Suspense>
               <TouchFeedback />
               <StaleDeployReload />
             </AnalyticsProvider>

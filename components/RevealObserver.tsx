@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 /** Pausa entre elementos que entran en pantalla a la vez (tarjetas de una grilla). */
 const STAGGER_MS = 90;
 const MAX_STAGGER_MS = 540;
+const CARD_STAGGER_MS = 50;
+const MAX_CARD_STAGGER_MS = 250;
 
 /**
  * Aparición al hacer scroll, como en apple.com: todo lo que tenga
@@ -35,7 +37,10 @@ export function RevealObserver() {
             return ra.top - rb.top || ra.left - rb.left;
           })
           .forEach((el, i) => {
-            el.style.setProperty('--reveal-delay', `${Math.min(i * STAGGER_MS, MAX_STAGGER_MS)}ms`);
+            // Las tarjetas de producto van más seguidas: son muchas y se ven seguido
+            const card = el.dataset.reveal === 'card';
+            const delay = card ? Math.min(i * CARD_STAGGER_MS, MAX_CARD_STAGGER_MS) : Math.min(i * STAGGER_MS, MAX_STAGGER_MS);
+            el.style.setProperty('--reveal-delay', `${delay}ms`);
             el.classList.add('is-revealed');
             io.unobserve(el);
           });

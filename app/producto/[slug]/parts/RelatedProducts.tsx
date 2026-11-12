@@ -79,7 +79,11 @@ export function RelatedProducts({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
-        {items.map((p) => <ProductCard key={p.id} product={p} />)}
+        {items.map((p) => (
+          <div key={p.id} data-reveal="card">
+            <ProductCard product={p} />
+          </div>
+        ))}
       </div>
 
       <Link
