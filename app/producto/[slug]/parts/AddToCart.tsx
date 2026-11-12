@@ -10,9 +10,10 @@ import { formatCurrency } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { GarmentIcon } from '@/components/pdp/GarmentDiagram';
 import { SizeGuide } from '@/components/pdp/SizeGuide';
+import { LeadSheet } from '@/components/contact/LeadSheet';
+import { markWhatsAppIntent, waLink as businessWaLink } from '@/lib/contact';
 import { formatCm, rowFor, waistStyle, type GarmentKind, type SizeGuide as SizeGuideData } from '@/lib/sizeGuide';
 
-const WA_NUMBER = '5492644802994';
 
 export function AddToCart({
   product,
@@ -29,6 +30,7 @@ export function AddToCart({
 }) {
   const [size, setSize] = useState<string>('');
   const [guideOpen, setGuideOpen] = useState(false);
+  const [sizeRequestOpen, setSizeRequestOpen] = useState(false);
   const [qty, setQty] = useState<number>(1);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useUIStore((s) => s.openCart);
@@ -59,12 +61,11 @@ export function AddToCart({
   };
 
   // Mensaje de WhatsApp con el producto, el talle elegido y el precio en pesos
-  const waLink = (text: string) => `https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(text)}`;
+  const waLink = businessWaLink;
   const productUrl = typeof window !== 'undefined' ? window.location.href : `https://www.tkicks.com.ar/producto/${product.slug}`;
   const priceText = dolarOficial > 0 ? formatCurrency(activePrice * dolarOficial) : `USD ${activePrice.toFixed(0)}`;
   const askText =
     `Hola! Me interesa *${product.title}*${size ? ` en talle *${size}*` : ''} (${priceText}). ¿Está disponible?\n${productUrl}`;
-  const missingSizeText = `Hola! Busco *${product.title}* en otro talle. ¿Lo pueden conseguir?\n${productUrl}`;
   const allSoldOut = variants.every((v) => Number(v.stock) <= 0);
 
   // Guía de talles: las medidas del talle elegido (o del único que hay)
@@ -171,15 +172,17 @@ export function AddToCart({
           </button>
         )}
         {/* Quien no encuentra su talle se iba sin decir nada: ahora pregunta */}
-        <a
-          href={waLink(missingSizeText)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => trackEvent('whatsapp_click', 'contact', { slug: product.slug, source: 'size_missing' })}
-          className="mt-2.5 inline-block t-caption text-primary"
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => {
+            setSizeRequestOpen(true);
+            trackEvent('size_request_open', 'contact', { slug: product.slug });
+          }}
+          className="mt-2.5 inline-block min-h-[32px] text-left t-caption text-primary"
         >
           {allSoldOut ? 'Se agotó. ¿Lo querés? Te lo conseguimos ›' : '¿No está tu talle? Te lo conseguimos ›'}
-        </a>
+        </button>
       </div>
 
       {/* Selector de cantidad: solo si de ese talle hay más de una unidad */}
@@ -240,7 +243,10 @@ export function AddToCart({
         href={waLink(askText)}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackEvent('whatsapp_click', 'contact', { slug: product.slug, size: size || null, source: 'pdp' })}
+        onClick={() => {
+          trackEvent('whatsapp_click', 'contact', { slug: product.slug, size: size || null, source: 'pdp' });
+          markWhatsAppIntent({ source: 'pdp', productSlug: product.slug, productTitle: product.title, size: size || null });
+        }}
         className="flex items-center justify-center gap-3 w-full py-3 rounded-full border border-gray-200 text-gray-900 font-normal text-[17px] hover:bg-gray-100 transition-colors duration-200"
       >
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -248,6 +254,21 @@ export function AddToCart({
         </svg>
         {size ? `Preguntar por el talle ${size}` : 'Preguntar por WhatsApp'}
       </a>
+
+      {/* Talle que no está: queda guardado con el teléfono, no depende de WhatsApp */}
+      <LeadSheet
+        open={sizeRequestOpen}
+        onClose={() => setSizeRequestOpen(false)}
+        title={allSoldOut ? 'Te lo conseguimos' : 'Te conseguimos tu talle'}
+        description={`Decinos qué talle buscás de ${product.title} y te escribimos cuando lo tengamos.`}
+        lead={{ kind: 'size_request', product_slug: product.slug, product_title: product.title }}
+        extraLabel="¿Qué talle buscás?"
+        extraPlaceholder="Ej.: 42, M, 9.5 US"
+        submitLabel="Avisarme"
+        savedTitle="Listo, lo buscamos"
+        waText={({ extra }) => `Hola! Busco *${product.title}*${extra ? ` en talle *${extra}*` : ' en otro talle'}. ¿Lo pueden conseguir?\n${productUrl}`}
+        source="size_missing"
+      />
 
       {showGuide && guide && kind && (
         <SizeGuide

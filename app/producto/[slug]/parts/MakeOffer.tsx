@@ -3,46 +3,76 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics/track';
 import { Sheet, SheetHandleArea } from '@/components/ui/Sheet';
-
-const WA_NUMBER = '5492644802994';
+import { LeadResult, PhoneField } from '@/components/contact/LeadSheet';
+import { rememberedPhone, saveLead } from '@/lib/contact';
+import { validPhone } from '@/lib/leads';
+import { haptic } from '@/lib/haptics';
 
 type Currency = 'ARS' | 'USD';
 
 /**
- * "Hacer una oferta" — el cliente propone un precio (en pesos o dólares, a su
- * elección) y se abre WhatsApp con el mensaje armado para negociar. No crea
- * ninguna orden ni pasa por el backend, mismo criterio que el flujo de
- * 3 cuotas del checkout.
+ * "Hacer una oferta": el cliente propone un precio (en pesos o dólares) y deja
+ * su WhatsApp. La oferta queda guardada en /admin/consultas, así llega aunque
+ * WhatsApp no se abra; antes dependía de que apretara Enviar en el chat y la
+ * mayoría se perdía. No crea ninguna orden ni reserva stock.
  */
 export function MakeOffer({ productTitle, productSlug }: { productTitle: string; productSlug: string }) {
   const [open, setOpen] = useState(false);
   const [currency, setCurrency] = useState<Currency>('ARS');
   const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<null | 'saved' | 'failed'>(null);
 
-  const handleSubmit = () => {
-    const value = amount.trim();
-    if (!value) return;
+  const openSheet = () => {
+    setPhone((p) => p || rememberedPhone());
+    setPhoneError(null);
+    setResult(null);
+    setOpen(true);
+  };
 
-    trackEvent('offer_requested', 'ecommerce', { slug: productSlug, amount: value, currency });
-
-    const productUrl = typeof window !== 'undefined' ? window.location.href : '';
-    const currencyLabel = currency === 'USD' ? 'dólares (USD)' : 'pesos (ARS)';
-    const message =
-      `¡Hola! Quiero hacer una oferta por este producto:\n\n` +
-      `👟 *${productTitle}*\n${productUrl}\n\n` +
-      `💰 *Mi oferta:* ${currency === 'USD' ? 'US$' : '$'}${value} — en *${currencyLabel}*\n\n` +
-      `¿Podemos negociar?`;
-
-    window.open(`https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(message)}`, '_blank');
+  const close = () => {
     setOpen(false);
-    setAmount('');
+    if (result) setAmount('');
+  };
+
+  const waMessage = () => {
+    const productUrl = typeof window !== 'undefined' ? window.location.href : '';
+    return (
+      `Hola! Quiero hacer una oferta por *${productTitle}*\n${productUrl}\n\n` +
+      `Mi oferta: ${currency === 'USD' ? 'US$' : '$'}${amount.trim()} en ${currency === 'USD' ? 'dólares' : 'pesos'}`
+    );
+  };
+
+  const handleSubmit = async () => {
+    const value = amount.trim();
+    if (!value || sending) return;
+    if (!validPhone(phone)) {
+      setPhoneError('Escribí tu número con característica, por ejemplo 264 480 2994');
+      return;
+    }
+    setPhoneError(null);
+    setSending(true);
+    trackEvent('offer_requested', 'ecommerce', { slug: productSlug, amount: value, currency });
+    const res = await saveLead({ kind: 'offer', phone, amount: value, currency, product_slug: productSlug, product_title: productTitle });
+    setSending(false);
+    if (res.error) {
+      setPhoneError(res.error);
+      return;
+    }
+    if (res.ok) {
+      haptic();
+      trackEvent('lead_saved', 'contact', { kind: 'offer', source: 'offer', slug: productSlug });
+    }
+    setResult(res.ok ? 'saved' : 'failed');
   };
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openSheet}
         className="btn-apple-ghost w-full"
       >
         Hacer una oferta
@@ -50,11 +80,22 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
 
       {/* La oferta en su propia hoja: el teclado numérico aparece solo y el
           resto de la ficha no salta mientras se escribe */}
-      <Sheet open={open} onClose={() => setOpen(false)} labelledBy="offer-title" describedBy="offer-help">
+      <Sheet open={open} onClose={close} labelledBy="offer-title" describedBy="offer-help">
+        {result ? (
+          <LeadResult
+            saved={result === 'saved'}
+            phone={phone}
+            waText={waMessage()}
+            savedTitle="Recibimos tu oferta"
+            onClose={close}
+            source="offer_after_lead"
+          />
+        ) : (
         <form
+          noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit();
+            void handleSubmit();
           }}
         >
           <SheetHandleArea className="px-6 pt-4 sm:px-8 sm:pt-8">
@@ -98,15 +139,19 @@ export function MakeOffer({ productTitle, productSlug }: { productTitle: string;
                 className="h-16 w-full bg-transparent text-[28px] font-semibold tabular-nums text-gray-900 placeholder:text-gray-300 focus:outline-none"
               />
             </label>
-            <p className="mt-2.5 text-[13px] text-gray-500">Se abre WhatsApp con tu oferta lista para mandar.</p>
+            <div className="mt-4">
+              <PhoneField id="offer-phone" value={phone} onChange={setPhone} error={phoneError} />
+            </div>
+            <p className="mt-2.5 text-[13px] text-gray-500">Te respondemos por WhatsApp a ese número.</p>
           </div>
 
           <div className="px-6 pb-2 pt-6 sm:px-8 sm:pb-7">
-            <button type="submit" disabled={!amount.trim()} className="btn-apple w-full disabled:opacity-40">
-              Enviar oferta por WhatsApp
+            <button type="submit" disabled={!amount.trim() || sending} className="btn-apple w-full disabled:opacity-40">
+              {sending ? 'Enviando' : 'Enviar oferta'}
             </button>
           </div>
         </form>
+        )}
       </Sheet>
     </>
   );

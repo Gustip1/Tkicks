@@ -128,7 +128,7 @@ const STAGES: { key: ExitStageKey; label: string }[] = [
   { key: 'browse', label: 'Sin abrir ningún producto' },
   { key: 'product', label: 'Mirando productos, sin agregar nada' },
   { key: 'cart', label: 'Con algo en el carrito, sin ir al checkout' },
-  { key: 'contacted', label: 'Después de consultarte' },
+  { key: 'contacted', label: 'Después de tocar WhatsApp u ofertar' },
   { key: 'checkout', label: 'En el checkout, sin terminar la compra' },
   { key: 'bought', label: 'Después de comprar' },
 ];

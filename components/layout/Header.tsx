@@ -7,11 +7,12 @@ import Image from 'next/image';
 // a negro (el JPG invertido dejaba ver su recuadro).
 import logo from '@/public/logo-white.png';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, Menu, Search as SearchIcon, X } from 'lucide-react';
+import { ShoppingCart, Menu, Search as SearchIcon, X, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/store/ui';
 import { useCartStore } from '@/store/cart';
+import { useFavoriteIds } from '@/store/favorites';
 import { cn } from '@/lib/utils';
 import { BannerTicker } from './BannerTicker';
 import { STREETWEAR_SUBCATEGORIES, Brand } from '@/types/db';
@@ -32,6 +33,25 @@ export function Header() {
   const isInAdmin = pathname.startsWith('/admin');
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const favoriteCount = useFavoriteIds().length;
+
+  // Favoritos: en el celular va a la izquierda, junto al menú, para que el logo
+  // quede centrado (dos íconos de cada lado); en escritorio, con el carrito.
+  const favoritesLink = (className: string) => (
+    <Link
+      prefetch={false}
+      href="/favoritos"
+      aria-label={favoriteCount ? `Favoritos (${favoriteCount})` : 'Favoritos'}
+      className={cn('relative items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-black/80 hover:text-black transition-colors', className)}
+    >
+      <Heart className="h-[18px] w-[18px]" />
+      {favoriteCount > 0 && (
+        <span key={favoriteCount} className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-[#1d1d1f] text-white text-xs font-semibold animate-badge-pop">
+          {favoriteCount}
+        </span>
+      )}
+    </Link>
+  );
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -106,6 +126,7 @@ export function Header() {
             >
               <Menu className="h-5 w-5" />
             </button>
+            {favoritesLink('inline-flex xl:hidden')}
 
             <nav className="hidden xl:flex items-center">
               <Link prefetch={false} href="/nuevos-ingresos" className={navLink} onMouseEnter={() => setMenu(null)}>
@@ -208,6 +229,8 @@ export function Header() {
                 Ingresar
               </Link>
             )}
+
+            {favoritesLink('hidden xl:inline-flex')}
 
             <button
               className="relative inline-flex items-center justify-center rounded-full p-3 min-h-[44px] min-w-[44px] text-black/80 hover:text-black transition-colors"

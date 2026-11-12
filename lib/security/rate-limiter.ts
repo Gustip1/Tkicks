@@ -130,3 +130,7 @@ export const publicApiLimiter = new RateLimiter(5, 1); // 5 intentos, 1 minuto d
 // Tarjetas: frena la prueba de tarjetas robadas de a muchas. Cuentan los cobros
 // rechazados; quien paga bien vuelve a cero.
 export const cardPaymentLimiter = new RateLimiter(5, 15); // 5 rechazos, 15 minutos de bloqueo
+
+// Consultas guardadas (/api/leads): 8 en 10 minutos por conexión alcanza para
+// una persona real y frena a quien quiera llenar el panel.
+export const leadLimiter = new RateLimiter(8, 10);

@@ -1,8 +1,8 @@
 "use client";
 import { usePathname } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
+import { markWhatsAppIntent, waLink } from '@/lib/contact';
 
-const WA_NUMBER = '5492644802994';
 const WA_MESSAGE = 'Hola! Vengo de la web de Tkicks 👟 Quería hacerte una consulta.';
 
 /**
@@ -27,10 +27,13 @@ export function WhatsAppFab() {
 
   return (
     <a
-      href={`https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(WA_MESSAGE)}`}
+      href={waLink(WA_MESSAGE)}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => trackEvent('whatsapp_click', 'contact', { source: 'fab', path: pathname })}
+      onClick={() => {
+        trackEvent('whatsapp_click', 'contact', { source: 'fab', path: pathname });
+        markWhatsAppIntent({ source: 'fab' });
+      }}
       aria-label="Consultar por WhatsApp"
       className={`fixed right-4 z-40 flex items-center gap-2.5 rounded-full bg-[#25D366] pl-3.5 pr-4 py-3 shadow-lg shadow-black/20 text-white active:scale-95 hover:brightness-105 transition ${
         // En producto, el botón sube en mobile para no chocar con la barra de compra

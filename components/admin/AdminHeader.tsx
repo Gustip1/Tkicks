@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Settings, LogOut, Search, Plus } from 'lucide-react';
 import { SalesBell } from '@/components/admin/SalesBell';
+import { LeadsBell } from '@/components/admin/LeadsBell';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useState } from 'react';
 
@@ -18,6 +19,7 @@ export function AdminHeader() {
     if (pathname.startsWith('/admin/productos')) return { title: 'Productos', subtitle: 'Gestiona tu catálogo' };
     if (pathname.includes('/admin/pedidos/')) return { title: 'Detalle Pedido', subtitle: 'Ver pedido' };
     if (pathname.startsWith('/admin/pedidos')) return { title: 'Pedidos', subtitle: 'Gestiona tus ventas' };
+    if (pathname.startsWith('/admin/consultas')) return { title: 'Consultas', subtitle: 'Ofertas, talles y dudas que dejaron en la web' };
     if (pathname.startsWith('/admin/stock')) return { title: 'Stock', subtitle: 'Control de inventario' };
     if (pathname.startsWith('/admin/precios')) return { title: 'Precios', subtitle: 'Ajusta tus precios' };
     if (pathname.startsWith('/admin/destacados')) return { title: 'Destacados', subtitle: 'Productos destacados' };
@@ -85,6 +87,8 @@ export function AdminHeader() {
             )}
             
             {/* Ventas nuevas: cuenta, avisa y lista las que entraron por la web */}
+            {/* Consultas sin responder (ofertas, talles, dudas) */}
+            <LeadsBell />
             <SalesBell />
             
             {/* User menu */}

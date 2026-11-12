@@ -2,6 +2,8 @@
 import { useState, useRef } from "react";
 import { Banknote, AlertCircle, Landmark, CreditCard, Bitcoin } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
+import { saveLead, waLink } from '@/lib/contact';
+import { trackEvent } from '@/lib/analytics/track';
 
 /* ─── tipos ─── */
 interface Producto {
@@ -160,8 +162,16 @@ export default function EncargosPage() {
     msg += `• Método: ${metodoLabel[metodoPago] || metodoPago}\n`;
     msg += `• Pago: 75% del total como seña para confirmar el pedido\n`;
 
-    const url = `https://api.whatsapp.com/send?phone=5492644802994&text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
+    // Queda guardado en /admin/consultas aunque WhatsApp no se abra o no se envíe.
+    // Sin esperar la respuesta: abrir WhatsApp tiene que pasar dentro del toque.
+    void saveLead({
+      kind: "custom_order",
+      phone: datos.telefono,
+      name: datos.nombreCompleto,
+      message: msg,
+    }).then((r) => r.ok && trackEvent("lead_saved", "contact", { kind: "custom_order", source: "encargos" }));
+
+    window.open(waLink(msg), "_blank");
   };
 
   /* ─── inputs reutilizables ─── */

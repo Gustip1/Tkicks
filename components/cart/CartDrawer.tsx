@@ -9,6 +9,14 @@ import { useDolarRate } from '@/components/DolarRateProvider';
 import { useSwipeToDismiss } from '@/lib/useSwipeToDismiss';
 import { Clock, AlertTriangle, X, ShoppingBag, Minus, Plus, ArrowRight } from 'lucide-react';
 
+const QUICK_PICKS = [
+  { label: 'Nuevos ingresos', href: '/nuevos-ingresos' },
+  { label: 'Sneakers', href: '/productos?sneakers' },
+  { label: 'Remeras', href: '/productos?streetwear&sub=remeras' },
+  { label: 'Hoodies', href: '/productos?streetwear&sub=hoodies' },
+  { label: 'Ofertas', href: '/ofertas' },
+];
+
 export function CartDrawer() {
   const { items, updateQty, removeItem, checkExpiry, getRemainingSeconds } = useCartStore();
   const { rate: dolarOficial } = useDolarRate();
@@ -169,6 +177,16 @@ export function CartDrawer() {
                   Ver productos
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
+                {/* Atajos: el carrito vacío no es un callejón sin salida */}
+                <ul className="mt-2 flex flex-wrap justify-center gap-2">
+                  {QUICK_PICKS.map((c) => (
+                    <li key={c.href}>
+                      <Link prefetch={false} href={c.href} onClick={close} className="pill-apple">
+                        {c.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             {items.map((it) => (

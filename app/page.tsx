@@ -223,10 +223,57 @@ async function getHomeProducts(): Promise<{ products: Product[]; total: number }
   };
 }
 
+const MOST_SAVED_MIN = 4;
+
+/**
+ * Los más guardados de la semana: sale de los corazones reales (evento
+ * `favorite_added` de las analíticas), contando una vez por visita. Con menos
+ * de 4 productos guardados no se muestra la sección: nunca se rellena.
+ */
+async function getMostSaved(): Promise<Product[]> {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return [];
+  try {
+    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { persistSession: false } });
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: events } = await admin
+      .from('analytics_events')
+      .select('session_id, event_data')
+      .eq('event_name', 'favorite_added')
+      .gte('created_at', since)
+      .limit(5000);
+
+    const sessionsByProduct = new Map<string, Set<string>>();
+    for (const e of events ?? []) {
+      const id = (e.event_data as any)?.product_id;
+      if (typeof id !== 'string') continue;
+      if (!sessionsByProduct.has(id)) sessionsByProduct.set(id, new Set());
+      sessionsByProduct.get(id)!.add(e.session_id);
+    }
+    const ranked = Array.from(sessionsByProduct.entries())
+      .sort((a, b) => b[1].size - a[1].size)
+      .slice(0, 16)
+      .map(([id]) => id);
+    if (ranked.length < MOST_SAVED_MIN) return [];
+
+    const { data: products } = await supabaseAnon()
+      .from('products')
+      .select('*, product_variants(stock,size)')
+      .eq('active', true)
+      .in('id', ranked);
+    const byId = new Map((products ?? []).map((p: any) => [p.id, p]));
+    const list = ranked.map((id) => byId.get(id)).filter((p) => p && inStock(p)).slice(0, 8);
+    return list.length >= MOST_SAVED_MIN ? (list as unknown as Product[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const [{ products, total }, content] = await Promise.all([
+  const [{ products, total }, content, mostSaved] = await Promise.all([
     getHomeProducts(),
     getHomeContent(),
+    getMostSaved(),
   ]);
 
   const brandProducts = await getHomeBrandProducts(supabaseAnon(), content.brandEntries);
@@ -253,6 +300,14 @@ export default async function HomePage() {
 
       {/* Carruseles por marca — configurables desde /admin/portada */}
       <HomepageBrands entries={content.brandEntries} productsByEntry={brandProducts} visibleCount={content.brandsVisible} />
+
+      {/* Los más guardados de la semana — solo aparece con corazones reales suficientes */}
+      <HomeProductGrid
+        products={mostSaved}
+        title="Los más guardados de la semana"
+        headingId="most-saved-title"
+        tone="parchment"
+      />
 
       {/* Opiniones — al final: en el medio cortaban el recorrido de productos y
           ocupaban una pantalla entera en el celular. Acá refuerzan la confianza

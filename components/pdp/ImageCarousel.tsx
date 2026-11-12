@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductImage } from '@/types/db';
 import { cn } from '@/lib/utils';
 
-export function ImageCarousel({ images, badge }: { images: ProductImage[]; /** Sello sobre la foto, arriba a la izquierda */ badge?: ReactNode }) {
+export function ImageCarousel({ images, badge, action }: { images: ProductImage[]; /** Sello sobre la foto, arriba a la izquierda */ badge?: ReactNode; /** Botón sobre la foto, arriba a la derecha */ action?: ReactNode }) {
   const [ref, api] = useEmblaCarousel({ loop: true, align: 'start' });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -37,6 +37,7 @@ export function ImageCarousel({ images, badge }: { images: ProductImage[]; /** S
       {/* Main image carousel */}
       <div className="relative group rounded-2xl overflow-hidden bg-gray-100 mx-2 md:mx-0">
         {badge && <div className="pointer-events-none absolute left-3 top-3 z-10">{badge}</div>}
+        {action && <div className="absolute right-3 top-3 z-10">{action}</div>}
         <div className="overflow-hidden" ref={ref} aria-roledescription="carousel">
           <ul className="flex">
             {images.map((img, idx) => (

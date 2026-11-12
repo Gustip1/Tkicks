@@ -21,6 +21,7 @@ import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 import { HideOnAdmin } from '@/components/layout/HideOnAdmin';
 import { RevealObserver } from '@/components/RevealObserver';
 import { NavProgress } from '@/components/NavProgress';
+import { ContactRescue } from '@/components/contact/ContactRescue';
 import { TouchFeedback } from '@/components/TouchFeedback';
 import { StaleDeployReload } from '@/components/StaleDeployReload';
 
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <AccountNoticeModal />
                 <PromoModal />
                 <RecentSaleToast />
+                <ContactRescue />
               </HideOnAdmin>
               <WhatsAppFab />
               <RevealObserver />

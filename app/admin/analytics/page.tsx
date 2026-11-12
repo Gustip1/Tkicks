@@ -43,8 +43,11 @@ const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'
 const LEAD_EVENTS = ['whatsapp_click', 'offer_requested', 'installments_link_requested'];
 
 const EVENT_LABELS: Record<string, string> = {
-  whatsapp_click: 'Consultas por WhatsApp',
-  offer_requested: 'Ofertas enviadas',
+  // Es el toque en el botón: el mensaje sale recién si después aprietan Enviar en WhatsApp
+  whatsapp_click: 'Toques en el botón de WhatsApp',
+  offer_requested: 'Ofertas armadas',
+  lead_saved: 'Consultas guardadas en la web',
+  whatsapp_confirmed: 'Confirmaron que escribieron',
   installments_link_requested: 'Pidieron link de 3 cuotas',
   add_to_cart: 'Agregados al carrito',
   checkout_started: 'Checkouts iniciados',
@@ -269,7 +272,7 @@ export default function AnalyticsPage() {
       const funnel = [
         { label: 'Entraron a la web', hint: 'Visitas', count: sessions },
         { label: 'Se interesaron', hint: 'Abrieron un producto o preguntaron', count: interestSessions.size },
-        { label: 'Quisieron comprar', hint: 'Carrito, WhatsApp, oferta o cuotas', count: intentSessions.size },
+        { label: 'Quisieron comprar', hint: 'Carrito, botón de WhatsApp, oferta o cuotas', count: intentSessions.size },
         { label: 'Iniciaron el checkout', hint: 'Llegaron al formulario', count: checkoutSessions.size },
         { label: 'Compraron', hint: 'Pedidos confirmados en la web', count: ordersInRange.length },
       ];
@@ -575,12 +578,13 @@ function Dashboard({ s, prevLabel, singleDay }: { s: Stats; prevLabel: string; s
           <div className="mt-5 flex items-start gap-2.5 rounded-[12px] bg-[#f5f5f7] p-3.5">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#0066cc]" aria-hidden />
             <p className="text-[13px] leading-relaxed text-[#424245]">
-              &quot;Quisieron comprar&quot; incluye WhatsApp, ofertas y pedidos de link de cuotas. La mayoría de tus
-              ventas se cierra por ahí y no en el checkout web.
+              &quot;Quisieron comprar&quot; incluye toques en el botón de WhatsApp, ofertas y pedidos de link de
+              cuotas. Un toque no es un mensaje: sale recién si después aprietan Enviar en WhatsApp. Las que sí
+              dejaron su número están en Consultas.
             </p>
           </div>
         </Card>
-        <Card title="¿Cómo te contactaron?" help="Acciones de compra en el período.">
+        <Card title="¿Cómo intentaron contactarte?" help="Toques y formularios en el período. Lo que llegó con teléfono está en Consultas.">
           <BarList color={SERIES.leads} rows={s.leadBreakdown.map((l) => ({ key: l.name, label: l.label, value: l.count }))} />
           {s.otherEvents.length > 0 && (
             <>

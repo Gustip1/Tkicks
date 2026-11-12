@@ -9,6 +9,8 @@ import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
 import { getCardPriceMultiplier } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
+import { FavoriteButton } from '@/components/catalog/FavoriteButton';
+import { QuickAdd } from '@/components/catalog/QuickAdd';
 
 interface ProductCardProps {
   product: Product;
@@ -66,6 +68,9 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
       : product.category;
 
   return (
+    // Los botones van al lado del link, no adentro: un botón dentro de un link
+    // no es válido y el toque abría la ficha.
+    <div className="relative h-full">
     <Link
       href={`/producto/${product.slug}`}
       // Sin precarga al aparecer en pantalla: la ficha se genera en cada visita, así que
@@ -212,5 +217,20 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
         </div>
       </div>
     </Link>
+
+      {/* Guardar y agregar sin entrar a la ficha, sobre la foto */}
+      <div className="store-card-overlay pointer-events-none absolute inset-x-0 top-0">
+        <div className="relative aspect-square">
+          <div className="pointer-events-auto absolute right-1.5 top-1.5 sm:right-3 sm:top-3">
+            <FavoriteButton productId={product.id} slug={product.slug} title={product.title} />
+          </div>
+          {!isSoldOut && !comingSoon && (
+            <div className="pointer-events-auto absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3">
+              <QuickAdd product={product} price={activePrice} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

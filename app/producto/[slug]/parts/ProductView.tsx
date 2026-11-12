@@ -8,6 +8,7 @@ import { MakeOffer } from './MakeOffer';
 import { BuyBar } from './BuyBar';
 import { RelatedProducts } from './RelatedProducts';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
+import { FavoriteButton } from '@/components/catalog/FavoriteButton';
 import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
@@ -75,6 +76,7 @@ export function ProductView({
         <div className="md:sticky md:top-20 md:self-start">
           <ImageCarousel
             images={product.images || []}
+            action={<FavoriteButton productId={product.id} slug={product.slug} title={product.title} className="!h-11 !w-11" />}
             badge={
               // Lo primero que se ve de la ficha: que es original (como el "Autenticado" de OneKickz)
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-semibold text-[#1d1d1f] backdrop-blur-md">

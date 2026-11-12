@@ -24,7 +24,7 @@ import {
 const POLL_MS = 30_000;
 
 /** Dos notas cortas, generadas en el momento (sin archivo de audio) */
-function chime() {
+export function chime() {
   try {
     const Ctx = window.AudioContext || (window as any).webkitAudioContext;
     if (!Ctx) return;
