@@ -45,7 +45,12 @@ export function Footer() {
         <div className="space-y-2.5 pb-4 border-b border-gray-300/70 text-gray-500 leading-[1.4]">
           <p>
             Todos los productos son 100% originales y se venden con su comprobante de compra. Las ventas son
-            finales (Final Sale).
+            finales (Final Sale): los productos exclusivos no tienen cambio ni devolución, y los encargos no se
+            pueden cancelar ni reembolsar. Más detalle en los{' '}
+            <Link href="/terminos" className="underline hover:text-gray-900">
+              Términos y condiciones
+            </Link>
+            .
           </p>
           <p>
             Los precios se publican en dólares y se convierten a pesos al tipo de cambio oficial del día. El pago en
@@ -84,9 +89,23 @@ export function Footer() {
           </div>
         </nav>
 
-        <div className="pt-4 border-t border-gray-300/70 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-gray-500">
+        {/* En el celular deja libre la esquina del botón de WhatsApp, que tapaba los links legales */}
+        <div className="pt-4 pr-[72px] md:pr-0 border-t border-gray-300/70 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-gray-500">
           <p>Copyright © {year} Tkicks. Todos los derechos reservados.</p>
-          <p>Argentina</p>
+          {/* Links legales en la última línea, como en apple.com */}
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <li>
+              <Link href="/terminos" className="inline-block py-1.5 hover:underline hover:text-gray-900">
+                Términos y condiciones
+              </Link>
+            </li>
+            <li>
+              <Link href="/privacidad" className="inline-block py-1.5 hover:underline hover:text-gray-900">
+                Política de privacidad
+              </Link>
+            </li>
+            <li>Argentina</li>
+          </ul>
         </div>
       </div>
     </footer>

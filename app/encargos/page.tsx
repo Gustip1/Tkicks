@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import Link from "next/link";
 import { Banknote, AlertCircle, Landmark, CreditCard, Bitcoin } from 'lucide-react';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
 import { saveLead, waLink } from '@/lib/contact';
@@ -204,6 +205,13 @@ export default function EncargosPage() {
             Para realizar tu encargo, se debe abonar el{" "}
             <span className="font-bold text-gray-900">75% del precio del producto</span> como seña antes de
             realizar el pedido.
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            <span className="font-bold text-gray-900">Los encargos no se pueden cancelar ni reembolsar</span> una vez
+            confirmados, y no tienen cambio.{" "}
+            <Link href="/terminos#encargos" className="text-primary underline">
+              Ver condiciones
+            </Link>
           </p>
         </div>
       </div>

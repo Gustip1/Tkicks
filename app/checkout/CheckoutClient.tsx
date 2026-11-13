@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import { useEffect, useId, useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -1256,6 +1257,17 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                 <Package className="w-4 h-4 text-gray-900" />
                 <span className="font-bold">Productos originales garantizados</span>
               </div>
+              <p className="pt-1 text-xs leading-relaxed text-gray-500">
+                Las ventas son finales: los productos exclusivos no tienen cambio ni devolución. Al comprar aceptás los{' '}
+                <Link href="/terminos" target="_blank" className="text-primary underline">
+                  Términos y condiciones
+                </Link>{' '}
+                y la{' '}
+                <Link href="/privacidad" target="_blank" className="text-primary underline">
+                  Política de privacidad
+                </Link>
+                .
+              </p>
             </div>
           </div>
         </div>
