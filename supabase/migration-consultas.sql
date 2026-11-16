@@ -14,7 +14,8 @@ create table if not exists public.leads (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   -- offer: oferta · size_request: busca un talle · question: consulta · custom_order: encargo
-  kind text not null check (kind in ('offer', 'size_request', 'question', 'custom_order')),
+  -- checkout: llegó al pago y no terminó la compra
+  kind text not null,
   status text not null default 'new' check (status in ('new', 'answered', 'discarded')),
   phone text not null,
   name text,
@@ -27,6 +28,12 @@ create table if not exists public.leads (
   page_path text,
   details jsonb not null default '{}'::jsonb
 );
+
+-- Los tipos permitidos se definen aparte para poder sumar uno nuevo volviendo a
+-- correr este archivo (así se agregó "checkout").
+alter table public.leads drop constraint if exists leads_kind_check;
+alter table public.leads add constraint leads_kind_check
+  check (kind in ('offer', 'size_request', 'question', 'custom_order', 'checkout'));
 
 create index if not exists idx_leads_created_at on public.leads (created_at desc);
 create index if not exists idx_leads_status on public.leads (status);

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { chime } from '@/components/admin/SalesBell';
-import { Lead, leadSummary } from '@/lib/leads';
+import { Lead, leadIsDue, leadSummary } from '@/lib/leads';
 
 const POLL_MS = 30_000;
 export const LEADS_CHANGED_EVENT = 'tk-admin-consultas';
@@ -29,7 +29,8 @@ export function LeadsBell() {
       .limit(50);
     // Sin la tabla (falta la migración) no se muestra nada
     if (error) return;
-    const list = (data ?? []) as Lead[];
+    // Una compra sin terminar recién cuenta pasado un rato: puede estar pagando
+    const list = ((data ?? []) as Lead[]).filter((l) => leadIsDue(l));
     setCount(list.length);
     const fresh = list.filter((l) => !announced.current.has(l.id));
     list.forEach((l) => announced.current.add(l.id));

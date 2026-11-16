@@ -29,6 +29,8 @@ interface CartState {
   checkExpiry: () => boolean;
   /** Get remaining seconds, or null if no timer */
   getRemainingSeconds: () => number | null;
+  /** Vuelve a dar el tiempo completo: se usa mientras la persona está en el checkout */
+  keepAlive: () => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -78,6 +80,9 @@ export const useCartStore = create<CartState>()(
           return true;
         }
         return false;
+      },
+      keepAlive: () => {
+        if (get().items.length > 0) set({ expiresAt: Date.now() + CART_EXPIRY_MS });
       },
       getRemainingSeconds: () => {
         const { expiresAt, items } = get();

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { leadSummary, replyText, toWhatsAppNumber, validPhone, validateLead } from '../lib/leads';
+import { leadIsDue, leadSummary, replyText, toWhatsAppNumber, validPhone, validateLead } from '../lib/leads';
 
 describe('consultas guardadas en la web', () => {
   it('reconoce celulares argentinos escritos de cualquier forma', () => {
@@ -33,6 +33,21 @@ describe('consultas guardadas en la web', () => {
     expect(validateLead(null).ok).toBe(false);
     const q = validateLead({ kind: 'question', phone: '2644802994', message: 'x'.repeat(9000) });
     expect(q.ok && q.lead.message?.length).toBe(4000);
+  });
+
+  it('compra sin terminar: se guarda con referencia y se muestra pasados 15 minutos', () => {
+    const v = validateLead({ kind: 'checkout', phone: '2644802994', name: 'Ana Gómez', product_title: 'Jordan 1', size: '42', ref: 'a1b2c3d4-0000-4000-8000-123456789abc' });
+    expect(v.ok && v.ref).toBe('a1b2c3d4-0000-4000-8000-123456789abc');
+    // Una referencia rara no se usa (evita filtrar por texto arbitrario)
+    const bad = validateLead({ kind: 'checkout', phone: '2644802994', ref: "x' or 1=1" });
+    expect(bad.ok && bad.ref).toBe(null);
+    const now = Date.parse('2026-11-16T12:00:00Z');
+    expect(leadIsDue({ kind: 'checkout', created_at: '2026-11-16T11:55:00Z' }, now)).toBe(false);
+    expect(leadIsDue({ kind: 'checkout', created_at: '2026-11-16T11:40:00Z' }, now)).toBe(true);
+    expect(leadIsDue({ kind: 'offer', created_at: '2026-11-16T11:59:00Z' }, now)).toBe(true);
+    const lead = { kind: 'checkout' as const, amount: null, currency: null, product_title: 'Jordan 1', size: '42', name: 'Ana Gómez' };
+    expect(leadSummary(lead)).toBe('Llegó al pago y no terminó: Jordan 1 (talle 42)');
+    expect(replyText(lead)).toBe('Hola Ana! Te escribo de Tkicks. Vi que estabas por comprar *Jordan 1* en la web y quedó sin terminar. ¿Te ayudo con algo?');
   });
 
   it('resume cada consulta y arma la respuesta del dueño', () => {

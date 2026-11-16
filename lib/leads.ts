@@ -7,7 +7,7 @@
  * la API, el admin y los tests.
  */
 
-export type LeadKind = 'offer' | 'size_request' | 'question' | 'custom_order';
+export type LeadKind = 'offer' | 'size_request' | 'question' | 'custom_order' | 'checkout';
 export type LeadStatus = 'new' | 'answered' | 'discarded';
 
 export interface Lead {
@@ -38,15 +38,29 @@ export interface LeadInput {
   currency?: string | null;
   message?: string | null;
   page_path?: string | null;
+  /** Identifica un checkout en curso: la misma compra no se guarda dos veces y se borra al pagar */
+  ref?: string | null;
 }
 
-export const LEAD_KINDS: LeadKind[] = ['offer', 'size_request', 'question', 'custom_order'];
+export const LEAD_KINDS: LeadKind[] = ['offer', 'size_request', 'question', 'custom_order', 'checkout'];
+
+/**
+ * Una compra sin terminar se muestra recién pasado este tiempo: antes, la
+ * persona puede estar todavía pagando.
+ */
+export const CHECKOUT_LEAD_DELAY_MS = 15 * 60 * 1000;
+
+/** ¿Ya se le puede mostrar al dueño? */
+export function leadIsDue(l: Pick<Lead, 'kind' | 'created_at'>, now = Date.now()): boolean {
+  return l.kind !== 'checkout' || now - new Date(l.created_at).getTime() >= CHECKOUT_LEAD_DELAY_MS;
+}
 
 export const LEAD_LABELS: Record<LeadKind, string> = {
   offer: 'Oferta',
   size_request: 'Busca un talle',
   question: 'Consulta',
   custom_order: 'Encargo',
+  checkout: 'Compra sin terminar',
 };
 
 const clean = (v: unknown, max: number): string | null => {
@@ -90,7 +104,9 @@ export function toWhatsAppNumber(raw: string): string {
   return d.length === 10 ? `549${d}` : d;
 }
 
-export type LeadValidation = { ok: true; lead: Omit<Lead, 'id' | 'created_at' | 'status' | 'details'> } | { ok: false; error: string };
+export type LeadValidation =
+  | { ok: true; lead: Omit<Lead, 'id' | 'created_at' | 'status' | 'details'>; ref: string | null }
+  | { ok: false; error: string };
 
 /** Valida y limpia lo que manda el navegador */
 export function validateLead(body: unknown): LeadValidation {
@@ -122,6 +138,7 @@ export function validateLead(body: unknown): LeadValidation {
       message: clean(b.message, 4000),
       page_path: clean(b.page_path, 300),
     },
+    ref: /^[A-Za-z0-9-]{8,64}$/.test(String(b.ref ?? '')) ? String(b.ref) : null,
   };
 }
 
@@ -138,6 +155,8 @@ export function leadSummary(l: Pick<Lead, 'kind' | 'amount' | 'currency' | 'prod
       return `Busca ${product}${l.size ? ` en talle ${l.size}` : ' en otro talle'}`;
     case 'custom_order':
       return 'Encargo personalizado';
+    case 'checkout':
+      return `Llegó al pago y no terminó: ${product}${l.size ? ` (talle ${l.size})` : ''}`;
     default:
       return l.product_title ? `Consulta por ${product}${l.size ? ` (talle ${l.size})` : ''}` : 'Consulta general';
   }
@@ -154,6 +173,8 @@ export function replyText(l: Pick<Lead, 'kind' | 'amount' | 'currency' | 'produc
       return `${hi}. Nos dejaste que buscás ${product}${l.size ? ` en talle ${l.size}` : ''}.`;
     case 'custom_order':
       return `${hi} por el encargo que nos dejaste en la web.`;
+    case 'checkout':
+      return `${hi}. Vi que estabas por comprar ${product} en la web y quedó sin terminar. ¿Te ayudo con algo?`;
     default:
       return `${hi} por tu consulta${l.product_title ? ` sobre ${product}` : ''}.`;
   }

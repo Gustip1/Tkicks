@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart';
 import { useCheckoutStore, PaymentMethod } from '@/store/checkout';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, formatCurrency, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { getCardSurchargeRate } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
 import { CardPayment, CardToken, ProvinceSelect } from '@/components/checkout/CardPayment';
+import { TransferInstructions } from '@/components/checkout/TransferInstructions';
+import { closeCheckoutLead, saveLead, waLink } from '@/lib/contact';
 import { CardInstallments, cardTotalArs, cardTotalUsd, CARD_BRAND_LABEL, cardBrandOf, canonicalProvince, surchargeLabel } from '@/lib/payments/card';
 import type { PaywayPublicConfig } from '@/lib/payments/payway';
 import {
@@ -87,6 +89,31 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   const [cardBrand, setCardBrand] = useState<CardBrand | null>(null);
   const [cardBrandError, setCardBrandError] = useState(false);
   const [completedProofUploaded, setCompletedProofUploaded] = useState(false);
+  // Transferencia: el pedido se confirma primero y recién después se muestran los datos para pagar
+  const [completedTransfer, setCompletedTransfer] = useState<{ orderId: string; totalUsd: number; totalArs: number } | null>(null);
+  // Identifica este checkout para guardar la "compra sin terminar" una sola vez y borrarla al pagar
+  const checkoutRef = useRef<string>('');
+  if (!checkoutRef.current && typeof window !== 'undefined') {
+    try {
+      checkoutRef.current = sessionStorage.getItem('tk-checkout-ref') || '';
+      if (!checkoutRef.current) {
+        checkoutRef.current = crypto.randomUUID();
+        sessionStorage.setItem('tk-checkout-ref', checkoutRef.current);
+      }
+    } catch {
+      checkoutRef.current = `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+  }
+  /** La compra terminó: se borra la "compra sin terminar" y el próximo checkout usa otra referencia */
+  const finishCheckoutLead = () => {
+    if (checkoutRef.current) closeCheckoutLead(checkoutRef.current);
+    try {
+      sessionStorage.removeItem('tk-checkout-ref');
+    } catch {
+      /* nada */
+    }
+    checkoutRef.current = '';
+  };
   // Tarjeta con Payway: cuotas elegidas, error del cobro y resultado final
   const [cardInstallments, setCardInstallments] = useState<CardInstallments>(1);
   const [cardError, setCardError] = useState<string | null>(null);
@@ -111,15 +138,26 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     window.scrollTo({ top: 0 });
   }, [step]);
 
-  // Check cart expiry
+  // En el checkout el carrito no vence: antes, a los 10 minutos se vaciaba y
+  // mandaba a la persona al catálogo aunque estuviera cargando la tarjeta o
+  // volviendo de la app del banco. Solo se respeta si ya llegó vencido.
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (cart.checkExpiry()) {
-        router.push('/productos');
-      }
-    }, 1000);
+    if (useCartStore.getState().checkExpiry()) {
+      router.push('/productos');
+      return;
+    }
+    useCartStore.getState().keepAlive();
+    const interval = setInterval(() => useCartStore.getState().keepAlive(), 30_000);
     return () => clearInterval(interval);
-  }, [cart, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Qué forma de pago mira cada persona: sirve para ver en cuál se van
+  useEffect(() => {
+    if (step === 2 && checkout.paymentMethod) {
+      trackEvent('payment_method_selected', 'ecommerce', { method: checkout.paymentMethod });
+    }
+  }, [step, checkout.paymentMethod]);
 
   // Redirect if cart is empty
   // Espera a estar montado: en el primer dibujo React usa el carrito como lo ve
@@ -256,8 +294,29 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   const handleContinueToPayment = () => {
     if (validateStep1()) {
       setStep(2);
+      trackEvent('checkout_payment_step', 'ecommerce', { total_usd: totalUSD, fulfillment: checkout.fulfillment });
+      // Queda guardada como "compra sin terminar" en /admin/consultas; si paga, se borra sola.
+      // Con el teléfono el dueño puede escribirle y ayudarla a terminar.
+      const first = cart.items[0];
+      if (first && checkout.contact.phone.trim()) {
+        const lines = cart.items.map((it) => `• ${it.title} (talle ${it.size}) x${it.quantity}`).join('\n');
+        void saveLead({
+          kind: 'checkout',
+          ref: checkoutRef.current || null,
+          phone: checkout.contact.phone,
+          name: `${checkout.contact.firstName} ${checkout.contact.lastName}`.trim(),
+          product_slug: first.slug,
+          product_title: cart.items.length > 1 ? `${first.title} y ${cart.items.length - 1} más` : first.title,
+          size: cart.items.length === 1 ? first.size : null,
+          message:
+            `${lines}\nTotal: US$ ${discountedSubtotalUSD.toFixed(2)} (${formatARS(discountedSubtotalUSD * dolarOficial)})\n` +
+            `${checkout.fulfillment === 'shipping' ? `Envío a ${checkout.address.city}, ${checkout.address.province}` : 'Retiro en showroom'}\n` +
+            `Email: ${checkout.contact.email}`,
+        });
+      }
       return;
     }
+    trackEvent('checkout_field_error', 'ecommerce', { step: 1 });
     // En el celular el error suele quedar fuera de pantalla y parecía que el
     // botón no hacía nada: se lleva al primer campo que falta y se enfoca.
     requestAnimationFrame(() => {
@@ -297,6 +356,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
 
       if (!res.ok) {
         setErrors({ submit: data.error || 'Error al procesar la orden' });
+        trackEvent('order_error', 'ecommerce', { method: checkout.paymentMethod, status: res.status });
         setSubmitting(false);
         return;
       }
@@ -321,6 +381,10 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
       setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));
       setCompletedPaymentMethod(checkout.paymentMethod);
       setCompletedProofUploaded(proofUploaded);
+      if (checkout.paymentMethod === 'crypto_transfer') {
+        setCompletedTransfer({ orderId, totalUsd: discountedSubtotalUSD, totalArs: discountedSubtotalUSD * dolarOficial });
+      }
+      finishCheckoutLead();
       setOrderComplete(true);
       cart.clear();
       checkout.reset();
@@ -382,6 +446,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
       setCompletedOrderNumber(null);
       setCompletedPaymentMethod('installments_3');
       setCompletedProofUploaded(false);
+      finishCheckoutLead();
       setOrderComplete(true);
       cart.clear();
       checkout.reset();
@@ -449,6 +514,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
         setCompletedOrderNumber(data.orderNumber || null);
         setCompletedPaymentMethod('card');
         setCompletedProofUploaded(false);
+        finishCheckoutLead();
         setOrderComplete(true);
         cart.clear();
         checkout.reset();
@@ -567,6 +633,40 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     );
   }
 
+  // ─── Transferencia: pedido reservado, falta pagar ───
+  if (orderComplete && completedTransfer) {
+    return (
+      <div className="bg-white px-4 py-8 md:py-14">
+        <div className="success-enter mx-auto max-w-md space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-900">
+            <DrawnCheck />
+          </div>
+          <h1 className="t-display text-gray-900">Tu pedido está reservado.</h1>
+          <p className="t-body text-gray-600">
+            Pedido <span className="font-semibold text-gray-900">{completedOrderNumber}</span>. Para confirmarlo, transferí el
+            total y mandanos el comprobante.
+          </p>
+          <TransferInstructions
+            account={{
+              aliasArs: PAYMENT_ALIAS_ARS,
+              aliasUsd: PAYMENT_ALIAS_USD,
+              holder: PAYMENT_HOLDER,
+              cryptoWallet: CRYPTO_WALLET,
+              whatsappNumber: WHATSAPP_NUMBER,
+            }}
+            orderId={completedTransfer.orderId}
+            orderRef={completedOrderNumber || ''}
+            totalUsd={completedTransfer.totalUsd}
+            totalArs={completedTransfer.totalArs}
+          />
+          <Link href="/productos" className="link-apple inline-flex t-body">
+            Seguir mirando
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Order Complete Screen ───
   if (orderComplete) {
     return (
@@ -659,6 +759,35 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
             </div>
           </div>
         </div>
+
+        {/* Celular: qué estás comprando y cuánto, arriba. El resumen completo queda al final. */}
+        <details className="faq-item group mb-6 rounded-2xl bg-[#f5f5f7] px-4 lg:hidden">
+          <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-2.5">
+              {cart.items[0]?.imageUrl && (
+                <img src={cart.items[0].imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg bg-white object-contain" />
+              )}
+              <span className="truncate text-[15px] text-gray-900">
+                {cart.items.reduce((n, it) => n + it.quantity, 0) === 1 ? '1 producto' : `${cart.items.reduce((n, it) => n + it.quantity, 0)} productos`}
+                <span className="text-gray-500"> · Envío gratis</span>
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1.5 text-[17px] font-semibold text-gray-900 tabular-nums">
+              {formatARS(totalARS)}
+              <ChevronRight className="h-4 w-4 text-gray-500 transition-transform duration-200 group-open:rotate-90" aria-hidden />
+            </span>
+          </summary>
+          <ul className="space-y-2.5 border-t border-[#d6d6d6] py-3.5">
+            {cart.items.map((it) => (
+              <li key={`${it.productId}-${it.size}`} className="flex items-baseline justify-between gap-3 text-[14px]">
+                <span className="min-w-0 truncate text-gray-900">
+                  {it.title} <span className="text-gray-500">· Talle {it.size}{it.quantity > 1 ? ` · x${it.quantity}` : ''}</span>
+                </span>
+                <span className="shrink-0 text-gray-700 tabular-nums">US$ {(it.price * it.quantity).toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
 
         <div className="grid gap-8 lg:grid-cols-[1fr,380px]">
           {/* Main content — al cambiar de paso entra de nuevo */}
@@ -915,77 +1044,21 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                 )}
 
                 {checkout.paymentMethod === 'crypto_transfer' && (
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-5">
-                    <h3 className="t-tagline text-gray-900">Datos para transferencia</h3>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
-                        <p className="text-xs text-gray-400 font-bold ">Alias (Pesos ARS)</p>
-                        <p className="text-lg font-black text-gray-900 font-mono">{PAYMENT_ALIAS_ARS}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
-                        <p className="text-xs text-gray-400 font-bold ">Alias (Dólares USD)</p>
-                        <p className="text-lg font-black text-gray-900 font-mono">{PAYMENT_ALIAS_USD}</p>
-                      </div>
+                  <div className="step-enter rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
+                    <h3 className="t-tagline text-gray-900">Pagás por transferencia</h3>
+                    <div className="rounded-2xl bg-[#f5f5f7] p-4">
+                      <p className="text-[13px] text-gray-500">Total a transferir</p>
+                      <p className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-gray-900 tabular-nums">
+                        {formatARS(discountedSubtotalUSD * dolarOficial)}
+                      </p>
+                      <p className="text-[14px] text-gray-500 tabular-nums">US$ {discountedSubtotalUSD.toFixed(2)} · también en dólares o USDT</p>
                     </div>
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
-                      <p className="text-xs text-gray-400 font-bold ">Titular de la cuenta</p>
-                      <p className="text-sm font-black text-gray-900">{PAYMENT_HOLDER}</p>
-                    </div>
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
-                      <p className="text-xs text-gray-400 font-bold ">Crypto (USDT ERC20 - Red Ethereum)</p>
-                      <p className="text-xs font-bold text-gray-900 font-mono break-all">{CRYPTO_WALLET}</p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-1">
-                      <p className="text-xs text-gray-400 font-bold ">Monto a transferir</p>
-                      <p className="text-xl font-black text-gray-900">${discountedSubtotalUSD.toFixed(2)} USD</p>
-                      <p className="text-sm text-gray-500 font-bold">{formatCurrency(discountedSubtotalUSD * dolarOficial)}</p>
-                    </div>
-
-                    {/* Proof upload — optional, can submit without */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-gray-400" />
-                        <p className="text-sm font-black text-gray-900">Subí tu comprobante <span className="text-gray-400 font-medium">(opcional)</span></p>
-                      </div>
-                      <p className="text-xs text-gray-500 font-medium -mt-1">Podés adjuntarlo ahora o enviárnoslo después por WhatsApp</p>
-                      <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition ${
-                        proofUploaded
-                          ? 'border-gray-900 bg-gray-50'
-                          : 'border-gray-300 bg-gray-50 hover:border-gray-500'
-                      }`}>
-                        {proofUploaded ? (
-                          <>
-                            <Check className="w-6 h-6 text-gray-900" />
-                            <p className="text-sm text-gray-900 font-black">{proofFile?.name}</p>
-                            <p className="text-xs text-gray-400 font-bold">Click para cambiar</p>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-6 h-6 text-gray-400" />
-                            <p className="text-sm text-gray-400 font-bold">
-                              Arrastrá o hacé click para subir
-                            </p>
-                            <p className="text-xs text-gray-500">JPG, PNG o WebP</p>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) handleProofUpload(f);
-                          }}
-                        />
-                      </label>
-                      {errors.proof && (
-                        <p className="text-xs text-red-400 font-bold flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> {errors.proof}
-                        </p>
-                      )}
-                    </div>
+                    {/* Primero queda el pedido, después se paga: así no se pierde si sale a la app del banco */}
+                    <ol className="space-y-2.5 text-[15px] text-gray-700">
+                      <li className="flex gap-3"><span className="font-semibold text-gray-900">1.</span>Confirmás el pedido y queda reservado a tu nombre.</li>
+                      <li className="flex gap-3"><span className="font-semibold text-gray-900">2.</span>Te mostramos el alias y el monto para copiar.</li>
+                      <li className="flex gap-3"><span className="font-semibold text-gray-900">3.</span>Transferís y nos mandás el comprobante.</li>
+                    </ol>
                   </div>
                 )}
 
@@ -1122,13 +1195,16 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        Confirmar orden
+                        {checkout.paymentMethod === 'crypto_transfer' ? 'Confirmar pedido y ver datos de pago' : 'Confirmar pedido'}
                       </>
                     )}
                   </button>
                 )}
               </>
             )}
+            <div className="lg:hidden">
+              <CheckoutHelp />
+            </div>
           </div>
 
           {/* ═══════════════ ORDER SUMMARY SIDEBAR ═══════════════ */}
@@ -1225,7 +1301,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                   <span className="text-gray-900 font-black ">Total</span>
                   <div className="text-right">
                     <p className="text-gray-900 font-black">${totalUSD.toFixed(2)} USD</p>
-                    <p className="text-xs text-gray-500 font-bold">{formatCurrency(totalARS)}</p>
+                    <p className="text-gray-900 font-black tabular-nums">{formatARS(totalARS)}</p>
                   </div>
                 </div>
                 {inInstallments && (
@@ -1237,15 +1313,8 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
               </div>
             </div>
 
-            {/* Timer warning */}
-            {cart.getRemainingSeconds() !== null && (
-              <div className="rounded-xl bg-gray-100 border border-gray-200 px-4 py-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-700 shrink-0" />
-                <p className="text-xs text-gray-700 font-bold">
-                  Completá tu compra antes de que expire el carrito
-                </p>
-              </div>
-            )}
+            {/* Ayuda a mano: en el checkout no está el botón flotante de WhatsApp */}
+            <CheckoutHelp />
 
             {/* Security badges */}
             <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-2">
@@ -1277,6 +1346,25 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
 }
 
 /* ─── Reusable Components ─── */
+
+/** "¿Te trabaste?": salida a WhatsApp para quien duda justo antes de pagar */
+function CheckoutHelp() {
+  return (
+    <a
+      href={waLink('Hola! Estoy por comprar en la web y tengo una duda.')}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackEvent('whatsapp_click', 'contact', { source: 'checkout' })}
+      className="flex min-h-[56px] items-center justify-between gap-3 rounded-2xl bg-[#f5f5f7] px-4 py-3 transition-transform duration-150 active:scale-[0.98]"
+    >
+      <span className="min-w-0">
+        <span className="block text-[15px] font-semibold text-gray-900">¿Tenés una duda antes de pagar?</span>
+        <span className="block text-[13px] text-gray-500">Escribinos por WhatsApp y te ayudamos a terminar la compra.</span>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
+    </a>
+  );
+}
 
 /** Tilde que se dibuja al confirmar la compra */
 function DrawnCheck() {

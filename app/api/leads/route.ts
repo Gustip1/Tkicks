@@ -36,15 +36,48 @@ export async function POST(req: NextRequest) {
   if (!url || !key) return NextResponse.json({ ok: false, error: 'No disponible' }, { status: 503 });
 
   const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { error } = await supabase.from('leads').insert({
-    ...checked.lead,
-    details: { browser: browserKind(req.headers.get('user-agent') || '') },
-  });
+  const details: Record<string, unknown> = { browser: browserKind(req.headers.get('user-agent') || '') };
+  if (checked.ref) details.ref = checked.ref;
+
+  // Un checkout en curso se guarda una sola vez: si la persona vuelve atrás y
+  // corrige sus datos, se actualiza la misma fila
+  if (checked.ref) {
+    const { data: existing } = await supabase.from('leads').select('id').eq('details->>ref', checked.ref).limit(1).maybeSingle();
+    if (existing) {
+      await supabase.from('leads').update({ ...checked.lead, kind: undefined }).eq('id', existing.id);
+      return NextResponse.json({ ok: true });
+    }
+  }
+
+  let { error } = await supabase.from('leads').insert({ ...checked.lead, details });
+  // Base con la primera versión de la tabla (sin el tipo "checkout"): se guarda como consulta
+  if (error?.code === '23514' && checked.lead.kind === 'checkout') {
+    ({ error } = await supabase.from('leads').insert({ ...checked.lead, kind: 'question', details }));
+  }
 
   if (error) {
     // Falta correr supabase/migration-consultas.sql: el navegador vuelve al WhatsApp de siempre
     console.error('[LEADS] No se pudo guardar la consulta:', error.message);
     return NextResponse.json({ ok: false, error: 'No disponible' }, { status: 503 });
   }
+  return NextResponse.json({ ok: true });
+}
+
+/**
+ * La compra se terminó: se borra la "compra sin terminar" de ese checkout, si
+ * el dueño todavía no la respondió. La referencia es un identificador al azar
+ * que solo conoce el navegador que la creó.
+ */
+export async function DELETE(req: NextRequest) {
+  const body = await req.json().catch(() => null);
+  const ref = String(body?.ref ?? '');
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(ref)) return NextResponse.json({ ok: false }, { status: 400 });
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return NextResponse.json({ ok: false }, { status: 503 });
+
+  const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  await supabase.from('leads').delete().eq('details->>ref', ref).eq('status', 'new');
   return NextResponse.json({ ok: true });
 }

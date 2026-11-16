@@ -93,3 +93,17 @@ export function closeWhatsAppIntent() {
     /* nada */
   }
 }
+
+/** La compra se terminó: la "compra sin terminar" de este checkout ya no hace falta */
+export function closeCheckoutLead(ref: string) {
+  try {
+    void fetch('/api/leads', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* sin conexión: queda en el panel y el dueño la descarta */
+  }
+}

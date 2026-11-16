@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, cn } from '@/lib/utils';
 import { useDolarRate } from '@/components/DolarRateProvider';
 import { useSwipeToDismiss } from '@/lib/useSwipeToDismiss';
-import { Clock, AlertTriangle, X, ShoppingBag, Minus, Plus, ArrowRight } from 'lucide-react';
+import { Clock, AlertTriangle, X, ShoppingBag, Minus, Plus, ArrowRight, ShieldCheck, Truck, CreditCard } from 'lucide-react';
+import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
+import { getCardPriceMultiplier } from '@/lib/promo';
+import { trackEvent } from '@/lib/analytics/track';
 
 const QUICK_PICKS = [
   { label: 'Nuevos ingresos', href: '/nuevos-ingresos' },
@@ -22,6 +25,9 @@ export function CartDrawer() {
   const { rate: dolarOficial } = useDolarRate();
   const subtotalUSD = items.reduce((acc, it) => acc + it.price * it.quantity, 0);
   const subtotalARS = subtotalUSD * dolarOficial;
+  const { active: promoOn } = useInstallmentsPromo();
+  // 3 cuotas con tarjeta: mismo cálculo que la ficha y el checkout
+  const installmentArs = (subtotalARS * getCardPriceMultiplier(promoOn)) / 3;
   const isOpen = useUIStore((s) => s.isCartOpen);
   const close = useUIStore((s) => s.closeCart);
   const pathname = usePathname();
@@ -247,7 +253,7 @@ export function CartDrawer() {
                     <span className="text-xs text-gray-400 ml-0.5">USD</span>
                   </p>
                   <p className="text-xs font-bold text-gray-500 mt-0.5">
-                    {formatCurrency(it.price * it.quantity * dolarOficial)}
+                    {formatARS(it.price * it.quantity * dolarOficial)}
                   </p>
                 </div>
               </div>
@@ -256,34 +262,65 @@ export function CartDrawer() {
             ))}
           </div>
           <div className="border-t border-gray-200 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-black text-gray-900 ">Subtotal</span>
-              <span className="font-black text-gray-900">
-                ${subtotalUSD.toFixed(2)}
-                <span className="text-xs text-gray-400 ml-0.5">USD</span>
-              </span>
-            </div>
-            {items.length > 0 && (
-              <div className="mt-1 flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-400">Transferencia / Efectivo</span>
-                <span className="font-black text-gray-700">{formatCurrency(subtotalARS)}</span>
-              </div>
+            {items.length > 0 ? (
+              <>
+                <dl className="space-y-1.5 text-[15px]">
+                  <div className="flex items-baseline justify-between">
+                    <dt className="text-gray-600">Envío</dt>
+                    <dd className="font-semibold text-gray-900">Gratis</dd>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <dt className="font-semibold text-gray-900">Total</dt>
+                    <dd className="text-right">
+                      <span className="block text-[19px] font-semibold text-gray-900 tabular-nums">
+                        ${subtotalUSD.toFixed(2)}
+                        <span className="ml-0.5 text-xs font-normal text-gray-500">USD</span>
+                      </span>
+                      <span className="block text-[15px] text-gray-700 tabular-nums">{formatARS(subtotalARS)} por transferencia o efectivo</span>
+                    </dd>
+                  </div>
+                </dl>
+                <p className={cn('mt-1.5 text-right text-[13px] tabular-nums', promoOn ? 'text-red-600' : 'text-gray-500')}>
+                  o 3 cuotas de {formatARS(installmentArs)}
+                  {promoOn ? ' sin interés' : ''} con tarjeta
+                </p>
+
+                <Link
+                  href="/checkout"
+                  onClick={() => {
+                    trackEvent('cart_checkout_click', 'ecommerce', { items: items.length, total_usd: subtotalUSD });
+                    close();
+                  }}
+                  className="btn-apple mt-3.5 w-full"
+                >
+                  Finalizar compra
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <button type="button" onClick={close} className="mt-1 min-h-[44px] w-full text-[15px] text-primary">
+                  Seguir mirando
+                </button>
+
+                {/* Lo que la persona necesita saber justo antes de pagar */}
+                <ul className="mt-1 space-y-1.5 border-t border-gray-200 pt-3 text-[13px] text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-gray-900" aria-hidden /> 100% original, con comprobante de compra
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Truck className="h-4 w-4 shrink-0 text-gray-900" aria-hidden /> Envío gratis a todo el país o retiro en San Juan
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 shrink-0 text-gray-900" aria-hidden /> Transferencia, efectivo o tarjeta en hasta 6 cuotas
+                  </li>
+                </ul>
+                {remainingSeconds !== null && (
+                  <p className="mt-2.5 text-[12px] text-gray-500">
+                    Reservado por {formatTime(remainingSeconds)}. En el checkout el tiempo no corre.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="py-1 text-center text-[13px] text-gray-500">Envío gratis a todo el país · 100% originales</p>
             )}
-            {items.length > 0 && remainingSeconds !== null && (
-              <p className="mt-1 text-xs text-gray-600 font-bold">
-                Tenés {formatTime(remainingSeconds)} para completar tu compra
-              </p>
-            )}
-            <Link
-              // El carrito está siempre montado: solo se precarga el checkout si hay algo para comprar
-              prefetch={items.length > 0 ? undefined : false}
-              href="/checkout"
-              onClick={close}
-              className={`btn-apple mt-3 w-full ${items.length === 0 ? '!bg-gray-100 !text-gray-400 pointer-events-none' : ''}`}
-            >
-              Ir al Checkout
-              {items.length > 0 && <ArrowRight className="w-4 h-4" />}
-            </Link>
           </div>
         </div>
       </div>

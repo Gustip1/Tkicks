@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { LEAD_LABELS, Lead, LeadStatus, leadSummary, replyLink } from '@/lib/leads';
+import { LEAD_LABELS, Lead, LeadStatus, leadIsDue, leadSummary, replyLink } from '@/lib/leads';
 import { LEADS_CHANGED_EVENT } from '@/components/admin/LeadsBell';
 import { timeAgo } from '@/lib/admin/webSales';
 
@@ -13,6 +13,7 @@ const KIND_TONE: Record<Lead['kind'], string> = {
   size_request: 'bg-yellow-100 text-yellow-800',
   question: 'bg-gray-100 text-gray-700',
   custom_order: 'bg-green-100 text-green-800',
+  checkout: 'bg-red-100 text-red-800',
 };
 
 const BROWSER_LABEL: Record<string, string> = {
@@ -38,7 +39,8 @@ export default function ConsultasPage() {
       setState('missing');
       return;
     }
-    setLeads((data ?? []) as Lead[]);
+    // Las compras sin terminar aparecen pasados 15 minutos: antes puede estar pagando
+    setLeads(((data ?? []) as Lead[]).filter((l) => leadIsDue(l)));
     setState('ready');
   }, []);
 

@@ -44,6 +44,11 @@ export default function PrivacidadPage() {
                 tu teléfono y lo que nos escribas, y tu nombre si lo ponés.
               </li>
               <li>
+                <strong className="font-semibold text-gray-900">Si empezás una compra y no la terminás:</strong> guardamos
+                los datos que cargaste (nombre, teléfono, email y qué ibas a comprar) para poder escribirte y ayudarte a
+                terminarla. Si pagás, ese registro se borra solo.
+              </li>
+              <li>
                 <strong className="font-semibold text-gray-900">Si creás una cuenta:</strong> tu email, para que veas
                 tus pedidos.
               </li>
