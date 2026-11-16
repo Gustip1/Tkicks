@@ -90,7 +90,10 @@ export function Reviews({
   reviews,
   stats = [],
   brandCount = 0,
+  contained = false,
 }: {
+  /** Dentro de una página con márgenes (la ficha): tarjeta redondeada en vez de franja de lado a lado */
+  contained?: boolean;
   reviews: Review[];
   /** Los que carga el dueño en /admin/opiniones */
   stats?: TrustStat[];
@@ -115,7 +118,7 @@ export function Reviews({
   return (
     // Franja oscura: en apple.com las franjas claras y oscuras se alternan
     // y el cambio de color es el divisor entre secciones.
-    <section className="bleed tile-dark py-14 md:py-16" aria-labelledby="reviews-title">
+    <section className={`tile-dark py-12 md:py-16 ${contained ? 'overflow-hidden rounded-3xl' : 'bleed'}`} aria-labelledby="reviews-title">
       <div className="tile-inner">
         <div className="text-center mb-7 md:mb-9">
           <h2 id="reviews-title" className="t-section max-w-[26ch] mx-auto">
@@ -128,6 +131,7 @@ export function Reviews({
           <dl
             className={`mx-auto mb-9 md:mb-12 grid grid-cols-2 gap-x-4 gap-y-6 text-center ${
               shownStats.length >= 4 ? 'md:grid-cols-4 max-w-4xl' : shownStats.length === 3 ? 'md:grid-cols-3 max-w-3xl' : 'max-w-xl'
+            } ${shownStats.length === 1 ? '!grid-cols-1' : ''
             }`}
           >
             {shownStats.map((s, i) => (

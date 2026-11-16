@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Product, ProductVariant } from '@/types/db';
 import { SITE_URL as SITE } from '@/lib/site';
 import { ProductView } from './parts/ProductView';
+import type { Review } from '@/components/landing/Reviews';
 import { ProductGone } from './parts/ProductGone';
 
 /**
@@ -39,19 +40,23 @@ const getProduct = cache(async (rawSlug: string) => {
   const { data: product } = await supabase.from('products').select('*').ilike('slug', slug).maybeSingle();
   if (!product) return null;
 
-  const [{ data: variants }, { data: brand }, { data: offersRow }] = await Promise.all([
+  const [{ data: variants }, { data: brand }, { data: settingsRows }] = await Promise.all([
     supabase.from('product_variants').select('*').eq('product_id', product.id).order('size', { ascending: true }),
     product.brand
       ? supabase.from('brands').select('name').eq('slug', product.brand).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from('settings').select('value').eq('key', 'offers_enabled').maybeSingle(),
+    // Una sola consulta: si se pueden hacer ofertas y las opiniones cargadas en /admin/opiniones
+    supabase.from('settings').select('key, value').in('key', ['offers_enabled', 'homepage_reviews']),
   ]);
+  const setting = (key: string) => (settingsRows ?? []).find((r) => r.key === key)?.value;
+  const reviews = setting('homepage_reviews');
 
   return {
     product: product as unknown as Product,
     variants: (variants ?? []) as unknown as ProductVariant[],
     brandName: (brand as { name?: string } | null)?.name ?? null,
-    offersEnabled: Boolean((offersRow?.value as { active?: boolean } | null)?.active),
+    offersEnabled: Boolean((setting('offers_enabled') as { active?: boolean } | null)?.active),
+    reviews: (Array.isArray(reviews) ? reviews : []) as Review[],
   };
 });
 
@@ -97,7 +102,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const data = await getProduct(params.slug);
   if (!data) return <ProductGone slug={params.slug} />;
 
-  const { product, variants, brandName, offersEnabled } = data;
+  const { product, variants, brandName, offersEnabled, reviews } = data;
   const inStock = variants.some((v) => Number(v.stock) > 0);
 
   // Datos estructurados: le dicen a Google qué es, cuánto sale y si hay stock
@@ -127,7 +132,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         // JSON.stringify ya escapa comillas; se escapa "<" para que ningún texto cierre la etiqueta
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
-      <ProductView product={product} variants={variants} offersEnabled={offersEnabled} />
+      <ProductView product={product} variants={variants} offersEnabled={offersEnabled} reviews={reviews} />
     </>
   );
 }

@@ -23,6 +23,7 @@ export function Footer() {
       links: [
         { label: 'Encargos', href: '/encargos' },
         { label: 'Cómo comprar', href: '/#como-comprar' },
+        { label: 'Preguntas frecuentes', href: '/#preguntas' },
         { label: 'Seguí tu pedido', href: '/track' },
         { label: 'WhatsApp', href: WHATSAPP_URL, external: true },
       ],

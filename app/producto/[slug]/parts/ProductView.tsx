@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Product, ProductVariant } from '@/types/db';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -9,6 +9,11 @@ import { BuyBar } from './BuyBar';
 import { RelatedProducts } from './RelatedProducts';
 import { ImageCarousel } from '@/components/pdp/ImageCarousel';
 import { FavoriteButton } from '@/components/catalog/FavoriteButton';
+import { Reviews, type Review } from '@/components/landing/Reviews';
+import { FaqList } from '@/components/landing/Faq';
+import { RecentlyViewed } from '@/components/landing/RecentlyViewed';
+import { FAQ, FAQ_PRODUCT_IDS } from '@/lib/trust';
+import { useRecentStore } from '@/store/recent';
 import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
@@ -22,15 +27,28 @@ import { extractFromDescription, garmentKind, parseSizeGuide } from '@/lib/sizeG
  * servidor (page.tsx): el producto se ve en el primer render, sin esqueleto
  * ni un segundo viaje a la base desde el celular.
  */
+const PRODUCT_FAQ = FAQ.filter((f) => FAQ_PRODUCT_IDS.includes(f.id)).sort(
+  (a, b) => FAQ_PRODUCT_IDS.indexOf(a.id) - FAQ_PRODUCT_IDS.indexOf(b.id)
+);
+
 export function ProductView({
   product,
   variants,
   offersEnabled,
+  reviews = [],
 }: {
   product: Product;
   variants: ProductVariant[];
   offersEnabled: boolean;
+  /** Opiniones reales cargadas en /admin/opiniones */
+  reviews?: Review[];
 }) {
+  // Queda en "vistos recientemente" de este dispositivo
+  const see = useRecentStore((st) => st.see);
+  useEffect(() => {
+    see(product.id);
+  }, [product.id, see]);
+
   const { rate: dolarOficial } = useDolarRate();
   const { active: promoOn } = useInstallmentsPromo();
   const { isComingSoon: comingSoonFlag, eta: comingSoonEta } = useComingSoon(product.id);
@@ -257,12 +275,27 @@ export function ProductView({
               </li>
             ))}
           </ul>
-          
+
+          {/* Antes de comprar: las dudas de quien llega del anuncio y no nos conoce */}
+          <div className="pt-3">
+            <h2 className="mb-3 text-[17px] font-semibold tracking-[-0.02em] text-gray-900">Antes de comprar</h2>
+            <FaqList items={PRODUCT_FAQ} />
+          </div>
         </div>
       </div>
 
+      {/* Opiniones reales: la confianza de quien ya compró, sin mostrar compras de nadie */}
+      {reviews.length > 0 && (
+        <div className="mt-10 md:mt-16">
+          <Reviews reviews={reviews} contained />
+        </div>
+      )}
+
       {/* Productos relacionados: evita que la ficha sea un callejón sin salida */}
       <RelatedProducts productId={product.id} category={product.category} brand={product.brand} />
+
+      {/* Lo que venía mirando, para volver sin buscar */}
+      <RecentlyViewed excludeId={product.id} className="mt-10 md:mt-16 border-t border-gray-200 pt-8 md:pt-12" />
 
       {/* Barra de compra fija — mobile y desktop, se oculta cuando la sección de compra está a la vista */}
       <BuyBar

@@ -923,3 +923,16 @@ img {
 .heart-pop { animation: tk-heart-pop 260ms var(--ease-out) backwards; }
 @keyframes tk-heart-pop { from { transform: scale(0.7); opacity: 0.4; } }
 @media (prefers-reduced-motion: reduce) { .heart-pop { animation: none; } }
+
+/* Preguntas frecuentes (<details>): se abren con altura animada donde el
+   navegador lo permite; en el resto abren de golpe, que también está bien. */
+.faq-item { interpolate-size: allow-keywords; }
+.faq-item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 260ms var(--ease-out), content-visibility 260ms allow-discrete;
+}
+.faq-item[open]::details-content { block-size: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .faq-item::details-content { transition: none; }
+}

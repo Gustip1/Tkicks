@@ -6,6 +6,10 @@ import { HomeProductGrid } from '@/components/landing/HomeProductGrid';
 import { HomepageBrands, HomeBrandEntry, DEFAULT_HOME_BRAND_ENTRIES } from '@/components/landing/HomepageBrands';
 import { Reviews, Review } from '@/components/landing/Reviews';
 import { HowToBuy } from '@/components/landing/HowToBuy';
+import { TrustSection } from '@/components/landing/TrustSection';
+import { Faq } from '@/components/landing/Faq';
+import { RecentlyViewed } from '@/components/landing/RecentlyViewed';
+import { faqJsonLd } from '@/lib/trust';
 import { InstagramFeed } from '@/components/landing/InstagramFeed';
 import { PromoBanner } from '@/components/promo/PromoBanner';
 import { GiveawayInlinePriceClue } from '@/components/giveaway/GiveawayClue';
@@ -298,6 +302,12 @@ export default async function HomePage() {
         <GiveawayInlinePriceClue clueId="/" label="Inicio" position={0} digit="2" />
       </div>
 
+      {/* Comprá tranquilo — las garantías, antes de seguir mirando productos */}
+      <TrustSection />
+
+      {/* Vistos recientemente — solo para quien ya estuvo mirando productos */}
+      <RecentlyViewed className="bleed tile-light px-[22px] md:px-10 pt-10 md:pt-[72px] pb-10 md:pb-[72px] [&>*]:mx-auto [&>*]:max-w-[1360px]" />
+
       {/* Carruseles por marca — configurables desde /admin/portada */}
       <HomepageBrands entries={content.brandEntries} productsByEntry={brandProducts} visibleCount={content.brandsVisible} />
 
@@ -316,6 +326,13 @@ export default async function HomePage() {
 
       {/* Feed de Instagram @tkicks.gp — se oculta sola si no hay token cargado */}
       <InstagramFeed />
+
+      {/* Preguntas frecuentes — lo que duda quien nunca nos compró */}
+      <Faq />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd()).replace(/</g, '\\u003c') }}
+      />
 
       {/* Cómo comprar — último bloque antes del footer */}
       <HowToBuy content={content.howToBuy} />

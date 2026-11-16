@@ -13,6 +13,7 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Celular primero: 93% del tráfico. Carruseles compactos de a dos en celular.
 - Hero de la home: solo la marca y las dos píldoras, sin fotos de productos (80px en escritorio, compacto en celular); debajo "Elegí tu estilo" con las categorías en fotos grandes (`CategoryShowcase`) y después la grilla de recién llegados. Opiniones al final. Se probaron círculos y cuadraditos tipo historias de Instagram (oct 2026) y al dueño le parecieron menos profesionales: no volver a eso.
 - Precios: el USD es el precio principal (como lo carga el dueño) y los pesos van debajo, con las tarjetas de transferencia y cuotas en la ficha. Se probó poner los pesos primero (oct 2026) y el dueño pidió volver al USD.
+- No mostrar ventas ni compradores recientes (el aviso "se vendió hace X" se sacó en nov 2026 a pedido del dueño: no quiere que se vea quién compró ni cuánto). La confianza va con garantías reales, opiniones y preguntas frecuentes: `lib/trust.ts`, `TrustSection`, `Faq`.
 - Titulares directos, de un solo tono, sin punto final ("Recién llegados"). El titular en dos tonos con frase gris se usaba en todas las secciones y sonaba a plantilla.
 - "Subí a GitHub" = commit a `main` + push = producción (Vercel). Compilar con `npm run build` antes.
 
@@ -25,7 +26,7 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Curvas: `var(--ease-out)` entradas/UI, `var(--ease-in-out)` movimiento en pantalla, `var(--ease-drawer)` paneles; `ease-apple` en Tailwind.
 - Material: `material-nav` (vidrio claro de la barra, como apple.com; menús desplegables en `#fafafc`). Gesto: `lib/useSwipeToDismiss.ts` (paneles que se cierran con el dedo). `lib/haptics.ts` (vibración en momentos clave).
 - `TouchFeedback` hace funcionar `:active` en iPhone; no sacarlo.
-- Popups: siempre `components/ui/Sheet.tsx` (hoja desde abajo en celular, tarjeta centrada en escritorio, fondo desenfocado, foco adentro, se cierra deslizando). Sin `onClose` es bloqueante. Avisos flotantes (venta reciente, pistas): tarjeta blanca sólida de 18px con sombra suave. Nunca degradés, brillos ni emojis; nunca inventar datos (ej.: ciudad de una venta).
+- Popups: siempre `components/ui/Sheet.tsx` (hoja desde abajo en celular, tarjeta centrada en escritorio, fondo desenfocado, foco adentro, se cierra deslizando). Sin `onClose` es bloqueante. Avisos flotantes (pistas del sorteo): tarjeta blanca sólida de 18px con sombra suave. Nunca degradés, brillos ni emojis; nunca inventar datos (ej.: ciudad de una venta).
 
 ## Movimiento (Emil + Apple)
 - ¿Se ve cien veces por día? No animar. Acciones de teclado: nunca.
