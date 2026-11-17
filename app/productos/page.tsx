@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { ProductsClient } from '@/components/catalog/ProductsClient';
 import { HOODIE_TYPES, Product, StreetWearSubcategory, subcategoriesOf } from '@/types/db';
 import { CARD_COLUMNS, CATALOG_PAGE_SIZE, publicDb } from '@/lib/catalog';
@@ -8,6 +9,39 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 const validSubcategories = ['remeras', 'hoodies', 'pantalones', 'accesorios'];
+
+const SUB_TITLES: Record<string, string> = {
+  remeras: 'Remeras',
+  hoodies: 'Hoodies y abrigos',
+  pantalones: 'Pantalones',
+  accesorios: 'Accesorios',
+};
+
+const PITCH = '100% originales, con envío gratis a todo el país. Transferencia, efectivo o tarjeta en hasta 6 cuotas.';
+
+/**
+ * Título propio por sección: antes todo el catálogo se llamaba igual que la
+ * portada ("Tkicks - Sneakers & Streetwear"), en la pestaña, en Google y al
+ * compartir el link de una marca o una categoría.
+ */
+export async function generateMetadata({ searchParams }: { searchParams: { [k: string]: string | string[] | undefined } }): Promise<Metadata> {
+  const q = typeof searchParams?.q === 'string' ? searchParams.q.trim().slice(0, 60) : '';
+  // Las búsquedas no se indexan: son infinitas y repiten el catálogo
+  if (q) return { title: `Resultados para “${q}” | Tkicks`, robots: { index: false, follow: true } };
+
+  const brand = typeof searchParams?.brand === 'string' ? searchParams.brand : undefined;
+  if (brand) {
+    const { data } = await publicDb().from('brands').select('name').eq('slug', brand).maybeSingle();
+    const name = (data as { name?: string } | null)?.name;
+    if (name) return { title: `${name} | Tkicks`, description: `${name} en Tkicks: ${PITCH}` };
+  }
+
+  const sub = typeof searchParams?.sub === 'string' ? SUB_TITLES[searchParams.sub] : undefined;
+  if (typeof searchParams?.sneakers !== 'undefined') return { title: 'Sneakers | Tkicks', description: `Sneakers ${PITCH}` };
+  if (sub) return { title: `${sub} | Tkicks`, description: `${sub} ${PITCH}` };
+  if (typeof searchParams?.streetwear !== 'undefined') return { title: 'Streetwear | Tkicks', description: `Streetwear ${PITCH}` };
+  return { title: 'Catálogo | Tkicks', description: `Sneakers y streetwear ${PITCH}` };
+}
 
 /**
  * La primera tanda de productos llega armada en el HTML. Antes el celular bajaba el JS,

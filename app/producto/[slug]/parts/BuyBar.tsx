@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Product, ProductVariant } from '@/types/db';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatARS, cn } from '@/lib/utils';
 import { Ars } from '@/components/DolarRateProvider';
 import { useCartStore } from '@/store/cart';
 import { useUIStore } from '@/store/ui';
@@ -147,11 +147,13 @@ export function BuyBar({
           </p>
 
           <div className="min-w-0">
-            <p className="text-lg font-semibold text-gray-900 leading-tight truncate">
-              <Ars>{formatCurrency(priceArs)}</Ars>
+            {/* USD principal y pesos debajo, igual que en la ficha y en las tarjetas */}
+            <p className="text-lg font-semibold text-gray-900 leading-tight truncate tabular-nums">
+              ${priceUsd.toFixed(2)}
+              <span className="ml-1 text-xs font-normal text-gray-500">USD</span>
             </p>
-            <p className="text-xs font-normal text-gray-500 leading-tight">
-              ${priceUsd.toFixed(2)} USD · transf. / efectivo
+            <p className="text-xs font-normal text-gray-500 leading-tight truncate tabular-nums">
+              <Ars>{formatARS(priceArs)}</Ars> por transferencia o efectivo
             </p>
           </div>
 

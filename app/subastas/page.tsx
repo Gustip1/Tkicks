@@ -122,7 +122,7 @@ export default function SubastasPage() {
         {!loading && !err && items.length === 0 && (
           <div className="border border-gray-200 rounded-xl p-8 text-center bg-gray-50">
             <p className="text-gray-500 font-bold">No hay subastas activas en este momento.</p>
-            <Link href="/productos" className="text-gray-900 hover:underline mt-2 inline-block font-bold">Ver productos</Link>
+            <Link href="/productos" className="link-apple t-body mt-2 inline-block">Ver productos</Link>
           </div>
         )}
 

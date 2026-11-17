@@ -28,9 +28,9 @@ export function HomeProductGrid({
   if (products.length === 0) return null;
 
   return (
-    <section className={`bleed ${tone === 'parchment' ? 'tile-parchment' : 'tile-light'} pt-10 md:pt-[90px] pb-12 md:pb-[90px]`} aria-labelledby={headingId}>
+    <section className={`bleed ${tone === 'parchment' ? 'tile-parchment' : 'tile-light'} pt-7 md:pt-[90px] pb-12 md:pb-[90px]`} aria-labelledby={headingId}>
       <div className="tile-inner">
-        <div className="flex items-baseline justify-between gap-4 mb-4 md:mb-10">
+        <div className="flex items-baseline justify-between gap-4 mb-3.5 md:mb-10">
           <h2 id={headingId} className="t-section">
             {title}
           </h2>

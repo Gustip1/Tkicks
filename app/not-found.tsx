@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+export const metadata = { title: 'No encontramos esta página | Tkicks' };
+
 /**
  * Página para links rotos. Antes aparecía la pantalla genérica de Next
  * ("404 | This page could not be found"), en inglés y sin salida.

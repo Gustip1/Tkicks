@@ -23,6 +23,7 @@ import { NavProgress } from '@/components/NavProgress';
 import { ContactRescue } from '@/components/contact/ContactRescue';
 import { TouchFeedback } from '@/components/TouchFeedback';
 import { StaleDeployReload } from '@/components/StaleDeployReload';
+import { SITE_URL } from '@/lib/site';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
@@ -30,12 +31,17 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  // Negro, como la navegación: en iPhone la barra de estado se funde con el menú
-  themeColor: '#000000',
+  // Blanco, como la barra de navegación: en iPhone la barra de estado se funde
+  // con el menú (era negro de cuando el menú era oscuro y quedaba una franja)
+  themeColor: '#ffffff',
   interactiveWidget: 'resizes-content'
 };
 
 export const metadata: Metadata = {
+  // Con la base, la imagen para compartir (app/opengraph-image.png) y el ícono
+  // (app/icon.png) salen con la dirección completa. Antes el link de la web
+  // pegado en WhatsApp o Instagram no mostraba imagen, y la pestaña no tenía ícono.
+  metadataBase: new URL(SITE_URL),
   title: 'Tkicks - Sneakers & Streetwear',
   description: 'Tu destino exclusivo para Sneakers y Streetwear 100% originales en San Juan, Argentina.',
   keywords: ['sneakers', 'streetwear', 'zapatillas', 'ropa urbana', 'original', 'san juan'],
@@ -43,8 +49,10 @@ export const metadata: Metadata = {
     title: 'Tkicks - Sneakers & Streetwear',
     description: 'Tu destino exclusivo para Sneakers y Streetwear 100% originales',
     type: 'website',
+    siteName: 'Tkicks',
     locale: 'es_AR'
-  }
+  },
+  twitter: { card: 'summary_large_image' }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

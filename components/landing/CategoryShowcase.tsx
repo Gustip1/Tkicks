@@ -13,13 +13,15 @@ export type CategoryTileConfig = { sub: string; label?: string; url?: string };
 
 type Tile = (typeof CATEGORY_TILES)[number];
 
+/** En el celular arranca por lo que más se busca */
+const MOBILE_ORDER: Tile['sub'][] = ['sneakers', 'remeras', 'hoodies', 'pantalones'];
+
 /**
  * Server component: recibe las imágenes ya resueltas por app/page.tsx
  * (config del admin + fallback a la última foto de producto) — sin fetch
  * propio en el cliente.
  *
- * El contenedor (className) define el tamaño: en mobile las filas del bento
- * dan la altura y acá solo se llena; en desktop se pasa el aspect ratio.
+ * El contenedor (className) define el tamaño y la proporción.
  */
 function CategoryTile({
   c,
@@ -69,27 +71,35 @@ function CategoryTile({
 export function CategoryShowcase({ images }: { images: Record<string, string> }) {
   const bySub = Object.fromEntries(CATEGORY_TILES.map((c) => [c.sub, c])) as Record<Tile['sub'], Tile>;
 
-  // Arriba con menos aire que el resto de las franjas: va pegada al hero y
-  // tiene que asomar en la primera pantalla del celular
+  // En el celular van en una fila que se desliza, de a dos y con la tercera
+  // asomando. Antes eran dos filas (bento) que llenaban la pantalla: el primer
+  // producto quedaba a pantalla y media, y la mitad de las visitas a la portada
+  // se iba sin bajar (nov 2026). Ahora "Recién llegados" asoma en la primera.
   return (
-    <section className="bleed tile tile-parchment !pt-8 md:!pt-14" aria-labelledby="categories-title">
+    <section
+      className="bleed tile tile-parchment max-sm:!pt-6 max-sm:!pb-7 sm:!pt-8 md:!pt-14"
+      aria-labelledby="categories-title"
+    >
       <div className="tile-inner">
         {/* Titular directo, de un solo tono (regla del dueño) */}
-        <h2 id="categories-title" className="t-section mb-5 md:mb-8">
+        <h2 id="categories-title" className="t-section mb-4 md:mb-8">
           Elegí tu estilo
         </h2>
 
-        {/* Mobile: bento — el tile grande alterna de lado en cada fila. Las cuatro se ven en la
-            primera pantalla, así que se piden antes que el resto (priority) y en 50vw, para
+        {/* Celular: las cuatro se piden antes que el resto (priority) y en 45vw, para
             que un celular 3x use la miniatura de 640: 30 KB en vez de 100 por foto. */}
-        <div className="sm:hidden space-y-3">
-          <div className="flex gap-3 h-52">
-            <CategoryTile c={bySub.sneakers} images={images} className="flex-[3]" imgSizes="50vw" priority />
-            <CategoryTile c={bySub.remeras} images={images} className="flex-[2]" imgSizes="40vw" priority />
-          </div>
-          <div className="flex gap-3 h-52">
-            <CategoryTile c={bySub.hoodies} images={images} className="flex-[2]" imgSizes="40vw" priority />
-            <CategoryTile c={bySub.pantalones} images={images} className="flex-[3]" imgSizes="50vw" priority />
+        <div className="sm:hidden -mx-[22px] snap-x snap-mandatory scroll-px-[22px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-2.5 px-[22px]">
+            {MOBILE_ORDER.map((sub) => (
+              <CategoryTile
+                key={sub}
+                c={bySub[sub]}
+                images={images}
+                className="aspect-square w-[42vw] max-w-[200px] shrink-0 snap-start"
+                imgSizes="45vw"
+                priority
+              />
+            ))}
           </div>
         </div>
 

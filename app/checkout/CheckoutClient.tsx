@@ -739,7 +739,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
       <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="t-display text-gray-900">Checkout</h1>
+          <h1 className="t-display text-gray-900">Finalizar compra</h1>
           {/* Step indicator */}
           <div className="mt-4 flex items-center gap-2">
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-colors ${

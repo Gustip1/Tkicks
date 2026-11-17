@@ -35,7 +35,7 @@ export function HeroSection({ content = DEFAULT_HERO_CONTENT }: { content?: Hero
 
   return (
     <section className="bleed tile-light -mt-3 md:-mt-8">
-      <div className="tile-inner pt-7 pb-6 md:pt-12 md:pb-10 text-center">
+      <div className="tile-inner pt-6 pb-5 md:pt-12 md:pb-10 text-center">
         {/* El momento de la página: el titular sube desde atrás de una máscara */}
         <h1 className="t-hero-compact">
           <span className="hero-line"><span>{headline}</span></span>
