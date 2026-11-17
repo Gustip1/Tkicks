@@ -520,6 +520,13 @@ img {
   @media (max-width: 419px) {
     .t-hero { font-size: 34px; }
   }
+  /* Celulares de 320px (iPhone SE viejo): el titular de la portada no entraba
+     en un renglón y se cortaba contra el borde */
+  @media (max-width: 359px) {
+    .t-hero-compact { font-size: 25px; }
+    .t-section { font-size: 24px; }
+    .t-display { font-size: 26px; }
+  }
 
   /* Titular en dos tonos: la primera frase en tinta, el resto en gris.
      Es la firma de la Apple Store ("La novedad. Mirá lo último que llegó."). */

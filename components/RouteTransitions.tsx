@@ -20,8 +20,14 @@ export function RouteTransitions({ children }: { children: ReactNode }) {
   const navigated = useRef(false);
   if (pathname !== firstPath.current) navigated.current = true;
 
+  // En el panel no hay entrada ni `key` por página: con el `key` se desmontaba
+  // el panel entero en cada cambio de sección (el menú volvía arriba, las
+  // campanas volvían a consultar) y, mientras duraba la animación, lo que va
+  // fijo a la pantalla se movía con el contenido.
+  const inAdmin = pathname.startsWith('/admin');
+
   return (
-    <div key={pathname} className={navigated.current ? 'page-enter' : undefined}>
+    <div key={inAdmin ? 'admin' : pathname} className={!inAdmin && navigated.current ? 'page-enter' : undefined}>
       {children}
     </div>
   );

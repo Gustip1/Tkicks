@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -62,17 +62,30 @@ export function AdminSidebar() {
     setIsOpen(false);
   }, [pathname]);
 
-  // Prevent body scroll when sidebar is open on mobile
+  // Con el menú abierto en el celular, la página de atrás no se mueve
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
     };
   }, [isOpen]);
+
+  // La sección actual siempre a la vista en el menú (son 20: en una notebook
+  // las últimas quedan abajo). Se mueve solo la lista, nunca la página.
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !active) return;
+    const top = active.offsetTop - nav.offsetTop;
+    if (top < nav.scrollTop) nav.scrollTop = top - 8;
+    else if (top + active.offsetHeight > nav.scrollTop + nav.clientHeight) nav.scrollTop = top + active.offsetHeight - nav.clientHeight + 8;
+  }, [pathname]);
 
   return (
     <>
@@ -80,11 +93,13 @@ export function AdminSidebar() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "md:hidden fixed z-50 p-3 rounded-full shadow-strong transition-all",
-          isOpen 
-            ? "top-4 left-56 bg-red-500 text-white hover:bg-red-600" 
-            : "top-4 left-4 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+          // Cerrado va dentro de la barra de arriba (44px), no flotando sobre el contenido
+          "md:hidden fixed z-50 flex h-11 w-11 items-center justify-center transition-[left,background-color,color] duration-200",
+          isOpen
+            ? "top-3.5 left-[12.75rem] rounded-full bg-gray-900 text-white"
+            : "top-1 left-2 rounded-xl text-gray-700 active:bg-gray-100"
         )}
+        aria-expanded={isOpen}
         aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
       >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -99,12 +114,14 @@ export function AdminSidebar() {
       )}
 
       {/* Sidebar */}
+      {/* Celular: cajón que entra desde la izquierda. Escritorio: queda fijo
+          mientras la página baja (sticky), con su propia lista deslizable. */}
       <aside className={cn(
-        "fixed md:static inset-y-0 left-0 z-40",
+        "fixed md:sticky top-0 left-0 z-40 md:z-auto h-dvh md:self-start shrink-0",
         "w-64 bg-white border-r border-gray-200",
-        "transform transition-transform duration-300 ease-out",
+        "transform transition-transform duration-300 ease-out md:transform-none md:transition-none",
         "flex flex-col",
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        isOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         {/* Logo area */}
         <div className="p-4 border-b border-gray-200">
@@ -120,7 +137,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav ref={navRef} className="relative min-h-0 flex-1 p-3 space-y-1 overflow-y-auto overscroll-contain">
           {navigation.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
             const Icon = item.icon;
@@ -129,6 +146,7 @@ export function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                   isActive
@@ -150,7 +168,7 @@ export function AdminSidebar() {
         </nav>
 
         {/* Bottom section */}
-        <div className="p-3 border-t border-gray-200">
+        <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-gray-200">
           <Link
             href="/"
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all"

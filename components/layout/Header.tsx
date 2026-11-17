@@ -334,6 +334,9 @@ export function Header() {
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscá por nombre, marca o talle"
                   aria-label="Buscar productos"
+                  enterKeyHint="search"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                   className="w-full rounded-full bg-black/[0.05] px-4 py-3 pl-10 text-[17px] text-[#1d1d1f] placeholder-black/45 focus:bg-black/[0.07] focus:outline-none"
                   autoFocus
                 />

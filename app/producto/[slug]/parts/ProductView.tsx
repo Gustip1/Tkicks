@@ -89,7 +89,7 @@ export function ProductView({
         <span className="text-gray-900 font-black truncate max-w-[120px] md:max-w-[200px]" aria-current="page">{product.title}</span>
       </nav>
 
-      <div className="grid gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:gap-8 lg:gap-16 md:grid-cols-2">
         {/* Image section */}
         <div className="md:sticky md:top-20 md:self-start">
           <ImageCarousel

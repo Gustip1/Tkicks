@@ -549,7 +549,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
     return (
       <div className="max-w-5xl mx-auto py-6 md:py-10 space-y-4" aria-busy="true" aria-label="Cargando checkout">
         <div className="skeleton h-8 w-40 rounded" />
-        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="skeleton h-[420px] rounded-lg" />
           <div className="skeleton h-[260px] rounded-lg" />
         </div>
@@ -789,7 +789,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
           </ul>
         </details>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr,380px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
           {/* Main content — al cambiar de paso entra de nuevo */}
           <div key={step} className={`space-y-6 ${stepChanged.current ? 'step-enter' : ''}`}>
             {/* ═══════════════ STEP 1: DELIVERY ═══════════════ */}
@@ -1255,12 +1255,16 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
                         value={couponInput}
                         onChange={(e) => setCouponInput(e.target.value)}
                         placeholder="¿Tenés un cupón?"
-                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-900"
+                        aria-label="Cupón de descuento"
+                        autoCapitalize="characters"
+                        autoCorrect="off"
+                        enterKeyHint="done"
+                        className="min-h-[44px] min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-900"
                       />
                       <button
                         onClick={handleApplyCoupon}
                         disabled={couponValidating || !couponInput.trim()}
-                        className="px-4 py-2 rounded-full bg-pricing text-white text-xs font-normal hover:bg-pricing-hover disabled:opacity-50 transition-colors"
+                        className="min-h-[44px] shrink-0 px-4 py-2 rounded-full bg-pricing text-white text-[14px] font-normal hover:bg-pricing-hover disabled:opacity-50 transition-colors"
                       >
                         {couponValidating ? '...' : 'Aplicar'}
                       </button>

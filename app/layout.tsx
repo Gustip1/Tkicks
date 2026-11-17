@@ -24,6 +24,7 @@ import { ContactRescue } from '@/components/contact/ContactRescue';
 import { TouchFeedback } from '@/components/TouchFeedback';
 import { StaleDeployReload } from '@/components/StaleDeployReload';
 import { SITE_URL } from '@/lib/site';
+import { SiteMain } from '@/components/layout/SiteMain';
 
 // Auto-hospedadas por Next (sin @import ni round-trip a fonts.googleapis.com,
 // que antes bloqueaba el render ~500-600ms en cada carga).
@@ -96,10 +97,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </a>
               <Header />
               <Sidebar />
-              <main id="contenido" tabIndex={-1} className="outline-none px-2 py-3 md:px-8 md:py-8 lg:px-12 max-w-[1600px] mx-auto bg-white">
+              <SiteMain>
                 <RouteTransitions>{children}</RouteTransitions>
                 <GiveawayClue />
-              </main>
+              </SiteMain>
               <HideOnAdmin>
                 <Footer />
                 <CartDrawer />

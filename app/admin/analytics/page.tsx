@@ -433,7 +433,7 @@ export default function AnalyticsPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="-m-4 md:-m-6 min-h-full bg-[#f5f5f7] px-4 py-6 md:px-8 md:py-10 text-[#1d1d1f]">
+      <div className="-m-4 md:-m-6 min-h-[calc(100dvh-3.5rem)] bg-[#f5f5f7] px-4 py-6 md:px-8 md:py-10 text-[#1d1d1f]">
         <div className="mx-auto max-w-[1280px] space-y-5 md:space-y-6">
           {/* ── Encabezado ── */}
           <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
