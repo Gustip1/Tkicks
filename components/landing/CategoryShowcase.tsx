@@ -13,8 +13,9 @@ export type CategoryTileConfig = { sub: string; label?: string; url?: string };
 
 type Tile = (typeof CATEGORY_TILES)[number];
 
-/** En el celular arranca por lo que más se busca */
-const MOBILE_ORDER: Tile['sub'][] = ['sneakers', 'remeras', 'hoodies', 'pantalones'];
+/** Orden en el celular: arriba lo que más se busca; abajo a la derecha el
+ *  nombre más corto, que es la esquina donde flota el botón de WhatsApp */
+const MOBILE_ORDER: Tile['sub'][] = ['sneakers', 'remeras', 'pantalones', 'hoodies'];
 
 /**
  * Server component: recibe las imágenes ya resueltas por app/page.tsx
@@ -29,12 +30,16 @@ function CategoryTile({
   className,
   imgSizes,
   priority,
+  compact,
 }: {
   c: Tile;
   images: Record<string, string>;
   className?: string;
   imgSizes: string;
   priority?: boolean;
+  /** Celular: solo el nombre, sin el "Comprar ›", y la foto encuadrada un poco
+   *  más abajo que el borde de arriba (el mosaico es apaisado y si no corta la prenda) */
+  compact?: boolean;
 }) {
   return (
     <Link
@@ -53,16 +58,18 @@ function CategoryTile({
           fill
           sizes={imgSizes}
           priority={priority}
-          className="object-cover object-top transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]"
+          className={cn('object-cover transition-transform duration-[1200ms] ease-apple group-hover:scale-[1.04]', compact ? 'object-[center_18%]' : 'object-top')}
         />
       )}
 
       {/* Velo sólo abajo, para que la etiqueta lea sobre cualquier foto */}
       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
 
-      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
-        <h3 className="t-tagline">{c.label}</h3>
-        <p className="t-caption text-white/80 mt-0.5 group-hover:text-white transition-colors">Comprar ›</p>
+      <div className={cn('absolute inset-x-0 bottom-0 text-white', compact ? 'px-3.5 pb-3' : 'p-4 sm:p-5')}>
+        <h3 className={compact ? 'text-[17px] font-semibold leading-tight tracking-[-0.01em]' : 't-tagline'}>{c.label}</h3>
+        {!compact && (
+          <p className="t-caption text-white/80 mt-0.5 group-hover:text-white transition-colors">Comprar ›</p>
+        )}
       </div>
     </Link>
   );
@@ -71,10 +78,10 @@ function CategoryTile({
 export function CategoryShowcase({ images }: { images: Record<string, string> }) {
   const bySub = Object.fromEntries(CATEGORY_TILES.map((c) => [c.sub, c])) as Record<Tile['sub'], Tile>;
 
-  // En el celular van en una fila que se desliza, de a dos y con la tercera
-  // asomando. Antes eran dos filas (bento) que llenaban la pantalla: el primer
-  // producto quedaba a pantalla y media, y la mitad de las visitas a la portada
-  // se iba sin bajar (nov 2026). Ahora "Recién llegados" asoma en la primera.
+  // En el celular van las cuatro a la vista, en una grilla pareja de dos por
+  // dos que entra completa en la primera pantalla. Se probó una fila que se
+  // deslizaba de costado (nov 2026) y el dueño la descartó: el cliente no tiene
+  // que deslizar para ver las categorías, y quedaba tosca.
   return (
     <section
       className="bleed tile tile-parchment max-sm:!pt-6 max-sm:!pb-7 sm:!pt-8 md:!pt-14"
@@ -86,21 +93,12 @@ export function CategoryShowcase({ images }: { images: Record<string, string> })
           Elegí tu estilo
         </h2>
 
-        {/* Celular: las cuatro se piden antes que el resto (priority) y en 45vw, para
-            que un celular 3x use la miniatura de 640: 30 KB en vez de 100 por foto. */}
-        <div className="sm:hidden -mx-[22px] snap-x snap-mandatory scroll-px-[22px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max gap-2.5 px-[22px]">
-            {MOBILE_ORDER.map((sub) => (
-              <CategoryTile
-                key={sub}
-                c={bySub[sub]}
-                images={images}
-                className="aspect-square w-[42vw] max-w-[200px] shrink-0 snap-start"
-                imgSizes="45vw"
-                priority
-              />
-            ))}
-          </div>
+        {/* Celular: se piden antes que el resto (priority) y en 50vw, para que un
+            celular 3x use la miniatura de 640: 30 KB en vez de 100 por foto. */}
+        <div className="sm:hidden grid grid-cols-2 gap-2.5">
+          {MOBILE_ORDER.map((sub) => (
+            <CategoryTile key={sub} c={bySub[sub]} images={images} className="aspect-[6/5]" imgSizes="50vw" priority compact />
+          ))}
         </div>
 
         {/* Desktop / tablet: las 4 en fila */}
