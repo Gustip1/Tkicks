@@ -14,6 +14,7 @@ import { ComingSoonProvider } from '@/components/ComingSoonProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
+import { CouponPopup } from '@/components/promo/CouponPopup';
 import { AccountNoticeProvider } from '@/components/announcement/AccountNoticeProvider';
 import { AccountNoticeModal } from '@/components/announcement/AccountNoticeModal';
 import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
@@ -106,6 +107,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <CartDrawer />
                 <AccountNoticeModal />
                 <PromoModal />
+                <CouponPopup />
                 <ContactRescue />
               </HideOnAdmin>
               <WhatsAppFab />

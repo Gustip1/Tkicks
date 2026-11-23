@@ -114,6 +114,8 @@ export interface DiscountCode {
   payment_scope?: 'transfer_cash' | 'card' | null;
   /** Nota interna: para quién o para qué es. No la ve el cliente */
   note?: string | null;
+  /** Es el cupón que entrega el popup de WhatsApp (supabase/migration-suscriptores.sql) */
+  popup?: boolean;
 }
 
 /* ────────────── Orders ────────────── */

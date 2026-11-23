@@ -16,17 +16,20 @@ export function LegalPage({
   intro,
   sections,
   other,
+  updated = LEGAL_UPDATED,
 }: {
   title: string;
   intro: ReactNode;
   sections: { id: string; title: string; body: ReactNode }[];
   /** La otra página legal, para pasar de una a otra */
   other: { href: string; label: string };
+  /** Si esta página cambió después que la otra */
+  updated?: string;
 }) {
   return (
     <article className="mx-auto max-w-[680px] px-3 py-6 md:py-12">
       <h1 className="t-display text-gray-900">{title}</h1>
-      <p className="mt-2 t-caption text-gray-500">Vigentes desde el {LEGAL_UPDATED}</p>
+      <p className="mt-2 t-caption text-gray-500">Vigentes desde el {updated}</p>
       <div className="mt-5 t-body text-gray-700">{intro}</div>
 
       <nav aria-label="Contenido" className="mt-7 rounded-2xl bg-[#f5f5f7] p-5">

@@ -5,6 +5,7 @@ import { DiscountCode, DiscountType } from '@/types/db';
 import { CouponStatus, couponStatus, couponSummary, dayEndAR, dayStartAR, toDateInputAR, usd } from '@/lib/coupons';
 import { Pencil, Plus, Shuffle, Ticket, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CouponPopupSettings } from '@/components/admin/CouponPopupSettings';
 
 /**
  * Cupones de descuento. Cada cupón puede llevar condiciones para que tenga
@@ -576,6 +577,8 @@ export default function CuponesPage() {
           })}
         </ul>
       )}
+
+      <CouponPopupSettings codes={codes} brandNames={brandNames} onChanged={load} />
 
       <p className="text-sm text-gray-500">
         El descuento se calcula sobre los productos, antes del recargo de tarjeta. El cliente carga el código en el resumen del pedido, en el checkout.

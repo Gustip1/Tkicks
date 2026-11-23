@@ -203,6 +203,15 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   const [couponInput, setCouponInput] = useState('');
   const [couponValidating, setCouponValidating] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
+  // El cupón que recibió en el popup queda escrito: solo le falta tocar "Aplicar"
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tk-cupon');
+      if (saved) setCouponInput((current) => current || saved);
+    } catch {
+      /* sin almacenamiento: lo escribe a mano */
+    }
+  }, []);
   // Un cupón puede valer solo con transferencia/efectivo o solo con tarjeta: si
   // el medio elegido no corresponde, no descuenta (y no se manda con el pedido),
   // pero queda cargado por si cambia de medio de pago.

@@ -16,6 +16,7 @@ export default function PrivacidadPage() {
   return (
     <LegalPage
       title="Política de privacidad"
+      updated="23 de noviembre de 2026"
       other={{ href: '/terminos', label: 'Términos y condiciones' }}
       intro={
         <p>
@@ -42,6 +43,12 @@ export default function PrivacidadPage() {
               <li>
                 <strong className="font-semibold text-gray-900">Cuando nos dejás una consulta, una oferta o un encargo:</strong>{' '}
                 tu teléfono y lo que nos escribas, y tu nombre si lo ponés.
+              </li>
+              <li>
+                <strong className="font-semibold text-gray-900">Si dejás tu WhatsApp para recibir un cupón:</strong> tu
+                teléfono y qué cupón te dimos. Te escribimos con el cupón y, de vez en cuando, con novedades y
+                promociones de Tkicks. Para dejar de recibirlas respondé BAJA a cualquiera de esos mensajes y
+                borramos tu número de la lista.
               </li>
               <li>
                 <strong className="font-semibold text-gray-900">Si empezás una compra y no la terminás:</strong> guardamos
@@ -71,6 +78,7 @@ export default function PrivacidadPage() {
             <LegalList>
               <li>Preparar, cobrar, facturar y entregar tu pedido.</li>
               <li>Escribirte por WhatsApp o email sobre tu compra, tu consulta o tu encargo.</li>
+              <li>Mandarte cupones, novedades y promociones, solo si nos dejaste tu número para eso.</li>
               <li>Prevenir fraudes en los pagos con tarjeta.</li>
               <li>Entender cómo se usa la web para mejorarla, y medir cómo funcionan nuestros anuncios.</li>
             </LegalList>
@@ -90,6 +98,7 @@ export default function PrivacidadPage() {
                 <li>
                   Meta (Instagram y Facebook): la web usa su píxel, que registra tu visita para medir nuestros anuncios.
                 </li>
+                <li>WhatsApp (también de Meta), por donde te mandamos los mensajes a tu número.</li>
               </LegalList>
             </>
           ),
