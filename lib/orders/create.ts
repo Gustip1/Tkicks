@@ -1,4 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
+import { CouponItem } from '@/lib/coupons';
+import { checkCoupon, findCoupon } from '@/lib/orders/coupon';
 
 /**
  * Alta de un pedido: valida, toma el precio real de la base (nunca el del
@@ -137,11 +139,13 @@ export async function createOrder(
 
   // ── Stock disponible y precio real (de la base) de cada producto/talle ──
   const resolvedItems: ResolvedItem[] = [];
+  // Lo que el cupón necesita saber de cada producto (categoría, marca, si está en oferta)
+  const couponItems: CouponItem[] = [];
 
   for (const item of body.items) {
     const { data: variant, error: varErr } = await supabase
       .from('product_variants')
-      .select('id, stock, products(price, sale_price, title, slug, active)')
+      .select('id, stock, products(price, sale_price, title, slug, active, category, brand)')
       .eq('product_id', item.productId)
       .eq('size', item.size)
       .single();
@@ -165,18 +169,39 @@ export async function createOrder(
       quantity: item.quantity,
       price: Number(product.sale_price ?? product.price),
     });
+    couponItems.push({
+      price: Number(product.sale_price ?? product.price),
+      quantity: item.quantity,
+      category: product.category ?? null,
+      brand: product.brand ?? null,
+      onSale: product.sale_price != null && Number(product.sale_price) > 0,
+    });
   }
 
   const grossSubtotal = resolvedItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
 
-  // ── Cupón (opcional): valida vigencia y máximo de usos y consume un uso, todo junto ──
+  // ── Cupón (opcional) ──
+  // Primero las condiciones (compra mínima, marcas, medio de pago, si el cliente
+  // ya lo usó…) con las mismas reglas que la vista previa del checkout. Después
+  // la base revisa vigencia y máximo de usos y consume un uso, todo junto y con
+  // la fila bloqueada: dos compras a la vez no se llevan el último uso las dos.
   let discountAmount = 0;
   let appliedCouponCode: string | null = null;
 
   if (body.couponCode && body.couponCode.trim()) {
+    const coupon = await findCoupon(supabase, body.couponCode);
+    if (!coupon) return fail(400, 'Cupón no encontrado');
+
+    const check = await checkCoupon(supabase, coupon, {
+      items: couponItems,
+      paymentMethod: body.paymentMethod,
+      customer: { email: body.contact.email, document: body.contact.document },
+    });
+    if (!check.ok) return fail(400, check.reason);
+
     const { data: redeemData, error: redeemErr } = await supabase.rpc('redeem_discount_code', {
-      p_code: body.couponCode.trim(),
-      p_subtotal: grossSubtotal,
+      p_code: coupon.code,
+      p_subtotal: check.eligibleSubtotal,
     });
     const redeemRow = Array.isArray(redeemData) ? redeemData[0] : redeemData;
 
@@ -184,8 +209,8 @@ export async function createOrder(
       return fail(400, redeemRow?.reason || 'No se pudo aplicar el cupón');
     }
 
-    discountAmount = Number(redeemRow.discount_amount);
-    appliedCouponCode = body.couponCode.trim().toUpperCase();
+    discountAmount = Math.min(check.discount, grossSubtotal);
+    appliedCouponCode = coupon.code;
   }
 
   const subtotal = grossSubtotal - discountAmount;

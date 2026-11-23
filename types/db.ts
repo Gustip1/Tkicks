@@ -98,6 +98,22 @@ export interface DiscountCode {
   max_uses: number | null;
   used_count: number;
   created_at: string;
+  // Condiciones (supabase/migration-cupones-reglas.sql). Todas opcionales:
+  // sin la migración no vienen y el cupón se comporta como los de antes.
+  /** Compra mínima en USD, sobre los productos a los que aplica */
+  min_subtotal?: number | null;
+  /** Tope del descuento en USD (solo porcentaje) */
+  max_discount?: number | null;
+  once_per_customer?: boolean;
+  first_purchase_only?: boolean;
+  /** No descuenta sobre productos que ya están en oferta */
+  exclude_sale?: boolean;
+  applies_category?: 'sneakers' | 'streetwear' | null;
+  /** slugs de marcas; vacío o null = todas */
+  applies_brands?: string[] | null;
+  payment_scope?: 'transfer_cash' | 'card' | null;
+  /** Nota interna: para quién o para qué es. No la ve el cliente */
+  note?: string | null;
 }
 
 /* ────────────── Orders ────────────── */

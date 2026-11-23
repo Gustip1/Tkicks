@@ -10,6 +10,7 @@ import { useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { getCardSurchargeRate } from '@/lib/promo';
 import { trackEvent } from '@/lib/analytics/track';
+import { PAYMENT_SCOPE_LABELS, paymentGroup } from '@/lib/coupons';
 import { CardPayment, CardToken, ProvinceSelect } from '@/components/checkout/CardPayment';
 import { TransferInstructions } from '@/components/checkout/TransferInstructions';
 import { closeCheckoutLead, saveLead, waLink } from '@/lib/contact';
@@ -202,7 +203,14 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
   const [couponInput, setCouponInput] = useState('');
   const [couponValidating, setCouponValidating] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
-  const discountAmount = Math.min(checkout.appliedDiscount?.amount ?? 0, subtotalUSD);
+  // Un cupón puede valer solo con transferencia/efectivo o solo con tarjeta: si
+  // el medio elegido no corresponde, no descuenta (y no se manda con el pedido),
+  // pero queda cargado por si cambia de medio de pago.
+  const couponScope = checkout.appliedDiscount?.paymentScope ?? null;
+  const chosenPaymentGroup = paymentGroup(checkout.paymentMethod);
+  const couponBlocked = !!couponScope && !!chosenPaymentGroup && chosenPaymentGroup !== couponScope;
+  const activeCouponCode = couponBlocked ? null : checkout.appliedDiscount?.code ?? null;
+  const discountAmount = couponBlocked ? 0 : Math.min(checkout.appliedDiscount?.amount ?? 0, subtotalUSD);
   const discountedSubtotalUSD = subtotalUSD - discountAmount;
 
   const handleApplyCoupon = async () => {
@@ -214,7 +222,14 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, subtotal: subtotalUSD }),
+        body: JSON.stringify({
+          code,
+          subtotal: subtotalUSD,
+          // Con el carrito el servidor sabe a qué productos aplica (marca, categoría, ofertas)
+          items: cart.items.map((it) => ({ productId: it.productId, quantity: it.quantity })),
+          email: checkout.contact.email || null,
+          document: checkout.contact.document || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -227,6 +242,9 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
         type: data.type,
         value: data.value,
         amount: data.discountAmount,
+        paymentScope: data.paymentScope ?? null,
+        headline: data.headline,
+        partial: !!data.partial,
       });
     } catch {
       setCouponError('Error de conexión. Intentá de nuevo.');
@@ -348,7 +366,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
           paymentMethod: checkout.paymentMethod,
           contact: checkout.contact,
           address: checkout.fulfillment === 'shipping' ? checkout.address : null,
-          couponCode: checkout.appliedDiscount?.code ?? null,
+          couponCode: activeCouponCode,
         }),
       });
 
@@ -479,7 +497,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
           paymentMethod: 'card',
           contact: checkout.contact,
           address: checkout.fulfillment === 'shipping' ? checkout.address : null,
-          couponCode: checkout.appliedDiscount?.code ?? null,
+          couponCode: activeCouponCode,
           card: { ...card, installments, totalArs: shownArs },
         }),
       });
@@ -1237,16 +1255,29 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
               {/* Cupón de descuento */}
               <div className="border-t border-gray-200 pt-3">
                 {checkout.appliedDiscount ? (
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-3 py-2">
-                    <span className="text-xs font-black text-white">
-                      Cupón {checkout.appliedDiscount.code} aplicado
-                    </span>
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="text-xs font-bold text-white underline hover:text-gray-300"
-                    >
-                      Quitar
-                    </button>
+                  <div className="space-y-1.5">
+                    <div className={cn('flex items-center justify-between gap-2 rounded-lg px-3 py-2', couponBlocked ? 'bg-gray-100' : 'bg-gray-900')}>
+                      <span className={cn('min-w-0 text-xs font-black', couponBlocked ? 'text-gray-500' : 'text-white')}>
+                        Cupón {checkout.appliedDiscount.code} {couponBlocked ? 'sin aplicar' : 'aplicado'}
+                      </span>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className={cn('-my-2 shrink-0 py-2 text-xs font-bold underline', couponBlocked ? 'text-gray-700' : 'text-white hover:text-gray-300')}
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                    {couponBlocked && couponScope ? (
+                      <p role="status" className="text-xs font-bold text-red-600">
+                        Este cupón vale solo pagando con {PAYMENT_SCOPE_LABELS[couponScope]}. Con el medio de pago que elegiste no descuenta.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        {checkout.appliedDiscount.headline}
+                        {checkout.appliedDiscount.partial ? ' en los productos que participan' : ''}
+                        {couponScope ? ` · pagando con ${PAYMENT_SCOPE_LABELS[couponScope]}` : ''}
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-1.5">

@@ -9,6 +9,12 @@ export interface AppliedDiscount {
   type: 'percent' | 'fixed';
   value: number;
   amount: number;
+  /** Si el cupón vale solo con un medio de pago */
+  paymentScope?: 'transfer_cash' | 'card' | null;
+  /** "10% de descuento, hasta US$ 30" */
+  headline?: string;
+  /** Descuenta solo sobre parte del carrito (por marca, categoría u ofertas) */
+  partial?: boolean;
 }
 
 export interface CheckoutState {

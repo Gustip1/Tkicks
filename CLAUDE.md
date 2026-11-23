@@ -27,6 +27,7 @@ nombre (`/apple-design`, etc.) o si hace falta un detalle que acá no está.
 - Curvas: `var(--ease-out)` entradas/UI, `var(--ease-in-out)` movimiento en pantalla, `var(--ease-drawer)` paneles; `ease-apple` en Tailwind.
 - Material: `material-nav` (vidrio claro de la barra, como apple.com; menús desplegables en `#fafafc`). Gesto: `lib/useSwipeToDismiss.ts` (paneles que se cierran con el dedo). `lib/haptics.ts` (vibración en momentos clave).
 - `TouchFeedback` hace funcionar `:active` en iPhone; no sacarlo.
+- Cupones: las reglas viven en un solo lugar, `lib/coupons.ts` (`evaluateCoupon`, `couponSummary`); lo usan la vista previa del checkout, el alta del pedido (`lib/orders/coupon.ts`) y el panel. Una condición nueva se agrega ahí, con su test, no en cada pantalla. Las fechas van en hora argentina (`dayStartAR`/`dayEndAR`).
 - Popups: siempre `components/ui/Sheet.tsx` (hoja desde abajo en celular, tarjeta centrada en escritorio, fondo desenfocado, foco adentro, se cierra deslizando). Sin `onClose` es bloqueante. Avisos flotantes (pistas del sorteo): tarjeta blanca sólida de 18px con sombra suave. Nunca degradés, brillos ni emojis; nunca inventar datos (ej.: ciudad de una venta).
 
 ## Movimiento (Emil + Apple)
