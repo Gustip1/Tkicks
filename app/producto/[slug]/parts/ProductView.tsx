@@ -18,7 +18,8 @@ import { Ars, useDolarRate } from '@/components/DolarRateProvider';
 import { useInstallmentsPromo } from '@/components/InstallmentsPromoProvider';
 import { useComingSoon } from '@/components/ComingSoonProvider';
 import { GiveawayInlinePriceClue, getProductClueInfo } from '@/components/giveaway/GiveawayClue';
-import { Shield, ShieldCheck, Truck, Banknote, CreditCard } from 'lucide-react';
+import { Eye, Shield, ShieldCheck, Truck, Banknote, CreditCard } from 'lucide-react';
+import type { ProductViews } from '@/lib/productViews';
 import { getCardPriceMultiplier } from '@/lib/promo';
 import { extractFromDescription, garmentKind, parseSizeGuide } from '@/lib/sizeGuide';
 
@@ -36,12 +37,15 @@ export function ProductView({
   variants,
   offersEnabled,
   reviews = [],
+  views = null,
 }: {
   product: Product;
   variants: ProductVariant[];
   offersEnabled: boolean;
   /** Opiniones reales cargadas en /admin/opiniones */
   reviews?: Review[];
+  /** Visitas reales de la ficha; null si son pocas para mostrarlas */
+  views?: ProductViews | null;
 }) {
   // Queda en "vistos recientemente" de este dispositivo
   const see = useRecentStore((st) => st.see);
@@ -126,6 +130,16 @@ export function ProductView({
           {description && (
             <p className="t-body text-gray-600 whitespace-pre-wrap">
               {description}
+            </p>
+          )}
+
+          {/* Cuántas personas la vieron: dato real de las visitas, solo si suma */}
+          {views && (
+            <p className="flex items-center gap-1.5 t-caption text-gray-600">
+              <Eye className="h-4 w-4 shrink-0 text-gray-900" aria-hidden />
+              <span>
+                <strong className="font-semibold text-gray-900 tabular-nums">{views.count} personas</strong> lo vieron {views.period}
+              </span>
             </p>
           )}
 

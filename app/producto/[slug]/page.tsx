@@ -6,6 +6,7 @@ import { SITE_URL as SITE } from '@/lib/site';
 import { ProductView } from './parts/ProductView';
 import type { Review } from '@/components/landing/Reviews';
 import { ProductGone } from './parts/ProductGone';
+import { ProductViews, summarizeViews, ViewRow, VIEWS_WINDOW_MS } from '@/lib/productViews';
 
 /**
  * Ficha de producto, resuelta en el servidor.
@@ -30,6 +31,30 @@ function db() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     auth: { persistSession: false },
   });
+}
+
+/**
+ * Cuántas personas vieron la ficha (lib/productViews.ts). La tabla de visitas
+ * no es pública: se lee con la clave del servidor. Si falla o falta la clave,
+ * la ficha se muestra igual, sin contador.
+ */
+async function getViews(slug: string): Promise<ProductViews | null> {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return null;
+  try {
+    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { persistSession: false } });
+    const { data, error } = await admin
+      .from('analytics_visits')
+      .select('session_id, visitor_id, created_at')
+      .eq('page_path', `/producto/${slug}`)
+      .gte('created_at', new Date(Date.now() - VIEWS_WINDOW_MS).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(3000);
+    if (error) return null;
+    return summarizeViews((data ?? []) as ViewRow[]);
+  } catch {
+    return null;
+  }
 }
 
 /** Una sola consulta por visita aunque la usen la metadata y la página. */
@@ -104,6 +129,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   const { product, variants, brandName, offersEnabled, reviews } = data;
   const inStock = variants.some((v) => Number(v.stock) > 0);
+  // Solo si se puede comprar: en un agotado el contador no suma nada
+  const views = inStock ? await getViews(product.slug) : null;
 
   // Datos estructurados: le dicen a Google qué es, cuánto sale y si hay stock
   const jsonLd = {
@@ -132,7 +159,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         // JSON.stringify ya escapa comillas; se escapa "<" para que ningún texto cierre la etiqueta
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
-      <ProductView product={product} variants={variants} offersEnabled={offersEnabled} reviews={reviews} />
+      <ProductView product={product} variants={variants} offersEnabled={offersEnabled} reviews={reviews} views={views} />
     </>
   );
 }
