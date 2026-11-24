@@ -233,11 +233,12 @@ export function ProductCard({ product, size = 'normal', priority = false }: Prod
               <QuickAdd product={product} price={activePrice} />
             </div>
           )}
-          {/* Visitas reales, sobre la foto: llega después de cargar la página y acá
-              no mueve nada (una línea más en el texto empujaría toda la grilla) */}
+          {/* Visitas reales, sobre la foto y arriba a la izquierda (pedido del dueño),
+              a la altura del corazón. Llega después de cargar la página y acá no
+              mueve nada (una línea más en el texto empujaría toda la grilla) */}
           {views && !isSoldOut && (
             <p
-              className="views-pill absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 inline-flex h-7 items-center gap-1 rounded-full bg-white/90 px-2.5 text-[12px] font-semibold tabular-nums text-[#1d1d1f] backdrop-blur-md"
+              className="views-pill absolute top-2.5 left-1.5 sm:top-4 sm:left-3 inline-flex h-7 items-center gap-1 rounded-full bg-white/90 px-2.5 text-[12px] font-semibold tabular-nums text-[#1d1d1f] backdrop-blur-md"
               title={`${views.count} personas lo vieron ${views.period}`}
             >
               <Eye className="h-3.5 w-3.5" aria-hidden />

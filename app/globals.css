@@ -807,7 +807,7 @@ img {
 /* La píldora de visitas de la tarjeta llega después de cargar: aparece con un fundido */
 .views-pill { animation: tk-fade 240ms var(--ease-out) both; }
 /* En las tarjetas angostas de los carruseles la palabra "vistas" se pisaba con
-   el botón de agregar: ahí queda el ojo con el número */
+   el corazón: ahí queda el ojo con el número */
 .card-media-layer { container-type: inline-size; }
 @container (max-width: 150px) { .views-word { display: none; } }
 @keyframes tk-page-in {
