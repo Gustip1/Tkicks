@@ -40,3 +40,18 @@ describe('summarizeViews', () => {
     expect(summarizeViews(rows, NOW)).toEqual({ count: 5, period: 'en los últimos 7 días' });
   });
 });
+
+import { summarizeAllViews } from '@/lib/productViews';
+
+describe('summarizeAllViews', () => {
+  it('agrupa por producto y deja afuera los que tienen pocas visitas', () => {
+    const at = new Date(NOW - 2 * DAY).toISOString();
+    const rows = [
+      ...Array.from({ length: 6 }, (_, i) => ({ session_id: `a${i}`, visitor_id: `a${i}`, created_at: at, page_path: '/producto/zapa-uno' })),
+      ...Array.from({ length: 2 }, (_, i) => ({ session_id: `b${i}`, visitor_id: `b${i}`, created_at: at, page_path: '/producto/zapa-dos' })),
+      { session_id: 'c', visitor_id: 'c', created_at: at, page_path: '/productos' },
+      { session_id: 'd', visitor_id: 'd', created_at: at, page_path: '/producto/zapa-uno?ref=ig' },
+    ];
+    expect(summarizeAllViews(rows, NOW)).toEqual({ 'zapa-uno': { count: 7, period: 'en los últimos 7 días' } });
+  });
+});

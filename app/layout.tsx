@@ -11,6 +11,7 @@ import { RouteTransitions } from '@/components/RouteTransitions';
 import { DolarRateProvider } from '@/components/DolarRateProvider';
 import { InstallmentsPromoProvider } from '@/components/InstallmentsPromoProvider';
 import { ComingSoonProvider } from '@/components/ComingSoonProvider';
+import { ProductViewsProvider } from '@/components/ProductViewsProvider';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 import { GiveawayClue } from '@/components/giveaway/GiveawayClue';
 import { PromoModal } from '@/components/promo/PromoModal';
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AccountNoticeProvider>
           <InstallmentsPromoProvider>
             <ComingSoonProvider>
+            <ProductViewsProvider>
             <AnalyticsProvider>
               {/* Para quien navega con teclado: saltea el menú y va directo al contenido */}
               <a
@@ -119,6 +121,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <TouchFeedback />
               <StaleDeployReload />
             </AnalyticsProvider>
+            </ProductViewsProvider>
             </ComingSoonProvider>
           </InstallmentsPromoProvider>
           </AccountNoticeProvider>

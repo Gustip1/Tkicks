@@ -48,3 +48,34 @@ export function summarizeViews(rows: ViewRow[], now: number = Date.now()): Produ
   }
   return null;
 }
+
+/** slug de la ficha a partir de la página visitada ("/producto/mi-slug") */
+function slugOf(path: string): string | null {
+  const m = /^\/producto\/([^/?#]+)/.exec(path || '');
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
+    return m[1];
+  }
+}
+
+/**
+ * Lo mismo para todo el catálogo de una vez: slug → visitas. Solo entran los
+ * productos con un número que valga; lo usan las tarjetas.
+ */
+export function summarizeAllViews(rows: (ViewRow & { page_path: string })[], now: number = Date.now()): Record<string, ProductViews> {
+  const bySlug = new Map<string, ViewRow[]>();
+  for (const r of rows) {
+    const slug = slugOf(r.page_path);
+    if (!slug) continue;
+    if (!bySlug.has(slug)) bySlug.set(slug, []);
+    bySlug.get(slug)!.push(r);
+  }
+  const out: Record<string, ProductViews> = {};
+  for (const [slug, list] of bySlug) {
+    const views = summarizeViews(list, now);
+    if (views) out[slug] = views;
+  }
+  return out;
+}

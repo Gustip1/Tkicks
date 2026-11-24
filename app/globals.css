@@ -804,6 +804,12 @@ img {
 /* Entrada al navegar entre páginas (RouteTransitions). Nunca en la primera
    carga: ahí el contenido tiene que verse apenas llega el HTML. */
 .page-enter { animation: tk-page-in 220ms var(--ease-out) both; }
+/* La píldora de visitas de la tarjeta llega después de cargar: aparece con un fundido */
+.views-pill { animation: tk-fade 240ms var(--ease-out) both; }
+/* En las tarjetas angostas de los carruseles la palabra "vistas" se pisaba con
+   el botón de agregar: ahí queda el ojo con el número */
+.card-media-layer { container-type: inline-size; }
+@container (max-width: 150px) { .views-word { display: none; } }
 @keyframes tk-page-in {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
 }
