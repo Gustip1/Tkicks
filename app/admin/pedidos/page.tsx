@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { isPdf } from '@/lib/images/prepareProof';
 
 interface OrderItem {
   id: string;
@@ -75,6 +76,11 @@ export default function AdminOrdersPage() {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [proofModal, setProofModal] = useState<string | null>(null);
+  // Un PDF no se puede mostrar como imagen: se abre en otra pestaña
+  const openProof = (url: string) => {
+    if (isPdf(url)) window.open(url, '_blank', 'noopener');
+    else setProofModal(url);
+  };
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   const loadOrders = useCallback(async () => {
@@ -279,13 +285,17 @@ export default function AdminOrdersPage() {
                             {paymentStatusLabels[order.payment_status] || order.payment_status}
                           </span>
                         )}
-                        {order.payment_proof_url && (
+                        {order.payment_proof_url ? (
                           <button
-                            onClick={() => setProofModal(order.payment_proof_url)}
-                            className="block mt-1 text-[10px] text-blue-600 hover:text-blue-800 font-semibold underline"
+                            onClick={() => openProof(order.payment_proof_url!)}
+                            className="block mt-1 text-[11px] text-blue-600 hover:text-blue-800 font-semibold underline"
                           >
-                            📄 Ver comprobante
+                            Ver comprobante
                           </button>
+                        ) : (
+                          order.payment_method === 'crypto_transfer' && (
+                            <span className="block mt-1 text-[11px] text-gray-400">Sin comprobante</span>
+                          )
                         )}
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
@@ -411,15 +421,19 @@ export default function AdminOrdersPage() {
                   </Link>
                   
                   {/* Payment proof quick action */}
-                  {order.payment_proof_url && (
+                  {order.payment_proof_url ? (
                     <div className="px-4 pb-3">
                       <button
-                        onClick={() => setProofModal(order.payment_proof_url)}
-                        className="text-xs text-blue-600 font-semibold underline"
+                        onClick={() => openProof(order.payment_proof_url!)}
+                        className="-my-2 py-2 text-xs text-blue-600 font-semibold underline"
                       >
-                        📄 Ver comprobante de pago
+                        Ver comprobante de pago
                       </button>
                     </div>
+                  ) : (
+                    order.payment_method === 'crypto_transfer' && (
+                      <p className="px-4 pb-3 text-xs text-gray-400">Sin comprobante: se adjunta desde el detalle del pedido</p>
+                    )
                   )}
                   {(order.status === 'cancelled' || order.status === 'fulfilled') && (
                     <div className="px-4 pb-3">

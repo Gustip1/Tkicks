@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { PaymentProof } from '@/components/admin/PaymentProof';
 
 interface Order {
   id: string;
@@ -87,7 +88,6 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
   const [trackingNumber, setTrackingNumber] = useState('');
   const [trackingUrl, setTrackingUrl] = useState('');
   const [validating, setValidating] = useState(false);
-  const [proofModal, setProofModal] = useState(false);
 
   const loadOrderDetails = useCallback(async () => {
     setLoading(true);
@@ -321,27 +321,10 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
                 <PaywayDetails orderId={order.id} details={order.payment_details} />
               )}
 
-              {/* Payment proof */}
-              {order.payment_proof_url && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm font-semibold text-gray-700 mb-3">Comprobante de pago</p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setProofModal(true)}
-                      className="flex-1 py-2 rounded-lg bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
-                    >
-                      👁 Ver comprobante
-                    </button>
-                    <a
-                      href={order.payment_proof_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 text-center py-2 rounded-lg bg-gray-50 text-gray-700 text-sm font-semibold hover:bg-gray-100 transition-colors border border-gray-200"
-                    >
-                      ↗ Abrir en nueva pestaña
-                    </a>
-                  </div>
-                </div>
+              {/* Comprobante: se ve si existe y se puede adjuntar si llegó por WhatsApp.
+                  Con tarjeta no hace falta: el pago lo confirma Payway. */}
+              {order.payment_method !== 'card' && (
+                <PaymentProof orderId={order.id} url={order.payment_proof_url} onChanged={loadOrderDetails} />
               )}
 
               {/* Payment actions */}
@@ -484,45 +467,6 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
         </div>
       </div>
 
-      {/* Proof Modal */}
-      {proofModal && order.payment_proof_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="font-bold text-gray-900">Comprobante de pago</h3>
-              <button
-                onClick={() => setProofModal(false)}
-                className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4 flex justify-center">
-              <img
-                src={order.payment_proof_url}
-                alt="Comprobante de pago"
-                className="max-w-[280px] max-h-[400px] object-contain rounded-lg border border-gray-200"
-              />
-            </div>
-            <div className="p-4 pt-0 flex gap-2">
-              <a
-                href={order.payment_proof_url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 text-center py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Abrir en nueva pestaña
-              </a>
-              <button
-                onClick={() => setProofModal(false)}
-                className="flex-1 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

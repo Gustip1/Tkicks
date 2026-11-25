@@ -13,6 +13,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { PAYMENT_SCOPE_LABELS, paymentGroup } from '@/lib/coupons';
 import { CardPayment, CardToken, ProvinceSelect } from '@/components/checkout/CardPayment';
 import { TransferInstructions } from '@/components/checkout/TransferInstructions';
+import { uploadProof } from '@/lib/images/prepareProof';
 import { closeCheckoutLead, saveLead, waLink } from '@/lib/contact';
 import { CardInstallments, cardTotalArs, cardTotalUsd, CARD_BRAND_LABEL, cardBrandOf, canonicalProvince, surchargeLabel } from '@/lib/payments/card';
 import type { PaywayPublicConfig } from '@/lib/payments/payway';
@@ -399,10 +400,7 @@ export default function CheckoutClient({ payway }: { payway: PaywayPublicConfig 
 
       // Upload proof if provided (optional) — swallow errors so order success always shows
       if (checkout.paymentMethod === 'crypto_transfer' && proofFile) {
-        const fd = new FormData();
-        fd.append('file', proofFile);
-        fd.append('order_id', orderId);
-        await fetch('/api/upload-proof', { method: 'POST', body: fd }).catch(() => {});
+        await uploadProof(orderId, proofFile);
       }
 
       setCompletedOrderNumber(data.orderNumber || orderId.slice(0, 8));

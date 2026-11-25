@@ -4,6 +4,7 @@ import { Check, Copy, Upload } from 'lucide-react';
 import { formatARS } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics/track';
 import { haptic } from '@/lib/haptics';
+import { PROOF_ACCEPT, uploadProof } from '@/lib/images/prepareProof';
 
 export interface TransferAccount {
   aliasArs: string;
@@ -69,18 +70,18 @@ export function TransferInstructions({
   totalArs: number;
 }) {
   const [proof, setProof] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [proofError, setProofError] = useState('');
 
   const upload = async (file: File) => {
     setProof('uploading');
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('order_id', orderId);
-      const res = await fetch('/api/upload-proof', { method: 'POST', body: fd });
-      setProof(res.ok ? 'done' : 'error');
-      if (res.ok) trackEvent('transfer_proof_uploaded', 'ecommerce', { order: orderRef });
-    } catch {
+    const result = await uploadProof(orderId, file);
+    if (result.ok) {
+      setProof('done');
+      trackEvent('transfer_proof_uploaded', 'ecommerce', { order: orderRef });
+    } else {
+      setProofError(result.error);
       setProof('error');
+      trackEvent('transfer_proof_error', 'ecommerce', { order: orderRef, reason: result.error });
     }
   };
 
@@ -120,7 +121,9 @@ export function TransferInstructions({
 
       <div>
         <p className="text-[17px] font-semibold text-gray-900">Mandanos el comprobante</p>
-        <p className="mt-1 text-[14px] text-gray-500">Con el comprobante confirmamos el pago y preparamos tu pedido.</p>
+        <p className="mt-1 text-[14px] text-gray-500">
+          Con el comprobante confirmamos el pago y preparamos tu pedido. Sirve una captura, una foto o el PDF del banco.
+        </p>
         {proof === 'done' ? (
           <p className="mt-3 flex items-center gap-2 rounded-2xl bg-[#f5f5f7] p-4 text-[15px] font-semibold text-gray-900" role="status">
             <Check className="h-5 w-5 shrink-0" aria-hidden /> Comprobante recibido. Te avisamos cuando lo validemos.
@@ -132,11 +135,13 @@ export function TransferInstructions({
               {proof === 'uploading' ? 'Subiendo' : 'Subir comprobante'}
               <input
                 type="file"
-                accept="image/*"
+                accept={PROOF_ACCEPT}
                 className="sr-only"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) void upload(f);
+                  // Para poder elegir de nuevo el mismo archivo si falló
+                  e.target.value = '';
                 }}
               />
             </label>
@@ -151,7 +156,7 @@ export function TransferInstructions({
             </a>
             {proof === 'error' && (
               <p className="text-[14px] text-red-600" role="alert">
-                No pudimos subir la foto. Probá de nuevo o mandala por WhatsApp.
+                {proofError} También podés mandarlo por WhatsApp.
               </p>
             )}
           </div>

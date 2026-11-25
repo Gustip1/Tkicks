@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+// Los bancos y billeteras dan el comprobante como captura o como PDF
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+// Vercel corta los pedidos de más de ~4,5 MB; el navegador ya achica las fotos antes de mandarlas
+const MAX_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,9 +33,13 @@ export async function POST(req: NextRequest) {
     // Validar tipo MIME
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Tipo de archivo no permitido. Solo se aceptan imágenes (JPEG, PNG, WebP)' },
+        { error: 'Ese tipo de archivo no se puede subir. Mandá una foto, una captura o el PDF del comprobante.' },
         { status: 400 }
       );
+    }
+
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json({ error: 'El archivo es muy pesado. Probá con una captura de pantalla.' }, { status: 413 });
     }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
     // Verificar que la orden existe
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id')
+      .select('id, payment_status')
       .eq('id', orderId)
       .single();
 
@@ -56,7 +63,7 @@ export async function POST(req: NextRequest) {
     // Generar nombre de archivo seguro
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 15);
-    const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
     const path = `payment-proofs/${orderId}-${timestamp}-${randomStr}.${extension}`;
 
     const { error: upErr } = await supabase.storage.from('payment-proofs').upload(path, buffer, {
@@ -76,7 +83,9 @@ export async function POST(req: NextRequest) {
       .from('orders')
       .update({
         payment_proof_url: pub.publicUrl,
-        payment_status: 'pending'
+        // Un pago que ya se validó sigue validado: el comprobante puede adjuntarse
+        // después (el dueño lo sube desde el panel cuando le llega por WhatsApp)
+        ...((order as { payment_status?: string }).payment_status === 'validated' ? {} : { payment_status: 'pending' }),
       })
       .eq('id', orderId);
 
