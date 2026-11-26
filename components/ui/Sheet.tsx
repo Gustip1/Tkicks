@@ -31,6 +31,7 @@ export function Sheet({
   className,
   size = 'md',
   flushBottom = false,
+  tone = 'light',
 }: {
   open: boolean;
   onClose?: () => void;
@@ -42,6 +43,8 @@ export function Sheet({
   size?: 'md' | 'lg' | 'xl';
   /** El contenido trae su propio pie fijo con el margen de abajo (textos largos) */
   flushBottom?: boolean;
+  /** dark: hoja negra con texto claro, para las promos (Black Friday) */
+  tone?: 'light' | 'dark';
 }) {
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
@@ -194,7 +197,8 @@ export function Sheet({
         aria-describedby={describedBy}
         tabIndex={-1}
         className={cn(
-          'sheet-panel relative w-full bg-white text-gray-900 outline-none',
+          'sheet-panel relative w-full outline-none',
+          tone === 'dark' ? 'bg-black text-[#f5f5f7]' : 'bg-white text-gray-900',
           'rounded-t-[28px] sm:rounded-[28px] max-h-[92dvh] overflow-y-auto overscroll-contain',
           !flushBottom && 'pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-0',
           'shadow-[0_-8px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_24px_80px_rgba(0,0,0,0.22)]',
@@ -205,7 +209,7 @@ export function Sheet({
         {/* Manija: muestra que se puede deslizar (solo celular, solo si se puede cerrar) */}
         {dismissible && (
           <div data-sheet-handle className="sm:hidden flex justify-center pt-2.5 pb-1 touch-none">
-            <span className="h-[5px] w-9 rounded-full bg-gray-300" />
+            <span className={cn('h-[5px] w-9 rounded-full', tone === 'dark' ? 'bg-white/30' : 'bg-gray-300')} />
           </div>
         )}
         {dismissible && (
@@ -213,7 +217,10 @@ export function Sheet({
             type="button"
             onClick={() => onClose?.()}
             aria-label="Cerrar"
-            className="absolute right-3 top-3 z-10 hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900 active:scale-95"
+            className={cn(
+              'absolute right-3 top-3 z-10 hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors active:scale-95',
+              tone === 'dark' ? 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900'
+            )}
           >
             <X className="h-4 w-4" aria-hidden />
           </button>

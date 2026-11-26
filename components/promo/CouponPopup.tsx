@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Check, Copy } from 'lucide-react';
 import { Sheet, SheetHandleArea } from '@/components/ui/Sheet';
-import { PhoneField } from '@/components/contact/LeadSheet';
 import { rememberedPhone } from '@/lib/contact';
 import { validPhone } from '@/lib/leads';
 import { trackEvent } from '@/lib/analytics/track';
@@ -170,116 +169,162 @@ export function CouponPopup() {
 
   if (!content) return null;
 
+  const list = content.mode === 'list';
+
   return (
-    <Sheet open={open} onClose={dismiss} labelledBy={`${id}-title`} describedBy={`${id}-text`}>
+    <Sheet open={open} onClose={dismiss} labelledBy={`${id}-title`} describedBy={`${id}-text`} tone="dark">
       {result ? (
-        <div className="step-enter px-6 pb-2 pt-6 sm:px-8 sm:pb-8 sm:pt-9">
-          {result.delivery === 'later' ? (
+        <div className="step-enter px-6 pb-3 pt-6 sm:px-9 sm:pb-9 sm:pt-11">
+          {result.delivery === 'screen' ? (
             <>
-              <h2 id={`${id}-title`} className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
-                Listo, ya estás en la lista
-              </h2>
-              <p id={`${id}-text`} className="mt-2 text-[15px] leading-snug text-gray-600">
-                Te mandamos tu descuento por WhatsApp al {phone} o por email. Lo cargás en el checkout, antes de pagar.
-              </p>
-            </>
-          ) : result.delivery === 'whatsapp' ? (
-            <>
-              <h2 id={`${id}-title`} className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
-                Listo, ya te lo mandamos
-              </h2>
-              <p id={`${id}-text`} className="mt-2 text-[15px] leading-snug text-gray-600">
-                Te escribimos por WhatsApp al {phone} con tu cupón. Lo cargás en el checkout, antes de pagar.
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 id={`${id}-title`} className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
+              <h2 id={`${id}-title`} className="pr-10 text-[26px] sm:text-[30px] font-semibold leading-[1.1] tracking-[-0.02em] text-white">
                 Este es tu cupón
               </h2>
-              <p id={`${id}-text`} className="mt-2 text-[15px] leading-snug text-gray-600">
+              <p id={`${id}-text`} className="mt-2.5 text-[15px] leading-snug text-white/70">
                 {result.headline}. Lo cargás en el checkout, antes de pagar.
               </p>
               <button
                 type="button"
                 onClick={() => copy(result.code)}
-                className="mt-5 flex min-h-[64px] w-full items-center justify-between gap-3 rounded-[16px] bg-[#f5f5f7] px-5 text-left transition-transform duration-150 active:scale-[0.98]"
+                className="mt-5 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-[18px] bg-white/10 px-5 text-left transition-transform duration-150 active:scale-[0.98]"
               >
-                <span className="min-w-0 truncate font-mono text-[24px] font-semibold tracking-[0.04em] text-[#1d1d1f]">{result.code}</span>
-                <span className="flex shrink-0 items-center gap-1.5 text-[15px] text-primary" aria-live="polite">
+                <span className="min-w-0 truncate font-mono text-[24px] font-semibold tracking-[0.04em] text-white">{result.code}</span>
+                <span className="flex shrink-0 items-center gap-1.5 text-[15px] text-white/80" aria-live="polite">
                   {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
                   {copied ? 'Copiado' : 'Copiar'}
                 </span>
               </button>
-              {result.conditions.length > 0 && <p className="mt-3 text-[13px] leading-snug text-gray-500">{result.conditions.join(' · ')}</p>}
+              {result.conditions.length > 0 && <p className="mt-3 text-[13px] leading-snug text-white/50">{result.conditions.join(' · ')}</p>}
+            </>
+          ) : (
+            <>
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black">
+                <Check className="h-7 w-7" strokeWidth={2.5} aria-hidden />
+              </span>
+              <h2 id={`${id}-title`} className="mt-5 text-[26px] sm:text-[30px] font-semibold leading-[1.1] tracking-[-0.02em] text-white">
+                {result.delivery === 'later' ? 'Listo, ya estás en la lista' : 'Listo, ya te lo mandamos'}
+              </h2>
+              <p id={`${id}-text`} className="mt-2.5 text-[15px] leading-snug text-white/70">
+                {result.delivery === 'later'
+                  ? `Te mandamos tu descuento por WhatsApp al ${phone} o por email. Lo cargás en el checkout, antes de pagar.`
+                  : `Te escribimos por WhatsApp al ${phone} con tu cupón. Lo cargás en el checkout, antes de pagar.`}
+              </p>
             </>
           )}
-          <div className="mt-6">
-            <Link href="/productos" onClick={() => setOpen(false)} className="btn-apple w-full">
+          <div className="mt-7">
+            <Link href="/productos" onClick={() => setOpen(false)} className="promo-cta">
               Ver productos
             </Link>
           </div>
         </div>
       ) : (
         <form onSubmit={submit} noValidate>
-          <SheetHandleArea className="px-6 pt-5 sm:px-8 sm:pt-9">
-            <h2 id={`${id}-title`} className="pr-10 text-[24px] sm:text-[28px] font-semibold leading-tight tracking-[-0.015em]">
+          <SheetHandleArea className="px-6 pt-4 sm:px-9 sm:pt-11">
+            <h2 id={`${id}-title`} className="text-[26px] min-[380px]:text-[30px] sm:pr-8 sm:text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] text-white">
               {content.title}
             </h2>
-            <p id={`${id}-text`} className="mt-2 text-[15px] leading-snug text-gray-600">
+
+            {/* Los descuentos, en grande: es lo que hace que alguien deje sus datos */}
+            {content.highlights.length > 0 && (
+              <ul className={`mt-5 grid gap-2 ${content.highlights.length === 1 ? 'grid-cols-1' : content.highlights.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`} aria-label="Descuentos">
+                {content.highlights.map((h, i) => {
+                  const m = /^(US\$|\$)?\s*([\d.,]+)\s*(%)?$/.exec(h);
+                  const single = content.highlights.length === 1;
+                  return (
+                    <li
+                      key={h}
+                      style={{ ['--i' as string]: i }}
+                      className={`promo-tile flex flex-col items-center justify-center rounded-[20px] bg-white/[0.08] text-center ${single ? 'py-4 min-[380px]:py-6' : 'py-4'}`}
+                    >
+                      <span className="sr-only">{h} de descuento</span>
+                      <span aria-hidden className="flex items-start justify-center font-semibold leading-none tracking-[-0.04em] text-white tabular-nums">
+                        {m?.[1] && <span className={`mr-0.5 font-semibold tracking-normal text-white/60 ${single ? 'mt-2 text-[20px]' : 'mt-1 text-[13px]'}`}>{m[1]}</span>}
+                        <span className={single ? 'text-[60px] min-[380px]:text-[80px]' : 'text-[46px]'}>{m ? m[2] : h}</span>
+                        {m?.[3] && <span className={single ? 'mt-2 text-[34px]' : 'mt-1 text-[22px]'}>%</span>}
+                      </span>
+                      <span aria-hidden className="mt-1.5 text-[12px] text-white/55">
+                        de descuento
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <p id={`${id}-text`} className="mt-4 text-[16px] leading-snug text-white/75">
               {content.text}
             </p>
-            {content.conditions.length > 0 && <p className="mt-2 text-[13px] leading-snug text-gray-500">{content.conditions.join(' · ')}</p>}
+            {content.conditions.length > 0 && <p className="mt-1.5 text-[13px] leading-snug text-white/50">{content.conditions.join(' · ')}</p>}
           </SheetHandleArea>
 
-          <div className="px-6 pb-2 pt-5 sm:px-8 sm:pb-8">
-            {content.mode === 'list' && (
-              <div className="mb-4">
-                <label htmlFor={`${id}-email`} className="block text-[13px] font-semibold text-gray-900">
-                  Tu email
+          <div className="px-6 pb-2 pt-4 sm:px-9 sm:pb-9">
+            <div className="space-y-2.5">
+              {list && (
+                <div>
+                  <label htmlFor={`${id}-email`} className="sr-only">
+                    Tu email
+                  </label>
+                  <input
+                    id={`${id}-email`}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Tu email"
+                    aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? `${id}-email-error` : undefined}
+                    className="promo-field"
+                  />
+                  {emailError && (
+                    <p id={`${id}-email-error`} className="mt-1.5 text-[13px] text-[#ff6961]">
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+              )}
+              <div>
+                <label htmlFor={`${id}-phone`} className="sr-only">
+                  Tu WhatsApp
                 </label>
                 <input
-                  id={`${id}-email`}
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nombre@gmail.com"
-                  aria-invalid={Boolean(emailError)}
-                  aria-describedby={emailError ? `${id}-email-error` : undefined}
-                  className={`mt-1.5 h-12 w-full rounded-[12px] border bg-white px-4 text-[17px] text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-4 focus:ring-primary/10 ${
-                    emailError ? 'border-red-500' : 'border-gray-200 focus:border-primary'
-                  }`}
+                  id={`${id}-phone`}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Tu WhatsApp, con característica"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? `${id}-phone-error` : undefined}
+                  className="promo-field tabular-nums"
                 />
-                {emailError && (
-                  <p id={`${id}-email-error`} className="mt-1.5 text-[13px] text-red-600">
-                    {emailError}
+                {error && (
+                  <p id={`${id}-phone-error`} className="mt-1.5 text-[13px] text-[#ff6961]">
+                    {error}
                   </p>
                 )}
               </div>
-            )}
-            <PhoneField id={`${id}-phone`} value={phone} onChange={setPhone} error={error} />
-            <div className="mt-5 flex flex-col gap-1">
-              <button type="submit" disabled={sending} className="btn-apple w-full disabled:opacity-60">
-                {sending ? 'Enviando…' : content.mode === 'list' ? 'Quiero mi descuento' : 'Quiero mi cupón'}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-1">
+              <button type="submit" disabled={sending} className="promo-cta">
+                {sending ? 'Enviando…' : list ? 'Quiero mi descuento' : 'Quiero mi cupón'}
               </button>
               <button
                 type="button"
                 onClick={dismiss}
-                className="min-h-[44px] w-full rounded-full text-[17px] text-primary transition-colors hover:bg-gray-50 active:scale-[0.98]"
+                className="min-h-[44px] w-full rounded-full text-[16px] text-white/70 transition-colors hover:text-white active:scale-[0.98]"
               >
                 Ahora no
               </button>
             </div>
-            <p className="mt-3 text-center text-[12px] leading-snug text-gray-500">
-              {content.mode === 'list'
-                ? 'Te escribimos por WhatsApp o por email con tu descuento y las novedades de Tkicks.'
-                : 'Te escribimos por WhatsApp con el cupón y las novedades de Tkicks.'}{' '}
-              Podés pedir la baja cuando quieras.{' '}
+            <p className="mt-1 text-center text-[12px] leading-snug text-white/45">
+              {list ? 'Te escribimos por WhatsApp o email con tu descuento y novedades.' : 'Te escribimos por WhatsApp con el cupón y novedades.'} Podés pedir la baja
+              cuando quieras.{' '}
               <Link href="/privacidad" onClick={() => setOpen(false)} className="underline">
                 Privacidad
               </Link>

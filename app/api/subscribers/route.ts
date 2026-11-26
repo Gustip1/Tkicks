@@ -4,7 +4,7 @@ import { leadLimiter } from '@/lib/security/rate-limiter';
 import { getClientIp } from '@/lib/security/get-client-ip';
 import { toWhatsAppNumber, validPhone } from '@/lib/leads';
 import { couponStatus, couponSummary } from '@/lib/coupons';
-import { COUPON_POPUP_KEY, couponTemplateParams, CouponPopupPublic, LIST_POPUP_FALLBACK_TITLE, parseCouponPopup, validEmail } from '@/lib/couponPopup';
+import { COUPON_POPUP_KEY, couponTemplateParams, CouponPopupPublic, extractHighlights, LIST_POPUP_FALLBACK_TITLE, parseCouponPopup, validEmail } from '@/lib/couponPopup';
 import { sendTemplate, whatsappConfig } from '@/lib/whatsapp';
 import type { DiscountCode } from '@/types/db';
 
@@ -42,7 +42,7 @@ async function popupCoupon(supabase: SupabaseClient) {
   return { coupon, brandNames, headline: summary.headline, conditions };
 }
 
-const OFF: CouponPopupPublic = { enabled: false, mode: 'coupon', title: '', text: '', delaySeconds: 0, conditions: [] };
+const OFF: CouponPopupPublic = { enabled: false, mode: 'coupon', highlights: [], title: '', text: '', delaySeconds: 0, conditions: [] };
 
 /**
  * Lo que el popup necesita para mostrarse. Nunca incluye el código: eso se
@@ -54,11 +54,21 @@ export async function GET() {
   if (supabase) {
     const settings = await readSettings(supabase);
     if (settings.enabled && settings.mode === 'list') {
-      body = { enabled: true, mode: 'list', title: settings.title || LIST_POPUP_FALLBACK_TITLE, text: settings.text, delaySeconds: settings.delaySeconds, conditions: [] };
+      const { highlights, rest } = extractHighlights(settings.text);
+      body = { enabled: true, mode: 'list', highlights, title: settings.title || LIST_POPUP_FALLBACK_TITLE, text: rest, delaySeconds: settings.delaySeconds, conditions: [] };
     } else if (settings.enabled) {
       const popup = await popupCoupon(supabase);
       if (popup) {
-        body = { enabled: true, mode: 'coupon', title: settings.title || popup.headline, text: settings.text, delaySeconds: settings.delaySeconds, conditions: popup.conditions };
+        const c = popup.coupon;
+        body = {
+          enabled: true,
+          mode: 'coupon',
+          highlights: [c.type === 'percent' ? `${Number(c.value)}%` : `US$ ${Number(c.value)}`],
+          title: settings.title || popup.headline,
+          text: settings.text,
+          delaySeconds: settings.delaySeconds,
+          conditions: popup.conditions,
+        };
       }
     }
   }

@@ -34,8 +34,11 @@ export const DEFAULT_COUPON_POPUP: CouponPopupSettings = {
   mode: 'coupon',
   title: '',
   text: 'Dejanos tu WhatsApp y te mandamos el cupón.',
-  delaySeconds: 15,
+  delaySeconds: 4,
 };
+
+/** La espera por defecto de la primera versión: resultó larga (el dueño lo notó) */
+const OLD_DEFAULT_DELAY = 15;
 
 /** Textos sugeridos al pasar a modo lista (el dueño los puede cambiar) */
 export const LIST_POPUP_TEXTS = {
@@ -56,14 +59,37 @@ export function parseCouponPopup(value: unknown): CouponPopupSettings {
     mode: v.mode === 'list' ? 'list' : 'coupon',
     title: typeof v.title === 'string' ? v.title.trim().slice(0, 80) : '',
     text: typeof v.text === 'string' && v.text.trim() ? v.text.trim().slice(0, 200) : DEFAULT_COUPON_POPUP.text,
-    delaySeconds: Number.isFinite(delay) ? Math.min(120, Math.max(3, Math.round(delay))) : DEFAULT_COUPON_POPUP.delaySeconds,
+    // Quien guardó la espera vieja por defecto (15 s) pasa a la nueva (4 s)
+    delaySeconds:
+      Number.isFinite(delay) && Math.round(delay) !== OLD_DEFAULT_DELAY ? Math.min(60, Math.max(2, Math.round(delay))) : DEFAULT_COUPON_POPUP.delaySeconds,
   };
 }
 
 /** Lo que el popup muestra antes de que dejen el número (nunca el código) */
+/**
+ * Los descuentos que el popup muestra en grande. En modo lista salen del
+ * texto que escribió el dueño ("Hay descuentos de 5, 10 y 15 USD. Dejanos…"
+ * → US$ 5, US$ 10, US$ 15) y esa primera frase no se repite debajo.
+ */
+export function extractHighlights(text: string): { highlights: string[]; rest: string } {
+  const clean = String(text || '').trim();
+  const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const first = sentences[0] ?? '';
+  const usd = /US\$|USD|u\$s|d[oó]lares/i.test(first);
+  const pct = /%|por ciento/i.test(first);
+  const numbers = (first.match(/\d+(?:[.,]\d+)?/g) ?? []).slice(0, 3);
+  if (numbers.length === 0 || (!usd && !pct)) return { highlights: [], rest: clean };
+  const highlights = numbers.map((n) => (usd ? `US$ ${n}` : `${n}%`));
+  // Si era la única frase se deja: el popup no puede quedar sin explicación
+  const rest = sentences.length > 1 ? sentences.slice(1).join(' ') : clean;
+  return { highlights, rest };
+}
+
 export interface CouponPopupPublic {
   enabled: boolean;
   mode: CouponPopupMode;
+  /** "US$ 5", "US$ 10" o "10%": van en grande arriba */
+  highlights: string[];
   title: string;
   text: string;
   delaySeconds: number;

@@ -39,11 +39,11 @@ describe('mensaje del cupón', () => {
 
 describe('parseCouponPopup', () => {
   it('apagado y con textos por defecto si no hay nada guardado', () => {
-    expect(parseCouponPopup(null)).toEqual({ enabled: false, mode: 'coupon', title: '', text: 'Dejanos tu WhatsApp y te mandamos el cupón.', delaySeconds: 15 });
+    expect(parseCouponPopup(null)).toEqual({ enabled: false, mode: 'coupon', title: '', text: 'Dejanos tu WhatsApp y te mandamos el cupón.', delaySeconds: 4 });
   });
   it('acota la espera y solo prende con true', () => {
-    expect(parseCouponPopup({ enabled: 'si', delaySeconds: 999 })).toMatchObject({ enabled: false, delaySeconds: 120 });
-    expect(parseCouponPopup({ enabled: true, delaySeconds: 0, title: '  Hola  ' })).toMatchObject({ enabled: true, delaySeconds: 3, title: 'Hola' });
+    expect(parseCouponPopup({ enabled: 'si', delaySeconds: 999 })).toMatchObject({ enabled: false, delaySeconds: 60 });
+    expect(parseCouponPopup({ enabled: true, delaySeconds: 0, title: '  Hola  ' })).toMatchObject({ enabled: true, delaySeconds: 2, title: 'Hola' });
   });
 });
 
@@ -106,5 +106,29 @@ describe('modo lista', () => {
     expect(validEmail('gusti@gmail.com')).toBe(true);
     expect(validEmail('  Gusti.P+bf@mail.com.ar ')).toBe(true);
     for (const bad of ['', 'gusti', 'gusti@', 'gusti@gmail', '@gmail.com', 'gus ti@gmail.com']) expect(validEmail(bad)).toBe(false);
+  });
+});
+
+import { extractHighlights } from '@/lib/couponPopup';
+
+describe('descuentos destacados y espera', () => {
+  it('saca los montos del texto del dueño y no repite esa frase', () => {
+    expect(extractHighlights('Hay descuentos de 5, 10 y 15 USD. Dejanos tu email y tu WhatsApp y te mandamos el tuyo.')).toEqual({
+      highlights: ['US$ 5', 'US$ 10', 'US$ 15'],
+      rest: 'Dejanos tu email y tu WhatsApp y te mandamos el tuyo.',
+    });
+    expect(extractHighlights('Hasta 20% de descuento. Anotate.')).toEqual({ highlights: ['20%'], rest: 'Anotate.' });
+  });
+
+  it('sin montos claros no inventa nada, y nunca deja el popup sin texto', () => {
+    expect(extractHighlights('Dejanos tu email y te avisamos.')).toEqual({ highlights: [], rest: 'Dejanos tu email y te avisamos.' });
+    // números que no son un descuento (sin moneda ni porcentaje)
+    expect(extractHighlights('Somos 3 en el showroom. Anotate.').highlights).toEqual([]);
+    expect(extractHighlights('Descuentos de 5, 10 y 15 USD')).toEqual({ highlights: ['US$ 5', 'US$ 10', 'US$ 15'], rest: 'Descuentos de 5, 10 y 15 USD' });
+  });
+
+  it('la espera vieja por defecto (15 s) pasa a 4 s; otra elegida a mano se respeta', () => {
+    expect(parseCouponPopup({ enabled: true, delaySeconds: 15 }).delaySeconds).toBe(4);
+    expect(parseCouponPopup({ enabled: true, delaySeconds: 8 }).delaySeconds).toBe(8);
   });
 });

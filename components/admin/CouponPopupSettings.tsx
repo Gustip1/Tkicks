@@ -264,8 +264,8 @@ export function CouponPopupSettings({
             <input
               type="number"
               inputMode="numeric"
-              min={3}
-              max={120}
+              min={2}
+              max={60}
               value={settings.delaySeconds}
               onChange={(e) => setSettings((s) => ({ ...s, delaySeconds: Number(e.target.value) || 0 }))}
               className={inputClass}

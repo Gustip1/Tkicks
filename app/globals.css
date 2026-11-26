@@ -898,6 +898,29 @@ img {
 /* Cambio de paso en el checkout y paneles que aparecen al elegir una opción.
    Sin relleno al final: no deja un transform que rompa lo fijo de adentro. */
 .step-enter { animation: tk-step-in 260ms var(--ease-out) backwards; }
+/* Popup de promo: los descuentos entran de a uno (el único momento animado de la hoja) */
+.promo-tile { animation: tk-promo-in 520ms var(--ease-out) backwards; animation-delay: calc(140ms + var(--i, 0) * 90ms); }
+@keyframes tk-promo-in {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.96); }
+}
+/* Campos sobre la hoja negra */
+.promo-field {
+  height: 52px; width: 100%; border-radius: 14px; padding: 0 16px;
+  background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 17px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+.promo-field::placeholder { color: rgba(255, 255, 255, 0.5); }
+.promo-field:focus { outline: none; background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 2px #fff; }
+.promo-field[aria-invalid="true"] { box-shadow: inset 0 0 0 2px #ff453a; }
+.promo-cta {
+  display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 52px;
+  border-radius: 9999px; background: #fff; color: #000; font-size: 17px; font-weight: 600;
+  transition: transform 160ms var(--ease-out), opacity 150ms;
+}
+.promo-cta:active { transform: scale(0.97); transition-duration: 100ms; }
+.promo-cta:focus-visible { outline: 2px solid #2997ff; outline-offset: 3px; }
+.promo-cta:disabled { opacity: 0.6; }
 @keyframes tk-step-in {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
 }
@@ -926,7 +949,7 @@ img {
 @keyframes tk-check-draw { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .step-enter, .success-enter > *, .animate-badge-pop { animation: tk-fade 150ms ease-out backwards !important; }
+  .step-enter, .promo-tile, .success-enter > *, .animate-badge-pop { animation: tk-fade 150ms ease-out backwards !important; }
   .check-draw { animation: none; stroke-dashoffset: 0; }
   .cart-line { transition: opacity 150ms ease-out; }
   .reveal-ready [data-reveal="card"] { transition: none; }
