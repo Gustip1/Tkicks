@@ -16,7 +16,7 @@ export default function PrivacidadPage() {
   return (
     <LegalPage
       title="Política de privacidad"
-      updated="23 de noviembre de 2026"
+      updated="26 de noviembre de 2026"
       other={{ href: '/terminos', label: 'Términos y condiciones' }}
       intro={
         <p>
@@ -46,7 +46,7 @@ export default function PrivacidadPage() {
               </li>
               <li>
                 <strong className="font-semibold text-gray-900">Si dejás tu WhatsApp para recibir un cupón:</strong> tu
-                teléfono y qué cupón te dimos. Te escribimos con el cupón y, de vez en cuando, con novedades y
+                teléfono, tu email si te lo pedimos, y qué cupón te dimos. Te escribimos por WhatsApp o por email con el cupón y, de vez en cuando, con novedades y
                 promociones de Tkicks. Para dejar de recibirlas respondé BAJA a cualquiera de esos mensajes y
                 borramos tu número de la lista.
               </li>

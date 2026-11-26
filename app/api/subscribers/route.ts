@@ -4,7 +4,7 @@ import { leadLimiter } from '@/lib/security/rate-limiter';
 import { getClientIp } from '@/lib/security/get-client-ip';
 import { toWhatsAppNumber, validPhone } from '@/lib/leads';
 import { couponStatus, couponSummary } from '@/lib/coupons';
-import { COUPON_POPUP_KEY, couponTemplateParams, CouponPopupPublic, parseCouponPopup } from '@/lib/couponPopup';
+import { COUPON_POPUP_KEY, couponTemplateParams, CouponPopupPublic, LIST_POPUP_FALLBACK_TITLE, parseCouponPopup, validEmail } from '@/lib/couponPopup';
 import { sendTemplate, whatsappConfig } from '@/lib/whatsapp';
 import type { DiscountCode } from '@/types/db';
 
@@ -18,16 +18,17 @@ function service(): SupabaseClient | null {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-/** El popup tal como está ahora: prendido, con un cupón elegido y vigente */
-async function currentPopup(supabase: SupabaseClient) {
-  const [{ data: setting }, { data: coupons, error }] = await Promise.all([
-    supabase.from('settings').select('value').eq('key', COUPON_POPUP_KEY).maybeSingle(),
-    // Falla si falta la columna `popup` (migración sin correr): se toma como apagado
-    supabase.from('discount_codes').select('*').eq('popup', true).limit(1),
-  ]);
-  const settings = parseCouponPopup(setting?.value);
+async function readSettings(supabase: SupabaseClient) {
+  const { data } = await supabase.from('settings').select('value').eq('key', COUPON_POPUP_KEY).maybeSingle();
+  return parseCouponPopup(data?.value);
+}
+
+/** El cupón que entrega el popup, si hay uno elegido y vigente */
+async function popupCoupon(supabase: SupabaseClient) {
+  // Falla si falta la columna `popup` (migración sin correr): se toma como que no hay
+  const { data: coupons, error } = await supabase.from('discount_codes').select('*').eq('popup', true).limit(1);
   const coupon = (error ? null : (coupons?.[0] as DiscountCode | undefined)) ?? null;
-  if (!settings.enabled || !coupon || couponStatus(coupon) !== 'active') return null;
+  if (!coupon || couponStatus(coupon) !== 'active') return null;
 
   const slugs = Array.isArray(coupon.applies_brands) ? coupon.applies_brands.filter(Boolean) : [];
   let brandNames: Record<string, string> = {};
@@ -38,27 +39,29 @@ async function currentPopup(supabase: SupabaseClient) {
   const summary = couponSummary(coupon, brandNames);
   // "Hasta 50 usos" es un dato interno: al cliente no le dice nada
   const conditions = summary.conditions.filter((c) => !/usos?$/.test(c));
-  return { settings, coupon, brandNames, headline: summary.headline, conditions };
+  return { coupon, brandNames, headline: summary.headline, conditions };
 }
 
-const OFF: CouponPopupPublic = { enabled: false, title: '', text: '', delaySeconds: 0, conditions: [] };
+const OFF: CouponPopupPublic = { enabled: false, mode: 'coupon', title: '', text: '', delaySeconds: 0, conditions: [] };
 
 /**
  * Lo que el popup necesita para mostrarse. Nunca incluye el código: eso se
- * entrega recién cuando dejan el número.
+ * entrega recién cuando dejan el número (o lo manda el dueño, en modo lista).
  */
 export async function GET() {
   const supabase = service();
-  const popup = supabase ? await currentPopup(supabase) : null;
-  const body: CouponPopupPublic = popup
-    ? {
-        enabled: true,
-        title: popup.settings.title || popup.headline,
-        text: popup.settings.text,
-        delaySeconds: popup.settings.delaySeconds,
-        conditions: popup.conditions,
+  let body: CouponPopupPublic = OFF;
+  if (supabase) {
+    const settings = await readSettings(supabase);
+    if (settings.enabled && settings.mode === 'list') {
+      body = { enabled: true, mode: 'list', title: settings.title || LIST_POPUP_FALLBACK_TITLE, text: settings.text, delaySeconds: settings.delaySeconds, conditions: [] };
+    } else if (settings.enabled) {
+      const popup = await popupCoupon(supabase);
+      if (popup) {
+        body = { enabled: true, mode: 'coupon', title: settings.title || popup.headline, text: settings.text, delaySeconds: settings.delaySeconds, conditions: popup.conditions };
       }
-    : OFF;
+    }
+  }
   // Un minuto en la red de Vercel: no se consulta la base por cada visita
   return NextResponse.json(body, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } });
 }
@@ -92,12 +95,44 @@ export async function POST(req: NextRequest) {
   const supabase = service();
   if (!supabase) return NextResponse.json({ ok: false, error: 'No disponible' }, { status: 503 });
 
-  const popup = await currentPopup(supabase);
+  const settings = await readSettings(supabase);
+  if (!settings.enabled) {
+    return NextResponse.json({ ok: false, error: 'Esta promo ya no está disponible.' }, { status: 409 });
+  }
+  const waNumber = toWhatsAppNumber(phone);
+  const browser = browserKind(req.headers.get('user-agent') || '');
+
+  // ── Modo lista: queda anotado con email y WhatsApp; el cupón lo manda el dueño ──
+  if (settings.mode === 'list') {
+    const email = String(body?.email ?? '').trim().toLowerCase();
+    if (!validEmail(email)) {
+      return NextResponse.json({ ok: false, error: 'Revisá el email.', field: 'email' }, { status: 400 });
+    }
+    const { data: existing } = await supabase.from('subscribers').select('id, status').eq('wa_number', waNumber).maybeSingle();
+    const row = {
+      phone,
+      wa_number: waNumber,
+      source: 'lista',
+      // Si ya se le mandó el cupón, anotarse de nuevo no lo vuelve a "pendiente"
+      status: existing?.status === 'sent' ? 'sent' : 'pending',
+      unsubscribed_at: null,
+      details: { browser, email },
+    };
+    const { error: saveErr } = existing
+      ? await supabase.from('subscribers').update(row).eq('id', existing.id)
+      : await supabase.from('subscribers').insert(row);
+    if (saveErr) {
+      console.error('[SUBSCRIBERS] No se pudo guardar en la lista:', saveErr.message);
+      return NextResponse.json({ ok: false, error: 'No pudimos guardar tus datos. Probá de nuevo.' }, { status: 503 });
+    }
+    return NextResponse.json({ ok: true, delivery: 'later' });
+  }
+
+  const popup = await popupCoupon(supabase);
   if (!popup) {
     return NextResponse.json({ ok: false, error: 'Este cupón ya no está disponible.' }, { status: 409 });
   }
   const { coupon, brandNames, headline, conditions } = popup;
-  const waNumber = toWhatsAppNumber(phone);
   const onScreen = { ok: true, delivery: 'screen' as const, code: coupon.code, headline, conditions };
 
   const { data: existing } = await supabase.from('subscribers').select('id, status, coupon_code').eq('wa_number', waNumber).maybeSingle();
@@ -115,7 +150,7 @@ export async function POST(req: NextRequest) {
     status: 'pending',
     wa_error: null,
     unsubscribed_at: null,
-    details: { browser: browserKind(req.headers.get('user-agent') || '') },
+    details: { browser },
   };
   const { data: saved, error: saveErr } = existing
     ? await supabase.from('subscribers').update(row).eq('id', existing.id).select('id').single()

@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MessageCircle, Send, Trash2 } from 'lucide-react';
+import { Check, Copy, Mail, MessageCircle, Send, Trash2 } from 'lucide-react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { couponStatus, couponSummary } from '@/lib/coupons';
 import {
@@ -11,6 +11,8 @@ import {
   couponTemplateParams,
   CouponPopupSettings as Settings,
   DEFAULT_COUPON_POPUP,
+  LIST_POPUP_FALLBACK_TITLE,
+  LIST_POPUP_TEXTS,
   parseCouponPopup,
   Subscriber,
   SUBSCRIBER_STATUS_LABELS,
@@ -54,11 +56,14 @@ export function CouponPopupSettings({
   const [testPhone, setTestPhone] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
+  // Modo lista: con qué cupón se arma el mensaje al tocar "Escribirle"
+  const [sendCode, setSendCode] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const loadSubscribers = useCallback(async () => {
     const { data, count, error } = await supabase
       .from('subscribers')
-      .select('id, phone, wa_number, coupon_code, source, status, wa_error, created_at, sent_at', { count: 'exact' })
+      .select('id, phone, wa_number, coupon_code, source, status, wa_error, created_at, sent_at, details', { count: 'exact' })
       .order('created_at', { ascending: false })
       .limit(100);
     setReady(!error);
@@ -92,16 +97,29 @@ export function CouponPopupSettings({
   const description = coupon ? couponDescription(coupon, brandNames) : '';
   const couponOk = !!coupon && couponStatus(coupon) === 'active';
 
+  const list = settings.mode === 'list';
+
+  // Al pasar a modo lista se proponen los textos del Black Friday (se pueden cambiar)
+  const setMode = (mode: Settings['mode']) =>
+    setSettings((s) => {
+      if (mode === s.mode) return s;
+      if (mode === 'list') {
+        return { ...s, mode, title: s.title.trim() || LIST_POPUP_TEXTS.title, text: !s.text.trim() || s.text === DEFAULT_COUPON_POPUP.text ? LIST_POPUP_TEXTS.text : s.text };
+      }
+      return { ...s, mode, title: s.title === LIST_POPUP_TEXTS.title ? '' : s.title, text: s.text === LIST_POPUP_TEXTS.text ? DEFAULT_COUPON_POPUP.text : s.text };
+    });
+
   const save = async () => {
     setMessage(null);
-    if (settings.enabled && !couponOk) {
+    if (settings.enabled && !list && !couponOk) {
       setMessage({ ok: false, text: 'Para prenderlo elegí un cupón que esté activo.' });
       return;
     }
     setSaving(true);
-    // Uno solo a la vez: primero se desmarca el anterior
-    const { error: clearErr } = await supabase.from('discount_codes').update({ popup: false }).eq('popup', true);
-    const { error: markErr } = coupon ? await supabase.from('discount_codes').update({ popup: true }).eq('id', coupon.id) : { error: null };
+    // En modo lista no se toca qué cupón está marcado. En el otro, uno solo a
+    // la vez: primero se desmarca el anterior
+    const { error: clearErr } = list ? { error: null } : await supabase.from('discount_codes').update({ popup: false }).eq('popup', true);
+    const { error: markErr } = !list && coupon ? await supabase.from('discount_codes').update({ popup: true }).eq('id', coupon.id) : { error: null };
     const { error: setErr } = await supabase
       .from('settings')
       .upsert({ key: COUPON_POPUP_KEY, value: { ...settings, title: settings.title.trim(), text: settings.text.trim() } }, { onConflict: 'key' });
@@ -141,6 +159,31 @@ export function CouponPopupSettings({
     }
   };
 
+  const markSent = async (s: Subscriber) => {
+    await supabase
+      .from('subscribers')
+      .update({ status: 'sent', sent_at: new Date().toISOString(), ...(sendCode ? { coupon_code: sendCode } : {}) })
+      .eq('id', s.id);
+    loadSubscribers();
+  };
+
+  const emails = Array.from(new Set(subscribers.map((s) => s.details?.email).filter((e): e is string => !!e)));
+  const copyEmails = async () => {
+    try {
+      await navigator.clipboard.writeText(emails.join(', '));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* sin permiso para copiar: quedan a la vista en la lista */
+    }
+  };
+
+  /** El mensaje para una persona: con el cupón elegido arriba de la lista, o con el que ya recibió */
+  const messageFor = (s: Subscriber) => {
+    const c = codes.find((x) => x.code === (sendCode || s.coupon_code));
+    return c ? couponMessage(c.code, couponDescription(c, brandNames)) : 'Hola, te escribo de Tkicks.';
+  };
+
   const removeSubscriber = async (s: Subscriber) => {
     if (!confirm(`¿Borrar el número ${s.phone} de la lista?`)) return;
     await supabase.from('subscribers').delete().eq('id', s.id);
@@ -154,7 +197,8 @@ export function CouponPopupSettings({
           Popup de cupón por WhatsApp
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Le aparece a quien visita la tienda: deja su WhatsApp y recibe el cupón que elijas. El número te queda guardado acá abajo.
+          Le aparece a quien visita la tienda. Puede entregar un cupón al instante, o armarte una lista con el email y el WhatsApp de cada persona para que
+          los cupones los mandes vos.
         </p>
       </div>
 
@@ -176,8 +220,32 @@ export function CouponPopupSettings({
           <span className="text-sm font-medium text-gray-900">Mostrar el popup en la tienda</span>
         </label>
 
+        <div role="radiogroup" aria-label="Qué hace el popup" className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              { value: 'coupon', title: 'Entrega un cupón al instante', hint: 'Piden el WhatsApp y reciben el cupón que elijas.' },
+              { value: 'list', title: 'Arma una lista y los mandás vos', hint: 'Piden email y WhatsApp. Después le mandás a cada uno el cupón que quieras.' },
+            ] as const
+          ).map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={settings.mode === o.value}
+              onClick={() => setMode(o.value)}
+              className={cn(
+                'min-h-[44px] rounded-lg border px-3.5 py-2.5 text-left transition-colors',
+                settings.mode === o.value ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-800 hover:border-gray-500'
+              )}
+            >
+              <span className="block text-sm font-semibold">{o.title}</span>
+              <span className={cn('block text-xs', settings.mode === o.value ? 'text-white/80' : 'text-gray-500')}>{o.hint}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
+          <label className={cn('block', list && 'hidden')}>
             <span className="mb-1 block text-sm font-medium text-gray-700">Cupón que entrega</span>
             <select value={couponId} onChange={(e) => setCouponId(e.target.value)} className={inputClass}>
               <option value="">Elegí un cupón</option>
@@ -209,11 +277,11 @@ export function CouponPopupSettings({
             <input
               value={settings.title}
               onChange={(e) => setSettings((s) => ({ ...s, title: e.target.value }))}
-              placeholder={summary?.headline ?? 'Vacío: el descuento del cupón'}
+              placeholder={list ? LIST_POPUP_FALLBACK_TITLE : summary?.headline ?? 'Vacío: el descuento del cupón'}
               maxLength={80}
               className={inputClass}
             />
-            <span className="mt-1 block text-xs text-gray-500">Vacío: se usa el descuento del cupón.</span>
+            {!list && <span className="mt-1 block text-xs text-gray-500">Vacío: se usa el descuento del cupón.</span>}
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-gray-700">Texto</span>
@@ -221,7 +289,16 @@ export function CouponPopupSettings({
           </label>
         </div>
 
-        {coupon && summary && (
+        {list && (
+          <div className="rounded-xl bg-gray-50 p-4 text-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Así lo ve el cliente</p>
+            <p className="mt-1 text-base font-semibold text-gray-900">{settings.title.trim() || LIST_POPUP_FALLBACK_TITLE}</p>
+            <p className="text-gray-700">{settings.text}</p>
+            <p className="mt-2 text-gray-600">Le pide el email y el WhatsApp. Los cupones no se muestran: los mandás vos desde la lista de abajo.</p>
+          </div>
+        )}
+
+        {!list && coupon && summary && (
           <div className="rounded-xl bg-gray-50 p-4 text-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Así lo ve el cliente</p>
             <p className="mt-1 text-base font-semibold text-gray-900">{settings.title.trim() || summary.headline}</p>
@@ -316,40 +393,90 @@ export function CouponPopupSettings({
           {subscribers.length === 0 ? (
             <p className="mt-2 text-sm text-gray-500">Todavía nadie dejó su número.</p>
           ) : (
-            <ul className="mt-3 divide-y divide-gray-100">
-              {subscribers.map((s) => {
-                const c = codes.find((x) => x.code === s.coupon_code);
-                const text = c ? couponMessage(c.code, couponDescription(c, brandNames)) : 'Hola, te escribo de Tkicks.';
-                return (
-                  <li key={s.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold tabular-nums text-gray-900">{s.phone}</p>
-                      <p className="text-xs text-gray-500">
-                        {shortDate(s.created_at)} · {s.coupon_code ?? 'sin cupón'} · {SUBSCRIBER_STATUS_LABELS[s.status] ?? s.status}
-                      </p>
-                      {s.status === 'failed' && s.wa_error && <p className="text-xs text-amber-700">Motivo: {s.wa_error}</p>}
-                    </div>
-                    <div className="-ml-3 flex items-center gap-1 sm:ml-0">
-                      <a
-                        href={`https://api.whatsapp.com/send?phone=${s.wa_number}&text=${encodeURIComponent(text)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                      >
-                        <MessageCircle className="h-4 w-4" /> Escribirle
-                      </a>
-                      <button
-                        onClick={() => removeSubscriber(s)}
-                        aria-label={`Borrar ${s.phone}`}
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-gray-700">Cupón para el mensaje</span>
+                  <select value={sendCode} onChange={(e) => setSendCode(e.target.value)} className={cn(inputClass, 'w-64 max-w-full')}>
+                    <option value="">El que ya recibió cada uno</option>
+                    {codes
+                      .filter((c) => couponStatus(c) === 'active')
+                      .map((c) => (
+                        <option key={c.id} value={c.code}>
+                          {c.code} · {couponSummary(c, brandNames).headline}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                {emails.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={copyEmails}
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-800 hover:border-gray-500"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? 'Copiados' : `Copiar los ${emails.length} emails`}
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Elegí el cupón y tocá “WhatsApp” o “Email” en cada persona: se abre con el mensaje ya escrito.</p>
+
+              <ul className="mt-3 divide-y divide-gray-100">
+                {subscribers.map((s) => {
+                  const text = messageFor(s);
+                  const email = s.details?.email;
+                  return (
+                    <li key={s.id} className="flex flex-col gap-2 py-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold tabular-nums text-gray-900">
+                          {s.phone}
+                          {email && <span className="ml-2 break-all font-normal text-gray-600">{email}</span>}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {shortDate(s.created_at)}
+                          {s.coupon_code ? ` · ${s.coupon_code}` : ''} ·{' '}
+                          <span className={s.status === 'pending' ? 'font-semibold text-amber-700' : undefined}>{SUBSCRIBER_STATUS_LABELS[s.status] ?? s.status}</span>
+                        </p>
+                        {s.status === 'failed' && s.wa_error && <p className="text-xs text-amber-700">Motivo: {s.wa_error}</p>}
+                      </div>
+                      <div className="-ml-3 flex flex-wrap items-center gap-1 lg:ml-0">
+                        <a
+                          href={`https://api.whatsapp.com/send?phone=${s.wa_number}&text=${encodeURIComponent(text)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                        >
+                          <MessageCircle className="h-4 w-4" /> WhatsApp
+                        </a>
+                        {email && (
+                          <a
+                            href={`mailto:${email}?subject=${encodeURIComponent('Tu descuento en Tkicks')}&body=${encodeURIComponent(text)}`}
+                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            <Mail className="h-4 w-4" /> Email
+                          </a>
+                        )}
+                        {s.status !== 'sent' && (
+                          <button
+                            onClick={() => markSent(s)}
+                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            <Check className="h-4 w-4" /> Ya se lo mandé
+                          </button>
+                        )}
+                        <button
+                          onClick={() => removeSubscriber(s)}
+                          aria-label={`Borrar ${s.phone}`}
+                          className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
           {total > subscribers.length && <p className="mt-2 text-xs text-gray-500">Se muestran los últimos {subscribers.length}.</p>}
         </div>

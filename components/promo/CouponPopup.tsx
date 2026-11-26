@@ -9,7 +9,7 @@ import { rememberedPhone } from '@/lib/contact';
 import { validPhone } from '@/lib/leads';
 import { trackEvent } from '@/lib/analytics/track';
 import { haptic } from '@/lib/haptics';
-import type { CouponPopupPublic } from '@/lib/couponPopup';
+import { validEmail, type CouponPopupPublic } from '@/lib/couponPopup';
 
 /**
  * Popup de cupón: el visitante deja su WhatsApp y recibe un cupón. Se prende
@@ -31,7 +31,7 @@ const SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
 /** Páginas donde no se interrumpe: está comprando, entrando o leyendo algo puntual */
 const QUIET = ['/admin', '/checkout', '/login', '/register', '/account', '/orders', '/track', '/terminos', '/privacidad', '/sorteo'];
 
-type Result = { delivery: 'whatsapp' } | { delivery: 'screen'; code: string; headline: string; conditions: string[] };
+type Result = { delivery: 'whatsapp' } | { delivery: 'later' } | { delivery: 'screen'; code: string; headline: string; conditions: string[] };
 
 function alreadyHandled(): boolean {
   try {
@@ -58,6 +58,8 @@ export function CouponPopup() {
   const [content, setContent] = useState<CouponPopupPublic | null>(null);
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
@@ -114,21 +116,25 @@ export function CouponPopup() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (sending) return;
-    if (!validPhone(phone)) {
-      setError('Escribí tu número con característica, por ejemplo 264 480 2994');
-      return;
-    }
-    setError(null);
+    // Modo lista: además del WhatsApp se pide el email
+    const list = content?.mode === 'list';
+    const badEmail = list && !validEmail(email);
+    const badPhone = !validPhone(phone);
+    setEmailError(badEmail ? 'Escribí tu email, por ejemplo nombre@gmail.com' : null);
+    setError(badPhone ? 'Escribí tu número con característica, por ejemplo 264 480 2994' : null);
+    if (badEmail || badPhone) return;
     setSending(true);
     try {
       const res = await fetch('/api/subscribers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(list ? { phone, email: email.trim() } : { phone }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
-        setError(data?.error || 'No pudimos guardar tu número. Probá de nuevo.');
+        const message = data?.error || 'No pudimos guardar tu número. Probá de nuevo.';
+        if (data?.field === 'email') setEmailError(message);
+        else setError(message);
         return;
       }
       remember({ done: true });
@@ -142,7 +148,7 @@ export function CouponPopup() {
         }
         setResult({ delivery: 'screen', code: data.code, headline: data.headline, conditions: data.conditions ?? [] });
       } else {
-        setResult({ delivery: 'whatsapp' });
+        setResult({ delivery: data.delivery === 'later' ? 'later' : 'whatsapp' });
       }
     } catch {
       setError('Sin conexión. Probá de nuevo.');
@@ -168,7 +174,16 @@ export function CouponPopup() {
     <Sheet open={open} onClose={dismiss} labelledBy={`${id}-title`} describedBy={`${id}-text`}>
       {result ? (
         <div className="step-enter px-6 pb-2 pt-6 sm:px-8 sm:pb-8 sm:pt-9">
-          {result.delivery === 'whatsapp' ? (
+          {result.delivery === 'later' ? (
+            <>
+              <h2 id={`${id}-title`} className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
+                Listo, ya estás en la lista
+              </h2>
+              <p id={`${id}-text`} className="mt-2 text-[15px] leading-snug text-gray-600">
+                Te mandamos tu descuento por WhatsApp al {phone} o por email. Lo cargás en el checkout, antes de pagar.
+              </p>
+            </>
+          ) : result.delivery === 'whatsapp' ? (
             <>
               <h2 id={`${id}-title`} className="pr-10 text-[22px] sm:text-[26px] font-semibold leading-tight tracking-[-0.015em]">
                 Listo, ya te lo mandamos
@@ -218,10 +233,39 @@ export function CouponPopup() {
           </SheetHandleArea>
 
           <div className="px-6 pb-2 pt-5 sm:px-8 sm:pb-8">
+            {content.mode === 'list' && (
+              <div className="mb-4">
+                <label htmlFor={`${id}-email`} className="block text-[13px] font-semibold text-gray-900">
+                  Tu email
+                </label>
+                <input
+                  id={`${id}-email`}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nombre@gmail.com"
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? `${id}-email-error` : undefined}
+                  className={`mt-1.5 h-12 w-full rounded-[12px] border bg-white px-4 text-[17px] text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-4 focus:ring-primary/10 ${
+                    emailError ? 'border-red-500' : 'border-gray-200 focus:border-primary'
+                  }`}
+                />
+                {emailError && (
+                  <p id={`${id}-email-error`} className="mt-1.5 text-[13px] text-red-600">
+                    {emailError}
+                  </p>
+                )}
+              </div>
+            )}
             <PhoneField id={`${id}-phone`} value={phone} onChange={setPhone} error={error} />
             <div className="mt-5 flex flex-col gap-1">
               <button type="submit" disabled={sending} className="btn-apple w-full disabled:opacity-60">
-                {sending ? 'Enviando…' : 'Quiero mi cupón'}
+                {sending ? 'Enviando…' : content.mode === 'list' ? 'Quiero mi descuento' : 'Quiero mi cupón'}
               </button>
               <button
                 type="button"
@@ -232,7 +276,10 @@ export function CouponPopup() {
               </button>
             </div>
             <p className="mt-3 text-center text-[12px] leading-snug text-gray-500">
-              Te escribimos por WhatsApp con el cupón y las novedades de Tkicks. Podés pedir la baja cuando quieras.{' '}
+              {content.mode === 'list'
+                ? 'Te escribimos por WhatsApp o por email con tu descuento y las novedades de Tkicks.'
+                : 'Te escribimos por WhatsApp con el cupón y las novedades de Tkicks.'}{' '}
+              Podés pedir la baja cuando quieras.{' '}
               <Link href="/privacidad" onClick={() => setOpen(false)} className="underline">
                 Privacidad
               </Link>

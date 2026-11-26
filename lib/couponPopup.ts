@@ -12,8 +12,16 @@ import { couponSummary } from '@/lib/coupons';
 
 export const COUPON_POPUP_KEY = 'coupon_popup';
 
+/**
+ * coupon: entrega al instante el cupón elegido, a cambio del WhatsApp.
+ * list: arma una lista (email y WhatsApp) y los cupones los manda el dueño a
+ *       mano, a cada persona el que quiera (Black Friday 2026: 5, 10 o 15 USD).
+ */
+export type CouponPopupMode = 'coupon' | 'list';
+
 export interface CouponPopupSettings {
   enabled: boolean;
+  mode: CouponPopupMode;
   /** Vacío: se usa el descuento del cupón ("10% de descuento") */
   title: string;
   text: string;
@@ -23,16 +31,29 @@ export interface CouponPopupSettings {
 
 export const DEFAULT_COUPON_POPUP: CouponPopupSettings = {
   enabled: false,
+  mode: 'coupon',
   title: '',
   text: 'Dejanos tu WhatsApp y te mandamos el cupón.',
   delaySeconds: 15,
 };
+
+/** Textos sugeridos al pasar a modo lista (el dueño los puede cambiar) */
+export const LIST_POPUP_TEXTS = {
+  title: 'Black Friday en Tkicks',
+  text: 'Hay descuentos de 5, 10 y 15 USD. Dejanos tu email y tu WhatsApp y te mandamos el tuyo.',
+};
+
+/** Título del modo lista si el dueño lo dejó vacío */
+export const LIST_POPUP_FALLBACK_TITLE = 'Sumate a la lista';
+
+export const validEmail = (raw: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(raw || '').trim()) && String(raw).trim().length <= 120;
 
 export function parseCouponPopup(value: unknown): CouponPopupSettings {
   const v = (value && typeof value === 'object' ? value : {}) as Partial<CouponPopupSettings>;
   const delay = Number(v.delaySeconds);
   return {
     enabled: v.enabled === true,
+    mode: v.mode === 'list' ? 'list' : 'coupon',
     title: typeof v.title === 'string' ? v.title.trim().slice(0, 80) : '',
     text: typeof v.text === 'string' && v.text.trim() ? v.text.trim().slice(0, 200) : DEFAULT_COUPON_POPUP.text,
     delaySeconds: Number.isFinite(delay) ? Math.min(120, Math.max(3, Math.round(delay))) : DEFAULT_COUPON_POPUP.delaySeconds,
@@ -42,6 +63,7 @@ export function parseCouponPopup(value: unknown): CouponPopupSettings {
 /** Lo que el popup muestra antes de que dejen el número (nunca el código) */
 export interface CouponPopupPublic {
   enabled: boolean;
+  mode: CouponPopupMode;
   title: string;
   text: string;
   delaySeconds: number;
@@ -60,11 +82,13 @@ export interface Subscriber {
   wa_error: string | null;
   created_at: string;
   sent_at: string | null;
+  /** En modo lista acá va el email */
+  details?: { email?: string } | null;
 }
 
 export const SUBSCRIBER_STATUS_LABELS: Record<SubscriberStatus, string> = {
-  pending: 'Pendiente',
-  sent: 'Enviado por WhatsApp',
+  pending: 'Falta mandarle el cupón',
+  sent: 'Enviado',
   failed: 'Falló el envío · lo vio en pantalla',
   shown: 'Lo vio en pantalla',
 };

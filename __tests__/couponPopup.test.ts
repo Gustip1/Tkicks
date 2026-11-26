@@ -39,7 +39,7 @@ describe('mensaje del cupón', () => {
 
 describe('parseCouponPopup', () => {
   it('apagado y con textos por defecto si no hay nada guardado', () => {
-    expect(parseCouponPopup(null)).toEqual({ enabled: false, title: '', text: 'Dejanos tu WhatsApp y te mandamos el cupón.', delaySeconds: 15 });
+    expect(parseCouponPopup(null)).toEqual({ enabled: false, mode: 'coupon', title: '', text: 'Dejanos tu WhatsApp y te mandamos el cupón.', delaySeconds: 15 });
   });
   it('acota la espera y solo prende con true', () => {
     expect(parseCouponPopup({ enabled: 'si', delaySeconds: 999 })).toMatchObject({ enabled: false, delaySeconds: 120 });
@@ -90,5 +90,21 @@ describe('WhatsApp', () => {
     expect(await sendTemplate(cfg, '549264', ['A', 'B'])).toEqual({ ok: false, error: 'Template name does not exist' });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     expect(await sendTemplate(cfg, '549264', ['A', 'B'])).toEqual({ ok: false, error: 'No se pudo conectar con WhatsApp' });
+  });
+});
+
+import { validEmail } from '@/lib/couponPopup';
+
+describe('modo lista', () => {
+  it('se elige solo con mode: "list"; cualquier otra cosa es el cupón al instante', () => {
+    expect(parseCouponPopup({ enabled: true, mode: 'list' }).mode).toBe('list');
+    expect(parseCouponPopup({ enabled: true, mode: 'otra' }).mode).toBe('coupon');
+    expect(parseCouponPopup({ enabled: true }).mode).toBe('coupon');
+  });
+
+  it('valida el email', () => {
+    expect(validEmail('gusti@gmail.com')).toBe(true);
+    expect(validEmail('  Gusti.P+bf@mail.com.ar ')).toBe(true);
+    for (const bad of ['', 'gusti', 'gusti@', 'gusti@gmail', '@gmail.com', 'gus ti@gmail.com']) expect(validEmail(bad)).toBe(false);
   });
 });
