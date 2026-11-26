@@ -270,7 +270,7 @@ export function CouponPopupSettings({
               onChange={(e) => setSettings((s) => ({ ...s, delaySeconds: Number(e.target.value) || 0 }))}
               className={inputClass}
             />
-            <span className="mt-1 block text-xs text-gray-500">Una sola vez por persona. Si lo cierra, no vuelve por dos semanas.</span>
+            <span className="mt-1 block text-xs text-gray-500">Sale cada vez que entran a la web, hasta que dejan sus datos.</span>
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-gray-700">Título</span>

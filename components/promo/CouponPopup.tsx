@@ -14,9 +14,11 @@ import { validEmail, type CouponPopupPublic } from '@/lib/couponPopup';
  * Popup de cupón: el visitante deja su WhatsApp y recibe un cupón. Se prende
  * y se configura en /admin/cupones.
  *
- * Aparece una sola vez, después de un rato en la web y nunca encima de otro
- * popup, del menú o del carrito. Quien lo cierra no lo vuelve a ver por dos
- * semanas; quien deja su número, nunca más.
+ * Aparece a los pocos segundos de entrar y nunca encima de otro popup, del
+ * menú o del carrito. Quien lo cierra lo vuelve a ver cada vez que entra a la
+ * web (pedido del dueño, nov 2026: antes se escondía dos semanas y casi nadie
+ * lo veía dos veces); mientras navega por la tienda no se repite. Quien ya
+ * dejó sus datos no lo ve más.
  *
  * El código no viaja al navegador hasta que dejan el número: si WhatsApp está
  * conectado llega por ahí; si no, se muestra acá mismo.
@@ -25,7 +27,6 @@ import { validEmail, type CouponPopupPublic } from '@/lib/couponPopup';
 const SEEN_KEY = 'tk-cupon-popup';
 /** El cupón que recibió en pantalla: el checkout lo deja escrito */
 export const SAVED_COUPON_KEY = 'tk-cupon';
-const SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
 
 /** Páginas donde no se interrumpe: está comprando, entrando o leyendo algo puntual */
 const QUIET = ['/admin', '/checkout', '/login', '/register', '/account', '/orders', '/track', '/terminos', '/privacidad', '/sorteo'];
@@ -36,14 +37,14 @@ function alreadyHandled(): boolean {
   try {
     const raw = localStorage.getItem(SEEN_KEY);
     if (!raw) return false;
-    const seen = JSON.parse(raw) as { done?: boolean; dismissedAt?: number };
-    return seen.done === true || (typeof seen.dismissedAt === 'number' && Date.now() - seen.dismissedAt < SNOOZE_MS);
+    // Solo cuenta haber dejado los datos; haberlo cerrado no lo esconde
+    return (JSON.parse(raw) as { done?: boolean }).done === true;
   } catch {
     return false;
   }
 }
 
-function remember(value: { done?: boolean; dismissedAt?: number }) {
+function remember(value: { done: true }) {
   try {
     localStorage.setItem(SEEN_KEY, JSON.stringify(value));
   } catch {
@@ -106,10 +107,8 @@ export function CouponPopup() {
 
   const dismiss = () => {
     setOpen(false);
-    if (!result) {
-      remember({ dismissedAt: Date.now() });
-      trackEvent('coupon_popup_dismissed', 'promo', {});
-    }
+    // No se guarda que lo cerró: la próxima vez que entre le vuelve a aparecer
+    if (!result) trackEvent('coupon_popup_dismissed', 'promo', {});
   };
 
   const submit = async (e: React.FormEvent) => {
