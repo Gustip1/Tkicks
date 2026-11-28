@@ -19,6 +19,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Brand, HOODIE_TYPES, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, groupOf } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
+import { ProfitPanel } from '@/components/admin/ProfitPanel';
+import { CostForm, EMPTY_COST_FORM, ProductCost, costError, costFormFrom, costsTableReady, loadProductCost, saveProductCost } from '@/lib/admin/productCosts';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +51,11 @@ export default function EditProductPage() {
   // producto se guarda igual, sin la guía
   const [hasGuideColumn, setHasGuideColumn] = useState(true);
   const [guideWarning, setGuideWarning] = useState<string | null>(null);
+  // Costo y precio de mercado: el costo es obligatorio para guardar
+  const [costForm, setCostForm] = useState<CostForm>(EMPTY_COST_FORM);
+  const [costPrev, setCostPrev] = useState<ProductCost | null>(null);
+  const [costErr, setCostErr] = useState<string | null>(null);
+  const [costsReady, setCostsReady] = useState(true);
 
   const sizes = useMemo(
     () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
@@ -59,9 +66,13 @@ export default function EditProductPage() {
   // Viene de "Nuevo producto" y la guía no se pudo guardar (falta la migración)
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (url.searchParams.get('guia') !== 'sin-guardar') return;
-    setGuideWarning(SIZE_GUIDE_NOT_SAVED);
+    const guideLost = url.searchParams.get('guia') === 'sin-guardar';
+    const costLost = url.searchParams.get('costo') === 'sin-guardar';
+    if (!guideLost && !costLost) return;
+    if (guideLost) setGuideWarning(SIZE_GUIDE_NOT_SAVED);
+    if (costLost) setError('El producto se creó, pero el costo no se pudo guardar. Cargalo de nuevo y guardá.');
     url.searchParams.delete('guia');
+    url.searchParams.delete('costo');
     window.history.replaceState(null, '', url.pathname + url.search);
   }, []);
 
@@ -75,6 +86,13 @@ export default function EditProductPage() {
       setLoading(true);
       const { data: p } = await supabase.from('products').select('*').eq('id', id).single();
       const { data: v } = await supabase.from('product_variants').select('*').eq('product_id', id);
+      const ready = await costsTableReady(supabase);
+      setCostsReady(ready);
+      if (ready) {
+        const c = await loadProductCost(supabase, id);
+        setCostPrev(c);
+        setCostForm(costFormFrom(c));
+      }
       if (p) {
         setTitle(p.title);
         setSlug(p.slug);
@@ -103,6 +121,13 @@ export default function EditProductPage() {
     setError(null);
     setSuccess(false);
     setGuideWarning(null);
+    // El costo es obligatorio: sin él no se sabe si el producto deja plata
+    const badCost = costsReady ? costError(costForm) : null;
+    setCostErr(badCost);
+    if (badCost) {
+      document.getElementById('product-cost')?.focus();
+      return setError(badCost);
+    }
     const badMeasure = firstInvalidMeasure();
     if (badMeasure) {
       badMeasure.focus();
@@ -157,6 +182,15 @@ export default function EditProductPage() {
       if (pErr) {
         setError(pErr.message);
         return;
+      }
+
+      if (costsReady) {
+        const { error: cErr, saved } = await saveProductCost(supabase, id, costForm, costPrev);
+        if (cErr) {
+          setError(`El producto se guardó, pero el costo no: ${cErr}`);
+          return;
+        }
+        setCostPrev(saved);
       }
       
       // Replace variants
@@ -263,7 +297,7 @@ export default function EditProductPage() {
       )}
       
       {/* Main content */}
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Left column - Details */}
         <div className="lg:col-span-3 space-y-6">
           {/* Basic info card */}
@@ -450,6 +484,18 @@ export default function EditProductPage() {
               />
             </div>
           </div>
+
+          <ProfitPanel
+            title={title}
+            price={price}
+            salePrice={salePrice}
+            form={costForm}
+            onChange={(f) => { setCostForm(f); if (costErr) setCostErr(costError(f)); }}
+            error={costErr}
+            ready={costsReady}
+            marketUpdatedAt={costPrev?.market_updated_at}
+            onUsePrice={setPrice}
+          />
           
           {/* Variants card */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">

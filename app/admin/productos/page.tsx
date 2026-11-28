@@ -4,6 +4,37 @@ import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { HOODIE_TYPES, Product, STREETWEAR_SUBCATEGORIES, groupOf, subcategoryLabel } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
+import { ProductCost, costsTableReady, loadAllCosts } from '@/lib/admin/productCosts';
+import { analyzeMargin, analyzeMarket, effectivePrice, MarginLevel, pct } from '@/lib/pricing';
+
+const MARGIN_CHIP: Record<MarginLevel, string> = {
+  loss: 'bg-red-100 text-red-800',
+  low: 'bg-amber-100 text-amber-800',
+  ok: 'bg-green-100 text-green-800',
+  high: 'bg-green-100 text-green-800',
+};
+
+/** Margen del producto, para la lista: "25%", "Sin costo" o nada si no hay tabla de costos */
+function MarginChip({ product, cost }: { product: Product; cost: ProductCost | undefined }) {
+  if (!cost) return <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">Sin costo</span>;
+  const sellAt = effectivePrice(Number(product.price), product.sale_price);
+  const m = analyzeMargin(sellAt, Number(cost.cost_usd));
+  if (!m) return <span className="text-xs text-gray-400">—</span>;
+  const market = analyzeMarket(sellAt, cost.market_price_usd != null ? Number(cost.market_price_usd) : null);
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold tabular-nums ${MARGIN_CHIP[m.level]}`}>
+        {m.profit < 0 ? '-' : ''}
+        {pct(m.margin)}
+      </span>
+      {market && (
+        <span className="text-xs text-gray-500">
+          {market.position === 'cheaper' ? `${pct(market.diff)} bajo mercado` : market.position === 'pricier' ? `${pct(market.diff)} sobre mercado` : 'a precio de mercado'}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,6 +43,9 @@ export default function AdminProductsPage() {
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [deleting, setDeleting] = useState(false);
+  // Costos (solo si ya se corrió supabase/migration-costos.sql)
+  const [costs, setCosts] = useState<Record<string, ProductCost> | null>(null);
+  const [onlyMissingCost, setOnlyMissingCost] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -21,7 +55,10 @@ export default function AdminProductsPage() {
       .order('created_at', { ascending: false })
       .limit(200)
       .then(({ data }) => setProducts((data || []) as unknown as Product[]));
+    costsTableReady(supabase).then((ready) => (ready ? loadAllCosts(supabase).then(setCosts) : setCosts(null)));
   }, []);
+
+  const missingCost = useMemo(() => (costs ? products.filter((p) => p.active && !costs[p.id]).length : 0), [products, costs]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -31,9 +68,10 @@ export default function AdminProductsPage() {
       if (subcategoryFilter.startsWith('tipo:') ? p.subcategory !== subcategoryFilter.slice(5) : subcategoryFilter && groupOf(p.subcategory) !== subcategoryFilter) return false;
       if (activeFilter === 'active' && !p.active) return false;
       if (activeFilter === 'inactive' && p.active) return false;
+      if (onlyMissingCost && (!costs || costs[p.id] || !p.active)) return false;
       return true;
     });
-  }, [products, q, category, subcategoryFilter, activeFilter]);
+  }, [products, q, category, subcategoryFilter, activeFilter, onlyMissingCost, costs]);
 
   const inactiveCount = useMemo(() => products.filter(p => !p.active).length, [products]);
 
@@ -153,6 +191,24 @@ export default function AdminProductsPage() {
         </div>
       )}
 
+      {costs && (missingCost > 0 || onlyMissingCost) && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span>
+            {missingCost === 0
+              ? 'Todos los productos activos tienen el costo cargado.'
+              : `${missingCost} ${missingCost === 1 ? 'producto activo no tiene' : 'productos activos no tienen'} el costo cargado: sin él no se ve el margen.`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setOnlyMissingCost((v) => !v)}
+            aria-pressed={onlyMissingCost}
+            className="min-h-[40px] rounded-lg border border-amber-300 bg-white px-3 font-medium hover:border-amber-500"
+          >
+            {onlyMissingCost ? 'Ver todos' : 'Ver solo esos'}
+          </button>
+        </div>
+      )}
+
       {/* Vista de tabla para desktop */}
       <div className="hidden md:block bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
@@ -162,6 +218,7 @@ export default function AdminProductsPage() {
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Título</th>
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Categoría</th>
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Precio</th>
+                {costs && <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Margen</th>}
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Destacado</th>
                 <th className="px-4 lg:px-6 py-3"></th>
@@ -170,7 +227,7 @@ export default function AdminProductsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={costs ? 7 : 6} className="px-6 py-8 text-center text-sm text-gray-500">
                     No se encontraron productos
                   </td>
                 </tr>
@@ -195,6 +252,11 @@ export default function AdminProductsPage() {
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       ${Number(p.price).toFixed(2)}
                     </td>
+                    {costs && (
+                      <td className="px-4 lg:px-6 py-4 text-sm">
+                        <MarginChip product={p} cost={costs[p.id]} />
+                      </td>
+                    )}
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                         p.active 
@@ -285,6 +347,7 @@ export default function AdminProductsPage() {
                     ⭐ Destacado
                   </span>
                 )}
+                {costs && <MarginChip product={p} cost={costs[p.id]} />}
                 <span className="ml-auto font-semibold text-gray-900">
                   ${Number(p.price).toFixed(2)}
                 </span>

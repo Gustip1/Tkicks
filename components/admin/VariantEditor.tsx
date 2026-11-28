@@ -16,15 +16,15 @@ export function VariantEditor({
   };
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-[1fr_120px_80px] items-center gap-2 text-xs font-medium text-neutral-300">
+      <div className="grid grid-cols-[minmax(0,1fr)_96px_72px] items-center gap-2 text-xs font-medium text-neutral-300">
         <div>Talle</div>
         <div>Stock</div>
         <div></div>
       </div>
       {rows.map((r, idx) => (
-        <div key={r.id || idx} className="grid grid-cols-[1fr_120px_80px] items-center gap-2">
+        <div key={r.id || idx} className="grid grid-cols-[minmax(0,1fr)_96px_72px] items-center gap-2">
           <input
-            className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-white placeholder-neutral-400"
+            className="w-full min-w-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-white placeholder-neutral-400"
             value={r.size}
             onChange={(e) => {
               const next = [...rows];
@@ -36,7 +36,7 @@ export function VariantEditor({
           <input
             type="number"
             min={0}
-            className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-white"
+            className="w-full min-w-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-white"
             value={r.stock}
             onChange={(e) => {
               const next = [...rows];

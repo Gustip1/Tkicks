@@ -15,6 +15,8 @@ import { extractFromDescription, garmentKind, waistStyle, type SizeGuide } from 
 import { slugify } from '@/lib/utils';
 import { Brand, HOODIE_TYPES, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, groupOf } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
+import { ProfitPanel } from '@/components/admin/ProfitPanel';
+import { CostForm, EMPTY_COST_FORM, costError, costsTableReady, saveProductCost } from '@/lib/admin/productCosts';
 
 export default function NewProductPage() {
   const supabase = createBrowserClient();
@@ -37,6 +39,10 @@ export default function NewProductPage() {
   // Se asume que la columna products.size_guide existe; si la base dice que no
   // (falta la migración), el producto se guarda igual, sin la guía
   const [hasGuideColumn, setHasGuideColumn] = useState(true);
+  // Costo y precio de mercado (obligatorio el costo, si la tabla ya existe)
+  const [costForm, setCostForm] = useState<CostForm>(EMPTY_COST_FORM);
+  const [costErr, setCostErr] = useState<string | null>(null);
+  const [costsReady, setCostsReady] = useState(true);
 
   const sizes = useMemo(
     () => variants.map((v: any) => String(v?.size ?? '').trim()).filter(Boolean),
@@ -50,6 +56,7 @@ export default function NewProductPage() {
     // Solo lectura: si la columna no existe, Supabase responde con error
     supabase.from('products').select('size_guide').limit(1)
       .then(({ error }) => { if (isMissingSizeGuideColumn(error)) setHasGuideColumn(false); });
+    costsTableReady(supabase).then(setCostsReady);
   }, []);
 
   const save = async (e: React.FormEvent) => {
@@ -57,6 +64,14 @@ export default function NewProductPage() {
     setError(null);
     if (!title) return setError('Título requerido');
     if (price < 0) return setError('Precio inválido');
+    if (!(price > 0)) return setError('Poné el precio de venta');
+    // El costo es obligatorio: sin él no se sabe si el producto deja plata
+    const badCost = costsReady ? costError(costForm) : null;
+    setCostErr(badCost);
+    if (badCost) {
+      document.getElementById('product-cost')?.focus();
+      return setError(badCost);
+    }
     if (images.length === 0) return setError('Al menos una imagen');
     const badMeasure = firstInvalidMeasure();
     if (badMeasure) {
@@ -115,16 +130,21 @@ export default function NewProductPage() {
       const { error: vErr } = await supabase.from('product_variants').insert(toInsert);
       if (vErr) return setError(vErr.message);
     }
+    let costSaved = true;
+    if (costsReady) costSaved = !(await saveProductCost(supabase, product!.id, costForm, null)).error;
     await revalidateHome();
-    // La ficha de edición avisa que la guía no se guardó
-    window.location.href = `/admin/productos/${product!.id}${!guideSaved && guide ? '?guia=sin-guardar' : ''}`;
+    // La ficha de edición avisa lo que no se pudo guardar (la guía o el costo)
+    const warn = new URLSearchParams();
+    if (!guideSaved && guide) warn.set('guia', 'sin-guardar');
+    if (!costSaved) warn.set('costo', 'sin-guardar');
+    window.location.href = `/admin/productos/${product!.id}${warn.toString() ? `?${warn}` : ''}`;
   };
 
   return (
     <form onSubmit={save} className="space-y-4 text-black">
       <h1 className="text-2xl font-bold">Nuevo producto</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium">Título</label>
@@ -150,6 +170,16 @@ export default function NewProductPage() {
               )}
             </div>
           </div>
+          <ProfitPanel
+            title={title}
+            price={price}
+            salePrice={salePrice}
+            form={costForm}
+            onChange={(f) => { setCostForm(f); if (costErr) setCostErr(costError(f)); }}
+            error={costErr}
+            ready={costsReady}
+            onUsePrice={setPrice}
+          />
           {category === 'streetwear' && (
             <div>
               <label className="block text-sm font-medium">Subcategoría</label>
