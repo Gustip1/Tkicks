@@ -30,3 +30,38 @@ create policy "product_costs_admin_all" on public.product_costs
   );
 
 revoke all on public.product_costs from anon;
+
+-- ── Competencia (nov 2026) ────────────────────────────────────────────────
+-- Webs de otros revendedores para comparar precios desde el panel. Solo admin.
+-- platform: cómo se leen sus productos (Shopify y WooCommerce tienen búsqueda
+-- pública en JSON; el resto queda como acceso directo).
+
+create table if not exists public.competitor_sites (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  url text not null unique,
+  platform text not null default 'manual',
+  currency text not null default 'ARS',
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.competitor_sites drop constraint if exists competitor_sites_platform_check;
+alter table public.competitor_sites add constraint competitor_sites_platform_check
+  check (platform in ('shopify', 'woocommerce', 'manual'));
+alter table public.competitor_sites drop constraint if exists competitor_sites_currency_check;
+alter table public.competitor_sites add constraint competitor_sites_currency_check
+  check (currency in ('ARS', 'USD'));
+
+alter table public.competitor_sites enable row level security;
+
+drop policy if exists "competitor_sites_admin_all" on public.competitor_sites;
+create policy "competitor_sites_admin_all" on public.competitor_sites
+  for all using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  )
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  );
+
+revoke all on public.competitor_sites from anon;

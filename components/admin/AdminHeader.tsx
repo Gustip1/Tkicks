@@ -22,6 +22,7 @@ export function AdminHeader() {
     if (pathname.startsWith('/admin/consultas')) return { title: 'Consultas', subtitle: 'Ofertas, talles y dudas que dejaron en la web' };
     if (pathname.startsWith('/admin/stock')) return { title: 'Stock', subtitle: 'Control de inventario' };
     if (pathname.startsWith('/admin/precios')) return { title: 'Precios', subtitle: 'Ajusta tus precios' };
+    if (pathname.startsWith('/admin/competencia')) return { title: 'Competencia', subtitle: 'Precios de otros revendedores' };
     if (pathname.startsWith('/admin/destacados')) return { title: 'Destacados', subtitle: 'Productos destacados' };
     if (pathname.startsWith('/admin/ofertas')) return { title: 'Ofertas', subtitle: 'Productos en oferta' };
     if (pathname.startsWith('/admin/proximos')) return { title: 'Próximos ingresos', subtitle: 'Productos en camino al showroom' };

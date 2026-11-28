@@ -16,6 +16,8 @@ import { slugify } from '@/lib/utils';
 import { Brand, HOODIE_TYPES, STREETWEAR_SUBCATEGORIES, StreetWearSubcategory, groupOf } from '@/types/db';
 import { revalidateHome } from '@/lib/admin/revalidateHome';
 import { ProfitPanel } from '@/components/admin/ProfitPanel';
+import { CompetitorPrices } from '@/components/admin/CompetitorPrices';
+import { effectivePrice } from '@/lib/pricing';
 import { CostForm, EMPTY_COST_FORM, costError, costsTableReady, saveProductCost } from '@/lib/admin/productCosts';
 
 export default function NewProductPage() {
@@ -179,6 +181,11 @@ export default function NewProductPage() {
             error={costErr}
             ready={costsReady}
             onUsePrice={setPrice}
+          />
+          <CompetitorPrices
+            title={title}
+            myPriceUsd={effectivePrice(price, salePrice)}
+            onUseAsMarket={(usd, note) => setCostForm((f) => ({ ...f, market: String(usd), marketNote: note }))}
           />
           {category === 'streetwear' && (
             <div>

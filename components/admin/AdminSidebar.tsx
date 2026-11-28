@@ -27,6 +27,7 @@ import {
   Ticket,
   MessageCircle,
   Truck,
+  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +39,7 @@ const navigation = [
   { name: 'Productos', href: '/admin/productos', icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
   { name: 'Stock', href: '/admin/stock', icon: Warehouse, color: 'text-amber-600', bg: 'bg-amber-50' },
   { name: 'Precios', href: '/admin/precios', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { name: 'Competencia', href: '/admin/competencia', icon: Scale, color: 'text-slate-700', bg: 'bg-slate-100' },
   { name: 'Destacados', href: '/admin/destacados', icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   { name: 'Portada', href: '/admin/portada', icon: LayoutTemplate, color: 'text-sky-600', bg: 'bg-sky-50' },
   { name: 'Opiniones', href: '/admin/opiniones', icon: MessageSquareQuote, color: 'text-rose-600', bg: 'bg-rose-50' },
